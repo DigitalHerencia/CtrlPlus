@@ -1,0 +1,89 @@
+name: Feature Request
+description: Propose a new product capability or a meaningful enhancement.
+title: "[Feature]: "
+labels:
+  - feature
+  - triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for product/domain features. Include expected behavior, user impact, and architectural constraints.
+
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Domain
+      description: Select the primary business/domain area.
+      options:
+        - Scheduling
+        - Visualizer
+        - Billing & Stripe
+        - Auth & RBAC
+        - Tenant & Subdomain Routing
+        - Notifications
+        - Integrations
+        - Admin & Backoffice
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What user or business problem should this solve?
+      placeholder: Describe the current limitation and affected users/workflows.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution
+      description: Describe the desired behavior and key acceptance criteria.
+      placeholder: Include happy path, edge cases, and expected outcomes.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity / Business Impact
+      description: Estimate business urgency and impact.
+      options:
+        - S4 - Low (nice-to-have)
+        - S3 - Medium (important improvement)
+        - S2 - High (material user/business impact)
+        - S1 - Critical (blocks core workflow or revenue)
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: architecture_gates
+    attributes:
+      label: Architecture & Security Gates
+      description: Confirm required platform constraints are understood.
+      options:
+        - label: No Prisma usage in app/ routes/components; data access goes through fetchers/actions.
+          required: true
+        - label: Tenant scope is resolved server-side from host/subdomain (never from client-provided tenantId).
+          required: true
+        - label: Authorization is enforced server-side with explicit permission checks.
+          required: true
+        - label: Inputs for mutations are validated with Zod in server actions.
+          required: true
+        - label: Tests will be added/updated (unit/integration/e2e as appropriate).
+          required: true
+
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-goals / Out of Scope
+      description: Clarify what this request should not include.
+      placeholder: List boundaries to avoid scope creep.
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Links, screenshots, customer notes, or related issues.

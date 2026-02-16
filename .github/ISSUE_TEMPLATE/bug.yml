@@ -1,0 +1,102 @@
+name: Bug Report
+description: Report a defect impacting expected behavior.
+title: "[Bug]: "
+labels:
+  - bug
+  - triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Provide reproducible details. Include tenant/subdomain context when relevant.
+
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Domain
+      description: Select the area where the defect occurs.
+      options:
+        - Scheduling
+        - Visualizer
+        - Billing & Stripe
+        - Auth & RBAC
+        - Tenant & Subdomain Routing
+        - Notifications
+        - Integrations
+        - Admin & Backoffice
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: Select the operational/business severity.
+      options:
+        - S1 - Critical (outage/data loss/security)
+        - S2 - High (core workflow degraded)
+        - S3 - Medium (workaround exists)
+        - S4 - Low (minor defect)
+    validations:
+      required: true
+
+  - type: input
+    id: tenant_context
+    attributes:
+      label: Tenant/Subdomain Context
+      description: Which tenant subdomain(s) are affected?
+      placeholder: e.g. acme.example.com
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction Steps
+      description: List deterministic steps to reproduce.
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: architecture_gates
+    attributes:
+      label: Architecture & Security Checks
+      description: Validate platform invariants while triaging.
+      options:
+        - label: Bug is not caused by bypassing tenant isolation (tenant resolved server-side).
+          required: true
+        - label: Authorization failure/success has been verified server-side (not only client state).
+          required: true
+        - label: Any mutation path involved uses server actions with input validation.
+          required: true
+        - label: Logs shared here do not contain secrets or sensitive personal data.
+          required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs / Stack Traces / Evidence
+      description: Include relevant snippets and monitoring links.
+
+  - type: input
+    id: regression
+    attributes:
+      label: Regression?
+      description: First known version/commit where this started (if known).
+      placeholder: e.g. v1.24.0 or commit SHA
