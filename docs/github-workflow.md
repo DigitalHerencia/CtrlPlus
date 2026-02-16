@@ -2,6 +2,16 @@
 
 This document defines the canonical label taxonomy for the repository and explains how to bootstrap labels so project boards and issue/PR templates can reference labels that already exist.
 
+## Canonical set decision
+
+We are **keeping the existing canonical prefixed taxonomy** (`type:*`, `domain:*`, `scope:*`, `p*`) and aligning all templates and automation rules to it.
+
+Rationale:
+
+- It is already documented as repository source of truth.
+- It is more scalable than flat labels (`bug`, `feature`, `infra`, `triage`) because each concern has a namespace.
+- It supports matrix-based triage (type × domain × scope × priority) without introducing duplicate semantic labels.
+
 ## Label taxonomy
 
 Use labels from each category below when creating or triaging issues and pull requests.
@@ -49,9 +59,16 @@ Use one priority label per issue.
 - `p1` — high priority, should be addressed in the current cycle.
 - `p2` — normal priority, can be planned in upcoming cycles.
 
+### 5) Workflow labels
+
+These labels track queue/triage state and are safe defaults for templates.
+
+- `status:triage` — newly created item awaiting initial triage.
+
 ## Label application guidance
 
-- Apply **at least one** label from: `type:*`, `domain:*`, and `scope:*`.
+- Apply **at least one** label from: `type:*`.
+- During triage, add **at least one** label from each of: `domain:*` and `scope:*`.
 - Apply **exactly one** of: `p0`, `p1`, `p2`.
 - Prefer smaller, specific label sets over broad tagging.
 - Keep label names stable; templates and board automations depend on exact spelling.
@@ -102,6 +119,9 @@ Before enabling project board automations or issue/PR templates that reference l
    gh label create "p0" --color "B60205" --description "Critical priority"
    gh label create "p1" --color "D93F0B" --description "High priority"
    gh label create "p2" --color "FBCA04" --description "Normal priority"
+
+   # workflow labels
+   gh label create "status:triage" --color "D4C5F9" --description "Awaiting triage"
    ```
 
 3. If some labels already exist, update instead of create:
@@ -131,6 +151,35 @@ After labels are created:
 2. Confirm default labels apply without errors.
 3. Move the issue through board columns to confirm automation rules keyed by labels work.
 4. Remove the test issue when done.
+
+## Label migration map
+
+Use this map when normalizing older issues/automation rules.
+
+| Old label | New canonical label |
+| --- | --- |
+| `feature` | `type:feature` |
+| `bug` | `type:bug` |
+| `infra` | `type:infra` |
+| `triage` | `status:triage` |
+
+## Matrix coverage verification
+
+Every issue can be represented with only canonical labels from this document.
+
+Required matrix dimensions:
+
+- Type: one of `type:*`.
+- Domain: one of `domain:*`.
+- Scope: one of `scope:*`.
+- Priority: one of `p0`, `p1`, `p2`.
+
+Example canonical matrix combinations:
+
+- Bug in scheduling server logic: `type:bug`, `domain:scheduling`, `scope:backend`, `p1`.
+- Visualizer UI enhancement: `type:feature`, `domain:visualizer`, `scope:frontend`, `p2`.
+- CI hardening task: `type:infra`, `domain:platform`, `scope:ci`, `p2`.
+- Security fix for tenancy checks: `type:security`, `domain:tenancy`, `scope:backend`, `p0`.
 
 ## Maintenance
 
