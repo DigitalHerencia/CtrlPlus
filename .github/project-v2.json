@@ -1,0 +1,79 @@
+{
+  "name": "WrapWorks Platform Board",
+  "description": "Project v2 configuration for planning and delivery of the WrapWorks multi-tenant platform.",
+  "fields": [
+    {
+      "name": "Status",
+      "type": "single_select",
+      "options": [
+        "Backlog",
+        "Ready",
+        "In Progress",
+        "Blocked",
+        "In Review",
+        "Done"
+      ]
+    },
+    {
+      "name": "Domain",
+      "type": "single_select",
+      "options": [
+        "Tenancy",
+        "Authz",
+        "Catalog",
+        "Visualizer",
+        "Scheduling",
+        "Billing",
+        "Platform"
+      ]
+    },
+    {
+      "name": "Risk",
+      "type": "single_select",
+      "options": [
+        "Low",
+        "Medium",
+        "High",
+        "Critical"
+      ]
+    },
+    {
+      "name": "Requires Migration",
+      "type": "single_select",
+      "options": [
+        "No",
+        "Yes"
+      ]
+    },
+    {
+      "name": "Requires E2E",
+      "type": "single_select",
+      "options": [
+        "No",
+        "Yes"
+      ]
+    }
+  ],
+  "views": [
+    {
+      "name": "By Status",
+      "layout": "board",
+      "groupBy": "Status"
+    },
+    {
+      "name": "By Domain",
+      "layout": "board",
+      "groupBy": "Domain"
+    }
+  ],
+  "milestones": [
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "M6",
+    "M7",
+    "M8"
+  ]
+}
