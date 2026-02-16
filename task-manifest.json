@@ -198,6 +198,20 @@
         {
           "id": "BILL-002",
           "title": "Stripe webhook signature verification and idempotent reconciliation",
+          "requirements": [
+            "Verify Stripe webhook signatures before processing any event payload.",
+            "Treat Stripe event metadata (tenantId and invoiceId) as untrusted input and validate both values against persisted invoice ownership before mutation.",
+            "Reject and record mismatched tenant scope when metadata tenantId does not match the invoice tenantId in the database.",
+            "Enforce server-side trust boundaries: tenant context for webhook processing must come from validated Stripe metadata and database lookups only, never client-derived request context.",
+            "Persist an AuditEvent describing webhook processing outcomes (success, rejection, idempotent duplicate)."
+          ],
+          "acceptance_criteria": [
+            "Webhook processing succeeds for a valid signed Stripe event when tenantId/invoiceId metadata matches database ownership and reconciliation updates invoice and booking state.",
+            "Webhook processing rejects events with mismatched tenant scope, performs no cross-tenant mutation, and returns an explicit failure outcome.",
+            "Webhook processing is idempotent for duplicate Stripe event IDs and does not re-apply side effects.",
+            "An AuditEvent is written for each webhook processing outcome, including success, rejection, and duplicate-event short-circuit paths.",
+            "Integration tests in tests/integration/stripe-webhook.test.ts cover valid metadata processing, tenant mismatch rejection, duplicate idempotency, and audit event persistence."
+          ],
           "file_map": {
             "domain": [
               "features/billing/use-cases/reconcile-stripe-payment.ts"
@@ -213,7 +227,7 @@
             ],
             "tests": [
               "tests/unit/billing/reconcile-stripe-payment.test.ts",
-              "tests/integration/billing/handle-stripe-webhook-action.test.ts",
+              "tests/integration/stripe-webhook.test.ts",
               "tests/e2e/billing/webhook-payment-confirmation.spec.ts"
             ]
           },
