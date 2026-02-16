@@ -2,8 +2,8 @@ name: Feature Request
 description: Propose a new product capability or a meaningful enhancement.
 title: "[Feature]: "
 labels:
-  - feature
-  - triage
+  - type:feature
+  - status:triage
 body:
   - type: markdown
     attributes:

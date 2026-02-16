@@ -75,5 +75,37 @@
     "M6",
     "M7",
     "M8"
+  ],
+  "automationRules": [
+    {
+      "name": "Queue new work for triage",
+      "trigger": {
+        "event": "item_labeled",
+        "label": "status:triage"
+      },
+      "actions": [
+        {
+          "setField": {
+            "field": "Status",
+            "value": "Backlog"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mark triaged work as ready",
+      "trigger": {
+        "event": "item_unlabeled",
+        "label": "status:triage"
+      },
+      "actions": [
+        {
+          "setField": {
+            "field": "Status",
+            "value": "Ready"
+          }
+        }
+      ]
+    }
   ]
 }
