@@ -94,6 +94,97 @@
       ]
     },
     {
+      "id": "M2",
+      "title": "Catalog Readiness + Wrap Listing Performance Validation",
+      "tasks": [
+        {
+          "id": "CAT-001",
+          "title": "Tenant-scoped wraps listing and detail fetchers for app/(tenant)/wraps/page.tsx",
+          "file_map": {
+            "domain": [
+              "features/catalog/use-cases/list-wraps.ts"
+            ],
+            "fetchers": [
+              "lib/server/fetchers/catalog/get-wraps-list.ts"
+            ],
+            "actions": [],
+            "app": [
+              "app/(tenant)/wraps/page.tsx"
+            ],
+            "tests": [
+              "tests/unit/catalog/list-wraps.test.ts",
+              "tests/integration/catalog/get-wraps-list.test.ts"
+            ]
+          },
+          "requires_migration": true,
+          "requires_e2e": false,
+          "test_types": [
+            "unit",
+            "integration"
+          ]
+        },
+        {
+          "id": "PERF-002",
+          "title": "Performance validation for wraps listing RSC render path",
+          "workload_shape": {
+            "seed_data": {
+              "tenants": 1,
+              "wrapDesignsPerTenant": 500,
+              "activeRatio": 0.8,
+              "filterProfiles": [
+                "default-unfiltered",
+                "finish=matte&vehicleType=suv",
+                "search=carbon"
+              ]
+            },
+            "request_mix": {
+              "default-unfiltered": 0.6,
+              "filtered": 0.3,
+              "search": 0.1
+            },
+            "concurrency": 10,
+            "warmup_requests": 50,
+            "measurement_requests": 400
+          },
+          "environment_assumptions": {
+            "runtime": "Next.js production build with Node.js 20",
+            "database": "Neon Postgres staging tier in same region as app",
+            "deployment": "Vercel preview equivalent CPU/memory class",
+            "cache_state": "run once cold and once warm with fetch cache primed"
+          },
+          "percentile_window": {
+            "metric": "server response latency for app/(tenant)/wraps/page.tsx",
+            "method": "sliding window p95 over last 400 measured requests, excluding warmup",
+            "report_units": "milliseconds"
+          },
+          "sla_thresholds": {
+            "p95_ms": 900,
+            "p99_ms": 1200
+          },
+          "acceptance_criteria": [
+            "CI perf harness fails when measured p95 exceeds 900ms for warm-cache run.",
+            "CI perf harness fails when measured p99 exceeds 1200ms for warm-cache run.",
+            "PR includes baseline and post-change wraps page p95/p99 metrics and delta."
+          ],
+          "harness": {
+            "scripts": [
+              "pnpm perf:wraps-page",
+              "pnpm perf:assert"
+            ],
+            "artifacts": [
+              "tests/perf/results/wraps-page-baseline.json",
+              "tests/perf/results/wraps-page-current.json"
+            ]
+          },
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        }
+      ]
+    },
+    {
       "id": "M3",
       "title": "Visualizer v1",
       "tasks": [
@@ -154,6 +245,64 @@
           "requires_e2e": true,
           "test_types": [
             "unit",
+            "integration",
+            "e2e"
+          ]
+        },
+        {
+          "id": "PERF-003",
+          "title": "Performance validation for visualizer actions (template and upload fallback)",
+          "workload_shape": {
+            "template_path": {
+              "requests": 300,
+              "concurrency": 15,
+              "vehicle_templates": 30
+            },
+            "upload_path": {
+              "requests": 120,
+              "concurrency": 5,
+              "upload_size_mb_distribution": {
+                "p50": 4,
+                "p95": 10
+              },
+              "fallback_trigger_rate": 0.15
+            },
+            "warmup_requests": 40
+          },
+          "environment_assumptions": {
+            "runtime": "Next.js server actions in production mode",
+            "image_pipeline": "same storage backend and image worker settings as staging",
+            "network": "single region; no cross-region blob access",
+            "cache_state": "template cache primed before warm measurements"
+          },
+          "percentile_window": {
+            "metric": "action completion latency for create-template-preview-action and create-upload-preview-action",
+            "method": "rolling 15-minute window p95 computed from per-action histograms; warmup excluded",
+            "report_units": "milliseconds"
+          },
+          "sla_thresholds": {
+            "template_p95_ms": 1000,
+            "upload_p95_ms": 20000
+          },
+          "acceptance_criteria": [
+            "Fail validation if template preview action p95 exceeds 1000ms in warm-cache run.",
+            "Fail validation if upload preview action p95 exceeds 20000ms under defined upload workload.",
+            "Fail validation if fallback success rate drops below 99% when upload path fails.",
+            "PR includes baseline and post-change visualizer metrics (template p95 and upload p95)."
+          ],
+          "harness": {
+            "scripts": [
+              "pnpm perf:visualizer-actions",
+              "pnpm perf:assert"
+            ],
+            "artifacts": [
+              "tests/perf/results/visualizer-baseline.json",
+              "tests/perf/results/visualizer-current.json"
+            ]
+          },
+          "requires_migration": false,
+          "requires_e2e": true,
+          "test_types": [
             "integration",
             "e2e"
           ]
@@ -223,6 +372,33 @@
             "unit",
             "integration",
             "e2e"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M8",
+      "title": "Platform Observability and Performance Governance",
+      "tasks": [
+        {
+          "id": "PERF-001",
+          "title": "Dedicated issue: performance instrumentation foundation",
+          "issue_type": "platform",
+          "issue_summary": "Add OpenTelemetry spans, latency histograms, and regression budget checks for wraps page and visualizer actions.",
+          "deliverables": [
+            "Instrumentation hooks for app/(tenant)/wraps/page.tsx and visualizer server actions.",
+            "Exported p50/p95/p99 metrics to CI artifacts and dashboard sink.",
+            "Regression gate consumed by pnpm perf:assert."
+          ],
+          "acceptance_criteria": [
+            "Issue is linked to milestone M8 and tracked on project board with Domain=Platform.",
+            "Instrumentation emits tenant-safe metrics with no PII in labels.",
+            "CI fails when metric export or regression assertion step is missing."
+          ],
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
           ]
         }
       ]
