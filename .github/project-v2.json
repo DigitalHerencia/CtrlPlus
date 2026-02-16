@@ -19,16 +19,17 @@
       "type": "single_select",
       "options": [
         "Tenancy",
-        "Authz",
+        "Auth",
         "Catalog",
         "Visualizer",
         "Scheduling",
         "Billing",
-        "Platform"
+        "Admin",
+        "CI"
       ]
     },
     {
-      "name": "Risk",
+      "name": "Risk Level",
       "type": "single_select",
       "options": [
         "Low",
