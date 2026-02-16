@@ -1,0 +1,99 @@
+name: Infrastructure Request / Incident
+description: Track infrastructure, platform, reliability, or operations work.
+title: "[Infra]: "
+labels:
+  - infra
+  - triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for reliability, deployment, environment, and platform changes/incidents.
+
+  - type: dropdown
+    id: infra_scope
+    attributes:
+      label: Infrastructure Scope
+      description: Select the primary scope.
+      options:
+        - CI/CD Pipelines
+        - Build System & Dependencies
+        - Runtime Platform & Hosting
+        - Database & Migrations
+        - Caching & Performance
+        - Networking, DNS & Subdomains
+        - Security, Secrets & IAM
+        - Observability, Logging & Alerting
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: Operational severity/urgency.
+      options:
+        - Sev-1 (production outage/security emergency)
+        - Sev-2 (major degradation)
+        - Sev-3 (moderate impact)
+        - Sev-4 (low impact / planned work)
+    validations:
+      required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Briefly describe the request or incident.
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Who/what is impacted (tenants, systems, revenue, delivery)?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_changes
+    attributes:
+      label: Proposed Changes / Mitigation Plan
+      description: What change should be made, or what mitigation is required?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: architecture_gates
+    attributes:
+      label: Architecture & Security Gates
+      description: Confirm constraints before implementation.
+      options:
+        - label: Tenant isolation and host/subdomain-based tenant resolution remain enforced server-side.
+          required: true
+        - label: No business mutation path is moved outside approved server action boundaries.
+          required: true
+        - label: Secrets/tokens are managed via secure runtime configuration (not committed or logged).
+          required: true
+        - label: Observability updates include actionable metrics/logs/alerts without exposing sensitive data.
+          required: true
+
+  - type: input
+    id: change_window
+    attributes:
+      label: Requested Change Window
+      description: Planned rollout window and timezone.
+      placeholder: e.g. 2026-03-12 22:00-23:00 UTC
+
+  - type: textarea
+    id: rollback
+    attributes:
+      label: Rollback / Contingency Plan
+      description: Describe rollback strategy or immediate recovery actions.
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Link dashboards, runbooks, incident docs, or related issues.
