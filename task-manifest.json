@@ -1,0 +1,238 @@
+{
+  "project": "WrapWorks",
+  "architecture_constraints": {
+    "tenancy": {
+      "host_resolved_tenant_required": true,
+      "client_tenant_id_trusted": false,
+      "all_tenant_scoped_queries_require_tenant_id": true,
+      "required_helpers": [
+        "requireTenant",
+        "assertTenantScope"
+      ]
+    },
+    "auth": {
+      "clerk_orgs_enabled": false,
+      "server_side_auth_required": true,
+      "required_helpers": [
+        "requireAuth",
+        "requirePermission"
+      ],
+      "authorization_client_only_forbidden": true
+    },
+    "fetcher_action_boundaries": {
+      "prisma_in_app_forbidden": true,
+      "reads_must_use": "lib/server/fetchers/**",
+      "writes_must_use": "lib/server/actions/**",
+      "fetchers_read_only": true,
+      "actions_write_only": true,
+      "action_validation_required": "zod"
+    }
+  },
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Tenant + Auth Foundations",
+      "tasks": [
+        {
+          "id": "TEN-001",
+          "title": "Subdomain tenant resolution and tenant scope guards",
+          "file_map": {
+            "domain": [
+              "features/tenancy/use-cases/resolve-tenant-from-host.ts"
+            ],
+            "fetchers": [
+              "lib/server/fetchers/tenancy/get-tenant-context.ts"
+            ],
+            "actions": [
+              "lib/server/actions/tenancy/assert-tenant-scope-action.ts"
+            ],
+            "app": [
+              "app/(tenant)/layout.tsx",
+              "app/middleware.ts"
+            ],
+            "tests": [
+              "tests/unit/tenancy/resolve-tenant-from-host.test.ts",
+              "tests/integration/tenancy/get-tenant-context.test.ts"
+            ]
+          },
+          "requires_migration": true,
+          "requires_e2e": false,
+          "test_types": [
+            "unit",
+            "integration"
+          ]
+        },
+        {
+          "id": "AUTH-001",
+          "title": "Tenant membership RBAC guards for read/write operations",
+          "file_map": {
+            "domain": [
+              "features/authz/use-cases/evaluate-permission.ts"
+            ],
+            "fetchers": [
+              "lib/server/fetchers/authz/get-tenant-membership.ts"
+            ],
+            "actions": [
+              "lib/server/actions/authz/require-permission-action.ts"
+            ],
+            "app": [
+              "app/(auth)/[[...sign-in]]/page.tsx",
+              "app/(auth)/[[...sign-up]]/page.tsx"
+            ],
+            "tests": [
+              "tests/unit/authz/evaluate-permission.test.ts",
+              "tests/integration/authz/get-tenant-membership.test.ts"
+            ]
+          },
+          "requires_migration": true,
+          "requires_e2e": false,
+          "test_types": [
+            "unit",
+            "integration"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Visualizer v1",
+      "tasks": [
+        {
+          "id": "VIS-001",
+          "title": "Template-based preview fast path",
+          "file_map": {
+            "domain": [
+              "features/visualizer/use-cases/generate-template-preview.ts"
+            ],
+            "fetchers": [
+              "lib/server/fetchers/visualizer/get-vehicle-template.ts"
+            ],
+            "actions": [
+              "lib/server/actions/visualizer/create-template-preview-action.ts"
+            ],
+            "app": [
+              "app/(tenant)/visualizer/page.tsx"
+            ],
+            "tests": [
+              "tests/unit/visualizer/generate-template-preview.test.ts",
+              "tests/integration/visualizer/create-template-preview-action.test.ts",
+              "tests/e2e/visualizer/template-preview.spec.ts"
+            ]
+          },
+          "requires_migration": true,
+          "requires_e2e": true,
+          "test_types": [
+            "unit",
+            "integration",
+            "e2e"
+          ]
+        },
+        {
+          "id": "VIS-002",
+          "title": "Upload-based preview with fallback and deterministic cache",
+          "file_map": {
+            "domain": [
+              "features/visualizer/use-cases/generate-upload-preview.ts",
+              "features/visualizer/use-cases/compute-preview-cache-key.ts"
+            ],
+            "fetchers": [
+              "lib/server/fetchers/visualizer/get-preview-cache-entry.ts"
+            ],
+            "actions": [
+              "lib/server/actions/visualizer/create-upload-preview-action.ts"
+            ],
+            "app": [
+              "app/(tenant)/visualizer/page.tsx"
+            ],
+            "tests": [
+              "tests/unit/visualizer/compute-preview-cache-key.test.ts",
+              "tests/integration/visualizer/create-upload-preview-action.test.ts",
+              "tests/e2e/visualizer/upload-fallback.spec.ts"
+            ]
+          },
+          "requires_migration": true,
+          "requires_e2e": true,
+          "test_types": [
+            "unit",
+            "integration",
+            "e2e"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "Billing and Stripe Reliability",
+      "tasks": [
+        {
+          "id": "BILL-001",
+          "title": "Invoice creation and Stripe Checkout session flow",
+          "file_map": {
+            "domain": [
+              "features/billing/use-cases/create-invoice.ts"
+            ],
+            "fetchers": [
+              "lib/server/fetchers/billing/get-invoice-by-id.ts"
+            ],
+            "actions": [
+              "lib/server/actions/billing/create-invoice-action.ts",
+              "lib/server/actions/billing/create-stripe-checkout-session-action.ts"
+            ],
+            "app": [
+              "app/(tenant)/checkout/page.tsx"
+            ],
+            "tests": [
+              "tests/unit/billing/create-invoice.test.ts",
+              "tests/integration/billing/create-stripe-checkout-session-action.test.ts",
+              "tests/e2e/billing/checkout.spec.ts"
+            ]
+          },
+          "requires_migration": true,
+          "requires_e2e": true,
+          "test_types": [
+            "unit",
+            "integration",
+            "e2e"
+          ]
+        },
+        {
+          "id": "BILL-002",
+          "title": "Stripe webhook signature verification and idempotent reconciliation",
+          "file_map": {
+            "domain": [
+              "features/billing/use-cases/reconcile-stripe-payment.ts"
+            ],
+            "fetchers": [
+              "lib/server/fetchers/billing/get-payment-event-by-stripe-event-id.ts"
+            ],
+            "actions": [
+              "lib/server/actions/billing/handle-stripe-webhook-action.ts"
+            ],
+            "app": [
+              "app/api/stripe/webhook/route.ts"
+            ],
+            "tests": [
+              "tests/unit/billing/reconcile-stripe-payment.test.ts",
+              "tests/integration/billing/handle-stripe-webhook-action.test.ts",
+              "tests/e2e/billing/webhook-payment-confirmation.spec.ts"
+            ]
+          },
+          "requires_migration": true,
+          "requires_e2e": true,
+          "test_types": [
+            "unit",
+            "integration",
+            "e2e"
+          ]
+        }
+      ]
+    }
+  ],
+  "quality_gates": {
+    "require_lint": true,
+    "require_typecheck": true,
+    "require_unit": true,
+    "require_integration": true,
+    "require_e2e": true
+  }
+}
