@@ -1,5 +1,5 @@
 {
-  "project": "WrapWorks",
+  "project": "CtrlPlus",
   "architecture_constraints": {
     "tenancy": {
       "host_resolved_tenant_required": true,
