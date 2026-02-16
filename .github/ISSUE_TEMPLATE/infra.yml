@@ -2,8 +2,8 @@ name: Infrastructure Request / Incident
 description: Track infrastructure, platform, reliability, or operations work.
 title: "[Infra]: "
 labels:
-  - infra
-  - triage
+  - type:infra
+  - status:triage
 body:
   - type: markdown
     attributes:

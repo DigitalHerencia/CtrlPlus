@@ -2,8 +2,8 @@ name: Bug Report
 description: Report a defect impacting expected behavior.
 title: "[Bug]: "
 labels:
-  - bug
-  - triage
+  - type:bug
+  - status:triage
 body:
   - type: markdown
     attributes:
