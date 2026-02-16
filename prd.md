@@ -148,7 +148,13 @@ A multi-tenant website for a small home-based vehicle wrap business in El Paso, 
 
 1. Tenant + auth + base shell + catalog read-only
 2. Visualizer v1 (upload + template fallback) + caching
+   * Performance validation work item: benchmark `app/(tenant)/wraps/page.tsx` under production-like load and fail if p95/p99 SLA thresholds regress.
+   * Require PRs touching wraps listing path to report baseline vs post-change p95/p99.
 3. Scheduling v1 + booking creation
+   * Performance validation work item: benchmark visualizer server actions (`create-template-preview-action`, `create-upload-preview-action`) with template/upload workload mix and 15-minute p95 window.
+   * Require fallback-success and latency SLA checks to be blocking acceptance criteria.
 4. Invoicing + Stripe Checkout + webhook finalize
 5. Admin console CRUD + operational views
 6. Hardening: testing, perf, security reviews, CI/CD polish
+7. Observability maturity: standardized latency dashboards and CI regression artifacts
+8. Platform governance: dedicated performance instrumentation issue tracking and enforcement
