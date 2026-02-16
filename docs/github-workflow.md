@@ -186,3 +186,23 @@ Example canonical matrix combinations:
 - Treat this file as the source of truth for label names.
 - If adding a new label, update this document and any issue/PR templates in the same PR.
 - Avoid renaming labels unless all dependent board automations/templates are updated simultaneously.
+
+## Roadmap governance (authoritative planning model)
+
+- `task-manifest.json` is the single source of truth for roadmap structure, milestone ordering, dependencies, and file-touch maps.
+- Edit roadmap data **only** in `task-manifest.json`; do not hand-edit milestone/task data directly in GitHub issues or project fields.
+- Task IDs in GitHub must use canonical manifest IDs (for example, `TEN-001`), while `legacy_ids` can be kept in issue body context when migrating from older matrix numbering.
+
+### Syncing GitHub issues and project fields from the manifest
+
+1. For each task in `task-manifest.json`, create or update one GitHub issue with:
+   - issue title from `title`
+   - canonical ID prefix from `id`
+   - dependency checklist from `depends_on`
+   - implementation checklist from `file_map`
+2. Set project fields from task metadata:
+   - `Requires Migration` = `Yes` when `requires_migration` is `true`, otherwise `No`
+   - `Requires E2E` = `Yes` when `requires_e2e` is `true`, otherwise `No`
+   - `Domain` from the task ID prefix (`TEN`, `AUTH`, `VIS`, `BILL`, etc.)
+3. Place each issue in the milestone declared by the manifest and preserve manifest `milestone_order` when sequencing delivery.
+4. If a GitHub issue field conflicts with the manifest, update GitHub to match the manifest in the same change window.
