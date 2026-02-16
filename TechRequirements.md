@@ -365,6 +365,8 @@ Examples:
 
 ## 13) CI/CD and tooling
 
+Reference policy documents: [CI Design](docs/ci-design.md), [Milestone 7 Planning](docs/milestone-7-planning.md), and [Standard PR Checklist](docs/pr-checklist.md).
+
 ### Git hooks
 
 * Husky pre-commit:
