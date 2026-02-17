@@ -28,12 +28,20 @@ This repository now includes baseline engineering and GitHub automation scaffold
    pnpm test
    ```
 
+4. Start the Next.js app locally:
+
+   ```bash
+   pnpm dev
+   ```
+
 ## GitHub setup
 
-After `gh auth login` and setting your default repository, bootstrap labels:
+After `gh auth login` and setting your default repository, bootstrap governance assets:
 
 ```bash
-pnpm bootstrap:labels
+pnpm bootstrap:github
 ```
+
+This syncs labels, milestones, roadmap issues, and project board field metadata.
 
 See `docs/github-workflow.md` and `docs/ci-design.md` for governance details.

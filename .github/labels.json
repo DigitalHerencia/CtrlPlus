@@ -1,0 +1,139 @@
+{
+  "labels": [
+    {
+      "name": "type:feature",
+      "color": "0E8A16",
+      "description": "New product functionality"
+    },
+    {
+      "name": "type:infra",
+      "color": "5319E7",
+      "description": "Infrastructure or platform work"
+    },
+    {
+      "name": "type:refactor",
+      "color": "1D76DB",
+      "description": "Behavior-preserving code improvements"
+    },
+    {
+      "name": "type:security",
+      "color": "B60205",
+      "description": "Security hardening or remediation"
+    },
+    {
+      "name": "type:test",
+      "color": "FBCA04",
+      "description": "Test additions or harness changes"
+    },
+    {
+      "name": "type:docs",
+      "color": "0075CA",
+      "description": "Documentation-only changes"
+    },
+    {
+      "name": "type:bug",
+      "color": "D73A4A",
+      "description": "Defect fix or regression"
+    },
+    {
+      "name": "domain:tenancy",
+      "color": "C2E0C6",
+      "description": "Tenant resolution and data isolation"
+    },
+    {
+      "name": "domain:auth",
+      "color": "C5DEF5",
+      "description": "Authentication and authorization"
+    },
+    {
+      "name": "domain:catalog",
+      "color": "E4E669",
+      "description": "Catalog and wrap inventory"
+    },
+    {
+      "name": "domain:visualizer",
+      "color": "FEF2C0",
+      "description": "Wrap preview and visualizer"
+    },
+    {
+      "name": "domain:scheduling",
+      "color": "D4C5F9",
+      "description": "Booking and slot availability"
+    },
+    {
+      "name": "domain:billing",
+      "color": "F9D0C4",
+      "description": "Payments, invoices, and Stripe"
+    },
+    {
+      "name": "domain:admin",
+      "color": "BFDADC",
+      "description": "Admin console and internal ops"
+    },
+    {
+      "name": "domain:ci",
+      "color": "24292E",
+      "description": "CI/CD and delivery automation"
+    },
+    {
+      "name": "scope:backend",
+      "color": "0366D6",
+      "description": "Server-side changes"
+    },
+    {
+      "name": "scope:frontend",
+      "color": "0052CC",
+      "description": "Client-side UI changes"
+    },
+    {
+      "name": "scope:db",
+      "color": "006B75",
+      "description": "Data model and migrations"
+    },
+    {
+      "name": "scope:rsc",
+      "color": "5319E7",
+      "description": "React Server Components surface"
+    },
+    {
+      "name": "scope:webhook",
+      "color": "B60205",
+      "description": "Webhook endpoints and processors"
+    },
+    {
+      "name": "scope:e2e",
+      "color": "FBCA04",
+      "description": "End-to-end test coverage"
+    },
+    {
+      "name": "scope:security",
+      "color": "D93F0B",
+      "description": "Security boundary hardening"
+    },
+    {
+      "name": "scope:docs",
+      "color": "0E8A16",
+      "description": "Documentation scope"
+    },
+    {
+      "name": "p0",
+      "color": "B60205",
+      "description": "Critical priority"
+    },
+    {
+      "name": "p1",
+      "color": "D93F0B",
+      "description": "High priority"
+    },
+    {
+      "name": "p2",
+      "color": "FBCA04",
+      "description": "Normal priority"
+    },
+    {
+      "name": "status:triage",
+      "color": "D4C5F9",
+      "description": "Awaiting triage"
+    }
+  ]
+}

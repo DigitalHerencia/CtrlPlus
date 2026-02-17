@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Governance Guide
+    url: https://github.com/DigitalHerencia/CtrlPlus/blob/main/docs/github-workflow.md
+    about: Review label taxonomy, board workflow, and bootstrap guidance.

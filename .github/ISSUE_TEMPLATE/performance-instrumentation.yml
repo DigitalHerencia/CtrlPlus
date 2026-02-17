@@ -3,7 +3,7 @@ description: Track platform-level instrumentation and latency regression guardra
 title: "[M8][PERF-001]: "
 labels:
   - type:infra
-  - domain:platform
+  - domain:ci
   - scope:ci
   - p1
 body:

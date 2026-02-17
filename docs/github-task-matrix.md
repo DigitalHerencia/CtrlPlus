@@ -23,6 +23,7 @@ This planning matrix is the canonical decomposition for milestones, project-boar
 - `type:security`
 - `type:test`
 - `type:docs`
+- `type:bug`
 
 ### Domain
 
@@ -43,6 +44,8 @@ This planning matrix is the canonical decomposition for milestones, project-boar
 - `scope:rsc`
 - `scope:webhook`
 - `scope:e2e`
+- `scope:security`
+- `scope:docs`
 
 ### Priority
 
