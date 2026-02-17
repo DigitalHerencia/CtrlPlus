@@ -111,6 +111,11 @@
       "description": "Security boundary hardening"
     },
     {
+      "name": "scope:ci",
+      "color": "24292E",
+      "description": "CI workflow and automation scope"
+    },
+    {
       "name": "scope:docs",
       "color": "0E8A16",
       "description": "Documentation scope"

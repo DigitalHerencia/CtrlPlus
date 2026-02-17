@@ -73,7 +73,7 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test
+      - run: pnpm test tests/unit
 
   test-integration:
     runs-on: ubuntu-latest
@@ -87,7 +87,7 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test
+      - run: pnpm test --passWithNoTests tests/integration
 
   test-e2e:
     runs-on: ubuntu-latest

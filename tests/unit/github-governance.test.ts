@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import labels from '../../.github/labels.json';
-import manifest from '../../task-manifest.json';
+import manifest from '../../.github/task-manifest.json';
 import project from '../../.github/project-v2.json';
 
 describe('github governance assets', () => {

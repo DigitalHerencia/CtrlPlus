@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const cliFlags = new Set(process.argv.slice(2));
 if (cliFlags.has('--help')) {
@@ -29,7 +29,8 @@ const verbose = cliFlags.has('--verbose');
 const shouldRun = (step) => runAllSteps || selectedSteps.has(step);
 
 const labelsConfig = readJson('.github/labels.json');
-const manifest = readJson('task-manifest.json');
+const manifestPath = resolveManifestPath();
+const manifest = readJson(manifestPath);
 const projectConfig = readJson('.github/project-v2.json');
 const tasks = collectTasks(manifest);
 
@@ -52,7 +53,7 @@ for (const task of tasks) {
 
 if (unknownTaskLabels.size > 0) {
   throw new Error(
-    `task-manifest.json references labels missing from .github/labels.json: ${Array.from(
+    `${manifestPath} references labels missing from .github/labels.json: ${Array.from(
       unknownTaskLabels
     ).join(', ')}`
   );
@@ -92,6 +93,19 @@ function printUsage() {
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
+}
+
+function resolveManifestPath() {
+  const candidates = ['.github/task-manifest.json', 'task-manifest.json'];
+  const resolved = candidates.find((candidate) => existsSync(candidate));
+
+  if (!resolved) {
+    throw new Error(
+      `Unable to locate task manifest. Expected one of: ${candidates.join(', ')}`
+    );
+  }
+
+  return resolved;
 }
 
 function runGh(args, input) {

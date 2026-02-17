@@ -1,6 +1,6 @@
 # TECHREQ.md
 
-## 1) Stack 
+## 1 Stack
 
 * Next.js App Router + React Server Components (RSC)
 * TypeScript
@@ -18,7 +18,7 @@
 * CI/CD: GitHub Actions + Vercel deployments
 * Tooling: ESLint + Prettier + Husky pre-commit
 
-## 2) Architecture rules (hard constraints)
+## 2 Architecture rules (hard constraints)
 
 ### 2.1 App Router boundaries
 
@@ -53,7 +53,7 @@
   * UI components (shadcn-based)
   * Integrations (Stripe, image pipeline) behind interfaces
 
-## 3) Multi-tenancy (official next/vercel demo pattern alignment)
+## 3 Multi-tenancy (official next/vercel demo pattern alignment)
 
 ### 3.1 Tenancy model
 
@@ -77,7 +77,7 @@
   * `scopeToTenant(tenantId)` helper patterns
 * Optional: Postgres RLS later; not required v1 but leave path open.
 
-## 4) AuthN/AuthZ (Clerk + custom RBAC, no orgs)
+## 4 AuthN/AuthZ (Clerk + custom RBAC, no orgs)
 
 ### 4.1 Identity
 
@@ -113,7 +113,7 @@
 * Use Clerk server helpers in server-only modules.
 * Any `tenantId` from client is ignored; derived from host resolution.
 
-## 5) Data model (Prisma schema outline)
+## 5 Data model (Prisma schema outline)
 
 **Core tables**
 
@@ -147,7 +147,7 @@
 * `PaymentEvent` { id, tenantId, stripeEventId, type, processedAt } (idempotency)
 * `AuditEvent` { id, tenantId, actorUserId?, type, payloadJson, createdAt }
 
-## 6) Visualizer implementation (practical v1)
+## 6 Visualizer implementation (practical v1)
 
 ### 6.1 Recommended approach
 
@@ -190,7 +190,7 @@
 * Virus scanning optional (future) but use basic validation now.
 * Never expose private blob URLs; serve via signed URLs if needed.
 
-## 7) Scheduling rules engine (v1)
+## 7 Scheduling rules engine (v1)
 
 * Inputs:
 
@@ -205,7 +205,7 @@
   * `lib/fetchers` reads rules/blackouts/bookings.
   * `lib/actions` creates booking with optimistic concurrency checks.
 
-## 8) Stripe integration
+## 8 Stripe integration
 
 ### 8.1 Checkout (v1 recommended)
 
@@ -224,7 +224,7 @@
   * Prefer using metadata on Checkout Session: `tenantId`, `invoiceId`.
   * Still validate that invoice belongs to tenant.
 
-## 9) Fetchers/actions contracts
+## 9 Fetchers/actions contracts
 
 ### 9.1 Read-only fetchers (server-only)
 
@@ -260,7 +260,7 @@ Examples:
 * `createStripeCheckoutSessionAction(input)`
 * `handleStripeWebhookAction(event)`
 
-## 10) Repo structure (recommended)
+## 10 Repo structure (recommended)
 
 ```
 .
@@ -317,7 +317,7 @@ Examples:
 └─ README.md
 ```
 
-## 11) Testing strategy (required)
+## 11 Testing strategy (required)
 
 * **Unit (Vitest)**:
 
@@ -341,7 +341,7 @@ Examples:
   * seed scripts for test tenants/wraps
   * time fixed via fake timers for scheduling tests
 
-## 12) Performance & security requirements
+## 12 Performance & security requirements
 
 ### Performance
 
@@ -363,7 +363,7 @@ Examples:
 * Input validation everywhere (Zod).
 * File upload validation and sanitization.
 
-## 13) CI/CD and tooling
+## 13 CI/CD and tooling
 
 Reference policy documents: [CI Design](docs/ci-design.md), [Milestone 7 Planning](docs/milestone-7-planning.md), and [Standard PR Checklist](docs/pr-checklist.md).
 
@@ -404,7 +404,7 @@ Reference policy documents: [CI Design](docs/ci-design.md), [Milestone 7 Plannin
 * `next.config.ts` hardened (images domains, headers)
 * `middleware.ts` for subdomain parsing
 
-## 14) Acceptance criteria checklist (must-pass)
+## 14 Acceptance criteria checklist (must-pass)
 
 * Tenant isolation verified: cross-tenant reads/writes fail.
 * Clerk auth works with universal components + user menu.
