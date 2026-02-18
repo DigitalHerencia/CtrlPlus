@@ -8,15 +8,16 @@ datasource db {
 }
 
 model Tenant {
-  id          String       @id @default(cuid())
-  slug        String       @unique
-  name        String
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  users       User[]
-  wrapDesigns WrapDesign[]
-  bookings    Booking[]
-  invoices    Invoice[]
+  id            String         @id @default(cuid())
+  slug          String         @unique
+  name          String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  users         User[]
+  wrapDesigns   WrapDesign[]
+  bookings      Booking[]
+  invoices      Invoice[]
+  paymentEvents PaymentEvent[]
 }
 
 model User {
@@ -76,4 +77,16 @@ model Invoice {
 
   @@index([tenantId])
   @@index([tenantId, bookingId])
+}
+
+model PaymentEvent {
+  id            String   @id @default(cuid())
+  tenantId      String
+  stripeEventId String   @unique
+  eventType     String
+  processedAt   DateTime @default(now())
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, eventType])
 }
