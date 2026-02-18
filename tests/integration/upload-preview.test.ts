@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { createUploadPreviewAction } from '../../lib/server/actions/create-upload-preview';
+import { RateLimitError } from '../../lib/server/rate-limit/fixed-window-limiter';
+import { uploadRateLimiter } from '../../lib/server/rate-limit/upload-rate-limit';
 import { UploadValidationError, uploadStore } from '../../lib/server/storage/upload-store';
 
 const ownerHeaders = {
@@ -9,13 +11,18 @@ const ownerHeaders = {
   'x-user-role': 'owner'
 } as const;
 
-function encodeString(value: string): Uint8Array {
-  return new TextEncoder().encode(value);
+function encodePngMock(): Uint8Array {
+  return Uint8Array.from([
+    137, 80, 78, 71, 13, 10, 26, 10,
+    73, 72, 68, 82,
+    0, 0, 0, 1
+  ]);
 }
 
 describe('upload preview pipeline', () => {
   beforeEach(() => {
     uploadStore.reset();
+    uploadRateLimiter.reset();
   });
 
   it('stores uploads and returns a generated preview payload', () => {
@@ -24,7 +31,7 @@ describe('upload preview pipeline', () => {
       tenantId: 'tenant_acme',
       fileName: 'mock-wrap.png',
       mimeType: 'image/png',
-      bytes: encodeString('png-bytes'),
+      bytes: encodePngMock(),
       wrapName: 'Acme Upload Preview',
       vehicleName: 'Transit Van'
     });
@@ -36,18 +43,57 @@ describe('upload preview pipeline', () => {
     expect(uploadStore.get(result.uploadId)?.checksum.length).toBe(64);
   });
 
-  it('rejects unsupported mime types', () => {
+  it('rejects unsupported mime types and unsafe file names', () => {
     expect(() =>
       createUploadPreviewAction({
         headers: ownerHeaders,
         tenantId: 'tenant_acme',
         fileName: 'mock-wrap.svg',
         mimeType: 'image/svg+xml',
-        bytes: encodeString('<svg />'),
+        bytes: Uint8Array.from([60, 115, 118, 103]),
+        wrapName: 'Invalid Upload',
+        vehicleName: 'Van'
+      })
+    ).toThrowError(UploadValidationError);
+
+    expect(() =>
+      createUploadPreviewAction({
+        headers: ownerHeaders,
+        tenantId: 'tenant_acme',
+        fileName: '../escape.png',
+        mimeType: 'image/png',
+        bytes: encodePngMock(),
         wrapName: 'Invalid Upload',
         vehicleName: 'Van'
       })
     ).toThrowError(UploadValidationError);
   });
-});
 
+  it('enforces tenant-scoped rate limiting for upload previews', () => {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const result = createUploadPreviewAction({
+        headers: ownerHeaders,
+        tenantId: 'tenant_acme',
+        fileName: `mock-${attempt}.png`,
+        mimeType: 'image/png',
+        bytes: encodePngMock(),
+        wrapName: 'Rate Limited Upload',
+        vehicleName: 'Van'
+      });
+
+      expect(result.uploadId).toBe(`upload_${attempt + 1}`);
+    }
+
+    expect(() =>
+      createUploadPreviewAction({
+        headers: ownerHeaders,
+        tenantId: 'tenant_acme',
+        fileName: 'mock-6.png',
+        mimeType: 'image/png',
+        bytes: encodePngMock(),
+        wrapName: 'Rate Limited Upload',
+        vehicleName: 'Van'
+      })
+    ).toThrowError(RateLimitError);
+  });
+});
