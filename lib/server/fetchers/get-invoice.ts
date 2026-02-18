@@ -59,6 +59,10 @@ export class InvoiceStore {
     return invoice;
   }
 
+  listByTenant(tenantId: string): readonly InvoiceRecord[] {
+    return Array.from(this.invoices.values()).filter((invoice) => invoice.tenantId === tenantId);
+  }
+
   markCheckoutSession(tenantId: string, invoiceId: string, checkoutSessionId: string): InvoiceRecord {
     const invoice = this.findByTenant(tenantId, invoiceId);
     if (!invoice) {
@@ -119,3 +123,4 @@ export function getInvoice(input: GetInvoiceInput): InvoiceRecord {
 
   return invoice;
 }
+
