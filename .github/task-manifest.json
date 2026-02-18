@@ -61,7 +61,7 @@
           "depends_on": [],
           "file_map": {
             "app": [
-              "middleware.ts"
+              "proxy.ts"
             ],
             "domain": [
               "lib/server/tenancy/resolve-tenant.ts",
@@ -134,8 +134,8 @@
           ],
           "file_map": {
             "app": [
-              "app/(auth)/[[...sign-in]]/page.tsx",
-              "app/(auth)/[[...sign-up]]/page.tsx"
+              "app/(auth)/sign-in/[[...sign-in]]/page.tsx",
+              "app/(auth)/sign-up/[[...sign-up]]/page.tsx"
             ],
             "components": [
               "components/auth/user-menu.tsx"
@@ -642,7 +642,7 @@
           "depends_on": [],
           "file_map": {
             "app": [
-              "middleware.ts",
+              "proxy.ts",
               "next.config.js"
             ]
           },

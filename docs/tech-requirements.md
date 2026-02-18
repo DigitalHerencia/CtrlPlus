@@ -1,4 +1,4 @@
-# TECHREQ.md
+# Tech Requirements
 
 ## 1 Stack
 
@@ -266,8 +266,8 @@ Examples:
 .
 ├─ app/
 │  ├─ (public)/
-│  ├─ (auth)/[[...sign-in]]/page.tsx
-│  ├─ (auth)/[[...sign-up]]/page.tsx
+│  ├─ (auth)/sign-in/[[...sign-in]]/page.tsx
+│  ├─ (auth)/sign-up/[[...sign-up]]/page.tsx
 │  ├─ (tenant)/
 │  │  ├─ layout.tsx
 │  │  ├─ page.tsx
@@ -278,7 +278,7 @@ Examples:
 │  │  └─ admin/
 │  ├─ api/
 │  │  └─ stripe/webhook/route.ts
-│  └─ middleware.ts (or root middleware.ts)
+│  └─ proxy.ts (or root proxy.ts)
 ├─ features/
 │  ├─ catalog/
 │  ├─ visualizer/
@@ -313,7 +313,9 @@ Examples:
 ├─ prettier.config.cjs
 ├─ vitest.config.ts
 ├─ playwright.config.ts
-├─ AGENTS.md
+├─ .codex/
+│  ├─ AGENTS.md
+│  └─ PLANS.md
 └─ README.md
 ```
 
@@ -365,7 +367,7 @@ Examples:
 
 ## 13 CI/CD and tooling
 
-Reference policy documents: [CI Design](docs/ci-design.md), [Milestone 7 Planning](docs/milestone-7-planning.md), and [Standard PR Checklist](docs/pr-checklist.md).
+Reference policy documents: [CI Design](./ci-design.md), [Milestone 7 Planning](./milestone-7-planning.md), and [Standard PR Checklist](./pr-checklist.md).
 
 ### Git hooks
 
@@ -402,7 +404,7 @@ Reference policy documents: [CI Design](docs/ci-design.md), [Milestone 7 Plannin
 * `.npmrc` (consistent install)
 * `.env.example` with required secrets list
 * `next.config.ts` hardened (images domains, headers)
-* `middleware.ts` for subdomain parsing
+* `proxy.ts` for subdomain parsing
 
 ## 14 Acceptance criteria checklist (must-pass)
 

@@ -40,7 +40,7 @@ Run `test-e2e` for PRs that modify files in any of these paths (or their descend
 - `features/authz/**`
 - `lib/server/actions/authz/**`
 - `lib/server/fetchers/authz/**`
-- `app/middleware.ts`
+- `proxy.ts`
 
 Additionally, run `test-e2e` when shared runtime dependencies change:
 

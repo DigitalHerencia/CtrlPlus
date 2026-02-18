@@ -61,7 +61,7 @@ Before enabling project board automations or issue/PR templates that reference l
 
 Canonical sources:
 
-- `task-manifest.json` (milestones + roadmap tasks)
+- `.github/task-manifest.json` (milestones + roadmap tasks)
 - `.github/project-v2.json` (project metadata + custom field definitions)
 - `.github/labels.json` (label taxonomy and descriptions)
 
@@ -98,5 +98,5 @@ pnpm bootstrap:labels
 
 ## Roadmap governance
 
-- `task-manifest.json` is the source of truth for roadmap structure, milestone ordering, dependencies, and file-touch maps.
-- Update milestone/task definitions in `task-manifest.json` first, then sync GitHub issues/projects.
+- `.github/task-manifest.json` is the source of truth for roadmap structure, milestone ordering, dependencies, and file-touch maps.
+- Update milestone/task definitions in `.github/task-manifest.json` first, then sync GitHub issues/projects.

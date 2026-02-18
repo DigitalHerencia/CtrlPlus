@@ -1,4 +1,4 @@
-# PRD.md
+# Product Requirements Document (PRD)
 
 ## Product name
 

@@ -67,7 +67,7 @@ This repo is a **subdomain-based multi-tenant** Next.js App Router application f
 
 ## ExecPlans
 
-When writing complex features or significant refactors, use an ExecPlan (as described in .agent/PLANS.md) from design to implementation.
+When writing complex features or significant refactors, use an ExecPlan (as described in .codex/PLANS.md) from design to implementation.
 
 ## How to implement changes (agent workflow)
 
