@@ -90,7 +90,7 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm test --passWithNoTests tests/integration
+      - run: pnpm exec vitest run --passWithNoTests tests/integration
 
   test-e2e:
     runs-on: ubuntu-latest
