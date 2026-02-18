@@ -16,6 +16,7 @@ model Tenant {
   users       User[]
   wrapDesigns WrapDesign[]
   bookings    Booking[]
+  invoices    Invoice[]
 }
 
 model User {
@@ -60,3 +61,19 @@ model Booking {
   @@index([tenantId, startsAt, endsAt])
 }
 
+model Invoice {
+  id                      String   @id @default(cuid())
+  tenantId                String
+  bookingId               String?
+  customerEmail           String
+  amountCents             Int
+  status                  String   @default("draft")
+  stripeCheckoutSessionId String?
+  stripePaymentIntentId   String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  tenant                  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, bookingId])
+}
