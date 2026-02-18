@@ -58,6 +58,44 @@ export class InvoiceStore {
 
     return invoice;
   }
+
+  markCheckoutSession(tenantId: string, invoiceId: string, checkoutSessionId: string): InvoiceRecord {
+    const invoice = this.findByTenant(tenantId, invoiceId);
+    if (!invoice) {
+      throw new InvoiceNotFoundError('Invoice not found');
+    }
+
+    const updated: InvoiceRecord = {
+      ...invoice,
+      stripeCheckoutSessionId: checkoutSessionId,
+      status: 'open'
+    };
+
+    this.invoices.set(invoiceId, updated);
+    return updated;
+  }
+
+  markPaid(
+    tenantId: string,
+    invoiceId: string,
+    checkoutSessionId: string,
+    paymentIntentId: string
+  ): InvoiceRecord {
+    const invoice = this.findByTenant(tenantId, invoiceId);
+    if (!invoice) {
+      throw new InvoiceNotFoundError('Invoice not found');
+    }
+
+    const updated: InvoiceRecord = {
+      ...invoice,
+      stripeCheckoutSessionId: checkoutSessionId,
+      stripePaymentIntentId: paymentIntentId,
+      status: 'paid'
+    };
+
+    this.invoices.set(invoiceId, updated);
+    return updated;
+  }
 }
 
 export interface GetInvoiceInput {
