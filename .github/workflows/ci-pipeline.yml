@@ -1,0 +1,72 @@
+name: CI Pipeline
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ci-main-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: ${{ matrix.task }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        task:
+          - lint
+          - typecheck
+          - test-unit
+          - test-integration
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Run ${{ matrix.task }}
+        run: |
+          case "${{ matrix.task }}" in
+            lint)
+              pnpm lint
+              ;;
+            typecheck)
+              pnpm typecheck
+              ;;
+            test-unit)
+              pnpm test tests/unit
+              ;;
+            test-integration)
+              pnpm exec vitest run --passWithNoTests tests/integration
+              ;;
+            *)
+              echo "Unknown task: ${{ matrix.task }}"
+              exit 1
+              ;;
+          esac
+
+  test-e2e:
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:e2e
