@@ -35,10 +35,13 @@ model WrapDesign {
   tenantId    String
   name        String
   description String?
+  priceCents  Int      @default(0)
+  isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  @@unique([tenantId, name])
   @@index([tenantId])
 }
 
