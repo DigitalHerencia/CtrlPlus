@@ -9,7 +9,8 @@ import { __internal, POST } from '../../app/api/stripe/webhook/route';
 const ownerHeaders = {
   host: 'acme.localhost:3000',
   'x-clerk-user-id': 'user_owner',
-  'x-clerk-user-email': 'owner@example.com'
+  'x-clerk-user-email': 'owner@example.com',
+  'x-clerk-org-id': 'org_acme'
 } as const;
 
 const webhookSecret = 'stripe_test_secret';
@@ -27,14 +28,14 @@ describe('stripe checkout + webhook integration', () => {
   });
 
   it('creates a checkout session and marks invoice paid from webhook', async () => {
-    const invoice = createInvoice({
+    const invoice = await createInvoice({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       customerEmail: 'customer@example.com',
       amountCents: 275000
     });
 
-    const checkout = createCheckoutSession({
+    const checkout = await createCheckoutSession({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       invoiceId: invoice.id,
@@ -42,7 +43,7 @@ describe('stripe checkout + webhook integration', () => {
       cancelUrl: 'https://acme.example.com/cancel'
     });
 
-    const openInvoice = getInvoice({
+    const openInvoice = await getInvoice({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       invoiceId: invoice.id
@@ -80,7 +81,7 @@ describe('stripe checkout + webhook integration', () => {
 
     expect(response.status).toBe(200);
 
-    const paidInvoice = getInvoice({
+    const paidInvoice = await getInvoice({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       invoiceId: invoice.id
@@ -91,7 +92,7 @@ describe('stripe checkout + webhook integration', () => {
   });
 
   it('handles duplicate webhook events idempotently', async () => {
-    const invoice = createInvoice({
+    const invoice = await createInvoice({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       customerEmail: 'customer@example.com',

@@ -24,16 +24,17 @@ function isValidEmail(value: string): boolean {
   return /.+@.+\..+/.test(value);
 }
 
-export function createInvoice(input: CreateInvoiceInput): InvoiceRecord {
+export async function createInvoice(input: CreateInvoiceInput): Promise<InvoiceRecord> {
   const tenantContext = requireTenant({
     headers: input.headers,
     routeTenantId: input.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
 
-  requirePermission({
+  await requirePermission({
     headers: input.headers,
     tenantId,
+    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'billing:write'
   });
 

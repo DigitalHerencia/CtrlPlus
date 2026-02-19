@@ -7,7 +7,8 @@ import { getAvailability } from '../../lib/server/fetchers/get-availability';
 const ownerHeaders = {
   host: 'acme.localhost:3000',
   'x-clerk-user-id': 'user_owner',
-  'x-clerk-user-email': 'owner@example.com'
+  'x-clerk-user-email': 'owner@example.com',
+  'x-clerk-org-id': 'org_acme'
 } as const;
 
 const dayWindow = {
@@ -21,7 +22,7 @@ describe('booking action + availability fetcher', () => {
     bookingStore.reset();
   });
 
-  it('creates a booking and removes the slot from availability', () => {
+  it('creates a booking and removes the slot from availability', async () => {
     const initialSlots = getAvailability({
       tenantId: 'tenant_acme',
       ...dayWindow
@@ -29,7 +30,7 @@ describe('booking action + availability fetcher', () => {
 
     expect(initialSlots).toHaveLength(4);
 
-    const booking = createBooking({
+    const booking = await createBooking({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       startsAtIso: '2026-02-18T08:00:00.000Z',
@@ -49,8 +50,8 @@ describe('booking action + availability fetcher', () => {
     expect(updatedSlots[0]?.startIso).toBe('2026-02-18T08:30:00.000Z');
   });
 
-  it('rejects overlapping booking attempts', () => {
-    createBooking({
+  it('rejects overlapping booking attempts', async () => {
+    await createBooking({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       startsAtIso: '2026-02-18T08:30:00.000Z',
@@ -59,7 +60,7 @@ describe('booking action + availability fetcher', () => {
       ...dayWindow
     });
 
-    expect(() =>
+    await expect(
       createBooking({
         headers: ownerHeaders,
         tenantId: 'tenant_acme',
@@ -68,11 +69,11 @@ describe('booking action + availability fetcher', () => {
         customerName: 'Second Booking',
         ...dayWindow
       })
-    ).toThrowError(BookingValidationError);
+    ).rejects.toThrowError(BookingValidationError);
   });
 
-  it('keeps availability tenant-scoped', () => {
-    createBooking({
+  it('keeps availability tenant-scoped', async () => {
+    await createBooking({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       startsAtIso: '2026-02-18T09:00:00.000Z',

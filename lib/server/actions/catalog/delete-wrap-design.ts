@@ -8,19 +8,19 @@ export interface DeleteWrapDesignActionInput {
   readonly id: string;
 }
 
-export function deleteWrapDesign(input: DeleteWrapDesignActionInput): boolean {
+export async function deleteWrapDesign(input: DeleteWrapDesignActionInput): Promise<boolean> {
   const tenantContext = requireTenant({
     headers: input.headers,
     routeTenantId: input.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
 
-  requirePermission({
+  await requirePermission({
     headers: input.headers,
     tenantId,
+    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'catalog:write'
   });
 
   return catalogStore.delete(tenantId, input.id);
 }
-

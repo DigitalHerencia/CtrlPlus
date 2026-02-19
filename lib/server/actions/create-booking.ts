@@ -24,16 +24,17 @@ export interface CreateBookingActionInput {
   readonly slotMinutes: number;
 }
 
-export function createBooking(input: CreateBookingActionInput): BookingRecord {
+export async function createBooking(input: CreateBookingActionInput): Promise<BookingRecord> {
   const tenantContext = requireTenant({
     headers: input.headers,
     routeTenantId: input.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
 
-  requirePermission({
+  await requirePermission({
     headers: input.headers,
     tenantId,
+    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'schedule:write'
   });
 
@@ -59,4 +60,3 @@ export function createBooking(input: CreateBookingActionInput): BookingRecord {
     customerName: input.customerName
   });
 }
-

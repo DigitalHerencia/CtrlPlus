@@ -14,7 +14,8 @@ import { catalogStore } from '../../lib/server/fetchers/catalog/store';
 const ownerHeaders = {
   host: 'acme.localhost:3000',
   'x-clerk-user-id': 'user_owner',
-  'x-clerk-user-email': 'owner@example.com'
+  'x-clerk-user-email': 'owner@example.com',
+  'x-clerk-org-id': 'org_acme'
 } as const;
 
 describe('catalog public rsc surface', () => {
@@ -23,7 +24,7 @@ describe('catalog public rsc surface', () => {
   });
 
   it('returns only published wraps from cached public fetchers', async () => {
-    const draftWrap = createWrapDesign({
+    const draftWrap = await createWrapDesign({
       headers: ownerHeaders,
       payload: {
         tenantId: 'tenant_acme',
@@ -31,7 +32,7 @@ describe('catalog public rsc surface', () => {
       }
     });
 
-    const publishedWrap = createWrapDesign({
+    const publishedWrap = await createWrapDesign({
       headers: ownerHeaders,
       payload: {
         tenantId: 'tenant_acme',
@@ -39,7 +40,7 @@ describe('catalog public rsc surface', () => {
       }
     });
 
-    updateWrapDesign({
+    await updateWrapDesign({
       headers: ownerHeaders,
       payload: {
         tenantId: 'tenant_acme',
@@ -59,7 +60,7 @@ describe('catalog public rsc surface', () => {
   });
 
   it('keeps public server fetches under the p95 threshold', async () => {
-    const publishedWrap = createWrapDesign({
+    const publishedWrap = await createWrapDesign({
       headers: ownerHeaders,
       payload: {
         tenantId: 'tenant_acme',
@@ -67,7 +68,7 @@ describe('catalog public rsc surface', () => {
       }
     });
 
-    updateWrapDesign({
+    await updateWrapDesign({
       headers: ownerHeaders,
       payload: {
         tenantId: 'tenant_acme',
