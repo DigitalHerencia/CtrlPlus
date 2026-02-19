@@ -24,8 +24,8 @@
     },
     "fetcher_action_boundaries": {
       "prisma_in_app_forbidden": true,
-      "reads_must_use": "lib/server/fetchers/**",
-      "writes_must_use": "lib/server/actions/**",
+      "reads_must_use": "lib/fetchers/**",
+      "writes_must_use": "lib/actions/**",
       "fetchers_read_only": true,
       "actions_write_only": true,
       "action_validation_required": "zod"
@@ -65,8 +65,8 @@
               "proxy.ts"
             ],
             "domain": [
-              "lib/server/tenancy/resolve-tenant.ts",
-              "lib/server/tenancy/require-tenant.ts"
+              "lib/tenancy/resolve-tenant.ts",
+              "lib/tenancy/require-tenant.ts"
             ],
             "tests": [
               "tests/integration/tenancy.test.ts"
@@ -103,7 +103,7 @@
               "prisma/migrations/**"
             ],
             "infra": [
-              "lib/server/db/prisma.ts"
+              "lib/db/prisma.ts"
             ]
           },
           "acceptance_criteria": [
@@ -142,7 +142,7 @@
               "components/auth/user-menu.tsx"
             ],
             "domain": [
-              "lib/server/auth/require-auth.ts"
+              "lib/auth/require-auth.ts"
             ],
             "tests": [
               "tests/integration/auth.test.ts"
@@ -172,7 +172,7 @@
           "file_map": {
             "domain": [
               "features/authz/permissions.ts",
-              "lib/server/auth/require-permission.ts"
+              "lib/auth/require-permission.ts"
             ],
             "tests": [
               "tests/unit/rbac.test.ts"
@@ -214,10 +214,10 @@
               "features/catalog/types.ts"
             ],
             "fetchers": [
-              "lib/server/fetchers/catalog/**"
+              "lib/fetchers/catalog/**"
             ],
             "actions": [
-              "lib/server/actions/catalog/**"
+              "lib/actions/catalog/**"
             ],
             "tests": [
               "tests/integration/catalog.test.ts"
@@ -291,7 +291,7 @@
               "features/visualizer/template-preview.ts"
             ],
             "actions": [
-              "lib/server/actions/create-template-preview.ts"
+              "lib/actions/create-template-preview.ts"
             ],
             "tests": [
               "tests/unit/template-preview.test.ts"
@@ -321,13 +321,13 @@
           ],
           "file_map": {
             "actions": [
-              "lib/server/actions/create-upload-preview.ts"
+              "lib/actions/create-upload-preview.ts"
             ],
             "domain": [
               "features/visualizer/upload-preview.ts"
             ],
             "infra": [
-              "lib/server/storage/**"
+              "lib/storage/**"
             ],
             "tests": [
               "tests/integration/upload-preview.test.ts"
@@ -389,10 +389,10 @@
           ],
           "file_map": {
             "actions": [
-              "lib/server/actions/create-booking.ts"
+              "lib/actions/create-booking.ts"
             ],
             "fetchers": [
-              "lib/server/fetchers/get-availability.ts"
+              "lib/fetchers/get-availability.ts"
             ],
             "tests": [
               "tests/integration/booking.test.ts"
@@ -430,10 +430,10 @@
               "prisma/schema.prisma"
             ],
             "actions": [
-              "lib/server/actions/create-invoice.ts"
+              "lib/actions/create-invoice.ts"
             ],
             "fetchers": [
-              "lib/server/fetchers/get-invoice.ts"
+              "lib/fetchers/get-invoice.ts"
             ],
             "tests": [
               "tests/integration/invoice.test.ts"
@@ -462,7 +462,7 @@
           ],
           "file_map": {
             "actions": [
-              "lib/server/actions/create-checkout-session.ts"
+              "lib/actions/create-checkout-session.ts"
             ],
             "app": [
               "app/api/stripe/webhook/route.ts"
@@ -618,8 +618,8 @@
           ],
           "file_map": {
             "infra": [
-              "lib/server/rate-limit/**",
-              "lib/server/storage/**"
+              "lib/rate-limit/**",
+              "lib/storage/**"
             ]
           },
           "requires_migration": false,
@@ -670,8 +670,7 @@
             "domain:catalog",
             "scope:backend",
             "scope:db",
-            "p0",
-            "status:triage"
+            "p0"
           ],
           "depends_on": [
             "TEN-002",
@@ -681,11 +680,11 @@
           ],
           "file_map": {
             "infra": [
-              "lib/server/fetchers/catalog/store.ts",
-              "lib/server/fetchers/booking-store.ts",
-              "lib/server/fetchers/get-invoice.ts",
-              "lib/server/storage/upload-store.ts",
-              "lib/server/db/prisma.ts"
+              "lib/fetchers/catalog/store.ts",
+              "lib/fetchers/booking-store.ts",
+              "lib/fetchers/get-invoice.ts",
+              "lib/storage/upload-store.ts",
+              "lib/db/prisma.ts"
             ],
             "tests": [
               "tests/integration/**"
@@ -714,8 +713,7 @@
             "type:infra",
             "domain:tenancy",
             "scope:db",
-            "p0",
-            "status:triage"
+            "p0"
           ],
           "depends_on": [
             "TEN-002"
@@ -752,8 +750,7 @@
             "domain:auth",
             "scope:backend",
             "scope:security",
-            "p0",
-            "status:triage"
+            "p0"
           ],
           "depends_on": [
             "AUTH-001",
@@ -761,9 +758,9 @@
           ],
           "file_map": {
             "domain": [
-              "lib/server/auth/resolve-tenant-role.ts",
-              "lib/server/auth/require-permission.ts",
-              "lib/server/auth/require-auth.ts"
+              "lib/auth/resolve-tenant-role.ts",
+              "lib/auth/require-permission.ts",
+              "lib/auth/require-auth.ts"
             ],
             "tests": [
               "tests/integration/auth.test.ts",
@@ -794,8 +791,7 @@
             "domain:auth",
             "scope:frontend",
             "scope:e2e",
-            "p0",
-            "status:triage"
+            "p0"
           ],
           "depends_on": [
             "AUTH-001"
@@ -830,8 +826,7 @@
             "type:infra",
             "domain:ci",
             "scope:ci",
-            "p1",
-            "status:triage"
+            "p1"
           ],
           "depends_on": [
             "CI-002"
@@ -839,11 +834,12 @@
           "file_map": {
             "ci": [
               ".github/workflows/pr-quality-gates.yml",
-              "docs/ci-design.md"
+              "docs/ci-design.md",
+              "tests/unit/github-governance.test.ts"
             ]
           },
           "acceptance_criteria": [
-            "Conditional e2e triggers include currently used auth, billing, visualizer, scheduling, and shared runtime paths.",
+            "Conditional e2e triggers include currently used auth, wraps, visualizer, scheduling, persistence, and shared runtime paths.",
             "Workflow rules in docs and YAML are synchronized.",
             "A governance test asserts expected critical-path trigger globs."
           ],
@@ -864,15 +860,14 @@
             "domain:ci",
             "scope:backend",
             "scope:security",
-            "p1",
-            "status:triage"
+            "p1"
           ],
           "depends_on": [
             "DEMO-001"
           ],
           "file_map": {
             "domain": [
-              "lib/server/actions/**"
+              "lib/actions/**"
             ],
             "tests": [
               "tests/integration/**"
@@ -899,15 +894,14 @@
             "type:infra",
             "domain:ci",
             "scope:backend",
-            "p2",
-            "status:triage"
+            "p2"
           ],
           "depends_on": [
             "DEMO-001"
           ],
           "file_map": {
             "infra": [
-              "lib/server/**",
+              "lib/**",
               "app/api/**"
             ],
             "docs": [
@@ -935,8 +929,7 @@
             "type:docs",
             "domain:ci",
             "scope:docs",
-            "p2",
-            "status:triage"
+            "p2"
           ],
           "depends_on": [
             "DEMO-002",
@@ -946,6 +939,7 @@
             "docs": [
               "README.md",
               "docs/**",
+              "docs/runbooks/deployment.md",
               ".env.example"
             ]
           },

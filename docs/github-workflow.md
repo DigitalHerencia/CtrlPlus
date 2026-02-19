@@ -36,6 +36,7 @@ Use labels from each category below when creating or triaging issues and pull re
 - `scope:webhook`
 - `scope:e2e`
 - `scope:security`
+- `scope:ci`
 - `scope:docs`
 
 ### 4) Priority labels

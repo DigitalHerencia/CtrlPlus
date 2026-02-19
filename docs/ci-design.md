@@ -23,29 +23,31 @@ These gates are non-optional and must stay aligned with the [Standard PR Checkli
 
 Run `test-e2e` for PRs that modify files in any of these paths (or their descendants):
 
-- `app/(tenant)/schedule/**`
-- `features/scheduling/**`
-- `lib/actions/create-booking.ts`
-- `lib/fetchers/get-availability.ts`
-- `lib/fetchers/booking-store.ts`
-- `app/(tenant)/checkout/**`
+- `app/(auth)/**`
+- `app/(tenant)/wraps/**`
 - `app/api/stripe/**`
-- `features/billing/**`
-- `lib/actions/create-invoice.ts`
-- `lib/actions/create-checkout-session.ts`
-- `lib/fetchers/get-invoice.ts`
-- `app/(tenant)/visualizer/**`
+- `features/authz/**`
+- `features/catalog/**`
+- `features/scheduling/**`
 - `features/visualizer/**`
+- `lib/actions/catalog/**`
+- `lib/actions/create-booking.ts`
+- `lib/actions/create-checkout-session.ts`
+- `lib/actions/create-invoice.ts`
 - `lib/actions/create-template-preview.ts`
 - `lib/actions/create-upload-preview.ts`
-- `lib/storage/upload-store.ts`
+- `lib/auth/**`
+- `lib/fetchers/booking-store.ts`
+- `lib/fetchers/catalog/**`
+- `lib/fetchers/get-availability.ts`
+- `lib/fetchers/get-invoice.ts`
 - `lib/rate-limit/fixed-window-limiter.ts`
 - `lib/rate-limit/upload-rate-limit.ts`
-- `app/(auth)/**`
-- `features/authz/**`
-- `lib/auth/**`
+- `lib/storage/upload-store.ts`
 - `lib/tenancy/**`
+- `prisma/**`
 - `proxy.ts`
+- `tests/e2e/**`
 
 Additionally, run `test-e2e` when shared runtime dependencies change:
 
