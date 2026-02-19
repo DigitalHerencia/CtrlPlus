@@ -38,8 +38,8 @@ describe('template preview engine', () => {
     expect(preview.html).toContain('&lt;b&gt;unsafe&lt;/b&gt;');
   });
 
-  it('requires an authenticated user for preview generation action', () => {
-    expect(() =>
+  it('requires an authenticated user for preview generation action', async () => {
+    await expect(
       createTemplatePreviewAction({
         headers: {
           host: 'acme.localhost:3000'
@@ -53,7 +53,6 @@ describe('template preview engine', () => {
           vehicleName: 'Mercedes Sprinter'
         }
       })
-    ).toThrowError(AuthError);
+    ).rejects.toThrowError(AuthError);
   });
 });
-

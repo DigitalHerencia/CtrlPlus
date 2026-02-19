@@ -8,7 +8,8 @@ import { UploadValidationError, uploadStore } from '../../lib/server/storage/upl
 const ownerHeaders = {
   host: 'acme.localhost:3000',
   'x-clerk-user-id': 'user_owner',
-  'x-clerk-user-email': 'owner@example.com'
+  'x-clerk-user-email': 'owner@example.com',
+  'x-clerk-org-id': 'org_acme'
 } as const;
 
 function encodePngMock(): Uint8Array {
@@ -25,8 +26,8 @@ describe('upload preview pipeline', () => {
     uploadRateLimiter.reset();
   });
 
-  it('stores uploads and returns a generated preview payload', () => {
-    const result = createUploadPreviewAction({
+  it('stores uploads and returns a generated preview payload', async () => {
+    const result = await createUploadPreviewAction({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       fileName: 'mock-wrap.png',
@@ -43,8 +44,8 @@ describe('upload preview pipeline', () => {
     expect(uploadStore.get(result.uploadId)?.checksum.length).toBe(64);
   });
 
-  it('rejects unsupported mime types and unsafe file names', () => {
-    expect(() =>
+  it('rejects unsupported mime types and unsafe file names', async () => {
+    await expect(
       createUploadPreviewAction({
         headers: ownerHeaders,
         tenantId: 'tenant_acme',
@@ -54,9 +55,9 @@ describe('upload preview pipeline', () => {
         wrapName: 'Invalid Upload',
         vehicleName: 'Van'
       })
-    ).toThrowError(UploadValidationError);
+    ).rejects.toThrowError(UploadValidationError);
 
-    expect(() =>
+    await expect(
       createUploadPreviewAction({
         headers: ownerHeaders,
         tenantId: 'tenant_acme',
@@ -66,12 +67,12 @@ describe('upload preview pipeline', () => {
         wrapName: 'Invalid Upload',
         vehicleName: 'Van'
       })
-    ).toThrowError(UploadValidationError);
+    ).rejects.toThrowError(UploadValidationError);
   });
 
-  it('enforces tenant-scoped rate limiting for upload previews', () => {
+  it('enforces tenant-scoped rate limiting for upload previews', async () => {
     for (let attempt = 0; attempt < 5; attempt += 1) {
-      const result = createUploadPreviewAction({
+      const result = await createUploadPreviewAction({
         headers: ownerHeaders,
         tenantId: 'tenant_acme',
         fileName: `mock-${attempt}.png`,
@@ -84,7 +85,7 @@ describe('upload preview pipeline', () => {
       expect(result.uploadId).toBe(`upload_${attempt + 1}`);
     }
 
-    expect(() =>
+    await expect(
       createUploadPreviewAction({
         headers: ownerHeaders,
         tenantId: 'tenant_acme',
@@ -94,7 +95,7 @@ describe('upload preview pipeline', () => {
         wrapName: 'Rate Limited Upload',
         vehicleName: 'Van'
       })
-    ).toThrowError(RateLimitError);
+    ).rejects.toThrowError(RateLimitError);
   });
 });
 

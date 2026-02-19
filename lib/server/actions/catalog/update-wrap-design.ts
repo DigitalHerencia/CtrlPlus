@@ -8,16 +8,17 @@ export interface UpdateWrapDesignActionInput {
   readonly payload: UpdateWrapDesignPayload;
 }
 
-export function updateWrapDesign(input: UpdateWrapDesignActionInput): WrapDesign | null {
+export async function updateWrapDesign(input: UpdateWrapDesignActionInput): Promise<WrapDesign | null> {
   const tenantContext = requireTenant({
     headers: input.headers,
     routeTenantId: input.payload.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
 
-  requirePermission({
+  await requirePermission({
     headers: input.headers,
     tenantId,
+    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'catalog:write'
   });
 
@@ -26,4 +27,3 @@ export function updateWrapDesign(input: UpdateWrapDesignActionInput): WrapDesign
     tenantId
   });
 }
-

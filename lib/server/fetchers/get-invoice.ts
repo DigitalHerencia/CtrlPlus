@@ -111,16 +111,17 @@ export interface GetInvoiceInput {
 
 export const invoiceStore = new InvoiceStore();
 
-export function getInvoice(input: GetInvoiceInput): InvoiceRecord {
+export async function getInvoice(input: GetInvoiceInput): Promise<InvoiceRecord> {
   const tenantContext = requireTenant({
     headers: input.headers,
     routeTenantId: input.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
 
-  requirePermission({
+  await requirePermission({
     headers: input.headers,
     tenantId,
+    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'billing:read'
   });
 
@@ -131,4 +132,3 @@ export function getInvoice(input: GetInvoiceInput): InvoiceRecord {
 
   return invoice;
 }
-

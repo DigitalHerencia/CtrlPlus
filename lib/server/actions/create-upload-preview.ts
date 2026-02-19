@@ -18,18 +18,19 @@ export interface CreateUploadPreviewActionInput {
   readonly vehicleName: string;
 }
 
-export function createUploadPreviewAction(
+export async function createUploadPreviewAction(
   input: CreateUploadPreviewActionInput
-): UploadPreviewResult {
+): Promise<UploadPreviewResult> {
   const tenantContext = requireTenant({
     headers: input.headers,
     routeTenantId: input.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
 
-  const permissionContext = requirePermission({
+  const permissionContext = await requirePermission({
     headers: input.headers,
     tenantId,
+    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'catalog:write'
   });
 

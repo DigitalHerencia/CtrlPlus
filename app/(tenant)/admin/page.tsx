@@ -1,9 +1,9 @@
 import { headers } from 'next/headers';
 
-import { listWrapDesigns } from '../../../lib/server/fetchers/catalog/list-wrap-designs';
+import { requirePermission } from '../../../lib/server/auth/require-permission';
 import { bookingStore } from '../../../lib/server/fetchers/booking-store';
 import { invoiceStore } from '../../../lib/server/fetchers/get-invoice';
-import { requirePermission } from '../../../lib/server/auth/require-permission';
+import { listWrapDesigns } from '../../../lib/server/fetchers/catalog/list-wrap-designs';
 import { getRequestTenant } from '../../../lib/server/tenancy/get-request-tenant';
 
 export const dynamic = 'force-dynamic';
@@ -22,9 +22,10 @@ export default async function AdminDashboardPage() {
   const headerMap = toHeaderMap(requestHeaders);
   const tenant = await getRequestTenant();
 
-  requirePermission({
+  await requirePermission({
     headers: headerMap,
     tenantId: tenant.tenantId,
+    tenantClerkOrgId: tenant.clerkOrgId,
     permission: 'admin:read'
   });
 
@@ -59,4 +60,3 @@ export default async function AdminDashboardPage() {
     </main>
   );
 }
-

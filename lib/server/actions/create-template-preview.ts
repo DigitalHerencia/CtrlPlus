@@ -12,21 +12,21 @@ export interface CreateTemplatePreviewActionInput {
   readonly payload: TemplatePreviewInput;
 }
 
-export function createTemplatePreviewAction(
+export async function createTemplatePreviewAction(
   input: CreateTemplatePreviewActionInput
-): TemplatePreviewResult {
+): Promise<TemplatePreviewResult> {
   const tenantContext = requireTenant({
     headers: input.headers,
     routeTenantId: input.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
 
-  requirePermission({
+  await requirePermission({
     headers: input.headers,
     tenantId,
+    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'catalog:read'
   });
 
   return createTemplatePreview(input.payload);
 }
-

@@ -22,16 +22,17 @@ function createSessionId(tenantId: string, invoiceId: string): string {
   return `cs_test_${suffix}`;
 }
 
-export function createCheckoutSession(input: CreateCheckoutSessionInput): CheckoutSessionResult {
+export async function createCheckoutSession(input: CreateCheckoutSessionInput): Promise<CheckoutSessionResult> {
   const tenantContext = requireTenant({
     headers: input.headers,
     routeTenantId: input.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
 
-  requirePermission({
+  await requirePermission({
     headers: input.headers,
     tenantId,
+    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'billing:write'
   });
 

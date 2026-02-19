@@ -15,7 +15,8 @@ import { uploadStore } from '../../lib/server/storage/upload-store';
 const ownerHeaders = {
   host: 'acme.localhost:3000',
   'x-clerk-user-id': 'user_owner',
-  'x-clerk-user-email': 'owner@example.com'
+  'x-clerk-user-email': 'owner@example.com',
+  'x-clerk-org-id': 'org_acme'
 } as const;
 
 function pngPayload(): Uint8Array {
@@ -38,7 +39,7 @@ test.describe('customer happy path', () => {
   });
 
   test('completes preview to booking to payment confirmation', async () => {
-    const uploadPreview = createUploadPreviewAction({
+    const uploadPreview = await createUploadPreviewAction({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       fileName: 'happy-path.png',
@@ -50,7 +51,7 @@ test.describe('customer happy path', () => {
 
     expect(uploadPreview.uploadId).toBe('upload_1');
 
-    const booking = createBooking({
+    const booking = await createBooking({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       startsAtIso: '2026-02-18T08:00:00.000Z',
@@ -61,7 +62,7 @@ test.describe('customer happy path', () => {
       slotMinutes: 30
     });
 
-    const invoice = createInvoice({
+    const invoice = await createInvoice({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       bookingId: booking.id,
@@ -69,7 +70,7 @@ test.describe('customer happy path', () => {
       amountCents: 250000
     });
 
-    const checkout = createCheckoutSession({
+    const checkout = await createCheckoutSession({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       invoiceId: invoice.id,
@@ -106,7 +107,7 @@ test.describe('customer happy path', () => {
 
     expect(webhookResponse.status).toBe(200);
 
-    const paidInvoice = getInvoice({
+    const paidInvoice = await getInvoice({
       headers: ownerHeaders,
       tenantId: 'tenant_acme',
       invoiceId: invoice.id

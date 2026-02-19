@@ -15,6 +15,7 @@ export class PermissionError extends Error {
 export interface RequirePermissionInput {
   readonly headers: Readonly<Record<string, string | undefined>>;
   readonly tenantId: string;
+  readonly tenantClerkOrgId: string;
   readonly permission: Permission;
 }
 
@@ -24,12 +25,19 @@ export interface PermissionContext {
   readonly permission: Permission;
 }
 
-export function requirePermission(input: RequirePermissionInput): PermissionContext {
-  const user = requireAuth({
+export async function requirePermission(input: RequirePermissionInput): Promise<PermissionContext> {
+  const user = await requireAuth({
     headers: input.headers
   });
 
-  const role = resolveTenantRole(input.tenantId, user.userId);
+  const role = resolveTenantRole({
+    tenantId: input.tenantId,
+    tenantClerkOrgId: input.tenantClerkOrgId,
+    activeOrgId: user.orgId,
+    actorUserId: user.userId,
+    privateMetadata: user.privateMetadata
+  });
+
   if (!role) {
     throw new PermissionError('Tenant membership required');
   }
@@ -44,4 +52,3 @@ export function requirePermission(input: RequirePermissionInput): PermissionCont
     permission: input.permission
   };
 }
-
