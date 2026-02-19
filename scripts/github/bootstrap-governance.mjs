@@ -26,6 +26,9 @@ const runAllSteps = selectedSteps.size === 0;
 const dryRun = cliFlags.has('--dry-run');
 const verbose = cliFlags.has('--verbose');
 
+
+ensureGhCliAvailable();
+
 const shouldRun = (step) => runAllSteps || selectedSteps.has(step);
 
 const labelsConfig = readJson('.github/labels.json');
@@ -86,6 +89,17 @@ if (shouldRun('project')) {
 }
 
 console.log('GitHub governance bootstrap complete.');
+
+
+function ensureGhCliAvailable() {
+  try {
+    execFileSync('gh', ['--version'], { stdio: 'ignore' });
+  } catch {
+    throw new Error(
+      "GitHub CLI ('gh') is required for bootstrap. Install gh and authenticate before running this script."
+    );
+  }
+}
 
 function printUsage() {
   console.log(`Usage: node scripts/github/bootstrap-governance.mjs [flags]\n\nFlags:\n  --labels-only      Sync labels only\n  --milestones-only  Sync milestones only\n  --issues-only      Sync milestone-linked task issues only\n  --project-only     Sync project board/fields/items only\n  --dry-run          Print write operations without executing them\n  --verbose          Print extra diagnostics\n  --help             Show this help`);
