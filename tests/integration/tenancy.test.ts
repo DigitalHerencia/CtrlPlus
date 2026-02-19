@@ -37,6 +37,21 @@ describe('tenant resolution middleware primitives', () => {
     ).toThrowError(TenantAccessError);
   });
 
+  it('prefers host header over x-forwarded-host for tenant resolution', () => {
+    const context = requireTenant({
+      headers: {
+        host: 'acme.localhost:3000',
+        'x-forwarded-host': 'beta.localhost:3000'
+      }
+    });
+
+    expect(context.tenant).toEqual({
+      tenantId: 'tenant_acme',
+      slug: 'acme',
+      clerkOrgId: 'org_acme'
+    });
+  });
+
   it('ignores client-provided tenantId headers', () => {
     const context = requireTenant({
       headers: {

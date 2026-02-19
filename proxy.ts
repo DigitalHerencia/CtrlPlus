@@ -15,6 +15,7 @@ const isPublicRoute = createRouteMatcher([
 
 const isTenantRoute = createRouteMatcher(['/wraps(.*)', '/admin(.*)']);
 const isApiRoute = createRouteMatcher(['/api(.*)']);
+const CLERK_CAPTCHA_CSP_SOURCES = ['https://challenges.cloudflare.com'] as const;
 
 function isStripeWebhookRoute(pathname: string): boolean {
   return pathname === '/api/stripe/webhook' || pathname.startsWith('/api/stripe/webhook/');
@@ -24,6 +25,7 @@ function sanitizeIdentityHeaders(headers: Headers): void {
   const spoofableIdentityHeaders = [
     'x-clerk-user-id',
     'x-clerk-user-email',
+    'x-clerk-org-id',
     'x-user-id',
     'x-user-email',
     'x-user-role'
@@ -55,17 +57,30 @@ function contentSecurityPolicyForEnvironment(nonce: string): string {
   const isProduction = process.env.NODE_ENV === 'production';
   const clerkSources = getClerkCspSources();
 
-  const connectSources = ["'self'", 'https://api.stripe.com', ...clerkSources];
+  const connectSources = ["'self'", 'https://api.stripe.com', ...clerkSources, ...CLERK_CAPTCHA_CSP_SOURCES];
   if (!isProduction) {
     connectSources.push('http://localhost:*', 'https://localhost:*', 'ws://localhost:*', 'wss://localhost:*');
   }
 
-  const scriptSources = ["'self'", `'nonce-${nonce}'`, 'https://js.stripe.com', ...clerkSources];
+  const scriptSources = [
+    "'self'",
+    `'nonce-${nonce}'`,
+    "'unsafe-inline'",
+    'https://js.stripe.com',
+    ...clerkSources,
+    ...CLERK_CAPTCHA_CSP_SOURCES
+  ];
   if (!isProduction) {
     scriptSources.push("'unsafe-eval'");
   }
 
-  const frameSources = ['https://js.stripe.com', 'https://hooks.stripe.com', ...clerkSources];
+  const frameSources = [
+    "'self'",
+    'https://js.stripe.com',
+    'https://hooks.stripe.com',
+    ...clerkSources,
+    ...CLERK_CAPTCHA_CSP_SOURCES
+  ];
   const imgSources = ["'self'", 'data:', 'blob:', ...clerkSources];
   const fontSources = ["'self'", 'data:'];
 
@@ -73,6 +88,7 @@ function contentSecurityPolicyForEnvironment(nonce: string): string {
     "default-src 'self'",
     `script-src ${scriptSources.join(' ')}`,
     "style-src 'self' 'unsafe-inline'",
+    "worker-src 'self' blob:",
     `img-src ${imgSources.join(' ')}`,
     `font-src ${fontSources.join(' ')}`,
     `connect-src ${connectSources.join(' ')}`,
@@ -147,6 +163,12 @@ export default clerkMiddleware(
           'x-clerk-user-email',
           readEmailFromClaims(authState.sessionClaims) ?? `${authState.userId}@clerk.local`
         );
+      }
+
+      if (authState.orgId) {
+        requestHeaders.set('x-clerk-org-id', authState.orgId);
+      } else {
+        requestHeaders.delete('x-clerk-org-id');
       }
     }
 

@@ -24,8 +24,8 @@ function normalizeHeaderName(headerName: string): string {
 }
 
 function resolveHostFromHeaders(headers: Readonly<Record<string, string | undefined>>): string | null {
-  const host = Object.entries(headers).find(([headerName]) => normalizeHeaderName(headerName) === 'x-forwarded-host')?.[1]
-    ?? Object.entries(headers).find(([headerName]) => normalizeHeaderName(headerName) === 'host')?.[1]
+  const host = Object.entries(headers).find(([headerName]) => normalizeHeaderName(headerName) === 'host')?.[1]
+    ?? Object.entries(headers).find(([headerName]) => normalizeHeaderName(headerName) === 'x-forwarded-host')?.[1]
     ?? null;
 
   if (!host || !host.trim()) {
