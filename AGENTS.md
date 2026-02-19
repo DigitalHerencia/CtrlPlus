@@ -4,6 +4,12 @@
 
 This repo is a **subdomain-based multi-tenant** Next.js App Router application for a vehicle wrap business platform. Agents must follow strict architectural boundaries for security, performance, and testability.
 
+## Codex file placement
+
+* This root-level `AGENTS.md` is the canonical instruction file for the repository.
+* `PLANS.md` at repository root is the canonical ExecPlan standard.
+* `.codex/` is reserved for repository-local Codex config and transient artifacts, not primary engineering policy.
+
 ## Non-negotiable rules
 
 1. **No Prisma usage in `app/`**
@@ -67,7 +73,7 @@ This repo is a **subdomain-based multi-tenant** Next.js App Router application f
 
 ## ExecPlans
 
-When writing complex features or significant refactors, use an ExecPlan (as described in .codex/PLANS.md) from design to implementation.
+When writing complex features or significant refactors, use an ExecPlan (as described in `PLANS.md`) from design to implementation.
 
 ## How to implement changes (agent workflow)
 

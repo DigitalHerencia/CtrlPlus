@@ -1,4 +1,6 @@
-# Codex Execution Plans (ExecPlans):
+# Codex Execution Plans (ExecPlans)
+
+Canonical location: repository root as `PLANS.md`. If a copy exists elsewhere, treat this file as source of truth.
 
 This document describes the requirements for an execution plan ("ExecPlan"), a design document that a coding agent can follow to deliver a working feature or system change. Treat the reader as a complete beginner to this repository: they have only the current working tree and the single ExecPlan file you provide. There is no memory of prior plans and no external context.
 

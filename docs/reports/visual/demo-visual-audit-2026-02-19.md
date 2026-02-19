@@ -57,8 +57,8 @@ flowchart TD
   Browser --> NextApp[Next.js App Router]
   NextApp --> Middleware[proxy.ts clerkMiddleware + tenancy + security headers]
   Middleware --> Pages[app/(public|auth|tenant)]
-  Pages --> Fetchers[lib/server/fetchers/*]
-  Pages --> Actions[lib/server/actions/*]
+  Pages --> Fetchers[lib/fetchers/*]
+  Pages --> Actions[lib/actions/*]
   Actions --> Guards[requireTenant + requirePermission]
   Fetchers --> InMemory[(In-memory stores)]
   Actions --> InMemory

@@ -20,7 +20,14 @@ This repository now includes baseline engineering and GitHub automation scaffold
    pnpm install
    ```
 
-3. Run baseline quality checks:
+3. Pull development environment variables from Vercel:
+
+   ```bash
+   pnpm dlx vercel pull --yes --environment=development
+   pnpm dlx vercel env pull .env.local --environment development
+   ```
+
+4. Run baseline quality checks:
 
    ```bash
    pnpm lint
@@ -28,7 +35,7 @@ This repository now includes baseline engineering and GitHub automation scaffold
    pnpm test
    ```
 
-4. Start the Next.js app locally:
+5. Start the Next.js app locally:
 
    ```bash
    pnpm dev
@@ -45,3 +52,4 @@ pnpm bootstrap:github
 This syncs labels, milestones, roadmap issues, and project board field metadata.
 
 See `docs/github-workflow.md` and `docs/ci-design.md` for governance details.
+Use `docs/README.md` for the documentation index and report locations.
