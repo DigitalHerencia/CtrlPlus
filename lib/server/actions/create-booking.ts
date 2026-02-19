@@ -1,6 +1,7 @@
 import { requirePermission } from '../auth/require-permission';
 import { bookingStore, type BookingRecord } from '../fetchers/booking-store';
 import { getAvailability } from '../fetchers/get-availability';
+import { requireTenant } from '../tenancy/require-tenant';
 
 export class BookingValidationError extends Error {
   readonly statusCode: number;
@@ -24,13 +25,20 @@ export interface CreateBookingActionInput {
 }
 
 export function createBooking(input: CreateBookingActionInput): BookingRecord {
+  const tenantContext = requireTenant({
+    headers: input.headers,
+    routeTenantId: input.tenantId
+  });
+  const tenantId = tenantContext.tenant.tenantId;
+
   requirePermission({
     headers: input.headers,
+    tenantId,
     permission: 'schedule:write'
   });
 
   const availableSlots = getAvailability({
-    tenantId: input.tenantId,
+    tenantId,
     dayStartIso: input.dayStartIso,
     dayEndIso: input.dayEndIso,
     slotMinutes: input.slotMinutes
@@ -45,7 +53,7 @@ export function createBooking(input: CreateBookingActionInput): BookingRecord {
   }
 
   return bookingStore.create({
-    tenantId: input.tenantId,
+    tenantId,
     startsAtIso: input.startsAtIso,
     endsAtIso: input.endsAtIso,
     customerName: input.customerName

@@ -22,10 +22,10 @@ describe('rbac permission layer', () => {
   it('allows access when user role includes requested permission', () => {
     const context = requirePermission({
       headers: {
-        'x-user-id': 'user_123',
-        'x-user-email': 'owner@example.com',
-        'x-user-role': 'manager'
+        'x-clerk-user-id': 'user_123',
+        'x-clerk-user-email': 'owner@example.com'
       },
+      tenantId: 'tenant_acme',
       permission: 'catalog:write'
     });
 
@@ -38,13 +38,14 @@ describe('rbac permission layer', () => {
     expect(() =>
       requirePermission({
         headers: {
-          'x-user-id': 'user_123',
-          'x-user-email': 'viewer@example.com',
-          'x-user-role': 'viewer'
+          'x-clerk-user-id': 'user_viewer',
+          'x-clerk-user-email': 'viewer@example.com'
         },
+        tenantId: 'tenant_acme',
         permission: 'billing:read'
       })
     ).toThrowError(PermissionError);
   });
 });
+
 

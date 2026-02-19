@@ -1,30 +1,82 @@
-import { randomUUID } from 'node:crypto';
-
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { getClerkCspSources, getClerkPublishableKey, getClerkSecretKey } from './lib/server/auth/clerk-config';
 import { TenantAccessError, requireTenant } from './lib/server/tenancy/require-tenant';
+
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/about(.*)',
+  '/features(.*)',
+  '/contact(.*)',
+  '/sign-in(.*)',
+  '/sign-up(.*)'
+]);
+
+const isTenantRoute = createRouteMatcher(['/wraps(.*)', '/admin(.*)']);
+const isApiRoute = createRouteMatcher(['/api(.*)']);
+
+function isStripeWebhookRoute(pathname: string): boolean {
+  return pathname === '/api/stripe/webhook' || pathname.startsWith('/api/stripe/webhook/');
+}
+
+function sanitizeIdentityHeaders(headers: Headers): void {
+  const spoofableIdentityHeaders = [
+    'x-clerk-user-id',
+    'x-clerk-user-email',
+    'x-user-id',
+    'x-user-email',
+    'x-user-role'
+  ];
+
+  for (const header of spoofableIdentityHeaders) {
+    headers.delete(header);
+  }
+}
+
+function readEmailFromClaims(sessionClaims: unknown): string | null {
+  if (!sessionClaims || typeof sessionClaims !== 'object' || Array.isArray(sessionClaims)) {
+    return null;
+  }
+
+  const claims = sessionClaims as Readonly<Record<string, unknown>>;
+  const candidateValues = [claims.email, claims.email_address, claims.primary_email_address];
+
+  for (const candidateValue of candidateValues) {
+    if (typeof candidateValue === 'string' && candidateValue.trim()) {
+      return candidateValue.trim();
+    }
+  }
+
+  return null;
+}
 
 function contentSecurityPolicyForEnvironment(nonce: string): string {
   const isProduction = process.env.NODE_ENV === 'production';
+  const clerkSources = getClerkCspSources();
 
-  const connectSources = ["'self'", 'https://api.stripe.com'];
+  const connectSources = ["'self'", 'https://api.stripe.com', ...clerkSources];
   if (!isProduction) {
     connectSources.push('http://localhost:*', 'https://localhost:*', 'ws://localhost:*', 'wss://localhost:*');
   }
 
-  const scriptSources = ["'self'", `'nonce-${nonce}'`, 'https://js.stripe.com'];
+  const scriptSources = ["'self'", `'nonce-${nonce}'`, 'https://js.stripe.com', ...clerkSources];
   if (!isProduction) {
     scriptSources.push("'unsafe-eval'");
   }
+
+  const frameSources = ['https://js.stripe.com', 'https://hooks.stripe.com', ...clerkSources];
+  const imgSources = ["'self'", 'data:', 'blob:', ...clerkSources];
+  const fontSources = ["'self'", 'data:'];
 
   return [
     "default-src 'self'",
     `script-src ${scriptSources.join(' ')}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
-    "font-src 'self' data:",
+    `img-src ${imgSources.join(' ')}`,
+    `font-src ${fontSources.join(' ')}`,
     `connect-src ${connectSources.join(' ')}`,
-    "frame-src https://js.stripe.com https://hooks.stripe.com",
+    `frame-src ${frameSources.join(' ')}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -67,30 +119,81 @@ function createErrorResponse(error: unknown, nonce: string): NextResponse {
   return response;
 }
 
-export function middleware(request: NextRequest): NextResponse {
-  const nonce = randomUUID().replace(/-/g, '');
+const clerkPublishableKey = getClerkPublishableKey();
+const clerkSecretKey = getClerkSecretKey();
 
-export function proxy(request: NextRequest): NextResponse {
-  try {
-    const context = requireTenant({
-      headers: {
-        host: request.headers.get('host') ?? undefined,
-        'x-forwarded-host': request.headers.get('x-forwarded-host') ?? undefined,
-        'x-tenant-id': request.headers.get('x-tenant-id') ?? undefined
+export default clerkMiddleware(
+  async (auth, request: NextRequest): Promise<NextResponse> => {
+    const nonce = crypto.randomUUID().replace(/-/g, '');
+    const pathname = request.nextUrl.pathname;
+    const tenantRoute = isTenantRoute(request);
+    const apiRoute = isApiRoute(request);
+    const webhookRoute = isStripeWebhookRoute(pathname);
+    const publicRoute = isPublicRoute(request) || webhookRoute;
+    const protectedRoute = (tenantRoute || apiRoute) && !publicRoute;
+
+    if (protectedRoute) {
+      await auth.protect();
+    }
+
+    const requestHeaders = new Headers(request.headers);
+    sanitizeIdentityHeaders(requestHeaders);
+
+    if (protectedRoute) {
+      const authState = await auth();
+      if (authState.userId) {
+        requestHeaders.set('x-clerk-user-id', authState.userId);
+        requestHeaders.set(
+          'x-clerk-user-email',
+          readEmailFromClaims(authState.sessionClaims) ?? `${authState.userId}@clerk.local`
+        );
+      }
+    }
+
+    if (tenantRoute) {
+      try {
+        const context = requireTenant({
+          headers: {
+            host: request.headers.get('host') ?? undefined,
+            'x-forwarded-host': request.headers.get('x-forwarded-host') ?? undefined
+          }
+        });
+
+        requestHeaders.set('x-tenant-id', context.tenant.tenantId);
+        requestHeaders.set('x-tenant-slug', context.tenant.slug);
+
+        const response = NextResponse.next({
+          request: {
+            headers: requestHeaders
+          }
+        });
+
+        response.headers.set('x-tenant-id', context.tenant.tenantId);
+        response.headers.set('x-tenant-slug', context.tenant.slug);
+        applySecurityHeaders(response, nonce);
+        return response;
+      } catch (error) {
+        return createErrorResponse(error, nonce);
+      }
+    }
+
+    const response = NextResponse.next({
+      request: {
+        headers: requestHeaders
       }
     });
-
-    const response = NextResponse.next();
-    response.headers.set('x-tenant-id', context.tenant.tenantId);
-    response.headers.set('x-tenant-slug', context.tenant.slug);
-
     applySecurityHeaders(response, nonce);
     return response;
-  } catch (error) {
-    return createErrorResponse(error, nonce);
+  },
+  {
+    ...(clerkPublishableKey ? { publishableKey: clerkPublishableKey } : {}),
+    ...(clerkSecretKey ? { secretKey: clerkSecretKey } : {})
   }
-}
+);
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']
+  matcher: [
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/(api|trpc)(.*)'
+  ]
 };

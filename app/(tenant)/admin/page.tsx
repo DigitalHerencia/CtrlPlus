@@ -20,13 +20,14 @@ function toHeaderMap(requestHeaders: Headers): Record<string, string | undefined
 export default async function AdminDashboardPage() {
   const requestHeaders = await headers();
   const headerMap = toHeaderMap(requestHeaders);
+  const tenant = await getRequestTenant();
 
   requirePermission({
     headers: headerMap,
+    tenantId: tenant.tenantId,
     permission: 'admin:read'
   });
 
-  const tenant = await getRequestTenant();
   const wraps = listWrapDesigns({ tenantId: tenant.tenantId });
   const bookings = bookingStore.listByTenant(tenant.tenantId);
   const invoices = invoiceStore.listByTenant(tenant.tenantId);

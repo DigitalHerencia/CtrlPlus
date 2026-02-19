@@ -1,17 +1,17 @@
 import { headers } from 'next/headers';
 
-import { resolveTenant, type TenantRecord } from './resolve-tenant';
+import { requireTenant, type TenantContext } from './require-tenant';
 
-const FALLBACK_TENANT: TenantRecord = {
-  tenantId: 'tenant_acme',
-  slug: 'acme'
-};
-
-export async function getRequestTenant(): Promise<TenantRecord> {
+export async function getRequestTenant(): Promise<TenantContext['tenant']> {
   const requestHeaders = await headers();
-  const host = requestHeaders.get('x-forwarded-host') ?? requestHeaders.get('host') ?? '';
 
-  const resolvedTenant = resolveTenant({ host });
-  return resolvedTenant ?? FALLBACK_TENANT;
+  const context = requireTenant({
+    headers: {
+      host: requestHeaders.get('host') ?? undefined,
+      'x-forwarded-host': requestHeaders.get('x-forwarded-host') ?? undefined
+    }
+  });
+
+  return context.tenant;
 }
 

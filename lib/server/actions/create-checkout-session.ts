@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import { requirePermission } from '../auth/require-permission';
 import { invoiceStore } from '../fetchers/get-invoice';
+import { requireTenant } from '../tenancy/require-tenant';
 
 export interface CreateCheckoutSessionInput {
   readonly headers: Readonly<Record<string, string | undefined>>;
@@ -22,13 +23,20 @@ function createSessionId(tenantId: string, invoiceId: string): string {
 }
 
 export function createCheckoutSession(input: CreateCheckoutSessionInput): CheckoutSessionResult {
+  const tenantContext = requireTenant({
+    headers: input.headers,
+    routeTenantId: input.tenantId
+  });
+  const tenantId = tenantContext.tenant.tenantId;
+
   requirePermission({
     headers: input.headers,
+    tenantId,
     permission: 'billing:write'
   });
 
-  const sessionId = createSessionId(input.tenantId, input.invoiceId);
-  invoiceStore.markCheckoutSession(input.tenantId, input.invoiceId, sessionId);
+  const sessionId = createSessionId(tenantId, input.invoiceId);
+  invoiceStore.markCheckoutSession(tenantId, input.invoiceId, sessionId);
 
   return {
     sessionId,

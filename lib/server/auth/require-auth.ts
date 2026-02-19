@@ -32,8 +32,8 @@ function readHeader(
 }
 
 export function requireAuth(input: RequireAuthInput): AuthenticatedUser {
-  const userId = readHeader(input.headers, 'x-clerk-user-id') ?? readHeader(input.headers, 'x-user-id');
-  const email = readHeader(input.headers, 'x-clerk-user-email') ?? readHeader(input.headers, 'x-user-email');
+  const userId = readHeader(input.headers, 'x-clerk-user-id');
+  const email = readHeader(input.headers, 'x-clerk-user-email');
 
   if (!userId || !email) {
     throw new AuthError('Authentication required', 401);

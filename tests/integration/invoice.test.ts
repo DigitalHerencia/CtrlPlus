@@ -5,21 +5,21 @@ import { createInvoice, InvoiceValidationError } from '../../lib/server/actions/
 import { getInvoice, invoiceStore, InvoiceNotFoundError } from '../../lib/server/fetchers/get-invoice';
 
 const ownerHeaders = {
-  'x-user-id': 'user_owner',
-  'x-user-email': 'owner@example.com',
-  'x-user-role': 'owner'
+  host: 'acme.localhost:3000',
+  'x-clerk-user-id': 'user_owner',
+  'x-clerk-user-email': 'owner@example.com'
 } as const;
 
 const managerHeaders = {
-  'x-user-id': 'user_manager',
-  'x-user-email': 'manager@example.com',
-  'x-user-role': 'manager'
+  host: 'acme.localhost:3000',
+  'x-clerk-user-id': 'user_manager',
+  'x-clerk-user-email': 'manager@example.com'
 } as const;
 
 const viewerHeaders = {
-  'x-user-id': 'user_viewer',
-  'x-user-email': 'viewer@example.com',
-  'x-user-role': 'viewer'
+  host: 'acme.localhost:3000',
+  'x-clerk-user-id': 'user_viewer',
+  'x-clerk-user-email': 'viewer@example.com'
 } as const;
 
 describe('invoice domain', () => {
@@ -80,10 +80,14 @@ describe('invoice domain', () => {
 
     expect(() =>
       getInvoice({
-        headers: ownerHeaders,
+        headers: {
+          ...ownerHeaders,
+          host: 'beta.localhost:3000'
+        },
         tenantId: 'tenant_beta',
         invoiceId: created.id
       })
     ).toThrowError(InvoiceNotFoundError);
   });
 });
+

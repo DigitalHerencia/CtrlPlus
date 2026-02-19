@@ -12,9 +12,9 @@ import {
 import { catalogStore } from '../../lib/server/fetchers/catalog/store';
 
 const ownerHeaders = {
-  'x-user-id': 'user_owner',
-  'x-user-email': 'owner@example.com',
-  'x-user-role': 'owner'
+  host: 'acme.localhost:3000',
+  'x-clerk-user-id': 'user_owner',
+  'x-clerk-user-email': 'owner@example.com'
 } as const;
 
 describe('catalog public rsc surface', () => {
@@ -101,4 +101,5 @@ describe('catalog public rsc surface', () => {
     expect(appFiles[1]).not.toContain('prisma');
   });
 });
+
 

@@ -1,4 +1,5 @@
 import { requirePermission } from '../auth/require-permission';
+import { requireTenant } from '../tenancy/require-tenant';
 
 export interface InvoiceRecord {
   readonly id: string;
@@ -111,12 +112,19 @@ export interface GetInvoiceInput {
 export const invoiceStore = new InvoiceStore();
 
 export function getInvoice(input: GetInvoiceInput): InvoiceRecord {
+  const tenantContext = requireTenant({
+    headers: input.headers,
+    routeTenantId: input.tenantId
+  });
+  const tenantId = tenantContext.tenant.tenantId;
+
   requirePermission({
     headers: input.headers,
+    tenantId,
     permission: 'billing:read'
   });
 
-  const invoice = invoiceStore.findByTenant(input.tenantId, input.invoiceId);
+  const invoice = invoiceStore.findByTenant(tenantId, input.invoiceId);
   if (!invoice) {
     throw new InvoiceNotFoundError('Invoice not found');
   }

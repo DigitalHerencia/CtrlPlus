@@ -1,10 +1,17 @@
 import './globals.css';
+import { ClerkProvider } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
+import { getClerkPublishableKey } from '../lib/server/auth/clerk-config';
+
 export const metadata: Metadata = {
-  title: 'CtrlPlus',
-  description: 'Subdomain-based multi-tenant Next.js platform for vehicle wrap operations.'
+  title: {
+    default: 'CTRL+ Vehicle Wraps',
+    template: '%s | CTRL+'
+  },
+  description:
+    'Premium vehicle wraps, tint, and signage with a guided browse, visualize, schedule, and payment flow.'
 };
 
 type RootLayoutProps = {
@@ -12,9 +19,13 @@ type RootLayoutProps = {
 };
 
 export default function RootLayout({ children }: RootLayoutProps) {
+  const publishableKey = getClerkPublishableKey();
+
   return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
+    <ClerkProvider publishableKey={publishableKey}>
+      <html lang="en">
+        <body>{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }

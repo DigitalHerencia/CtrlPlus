@@ -18,18 +18,15 @@ describe('requireAuth', () => {
     });
   });
 
-  it('falls back to generic user headers when Clerk headers are absent', () => {
-    const user = requireAuth({
-      headers: {
-        'x-user-id': 'user_234',
-        'x-user-email': 'ops@example.com'
-      }
-    });
-
-    expect(user).toEqual({
-      userId: 'user_234',
-      email: 'ops@example.com'
-    });
+  it('rejects generic non-Clerk user headers', () => {
+    expect(() =>
+      requireAuth({
+        headers: {
+          'x-user-id': 'user_234',
+          'x-user-email': 'ops@example.com'
+        }
+      })
+    ).toThrowError(AuthError);
   });
 
   it('throws 401 when user identity is missing', () => {
@@ -54,4 +51,5 @@ describe('requireAuth', () => {
     }
   });
 });
+
 

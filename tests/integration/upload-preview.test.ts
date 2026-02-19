@@ -6,9 +6,9 @@ import { uploadRateLimiter } from '../../lib/server/rate-limit/upload-rate-limit
 import { UploadValidationError, uploadStore } from '../../lib/server/storage/upload-store';
 
 const ownerHeaders = {
-  'x-user-id': 'user_owner',
-  'x-user-email': 'owner@example.com',
-  'x-user-role': 'owner'
+  host: 'acme.localhost:3000',
+  'x-clerk-user-id': 'user_owner',
+  'x-clerk-user-email': 'owner@example.com'
 } as const;
 
 function encodePngMock(): Uint8Array {
@@ -97,3 +97,4 @@ describe('upload preview pipeline', () => {
     ).toThrowError(RateLimitError);
   });
 });
+

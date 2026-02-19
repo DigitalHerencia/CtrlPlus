@@ -1,5 +1,6 @@
 import { requirePermission } from '../auth/require-permission';
 import { invoiceStore, type InvoiceRecord } from '../fetchers/get-invoice';
+import { requireTenant } from '../tenancy/require-tenant';
 
 export class InvoiceValidationError extends Error {
   readonly statusCode: number;
@@ -24,8 +25,15 @@ function isValidEmail(value: string): boolean {
 }
 
 export function createInvoice(input: CreateInvoiceInput): InvoiceRecord {
+  const tenantContext = requireTenant({
+    headers: input.headers,
+    routeTenantId: input.tenantId
+  });
+  const tenantId = tenantContext.tenant.tenantId;
+
   requirePermission({
     headers: input.headers,
+    tenantId,
     permission: 'billing:write'
   });
 
@@ -38,7 +46,7 @@ export function createInvoice(input: CreateInvoiceInput): InvoiceRecord {
   }
 
   return invoiceStore.create({
-    tenantId: input.tenantId,
+    tenantId,
     bookingId: input.bookingId,
     customerEmail: input.customerEmail.trim().toLowerCase(),
     amountCents: input.amountCents

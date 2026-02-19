@@ -1,5 +1,6 @@
-import { hasPermission, isRole, type Permission, type Role } from '../../../features/authz/permissions';
-import { AuthError, requireAuth, type AuthenticatedUser } from './require-auth';
+import { hasPermission, type Permission, type Role } from '../../../features/authz/permissions';
+import { requireAuth, type AuthenticatedUser } from './require-auth';
+import { resolveTenantRole } from './resolve-tenant-role';
 
 export class PermissionError extends Error {
   readonly statusCode: number;
@@ -13,6 +14,7 @@ export class PermissionError extends Error {
 
 export interface RequirePermissionInput {
   readonly headers: Readonly<Record<string, string | undefined>>;
+  readonly tenantId: string;
   readonly permission: Permission;
 }
 
@@ -22,29 +24,16 @@ export interface PermissionContext {
   readonly permission: Permission;
 }
 
-function readRole(headers: Readonly<Record<string, string | undefined>>): Role {
-  const roleHeader = Object.entries(headers).find(
-    ([headerName]) => headerName.toLowerCase() === 'x-user-role'
-  )?.[1];
-
-  if (!roleHeader) {
-    return 'viewer';
-  }
-
-  const normalizedRole = roleHeader.trim().toLowerCase();
-  if (!isRole(normalizedRole)) {
-    throw new AuthError('Invalid role supplied', 403);
-  }
-
-  return normalizedRole;
-}
-
 export function requirePermission(input: RequirePermissionInput): PermissionContext {
   const user = requireAuth({
     headers: input.headers
   });
 
-  const role = readRole(input.headers);
+  const role = resolveTenantRole(input.tenantId, user.userId);
+  if (!role) {
+    throw new PermissionError('Tenant membership required');
+  }
+
   if (!hasPermission(role, input.permission)) {
     throw new PermissionError(`Permission denied for ${input.permission}`);
   }

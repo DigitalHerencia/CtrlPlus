@@ -41,7 +41,10 @@ describe('template preview engine', () => {
   it('requires an authenticated user for preview generation action', () => {
     expect(() =>
       createTemplatePreviewAction({
-        headers: {},
+        headers: {
+          host: 'acme.localhost:3000'
+        },
+        tenantId: 'tenant_acme',
         payload: {
           templateStyle: 'sport',
           wrapName: 'Ocean Blue',

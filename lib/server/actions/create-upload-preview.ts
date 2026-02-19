@@ -6,6 +6,7 @@ import { requirePermission } from '../auth/require-permission';
 import { RateLimitError } from '../rate-limit/fixed-window-limiter';
 import { uploadRateLimiter } from '../rate-limit/upload-rate-limit';
 import { uploadStore } from '../storage/upload-store';
+import { requireTenant } from '../tenancy/require-tenant';
 
 export interface CreateUploadPreviewActionInput {
   readonly headers: Readonly<Record<string, string | undefined>>;
@@ -17,40 +18,28 @@ export interface CreateUploadPreviewActionInput {
   readonly vehicleName: string;
 }
 
-function readHeader(
-  headers: Readonly<Record<string, string | undefined>>,
-  headerName: string
-): string | undefined {
-  const normalizedHeaderName = headerName.toLowerCase();
-
-  const matchingHeader = Object.entries(headers).find(
-    ([candidateHeader]) => candidateHeader.toLowerCase() === normalizedHeaderName
-  );
-
-  const value = matchingHeader?.[1]?.trim();
-  return value || undefined;
-}
-
-function resolveRateLimitKey(input: CreateUploadPreviewActionInput): string {
-  const userId = readHeader(input.headers, 'x-clerk-user-id') ?? readHeader(input.headers, 'x-user-id');
-  return `upload:${input.tenantId}:${userId ?? 'anonymous'}`;
-}
-
 export function createUploadPreviewAction(
   input: CreateUploadPreviewActionInput
 ): UploadPreviewResult {
-  requirePermission({
+  const tenantContext = requireTenant({
     headers: input.headers,
+    routeTenantId: input.tenantId
+  });
+  const tenantId = tenantContext.tenant.tenantId;
+
+  const permissionContext = requirePermission({
+    headers: input.headers,
+    tenantId,
     permission: 'catalog:write'
   });
 
-  const decision = uploadRateLimiter.consume(resolveRateLimitKey(input));
+  const decision = uploadRateLimiter.consume(`upload:${tenantId}:${permissionContext.user.userId}`);
   if (!decision.allowed) {
     throw new RateLimitError('Upload rate limit exceeded', decision.retryAfterSeconds);
   }
 
   const storedUpload = uploadStore.save({
-    tenantId: input.tenantId,
+    tenantId,
     fileName: input.fileName,
     mimeType: input.mimeType,
     bytes: input.bytes

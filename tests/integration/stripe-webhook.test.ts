@@ -7,9 +7,9 @@ import { getInvoice, invoiceStore } from '../../lib/server/fetchers/get-invoice'
 import { __internal, POST } from '../../app/api/stripe/webhook/route';
 
 const ownerHeaders = {
-  'x-user-id': 'user_owner',
-  'x-user-email': 'owner@example.com',
-  'x-user-role': 'owner'
+  host: 'acme.localhost:3000',
+  'x-clerk-user-id': 'user_owner',
+  'x-clerk-user-email': 'owner@example.com'
 } as const;
 
 const webhookSecret = 'stripe_test_secret';
@@ -179,4 +179,5 @@ describe('stripe checkout + webhook integration', () => {
     expect(response.status).toBe(400);
   });
 });
+
 

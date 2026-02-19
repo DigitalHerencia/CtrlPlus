@@ -5,9 +5,9 @@ import { bookingStore } from '../../lib/server/fetchers/booking-store';
 import { getAvailability } from '../../lib/server/fetchers/get-availability';
 
 const ownerHeaders = {
-  'x-user-id': 'user_owner',
-  'x-user-email': 'owner@example.com',
-  'x-user-role': 'owner'
+  host: 'acme.localhost:3000',
+  'x-clerk-user-id': 'user_owner',
+  'x-clerk-user-email': 'owner@example.com'
 } as const;
 
 const dayWindow = {
@@ -89,4 +89,5 @@ describe('booking action + availability fetcher', () => {
     expect(betaSlots).toHaveLength(4);
   });
 });
+
 

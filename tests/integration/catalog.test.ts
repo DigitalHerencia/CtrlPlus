@@ -7,10 +7,16 @@ import { getWrapDesign } from '../../lib/server/fetchers/catalog/get-wrap-design
 import { listWrapDesigns } from '../../lib/server/fetchers/catalog/list-wrap-designs';
 import { catalogStore } from '../../lib/server/fetchers/catalog/store';
 
-const ownerHeaders = {
-  'x-user-id': 'user_owner',
-  'x-user-email': 'owner@example.com',
-  'x-user-role': 'owner'
+const ownerHeadersAcme = {
+  host: 'acme.localhost:3000',
+  'x-clerk-user-id': 'user_owner',
+  'x-clerk-user-email': 'owner@example.com'
+} as const;
+
+const ownerHeadersBeta = {
+  host: 'beta.localhost:3000',
+  'x-clerk-user-id': 'user_owner',
+  'x-clerk-user-email': 'owner@example.com'
 } as const;
 
 describe('catalog wrap design CRUD', () => {
@@ -20,7 +26,7 @@ describe('catalog wrap design CRUD', () => {
 
   it('creates and lists tenant-scoped wrap designs', () => {
     createWrapDesign({
-      headers: ownerHeaders,
+      headers: ownerHeadersAcme,
       payload: {
         tenantId: 'tenant_acme',
         name: 'Acme Carbon',
@@ -29,7 +35,7 @@ describe('catalog wrap design CRUD', () => {
     });
 
     createWrapDesign({
-      headers: ownerHeaders,
+      headers: ownerHeadersBeta,
       payload: {
         tenantId: 'tenant_beta',
         name: 'Beta White',
@@ -48,7 +54,7 @@ describe('catalog wrap design CRUD', () => {
 
   it('supports update and delete via actions', () => {
     const created = createWrapDesign({
-      headers: ownerHeaders,
+      headers: ownerHeadersAcme,
       payload: {
         tenantId: 'tenant_acme',
         name: 'Acme Matte',
@@ -57,7 +63,7 @@ describe('catalog wrap design CRUD', () => {
     });
 
     const updated = updateWrapDesign({
-      headers: ownerHeaders,
+      headers: ownerHeadersAcme,
       payload: {
         tenantId: 'tenant_acme',
         id: created.id,
@@ -70,7 +76,7 @@ describe('catalog wrap design CRUD', () => {
     expect(updated?.priceCents).toBe(54000);
 
     const deleted = deleteWrapDesign({
-      headers: ownerHeaders,
+      headers: ownerHeadersAcme,
       tenantId: 'tenant_acme',
       id: created.id
     });
@@ -81,7 +87,7 @@ describe('catalog wrap design CRUD', () => {
 
   it('prevents cross-tenant reads and writes', () => {
     const created = createWrapDesign({
-      headers: ownerHeaders,
+      headers: ownerHeadersAcme,
       payload: {
         tenantId: 'tenant_acme',
         name: 'Acme Satin',
@@ -94,7 +100,7 @@ describe('catalog wrap design CRUD', () => {
       id: created.id
     });
     const crossTenantUpdate = updateWrapDesign({
-      headers: ownerHeaders,
+      headers: ownerHeadersBeta,
       payload: {
         tenantId: 'tenant_beta',
         id: created.id,
@@ -102,7 +108,7 @@ describe('catalog wrap design CRUD', () => {
       }
     });
     const crossTenantDelete = deleteWrapDesign({
-      headers: ownerHeaders,
+      headers: ownerHeadersBeta,
       tenantId: 'tenant_beta',
       id: created.id
     });
@@ -112,4 +118,5 @@ describe('catalog wrap design CRUD', () => {
     expect(crossTenantDelete).toBe(false);
   });
 });
+
 
