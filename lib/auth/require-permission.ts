@@ -1,4 +1,4 @@
-import { hasPermission, type Permission, type Role } from '../../../features/authz/permissions';
+import { hasPermission, type Permission, type Role } from '../../features/authz/permissions';
 import { requireAuth, type AuthenticatedUser } from './require-auth';
 import { resolveTenantRole } from './resolve-tenant-role';
 

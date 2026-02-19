@@ -1,4 +1,4 @@
-import type { StoredUpload } from '../../lib/server/storage/upload-store';
+import type { StoredUpload } from '../../lib/storage/upload-store';
 import { createTemplatePreview, type TemplateStyle } from './template-preview';
 
 export interface UploadPreviewInput {

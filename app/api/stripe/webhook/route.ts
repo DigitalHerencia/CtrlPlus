@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-import { invoiceStore } from '../../../../lib/server/fetchers/get-invoice';
+import { invoiceStore } from '../../../../lib/fetchers/get-invoice';
 
 interface StripeCheckoutSessionObject {
   readonly id: string;

@@ -1,6 +1,6 @@
 import { WrapCatalogList } from '../../../features/catalog/components/wrap-catalog-list';
-import { getPublicWraps } from '../../../lib/server/fetchers/catalog/get-public-wraps';
-import { getRequestTenant } from '../../../lib/server/tenancy/get-request-tenant';
+import { getPublicWraps } from '../../../lib/fetchers/catalog/get-public-wraps';
+import { getRequestTenant } from '../../../lib/tenancy/get-request-tenant';
 
 export const revalidate = 60;
 

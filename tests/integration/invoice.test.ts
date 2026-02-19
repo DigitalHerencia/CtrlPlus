@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { PermissionError } from '../../lib/server/auth/require-permission';
-import { createInvoice, InvoiceValidationError } from '../../lib/server/actions/create-invoice';
-import { getInvoice, invoiceStore, InvoiceNotFoundError } from '../../lib/server/fetchers/get-invoice';
+import { PermissionError } from '../../lib/auth/require-permission';
+import { createInvoice, InvoiceValidationError } from '../../lib/actions/create-invoice';
+import { getInvoice, invoiceStore, InvoiceNotFoundError } from '../../lib/fetchers/get-invoice';
 
 const ownerHeaders = {
   host: 'acme.localhost:3000',

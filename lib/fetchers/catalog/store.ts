@@ -2,7 +2,7 @@ import type {
   CreateWrapDesignPayload,
   UpdateWrapDesignPayload,
   WrapDesign
-} from '../../../../features/catalog/types';
+} from '../../../features/catalog/types';
 
 export class CatalogStore {
   private readonly designs = new Map<string, WrapDesign>();

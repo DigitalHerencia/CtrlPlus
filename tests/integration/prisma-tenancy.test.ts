@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { TenantScopedPrisma } from '../../lib/server/db/prisma';
+import { TenantScopedPrisma } from '../../lib/db/prisma';
 
 function readRepositoryFile(...parts: string[]): string {
   return readFileSync(join(process.cwd(), ...parts), 'utf8');

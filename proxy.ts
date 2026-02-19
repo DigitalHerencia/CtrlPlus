@@ -1,8 +1,8 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { getClerkCspSources, getClerkPublishableKey, getClerkSecretKey } from './lib/server/auth/clerk-config';
-import { TenantAccessError, requireTenant } from './lib/server/tenancy/require-tenant';
+import { getClerkCspSources, getClerkPublishableKey, getClerkSecretKey } from './lib/auth/clerk-config';
+import { TenantAccessError, requireTenant } from './lib/tenancy/require-tenant';
 
 const isPublicRoute = createRouteMatcher([
   '/',

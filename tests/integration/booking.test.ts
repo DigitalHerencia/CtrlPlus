@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { BookingValidationError, createBooking } from '../../lib/server/actions/create-booking';
-import { bookingStore } from '../../lib/server/fetchers/booking-store';
-import { getAvailability } from '../../lib/server/fetchers/get-availability';
+import { BookingValidationError, createBooking } from '../../lib/actions/create-booking';
+import { bookingStore } from '../../lib/fetchers/booking-store';
+import { getAvailability } from '../../lib/fetchers/get-availability';
 
 const ownerHeaders = {
   host: 'acme.localhost:3000',

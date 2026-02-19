@@ -3,10 +3,16 @@ name: CI Pipeline
 permissions:
   contents: read
 
+env:
+  HUSKY: 0
+
 on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
   workflow_dispatch:
 
 concurrency:

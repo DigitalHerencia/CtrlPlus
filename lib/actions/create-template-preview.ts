@@ -2,7 +2,7 @@ import {
   createTemplatePreview,
   type TemplatePreviewInput,
   type TemplatePreviewResult
-} from '../../../features/visualizer/template-preview';
+} from '../../features/visualizer/template-preview';
 import { requirePermission } from '../auth/require-permission';
 import { requireTenant } from '../tenancy/require-tenant';
 

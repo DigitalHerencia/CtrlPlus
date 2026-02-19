@@ -1,4 +1,4 @@
-import type { WrapDesign } from '../../../../features/catalog/types';
+import type { WrapDesign } from '../../../features/catalog/types';
 import { catalogStore } from './store';
 
 export interface ListWrapDesignsInput {

@@ -228,7 +228,7 @@
 
 ### 9.1 Read-only fetchers (server-only)
 
-Location: `lib/server/fetchers/**`
+Location: `lib/fetchers/**`
 Rules:
 
 * Must not mutate DB.
@@ -244,7 +244,7 @@ Examples:
 
 ### 9.2 Write-only actions (server actions)
 
-Location: `lib/server/actions/**`
+Location: `lib/actions/**`
 Rules:
 
 * Validate input with Zod.
@@ -287,13 +287,13 @@ Examples:
 │  ├─ tenancy/
 │  └─ authz/
 ├─ lib/
-│  ├─ server/
-│  │  ├─ db/ (prisma client)
-│  │  ├─ auth/ (clerk server helpers)
-│  │  ├─ tenancy/
-│  │  ├─ fetchers/
-│  │  ├─ actions/
-│  │  └─ audit/
+│  ├─ db/ (prisma client)
+│  ├─ auth/ (clerk server helpers)
+│  ├─ tenancy/
+│  ├─ fetchers/
+│  ├─ actions/
+│  ├─ rate-limit/
+│  ├─ storage/
 │  ├─ shared/ (types, zod schemas, utils)
 │  └─ client/ (client-only helpers)
 ├─ components/
@@ -309,13 +309,14 @@ Examples:
 ├─ .github/workflows/
 ├─ .husky/
 ├─ .vscode/
+├─ AGENTS.md
+├─ PLANS.md
 ├─ eslint.config.mjs
 ├─ prettier.config.cjs
 ├─ vitest.config.ts
 ├─ playwright.config.ts
 ├─ .codex/
-│  ├─ AGENTS.md
-│  └─ PLANS.md
+│  └─ config.toml
 └─ README.md
 ```
 
@@ -373,10 +374,10 @@ Reference policy documents: [CI Design](./ci-design.md) and [Standard PR Checkli
 
 * Husky pre-commit:
 
-  * `lint-staged` runs ESLint + Prettier + typecheck on staged files.
+  * `lint-staged` runs cached ESLint checks on staged JS/TS files.
 * Pre-push:
 
-  * run unit tests.
+  * run unit tests (`pnpm test tests/unit`).
 
 ### GitHub Actions
 

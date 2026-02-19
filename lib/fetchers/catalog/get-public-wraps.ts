@@ -1,6 +1,6 @@
 import { unstable_cache } from 'next/cache';
 
-import type { WrapDesign } from '../../../../features/catalog/types';
+import type { WrapDesign } from '../../../features/catalog/types';
 import { getWrapDesign } from './get-wrap-design';
 import { listWrapDesigns } from './list-wrap-designs';
 

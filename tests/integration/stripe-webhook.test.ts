@@ -1,9 +1,9 @@
 import { createHmac } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createInvoice } from '../../lib/server/actions/create-invoice';
-import { createCheckoutSession } from '../../lib/server/actions/create-checkout-session';
-import { getInvoice, invoiceStore } from '../../lib/server/fetchers/get-invoice';
+import { createInvoice } from '../../lib/actions/create-invoice';
+import { createCheckoutSession } from '../../lib/actions/create-checkout-session';
+import { getInvoice, invoiceStore } from '../../lib/fetchers/get-invoice';
 import { __internal, POST } from '../../app/api/stripe/webhook/route';
 
 const ownerHeaders = {

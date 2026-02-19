@@ -3,14 +3,14 @@ import { createHmac } from 'node:crypto';
 import { expect, test } from '@playwright/test';
 
 import { POST as stripeWebhookPost, __internal as stripeWebhookInternal } from '../../app/api/stripe/webhook/route';
-import { createBooking } from '../../lib/server/actions/create-booking';
-import { createCheckoutSession } from '../../lib/server/actions/create-checkout-session';
-import { createInvoice } from '../../lib/server/actions/create-invoice';
-import { createUploadPreviewAction } from '../../lib/server/actions/create-upload-preview';
-import { bookingStore } from '../../lib/server/fetchers/booking-store';
-import { getInvoice, invoiceStore } from '../../lib/server/fetchers/get-invoice';
-import { uploadRateLimiter } from '../../lib/server/rate-limit/upload-rate-limit';
-import { uploadStore } from '../../lib/server/storage/upload-store';
+import { createBooking } from '../../lib/actions/create-booking';
+import { createCheckoutSession } from '../../lib/actions/create-checkout-session';
+import { createInvoice } from '../../lib/actions/create-invoice';
+import { createUploadPreviewAction } from '../../lib/actions/create-upload-preview';
+import { bookingStore } from '../../lib/fetchers/booking-store';
+import { getInvoice, invoiceStore } from '../../lib/fetchers/get-invoice';
+import { uploadRateLimiter } from '../../lib/rate-limit/upload-rate-limit';
+import { uploadStore } from '../../lib/storage/upload-store';
 
 const ownerHeaders = {
   host: 'acme.localhost:3000',

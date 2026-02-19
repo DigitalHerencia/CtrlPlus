@@ -1,10 +1,10 @@
 import { headers } from 'next/headers';
 
-import { requirePermission } from '../../../lib/server/auth/require-permission';
-import { bookingStore } from '../../../lib/server/fetchers/booking-store';
-import { invoiceStore } from '../../../lib/server/fetchers/get-invoice';
-import { listWrapDesigns } from '../../../lib/server/fetchers/catalog/list-wrap-designs';
-import { getRequestTenant } from '../../../lib/server/tenancy/get-request-tenant';
+import { requirePermission } from '../../../lib/auth/require-permission';
+import { bookingStore } from '../../../lib/fetchers/booking-store';
+import { invoiceStore } from '../../../lib/fetchers/get-invoice';
+import { listWrapDesigns } from '../../../lib/fetchers/catalog/list-wrap-designs';
+import { getRequestTenant } from '../../../lib/tenancy/get-request-tenant';
 
 export const dynamic = 'force-dynamic';
 

@@ -3,7 +3,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
-import { getClerkPublishableKey } from '../lib/server/auth/clerk-config';
+import { getClerkPublishableKey } from '../lib/auth/clerk-config';
 
 export const metadata: Metadata = {
   title: {

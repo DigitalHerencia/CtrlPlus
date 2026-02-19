@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createUploadPreviewAction } from '../../lib/server/actions/create-upload-preview';
-import { RateLimitError } from '../../lib/server/rate-limit/fixed-window-limiter';
-import { uploadRateLimiter } from '../../lib/server/rate-limit/upload-rate-limit';
-import { UploadValidationError, uploadStore } from '../../lib/server/storage/upload-store';
+import { createUploadPreviewAction } from '../../lib/actions/create-upload-preview';
+import { RateLimitError } from '../../lib/rate-limit/fixed-window-limiter';
+import { uploadRateLimiter } from '../../lib/rate-limit/upload-rate-limit';
+import { UploadValidationError, uploadStore } from '../../lib/storage/upload-store';
 
 const ownerHeaders = {
   host: 'acme.localhost:3000',

@@ -3,9 +3,19 @@ name: PR Quality Gates
 permissions:
   contents: read
 
+env:
+  HUSKY: 0
+
 on:
   pull_request:
     branches: ["**"]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+
+concurrency:
+  group: pr-quality-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   changes:
@@ -21,20 +31,32 @@ jobs:
             e2e:
               - 'app/(tenant)/schedule/**'
               - 'features/scheduling/**'
-              - 'lib/server/actions/scheduling/**'
-              - 'lib/server/fetchers/scheduling/**'
+              - 'lib/actions/create-booking.ts'
+              - 'lib/fetchers/get-availability.ts'
+              - 'lib/fetchers/booking-store.ts'
               - 'app/(tenant)/checkout/**'
               - 'app/api/stripe/**'
               - 'features/billing/**'
-              - 'lib/server/actions/billing/**'
-              - 'lib/server/fetchers/billing/**'
+              - 'lib/actions/create-invoice.ts'
+              - 'lib/actions/create-checkout-session.ts'
+              - 'lib/fetchers/get-invoice.ts'
               - 'app/(tenant)/visualizer/**'
               - 'features/visualizer/**'
-              - 'lib/server/actions/visualizer/**'
-              - 'lib/server/fetchers/visualizer/**'
+              - 'lib/actions/create-template-preview.ts'
+              - 'lib/actions/create-upload-preview.ts'
+              - 'lib/storage/upload-store.ts'
+              - 'lib/rate-limit/fixed-window-limiter.ts'
+              - 'lib/rate-limit/upload-rate-limit.ts'
               - 'app/(auth)/**'
               - 'features/authz/**'
-              - 'lib/server/auth/**'
+              - 'lib/auth/**'
+              - 'lib/tenancy/**'
+              - 'proxy.ts'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'playwright.config.*'
+              - 'next.config.*'
+              - '.github/workflows/**'
 
   lint:
     runs-on: ubuntu-latest

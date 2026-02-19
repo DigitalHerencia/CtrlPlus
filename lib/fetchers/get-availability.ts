@@ -1,4 +1,4 @@
-import { computeSlots, type ComputedSlot } from '../../../features/scheduling/compute-slots';
+import { computeSlots, type ComputedSlot } from '../../features/scheduling/compute-slots';
 import { bookingStore } from './booking-store';
 
 export interface GetAvailabilityInput {

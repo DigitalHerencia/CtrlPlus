@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { TenantAccessError, requireTenant } from '../../lib/server/tenancy/require-tenant';
-import { resolveTenant } from '../../lib/server/tenancy/resolve-tenant';
+import { TenantAccessError, requireTenant } from '../../lib/tenancy/require-tenant';
+import { resolveTenant } from '../../lib/tenancy/resolve-tenant';
 
 describe('tenant resolution middleware primitives', () => {
   it('resolves tenantId from a valid subdomain', () => {

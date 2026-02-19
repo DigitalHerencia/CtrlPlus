@@ -4,8 +4,8 @@ import {
   TEMPLATE_STYLES,
   createTemplatePreview
 } from '../../features/visualizer/template-preview';
-import { createTemplatePreviewAction } from '../../lib/server/actions/create-template-preview';
-import { AuthError } from '../../lib/server/auth/require-auth';
+import { createTemplatePreviewAction } from '../../lib/actions/create-template-preview';
+import { AuthError } from '../../lib/auth/require-auth';
 
 describe('template preview engine', () => {
   it('generates preview HTML + SVG data url for each template style', () => {

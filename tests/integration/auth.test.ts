@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { AuthError, requireAuth } from '../../lib/server/auth/require-auth';
+import { AuthError, requireAuth } from '../../lib/auth/require-auth';
 
 describe('requireAuth', () => {
   it('returns authenticated user from Clerk headers when session context is unavailable', async () => {

@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 
 import { WrapCatalogDetail } from '../../../../features/catalog/components/wrap-catalog-detail';
-import { getPublicWrapById } from '../../../../lib/server/fetchers/catalog/get-public-wraps';
-import { getRequestTenant } from '../../../../lib/server/tenancy/get-request-tenant';
+import { getPublicWrapById } from '../../../../lib/fetchers/catalog/get-public-wraps';
+import { getRequestTenant } from '../../../../lib/tenancy/get-request-tenant';
 
 export const revalidate = 60;
 

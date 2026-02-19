@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { getRolePermissions, hasPermission } from '../../features/authz/permissions';
-import { PermissionError, requirePermission } from '../../lib/server/auth/require-permission';
+import { PermissionError, requirePermission } from '../../lib/auth/require-permission';
 
 describe('rbac permission layer', () => {
   it('grants owner access to admin operations', () => {

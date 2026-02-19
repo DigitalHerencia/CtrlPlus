@@ -25,21 +25,26 @@ Run `test-e2e` for PRs that modify files in any of these paths (or their descend
 
 - `app/(tenant)/schedule/**`
 - `features/scheduling/**`
-- `lib/server/actions/scheduling/**`
-- `lib/server/fetchers/scheduling/**`
+- `lib/actions/create-booking.ts`
+- `lib/fetchers/get-availability.ts`
+- `lib/fetchers/booking-store.ts`
 - `app/(tenant)/checkout/**`
 - `app/api/stripe/**`
 - `features/billing/**`
-- `lib/server/actions/billing/**`
-- `lib/server/fetchers/billing/**`
+- `lib/actions/create-invoice.ts`
+- `lib/actions/create-checkout-session.ts`
+- `lib/fetchers/get-invoice.ts`
 - `app/(tenant)/visualizer/**`
 - `features/visualizer/**`
-- `lib/server/actions/visualizer/**`
-- `lib/server/fetchers/visualizer/**`
+- `lib/actions/create-template-preview.ts`
+- `lib/actions/create-upload-preview.ts`
+- `lib/storage/upload-store.ts`
+- `lib/rate-limit/fixed-window-limiter.ts`
+- `lib/rate-limit/upload-rate-limit.ts`
 - `app/(auth)/**`
 - `features/authz/**`
-- `lib/server/actions/authz/**`
-- `lib/server/fetchers/authz/**`
+- `lib/auth/**`
+- `lib/tenancy/**`
 - `proxy.ts`
 
 Additionally, run `test-e2e` when shared runtime dependencies change:

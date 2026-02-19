@@ -1,4 +1,4 @@
-import type { UpdateWrapDesignPayload, WrapDesign } from '../../../../features/catalog/types';
+import type { UpdateWrapDesignPayload, WrapDesign } from '../../../features/catalog/types';
 import { requirePermission } from '../../auth/require-permission';
 import { catalogStore } from '../../fetchers/catalog/store';
 import { requireTenant } from '../../tenancy/require-tenant';

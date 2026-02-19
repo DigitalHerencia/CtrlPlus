@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createWrapDesign } from '../../lib/server/actions/catalog/create-wrap-design';
-import { deleteWrapDesign } from '../../lib/server/actions/catalog/delete-wrap-design';
-import { updateWrapDesign } from '../../lib/server/actions/catalog/update-wrap-design';
-import { getWrapDesign } from '../../lib/server/fetchers/catalog/get-wrap-design';
-import { listWrapDesigns } from '../../lib/server/fetchers/catalog/list-wrap-designs';
-import { catalogStore } from '../../lib/server/fetchers/catalog/store';
+import { createWrapDesign } from '../../lib/actions/catalog/create-wrap-design';
+import { deleteWrapDesign } from '../../lib/actions/catalog/delete-wrap-design';
+import { updateWrapDesign } from '../../lib/actions/catalog/update-wrap-design';
+import { getWrapDesign } from '../../lib/fetchers/catalog/get-wrap-design';
+import { listWrapDesigns } from '../../lib/fetchers/catalog/list-wrap-designs';
+import { catalogStore } from '../../lib/fetchers/catalog/store';
 
 const ownerHeadersAcme = {
   host: 'acme.localhost:3000',

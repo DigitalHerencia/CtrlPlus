@@ -1,7 +1,7 @@
 import {
   createUploadPreview,
   type UploadPreviewResult
-} from '../../../features/visualizer/upload-preview';
+} from '../../features/visualizer/upload-preview';
 import { requirePermission } from '../auth/require-permission';
 import { RateLimitError } from '../rate-limit/fixed-window-limiter';
 import { uploadRateLimiter } from '../rate-limit/upload-rate-limit';

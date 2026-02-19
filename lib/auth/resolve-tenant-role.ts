@@ -1,4 +1,4 @@
-import { isRole, type Role } from '../../../features/authz/permissions';
+import { isRole, type Role } from '../../features/authz/permissions';
 
 interface TenantRoleMetadata {
   readonly tenantRoles?: Readonly<Record<string, string>>;

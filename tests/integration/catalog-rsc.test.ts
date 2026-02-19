@@ -3,13 +3,13 @@ import { join } from 'node:path';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createWrapDesign } from '../../lib/server/actions/catalog/create-wrap-design';
-import { updateWrapDesign } from '../../lib/server/actions/catalog/update-wrap-design';
+import { createWrapDesign } from '../../lib/actions/catalog/create-wrap-design';
+import { updateWrapDesign } from '../../lib/actions/catalog/update-wrap-design';
 import {
   getPublicWrapById,
   getPublicWraps
-} from '../../lib/server/fetchers/catalog/get-public-wraps';
-import { catalogStore } from '../../lib/server/fetchers/catalog/store';
+} from '../../lib/fetchers/catalog/get-public-wraps';
+import { catalogStore } from '../../lib/fetchers/catalog/store';
 
 const ownerHeaders = {
   host: 'acme.localhost:3000',
