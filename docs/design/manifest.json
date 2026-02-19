@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0.0",
+  "designSystem": {
+    "name": "CTRL+ Design System",
+    "version": "1.0.0",
+    "status": "locked",
+    "locationContext": "El Paso, Texas",
+    "lastUpdated": "2026-02-19"
+  },
+  "canonicalFiles": {
+    "tokens": "docs/design/system.tokens.v1.json",
+    "spec": "docs/design/visual-system.spec.v1.md",
+    "tailwindContract": "docs/design/tailwind-v4.contract.v1.md",
+    "globalStyles": "app/globals.css",
+    "postcssConfig": "postcss.config.mjs"
+  },
+  "codexPolicy": {
+    "loadOrder": [
+      "docs/design/manifest.json",
+      "docs/design/system.tokens.v1.json",
+      "docs/design/visual-system.spec.v1.md",
+      "docs/design/tailwind-v4.contract.v1.md"
+    ],
+    "deviationPolicy": "No deviation without version update."
+  }
+}

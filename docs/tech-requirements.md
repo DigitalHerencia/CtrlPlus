@@ -367,7 +367,7 @@ Examples:
 
 ## 13 CI/CD and tooling
 
-Reference policy documents: [CI Design](./ci-design.md), [Milestone 7 Planning](./milestone-7-planning.md), and [Standard PR Checklist](./pr-checklist.md).
+Reference policy documents: [CI Design](./ci-design.md) and [Standard PR Checklist](./pr-checklist.md).
 
 ### Git hooks
 

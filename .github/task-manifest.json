@@ -670,7 +670,8 @@
             "domain:catalog",
             "scope:backend",
             "scope:db",
-            "p0"
+            "p0",
+            "status:triage"
           ],
           "depends_on": [
             "TEN-002",
@@ -713,7 +714,8 @@
             "type:infra",
             "domain:tenancy",
             "scope:db",
-            "p0"
+            "p0",
+            "status:triage"
           ],
           "depends_on": [
             "TEN-002"
@@ -750,7 +752,8 @@
             "domain:auth",
             "scope:backend",
             "scope:security",
-            "p0"
+            "p0",
+            "status:triage"
           ],
           "depends_on": [
             "AUTH-001",
@@ -791,7 +794,8 @@
             "domain:auth",
             "scope:frontend",
             "scope:e2e",
-            "p0"
+            "p0",
+            "status:triage"
           ],
           "depends_on": [
             "AUTH-001"
@@ -826,7 +830,8 @@
             "type:infra",
             "domain:ci",
             "scope:ci",
-            "p1"
+            "p1",
+            "status:triage"
           ],
           "depends_on": [
             "CI-002"
@@ -859,7 +864,8 @@
             "domain:ci",
             "scope:backend",
             "scope:security",
-            "p1"
+            "p1",
+            "status:triage"
           ],
           "depends_on": [
             "DEMO-001"
@@ -893,7 +899,8 @@
             "type:infra",
             "domain:ci",
             "scope:backend",
-            "p2"
+            "p2",
+            "status:triage"
           ],
           "depends_on": [
             "DEMO-001"
@@ -928,7 +935,8 @@
             "type:docs",
             "domain:ci",
             "scope:docs",
-            "p2"
+            "p2",
+            "status:triage"
           ],
           "depends_on": [
             "DEMO-002",

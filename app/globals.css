@@ -1,16 +1,39 @@
+@import "tailwindcss";
+@source "../app/**/*.{ts,tsx,mdx}";
+@source "../components/**/*.{ts,tsx}";
+@source "../features/**/*.{ts,tsx}";
+
+@theme {
+  --color-ctrl-bg: #0E1A3A;
+  --color-ctrl-primary: #1F46E0;
+  --color-ctrl-secondary: #1234B5;
+  --color-ctrl-text: #F8F9FB;
+  --color-ctrl-decorative: #D8DBF4;
+  --font-sans: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
+  --tracking-headline: 0.024em;
+  --tracking-subtext: 0.005em;
+  --radius-ui: 18px;
+}
+
 :root {
   color-scheme: dark;
-  --bg: #07142b;
+  --color-bg-primary: var(--color-ctrl-bg);
+  --color-accent-primary: var(--color-ctrl-primary);
+  --color-accent-secondary: var(--color-ctrl-secondary);
+  --color-text-primary: var(--color-ctrl-text);
+  --color-decorative: var(--color-ctrl-decorative);
+  --font-primary: var(--font-sans);
+  --bg: var(--color-bg-primary);
   --bg-soft: #102952;
   --surface: #10254a;
   --surface-strong: #14346a;
   --surface-muted: #162c53;
-  --text: #f2f6ff;
+  --text: var(--color-text-primary);
   --text-muted: #c2cfea;
-  --accent: #4688ff;
-  --accent-strong: #2d62ff;
-  --accent-soft: rgba(70, 136, 255, 0.2);
-  --border: rgba(183, 208, 255, 0.25);
+  --accent: var(--color-accent-primary);
+  --accent-strong: var(--color-accent-secondary);
+  --accent-soft: rgba(31, 70, 224, 0.2);
+  --border: rgba(216, 219, 244, 0.25);
   --section-max-width: 1120px;
 }
 
@@ -26,7 +49,7 @@ body {
 }
 
 body {
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-primary);
   background:
     radial-gradient(circle at top, #183d75 0%, rgba(24, 61, 117, 0) 48%),
     linear-gradient(180deg, #061229 0%, #07142b 55%, #09162d 100%);
@@ -90,6 +113,7 @@ p {
   color: var(--text-muted);
 }
 
+@layer components {
 .section-shell {
   width: min(100%, var(--section-max-width));
   margin: 0 auto;
@@ -741,6 +765,39 @@ p {
   gap: 0.6rem;
 }
 
+  .headline {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-headline);
+    line-height: 0.95;
+  }
+
+  .subtext {
+    font-weight: 500;
+    letter-spacing: var(--tracking-subtext);
+  }
+
+  .ui-window {
+    border: 2px solid var(--color-accent-primary);
+    border-radius: var(--radius-ui);
+    overflow: hidden;
+    background-color: var(--color-bg-primary);
+  }
+
+  .ui-window-topbar {
+    height: 40px;
+    background-color: var(--color-accent-primary);
+    display: flex;
+    align-items: center;
+    padding-inline: 1rem;
+  }
+
+  .decorative-shape {
+    color: var(--color-decorative);
+    opacity: 0.06;
+    pointer-events: none;
+  }
+
 @media (max-width: 1120px) {
   .hero {
     grid-template-columns: repeat(10, minmax(0, 1fr));
@@ -838,4 +895,5 @@ p {
   .contact-grid {
     grid-template-columns: 1fr;
   }
+}
 }

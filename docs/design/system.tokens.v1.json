@@ -1,0 +1,90 @@
+{
+  "meta": {
+    "name": "CTRL+ Design System",
+    "version": "1.0.0",
+    "status": "locked",
+    "locationContext": "El Paso, Texas"
+  },
+  "tailwindV4": {
+    "mode": "css-first",
+    "entryFile": "app/globals.css",
+    "postcssConfig": "postcss.config.mjs",
+    "sources": [
+      "../app/**/*.{ts,tsx,mdx}",
+      "../components/**/*.{ts,tsx}",
+      "../features/**/*.{ts,tsx}"
+    ],
+    "themeTokens": {
+      "colorBg": "--color-ctrl-bg",
+      "colorPrimary": "--color-ctrl-primary",
+      "colorSecondary": "--color-ctrl-secondary",
+      "colorText": "--color-ctrl-text",
+      "colorDecorative": "--color-ctrl-decorative",
+      "fontSans": "--font-sans",
+      "trackingHeadline": "--tracking-headline",
+      "trackingSubtext": "--tracking-subtext",
+      "radiusUi": "--radius-ui"
+    }
+  },
+  "colors": {
+    "bgPrimary": "#0E1A3A",
+    "accentPrimary": "#1F46E0",
+    "accentSecondary": "#1234B5",
+    "textPrimary": "#F8F9FB",
+    "decorative": "#D8DBF4"
+  },
+  "typography": {
+    "fontFamily": {
+      "primary": "Inter Tight",
+      "fallback": "ui-sans-serif, system-ui, sans-serif"
+    },
+    "weights": {
+      "headline": 700,
+      "subtext": 500
+    },
+    "tracking": {
+      "headline": "0.024em",
+      "subtext": "0.005em"
+    },
+    "lineHeight": {
+      "headline": 0.95,
+      "body": 1.5
+    },
+    "textCase": {
+      "headline": "uppercase",
+      "body": "sentence"
+    }
+  },
+  "layout": {
+    "uiFrame": {
+      "borderColor": "#1F46E0",
+      "borderWidth": "2px",
+      "radius": "18px",
+      "topBarHeight": "40px",
+      "shadow": false,
+      "gradient": false
+    }
+  },
+  "visualConstraints": {
+    "location": "El Paso, Texas",
+    "vehiclesAllowed": [
+      "Ford F-150",
+      "Chevy Silverado",
+      "Dodge Charger",
+      "Toyota Camry",
+      "Mercedes Sprinter"
+    ],
+    "wrapCharacteristicsRequired": [
+      "hardGraphicEdges",
+      "vinylLayerTransitions",
+      "matteGlossContrast",
+      "visiblePanelSeams"
+    ],
+    "prohibited": [
+      "supercars",
+      "luxuryShowroom",
+      "gradients",
+      "embossEffects"
+    ]
+  }
+}

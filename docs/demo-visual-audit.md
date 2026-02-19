@@ -94,7 +94,7 @@ flowchart TD
 
 The remediation plan is now codified as roadmap tasks under milestone `M9` in `.github/task-manifest.json` (`DEMO-001` through `DEMO-008`) to ensure label/project automation can materialize issues consistently.
 
-A template-aligned issue packet is provided at `docs/github-demo-audit-issue-packet.md` for maintainers and reviewers.
+The roadmap tasks are materialized as GitHub issues `#52` through `#59` and attached to milestone `M9` plus the project board.
 
 ## Suggested acceptance criteria for visual demo approval
 

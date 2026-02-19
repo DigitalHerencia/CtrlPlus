@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import labels from '../../.github/labels.json';
 import manifest from '../../.github/task-manifest.json';
@@ -31,15 +31,12 @@ describe('github governance assets', () => {
     expect(fieldNames.has('Requires E2E')).toBe(true);
   });
 
-  it('keeps performance instrumentation template labels in taxonomy', () => {
-    const template = readFileSync(
-      '.github/ISSUE_TEMPLATE/performance-instrumentation.yml',
-      'utf8'
+  it('keeps only active issue templates in repository', () => {
+    expect(existsSync('.github/ISSUE_TEMPLATE/bug.yml')).toBe(true);
+    expect(existsSync('.github/ISSUE_TEMPLATE/feature.yml')).toBe(true);
+    expect(existsSync('.github/ISSUE_TEMPLATE/infra.yml')).toBe(true);
+    expect(existsSync('.github/ISSUE_TEMPLATE/performance-instrumentation.yml')).toBe(
+      false
     );
-
-    expect(template).toContain('- type:infra');
-    expect(template).toContain('- domain:ci');
-    expect(template).toContain('- scope:ci');
-    expect(template).toContain('- p1');
   });
 });

@@ -8,17 +8,29 @@ export interface WrapCatalogListProps {
 
 export function WrapCatalogList({ wraps }: WrapCatalogListProps) {
   if (wraps.length === 0) {
-    return <p>No published wraps found.</p>;
+    return (
+      <p className="rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-muted)] p-4 text-[color:var(--text-muted)]">
+        No published wraps found.
+      </p>
+    );
   }
 
   return (
-    <ul>
+    <ul className="mt-6 grid list-none gap-4 p-0">
       {wraps.map((wrap) => (
-        <li key={wrap.id}>
-          <h2>{wrap.name}</h2>
-          <p>{wrap.description ?? 'No description provided.'}</p>
-          <p>${(wrap.priceCents / 100).toFixed(2)}</p>
-          <Link href={`/wraps/${wrap.id}`}>View details</Link>
+        <li
+          className="grid gap-2 rounded-2xl border border-[color:var(--border)] bg-[color:var(--surface)] p-4"
+          key={wrap.id}
+        >
+          <h2 className="text-xl font-semibold text-[color:var(--text)]">{wrap.name}</h2>
+          <p className="text-[color:var(--text-muted)]">{wrap.description ?? 'No description provided.'}</p>
+          <p className="font-semibold text-[color:var(--text)]">${(wrap.priceCents / 100).toFixed(2)}</p>
+          <Link
+            className="inline-flex w-fit items-center gap-1 font-semibold text-[color:var(--color-accent-primary)] hover:underline"
+            href={`/wraps/${wrap.id}`}
+          >
+            View details
+          </Link>
         </li>
       ))}
     </ul>
