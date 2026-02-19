@@ -39,7 +39,8 @@
     "M5",
     "M6",
     "M7",
-    "M8"
+    "M8",
+    "M9"
   ],
   "milestones": [
     {
@@ -650,6 +651,305 @@
           "requires_e2e": false,
           "test_types": [
             "integration"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M9",
+      "title": "Demo Visual Approval Readiness",
+      "tasks": [
+        {
+          "id": "DEMO-001",
+          "legacy_ids": [
+            "9.1"
+          ],
+          "title": "Replace in-memory stores with Prisma-backed repositories",
+          "labels": [
+            "type:feature",
+            "domain:catalog",
+            "scope:backend",
+            "scope:db",
+            "p0"
+          ],
+          "depends_on": [
+            "TEN-002",
+            "CAT-001",
+            "SCH-002",
+            "BILL-001"
+          ],
+          "file_map": {
+            "infra": [
+              "lib/server/fetchers/catalog/store.ts",
+              "lib/server/fetchers/booking-store.ts",
+              "lib/server/fetchers/get-invoice.ts",
+              "lib/server/storage/upload-store.ts",
+              "lib/server/db/prisma.ts"
+            ],
+            "tests": [
+              "tests/integration/**"
+            ]
+          },
+          "acceptance_criteria": [
+            "Catalog, booking, invoice, and upload persistence uses Prisma-backed repositories.",
+            "Tenant isolation is enforced through tenantId-scoped queries for all read and write paths.",
+            "In-memory store implementations are removed from runtime code paths.",
+            "Integration tests validate persistence and tenant isolation after process restart boundaries."
+          ],
+          "requires_migration": true,
+          "requires_e2e": true,
+          "test_types": [
+            "integration",
+            "e2e"
+          ]
+        },
+        {
+          "id": "DEMO-002",
+          "legacy_ids": [
+            "9.2"
+          ],
+          "title": "Migrate Prisma datasource from SQLite to Neon Postgres",
+          "labels": [
+            "type:infra",
+            "domain:tenancy",
+            "scope:db",
+            "p0"
+          ],
+          "depends_on": [
+            "TEN-002"
+          ],
+          "file_map": {
+            "db": [
+              "prisma/schema.prisma",
+              "prisma/migrations/**"
+            ],
+            "docs": [
+              "docs/tech-requirements.md",
+              "README.md"
+            ]
+          },
+          "acceptance_criteria": [
+            "Prisma datasource provider is postgres and validated against Neon serverless Postgres.",
+            "Migrations apply cleanly in CI/test database environments.",
+            "Local and CI environment variable contract documents Neon connection requirements."
+          ],
+          "requires_migration": true,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "DEMO-003",
+          "legacy_ids": [
+            "9.3"
+          ],
+          "title": "Align Clerk authorization model with no-org requirement",
+          "labels": [
+            "type:feature",
+            "domain:auth",
+            "scope:backend",
+            "scope:security",
+            "p0"
+          ],
+          "depends_on": [
+            "AUTH-001",
+            "AUTH-002"
+          ],
+          "file_map": {
+            "domain": [
+              "lib/server/auth/resolve-tenant-role.ts",
+              "lib/server/auth/require-permission.ts",
+              "lib/server/auth/require-auth.ts"
+            ],
+            "tests": [
+              "tests/integration/auth.test.ts",
+              "tests/unit/rbac.test.ts"
+            ]
+          },
+          "acceptance_criteria": [
+            "Authorization no longer depends on Clerk org context.",
+            "Tenant membership and role resolution is validated server-side using trusted storage.",
+            "Regression tests cover valid membership, cross-tenant denial, and missing membership paths."
+          ],
+          "requires_migration": true,
+          "requires_e2e": true,
+          "test_types": [
+            "unit",
+            "integration",
+            "e2e"
+          ]
+        },
+        {
+          "id": "DEMO-004",
+          "legacy_ids": [
+            "9.4"
+          ],
+          "title": "Fix sign-up catch-all route segment naming and auth route regression coverage",
+          "labels": [
+            "type:bug",
+            "domain:auth",
+            "scope:frontend",
+            "scope:e2e",
+            "p0"
+          ],
+          "depends_on": [
+            "AUTH-001"
+          ],
+          "file_map": {
+            "app": [
+              "app/(auth)/sign-up/**"
+            ],
+            "tests": [
+              "tests/e2e/**"
+            ]
+          },
+          "acceptance_criteria": [
+            "Sign-up catch-all route segment matches Clerk and Next.js App Router conventions.",
+            "Sign-in/sign-up navigation and callback routing are covered by automated test flow.",
+            "No broken auth routes remain in tenant and public navigation."
+          ],
+          "requires_migration": false,
+          "requires_e2e": true,
+          "test_types": [
+            "integration",
+            "e2e"
+          ]
+        },
+        {
+          "id": "DEMO-005",
+          "legacy_ids": [
+            "9.5"
+          ],
+          "title": "Realign PR e2e path filters to current repository topology",
+          "labels": [
+            "type:infra",
+            "domain:ci",
+            "scope:ci",
+            "p1"
+          ],
+          "depends_on": [
+            "CI-002"
+          ],
+          "file_map": {
+            "ci": [
+              ".github/workflows/pr-quality-gates.yml",
+              "docs/ci-design.md"
+            ]
+          },
+          "acceptance_criteria": [
+            "Conditional e2e triggers include currently used auth, billing, visualizer, scheduling, and shared runtime paths.",
+            "Workflow rules in docs and YAML are synchronized.",
+            "A governance test asserts expected critical-path trigger globs."
+          ],
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "unit"
+          ]
+        },
+        {
+          "id": "DEMO-006",
+          "legacy_ids": [
+            "9.6"
+          ],
+          "title": "Enforce Zod validation for all server action inputs",
+          "labels": [
+            "type:security",
+            "domain:ci",
+            "scope:backend",
+            "scope:security",
+            "p1"
+          ],
+          "depends_on": [
+            "DEMO-001"
+          ],
+          "file_map": {
+            "domain": [
+              "lib/server/actions/**"
+            ],
+            "tests": [
+              "tests/integration/**"
+            ]
+          },
+          "acceptance_criteria": [
+            "All server actions validate input via explicit Zod schemas before mutation side effects.",
+            "Validation errors return deterministic, non-sensitive error responses.",
+            "Integration coverage includes invalid payload edge cases for billing, booking, and preview actions."
+          ],
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "DEMO-007",
+          "legacy_ids": [
+            "9.7"
+          ],
+          "title": "Introduce baseline structured logging with request correlation",
+          "labels": [
+            "type:infra",
+            "domain:ci",
+            "scope:backend",
+            "p2"
+          ],
+          "depends_on": [
+            "DEMO-001"
+          ],
+          "file_map": {
+            "infra": [
+              "lib/server/**",
+              "app/api/**"
+            ],
+            "docs": [
+              "docs/tech-requirements.md"
+            ]
+          },
+          "acceptance_criteria": [
+            "Server actions, fetchers, and webhook handlers emit structured logs with correlation IDs.",
+            "Logs exclude secrets, auth tokens, and raw personal data.",
+            "Error logs include enough context to debug tenant-scoped failures safely."
+          ],
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "DEMO-008",
+          "legacy_ids": [
+            "9.8"
+          ],
+          "title": "Ship environment template and deployment runbook for demo-critical infrastructure",
+          "labels": [
+            "type:docs",
+            "domain:ci",
+            "scope:docs",
+            "p2"
+          ],
+          "depends_on": [
+            "DEMO-002",
+            "DEMO-003"
+          ],
+          "file_map": {
+            "docs": [
+              "README.md",
+              "docs/**",
+              ".env.example"
+            ]
+          },
+          "acceptance_criteria": [
+            "Repository contains a complete .env.example for Neon, Clerk, Stripe, and app runtime settings.",
+            "Deployment runbook documents migration, rollback, and verification steps.",
+            "Onboarding commands for labels/issues/project sync are documented for maintainers."
+          ],
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "docs"
           ]
         }
       ]

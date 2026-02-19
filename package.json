@@ -18,7 +18,9 @@
     "bootstrap:github": "node scripts/github/bootstrap-governance.mjs",
     "bootstrap:labels": "node scripts/github/bootstrap-governance.mjs --labels-only",
     "prepare": "husky",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "bootstrap:issues": "node scripts/github/bootstrap-governance.mjs --issues-only --project-only",
+    "bootstrap:github:dry-run": "node scripts/github/bootstrap-governance.mjs --dry-run --verbose"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.38.0",

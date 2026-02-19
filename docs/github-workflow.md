@@ -55,6 +55,19 @@ Use labels from each category below when creating or triaging issues and pull re
 - Apply **at least one** `scope:*` label.
 - Apply **exactly one** priority label (`p0`, `p1`, `p2`).
 
+
+## Prerequisite: GitHub CLI installation
+
+`pnpm bootstrap:github` shells out to the `gh` binary and **does not** install GitHub CLI for you. Keep `gh` as a machine/runtime prerequisite, not an npm dependency in `package.json`.
+
+Why:
+
+- `gh` is an OS-level authenticated CLI, not a Node package runtime dependency.
+- Installing it via package manager scripts in project code introduces platform-specific drift and security/maintainability overhead.
+- CI and local developer machines should provision `gh` in the environment image/setup step.
+
+For Codex or ephemeral environments, install `gh` in the environment bootstrap/settings layer before running governance commands.
+
 ## Governance bootstrap
 
 Before enabling project board automations or issue/PR templates that reference labels, bootstrap governance assets from the canonical manifest/config files.
