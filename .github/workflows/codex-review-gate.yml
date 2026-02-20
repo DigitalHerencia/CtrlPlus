@@ -1,0 +1,120 @@
+name: Codex Review Gate
+
+on:
+  pull_request:
+    types:
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+env:
+  CODEX_REVIEWER: Codex
+
+jobs:
+  review-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Codex review when checklist is complete
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pr = context.payload.pull_request;
+            const reviewer = process.env.CODEX_REVIEWER;
+
+            const body = pr.body || '';
+            const hasChecklist = /-\s\[(?: |x|X)\]/.test(body);
+            const hasUnchecked = /-\s\[ \]/.test(body);
+            const checklistComplete = hasChecklist && !hasUnchecked;
+
+            if (!checklistComplete) {
+              core.info('Checklist is not complete yet; skipping Codex review gate.');
+              return;
+            }
+
+            async function commentOnce(marker, message) {
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number: pr.number,
+                per_page: 100
+              });
+
+              const exists = comments.some((comment) => (comment.body || '').includes(marker));
+              if (exists) {
+                return;
+              }
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pr.number,
+                body: `${marker}\n${message}`
+              });
+            }
+
+            if (pr.draft) {
+              try {
+                await github.graphql(
+                  `
+                    mutation($pullRequestId: ID!) {
+                      markPullRequestReadyForReview(input: { pullRequestId: $pullRequestId }) {
+                        pullRequest {
+                          number
+                          isDraft
+                        }
+                      }
+                    }
+                  `,
+                  { pullRequestId: pr.node_id }
+                );
+                core.info(`Marked PR #${pr.number} ready for review.`);
+              } catch (error) {
+                core.warning(`Unable to mark PR #${pr.number} ready for review: ${error.message}`);
+              }
+            }
+
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner,
+                repo,
+                pull_number: pr.number,
+                reviewers: [reviewer]
+              });
+              core.info(`Requested reviewer '${reviewer}' on PR #${pr.number}.`);
+            } catch (error) {
+              core.warning(`Unable to request reviewer '${reviewer}': ${error.message}`);
+            }
+
+            try {
+              await github.graphql(
+                `
+                  mutation($pullRequestId: ID!) {
+                    enablePullRequestAutoMerge(
+                      input: { pullRequestId: $pullRequestId, mergeMethod: SQUASH }
+                    ) {
+                      pullRequest {
+                        number
+                      }
+                    }
+                  }
+                `,
+                { pullRequestId: pr.node_id }
+              );
+              core.info(`Enabled auto-merge for PR #${pr.number}.`);
+            } catch (error) {
+              core.warning(`Unable to enable auto-merge on PR #${pr.number}: ${error.message}`);
+            }
+
+            await commentOnce(
+              '<!-- codex-review-gate -->',
+              '@codex checklist is complete; code review and merge gate have been triggered.'
+            );
+

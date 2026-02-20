@@ -10,7 +10,7 @@ This repository now includes baseline engineering and GitHub automation scaffold
 - PR quality-gate workflow with conditional E2E triggers.
 - Issue and pull request templates aligned to the standard checklist.
 - Scripted GitHub label bootstrap matching the canonical taxonomy.
-- Codex/project automation for issue routing, board status syncing, and PR template validation.
+- Codex/project automation for issue routing, board status syncing, PR template validation, and checklist-complete review gating.
 
 ## Local setup
 

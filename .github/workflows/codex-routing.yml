@@ -19,7 +19,7 @@ permissions:
 
 env:
   CODEX_HANDLE: codex
-  DEFAULT_ASSIGNEE: DigitalHerencia
+  DEFAULT_ASSIGNEE: Codex
 
 jobs:
   route:
@@ -152,4 +152,3 @@ jobs:
             } else {
               core.info(`PR #${prNumber} is draft; auto-merge will be attempted after ready_for_review.`);
             }
-

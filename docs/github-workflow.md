@@ -120,6 +120,7 @@ pnpm bootstrap:labels
 The repository enforces issue/PR progression through these workflows:
 
 - `.github/workflows/codex-routing.yml`
+- `.github/workflows/codex-review-gate.yml`
 - `.github/workflows/project-board-automation.yml`
 - `.github/workflows/pr-template-guard.yml`
 
@@ -140,10 +141,9 @@ If your board is a **user-owned** Project v2, set repository secret `PROJECT_AUT
 ### Codex routing behavior
 
 - Issues and PRs receive the `codex` label.
-- Items are assigned to the default human assignee (`DigitalHerencia`) to keep queue ownership explicit.
+- Items are assigned to `Codex` by default.
+- `codex-review-gate.yml` promotes draft PRs to ready-for-review when all checklist boxes are complete, then requests Codex review and enables auto-merge.
 - Workflows tag `@codex` in comments when reviewer assignment cannot be requested.
-
-Important: `@codex` is an organization account on GitHub, so reviewer assignment APIs can fail unless you configure a collaborator account as the reviewer target.
 
 ### PR template enforcement
 
