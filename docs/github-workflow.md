@@ -123,6 +123,8 @@ The repository enforces issue/PR progression through these workflows:
 - `.github/workflows/project-board-automation.yml`
 - `.github/workflows/pr-template-guard.yml`
 
+If your board is a **user-owned** Project v2, set repository secret `PROJECT_AUTOMATION_TOKEN` (PAT with `repo` + `project` scopes) so workflow updates can write board fields.
+
 ### Status transitions (Project v2 `Status` field)
 
 - Issue opened/reopened/labeled:

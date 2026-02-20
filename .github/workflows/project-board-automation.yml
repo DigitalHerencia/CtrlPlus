@@ -35,16 +35,17 @@ jobs:
       - name: Sync issue/pr status with project board
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.PROJECT_AUTOMATION_TOKEN || github.token }}
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const projectTitle = process.env.PROJECT_TITLE;
 
             async function getProject() {
-              const query = `
+              const repositoryQuery = `
                 query($owner: String!, $repo: String!) {
                   repository(owner: $owner, name: $repo) {
-                    projectsV2(first: 50) {
+                    projectsV2(first: 100) {
                       nodes {
                         id
                         title
@@ -55,11 +56,55 @@ jobs:
                 }
               `;
 
-              const data = await github.graphql(query, { owner, repo });
-              const project = data.repository.projectsV2.nodes.find((node) => node.title === projectTitle);
-              if (!project) {
-                core.setFailed(`Project '${projectTitle}' not found in ${owner}/${repo}.`);
+              const ownerQuery = `
+                query($owner: String!) {
+                  user(login: $owner) {
+                    projectsV2(first: 100) {
+                      nodes {
+                        id
+                        title
+                        number
+                      }
+                    }
+                  }
+                  organization(login: $owner) {
+                    projectsV2(first: 100) {
+                      nodes {
+                        id
+                        title
+                        number
+                      }
+                    }
+                  }
+                }
+              `;
+
+              let projects = [];
+
+              try {
+                const repositoryData = await github.graphql(repositoryQuery, { owner, repo });
+                projects = projects.concat(repositoryData.repository?.projectsV2?.nodes ?? []);
+              } catch (error) {
+                core.warning(`Repository project lookup failed: ${error.message}`);
               }
+
+              try {
+                const ownerData = await github.graphql(ownerQuery, { owner });
+                projects = projects.concat(ownerData.user?.projectsV2?.nodes ?? []);
+                projects = projects.concat(ownerData.organization?.projectsV2?.nodes ?? []);
+              } catch (error) {
+                core.warning(`Owner project lookup failed: ${error.message}`);
+              }
+
+              const project = projects.find((node) => node.title === projectTitle);
+              if (!project) {
+                core.warning(
+                  `Project '${projectTitle}' was not found or token lacks project access. ` +
+                    `Set secret PROJECT_AUTOMATION_TOKEN with project scope to enable board sync.`
+                );
+                return null;
+              }
+
               return project;
             }
 
@@ -94,7 +139,8 @@ jobs:
               const statusField = fields.find((field) => field.name === 'Status' && Array.isArray(field.options));
 
               if (!statusField) {
-                core.setFailed(`Status field not found in project '${projectTitle}'.`);
+                core.warning(`Status field not found in project '${projectTitle}'.`);
+                return null;
               }
 
               return statusField;
@@ -292,4 +338,3 @@ jobs:
 
               await setStatus(project.id, linkedItemId, statusField, linkedStatus);
             }
-
