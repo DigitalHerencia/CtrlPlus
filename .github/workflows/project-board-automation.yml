@@ -1,0 +1,295 @@
+name: Project Board Automation
+
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+      - closed
+      - assigned
+      - unassigned
+      - labeled
+      - unlabeled
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - converted_to_draft
+      - synchronize
+      - closed
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  repository-projects: write
+
+env:
+  PROJECT_TITLE: CtrlPlus Platform Board
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync issue/pr status with project board
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const projectTitle = process.env.PROJECT_TITLE;
+
+            async function getProject() {
+              const query = `
+                query($owner: String!, $repo: String!) {
+                  repository(owner: $owner, name: $repo) {
+                    projectsV2(first: 50) {
+                      nodes {
+                        id
+                        title
+                        number
+                      }
+                    }
+                  }
+                }
+              `;
+
+              const data = await github.graphql(query, { owner, repo });
+              const project = data.repository.projectsV2.nodes.find((node) => node.title === projectTitle);
+              if (!project) {
+                core.setFailed(`Project '${projectTitle}' not found in ${owner}/${repo}.`);
+              }
+              return project;
+            }
+
+            async function getStatusField(projectId) {
+              const query = `
+                query($projectId: ID!) {
+                  node(id: $projectId) {
+                    ... on ProjectV2 {
+                      fields(first: 50) {
+                        nodes {
+                          ... on ProjectV2FieldCommon {
+                            id
+                            name
+                          }
+                          ... on ProjectV2SingleSelectField {
+                            id
+                            name
+                            options {
+                              id
+                              name
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              `;
+
+              const data = await github.graphql(query, { projectId });
+              const fields = data.node.fields.nodes;
+              const statusField = fields.find((field) => field.name === 'Status' && Array.isArray(field.options));
+
+              if (!statusField) {
+                core.setFailed(`Status field not found in project '${projectTitle}'.`);
+              }
+
+              return statusField;
+            }
+
+            async function findProjectItemId(projectId, contentId) {
+              let hasNextPage = true;
+              let after = null;
+
+              while (hasNextPage) {
+                const query = `
+                  query($projectId: ID!, $after: String) {
+                    node(id: $projectId) {
+                      ... on ProjectV2 {
+                        items(first: 100, after: $after) {
+                          pageInfo {
+                            hasNextPage
+                            endCursor
+                          }
+                          nodes {
+                            id
+                            content {
+                              __typename
+                              ... on Issue {
+                                id
+                              }
+                              ... on PullRequest {
+                                id
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                `;
+
+                const data = await github.graphql(query, { projectId, after });
+                const items = data.node.items.nodes;
+
+                const matched = items.find((item) => item.content && item.content.id === contentId);
+                if (matched) {
+                  return matched.id;
+                }
+
+                hasNextPage = data.node.items.pageInfo.hasNextPage;
+                after = data.node.items.pageInfo.endCursor;
+              }
+
+              return null;
+            }
+
+            async function ensureItem(projectId, contentId) {
+              let itemId = await findProjectItemId(projectId, contentId);
+              if (itemId) {
+                return itemId;
+              }
+
+              const addMutation = `
+                mutation($projectId: ID!, $contentId: ID!) {
+                  addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
+                    item {
+                      id
+                    }
+                  }
+                }
+              `;
+
+              const added = await github.graphql(addMutation, { projectId, contentId });
+              itemId = added.addProjectV2ItemById.item.id;
+              return itemId;
+            }
+
+            async function setStatus(projectId, itemId, statusField, statusName) {
+              const statusOption = statusField.options.find(
+                (option) => option.name.toLowerCase() === statusName.toLowerCase()
+              );
+
+              if (!statusOption) {
+                core.warning(`Status option '${statusName}' does not exist.`);
+                return;
+              }
+
+              const mutation = `
+                mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                  updateProjectV2ItemFieldValue(
+                    input: {
+                      projectId: $projectId
+                      itemId: $itemId
+                      fieldId: $fieldId
+                      value: { singleSelectOptionId: $optionId }
+                    }
+                  ) {
+                    projectV2Item {
+                      id
+                    }
+                  }
+                }
+              `;
+
+              await github.graphql(mutation, {
+                projectId,
+                itemId,
+                fieldId: statusField.id,
+                optionId: statusOption.id
+              });
+            }
+
+            function issueStatusFromPayload(issue) {
+              const labels = (issue.labels || []).map((label) =>
+                typeof label === 'string' ? label : label.name
+              );
+
+              if (issue.state === 'closed') {
+                return 'Done';
+              }
+              if (labels.includes('status:triage')) {
+                return 'Backlog';
+              }
+              if (labels.includes('codex') || (issue.assignees || []).length > 0) {
+                return 'In Progress';
+              }
+              return 'Ready';
+            }
+
+            function prStatusFromPayload(pr, action) {
+              if (action === 'closed') {
+                return pr.merged_at ? 'Done' : 'Ready';
+              }
+              if (pr.draft) {
+                return 'In Progress';
+              }
+              return 'In Review';
+            }
+
+            function extractClosingIssueNumbers(body) {
+              const text = body || '';
+              const regex =
+                /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+(?:[\w.-]+\/[\w.-]+)?#(\d+)\b/gi;
+              const numbers = new Set();
+              let match;
+
+              while ((match = regex.exec(text)) !== null) {
+                numbers.add(Number(match[1]));
+              }
+
+              return [...numbers];
+            }
+
+            const project = await getProject();
+            if (!project) {
+              return;
+            }
+
+            const statusField = await getStatusField(project.id);
+            if (!statusField) {
+              return;
+            }
+
+            if (context.eventName === 'issues') {
+              const issue = context.payload.issue;
+              const itemId = await ensureItem(project.id, issue.node_id);
+              await setStatus(project.id, itemId, statusField, issueStatusFromPayload(issue));
+              return;
+            }
+
+            const pr = context.payload.pull_request;
+            const action = context.payload.action;
+            const prItemId = await ensureItem(project.id, pr.node_id);
+            await setStatus(project.id, prItemId, statusField, prStatusFromPayload(pr, action));
+
+            const linkedIssues = extractClosingIssueNumbers(pr.body);
+            for (const issueNumber of linkedIssues) {
+              let linkedIssue;
+              try {
+                linkedIssue = await github.rest.issues.get({
+                  owner,
+                  repo,
+                  issue_number: issueNumber
+                });
+              } catch (error) {
+                core.warning(`Failed to fetch linked issue #${issueNumber}: ${error.message}`);
+                continue;
+              }
+
+              const linkedItemId = await ensureItem(project.id, linkedIssue.data.node_id);
+              const linkedStatus =
+                action === 'closed'
+                  ? pr.merged_at
+                    ? 'Done'
+                    : 'Ready'
+                  : pr.draft
+                    ? 'In Progress'
+                    : 'In Review';
+
+              await setStatus(project.id, linkedItemId, statusField, linkedStatus);
+            }
+

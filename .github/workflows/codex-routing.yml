@@ -1,0 +1,155 @@
+name: Codex Routing
+
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - synchronize
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+env:
+  CODEX_HANDLE: codex
+  DEFAULT_ASSIGNEE: DigitalHerencia
+
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Route issue/pr to Codex
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const codexHandle = process.env.CODEX_HANDLE;
+            const defaultAssignee = process.env.DEFAULT_ASSIGNEE;
+
+            async function ensureCodexLabel(number) {
+              try {
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: number,
+                  labels: ['codex']
+                });
+              } catch (error) {
+                core.warning(`Failed to add codex label on #${number}: ${error.message}`);
+              }
+            }
+
+            async function ensureAssignee(number) {
+              try {
+                await github.rest.issues.addAssignees({
+                  owner,
+                  repo,
+                  issue_number: number,
+                  assignees: [defaultAssignee]
+                });
+              } catch (error) {
+                core.warning(`Failed to assign #${number} to ${defaultAssignee}: ${error.message}`);
+              }
+            }
+
+            async function hasMarkerComment(number, marker) {
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number: number,
+                per_page: 100
+              });
+              return comments.some((comment) => (comment.body || '').includes(marker));
+            }
+
+            async function commentOnce(number, marker, body) {
+              const exists = await hasMarkerComment(number, marker);
+              if (exists) {
+                return;
+              }
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: number,
+                body: `${marker}\n${body}`
+              });
+            }
+
+            async function tryRequestReview(prNumber) {
+              try {
+                await github.rest.pulls.requestReviewers({
+                  owner,
+                  repo,
+                  pull_number: prNumber,
+                  reviewers: [codexHandle]
+                });
+                return true;
+              } catch (error) {
+                core.warning(`Codex reviewer request failed for PR #${prNumber}: ${error.message}`);
+                return false;
+              }
+            }
+
+            async function tryEnableAutoMerge(prNodeId, prNumber) {
+              try {
+                await github.graphql(
+                  `
+                    mutation($pullRequestId: ID!) {
+                      enablePullRequestAutoMerge(
+                        input: { pullRequestId: $pullRequestId, mergeMethod: SQUASH }
+                      ) {
+                        pullRequest {
+                          number
+                        }
+                      }
+                    }
+                  `,
+                  { pullRequestId: prNodeId }
+                );
+                core.info(`Enabled auto-merge for PR #${prNumber}.`);
+              } catch (error) {
+                core.warning(`Auto-merge not enabled for PR #${prNumber}: ${error.message}`);
+              }
+            }
+
+            if (context.eventName === 'issues') {
+              const issueNumber = context.payload.issue.number;
+              await ensureCodexLabel(issueNumber);
+              await ensureAssignee(issueNumber);
+              await commentOnce(
+                issueNumber,
+                '<!-- codex-routing-issue -->',
+                `@${codexHandle} this issue is routed for Codex implementation tracking.`
+              );
+              return;
+            }
+
+            const pr = context.payload.pull_request;
+            const prNumber = pr.number;
+            await ensureCodexLabel(prNumber);
+            await ensureAssignee(prNumber);
+
+            const reviewerAssigned = await tryRequestReview(prNumber);
+            if (!reviewerAssigned) {
+              await commentOnce(
+                prNumber,
+                '<!-- codex-routing-pr -->',
+                `@${codexHandle} please review this PR. GitHub reviewer assignment may fail when the account is not a repository collaborator.`
+              );
+            }
+
+            if (!pr.draft) {
+              await tryEnableAutoMerge(pr.node_id, prNumber);
+            } else {
+              core.info(`PR #${prNumber} is draft; auto-merge will be attempted after ready_for_review.`);
+            }
+

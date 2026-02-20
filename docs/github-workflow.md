@@ -102,7 +102,7 @@ Canonical sources:
    gh project list --owner <owner> --limit 20
    ```
 
-Note: GitHub does not currently expose full CLI automation for project views and rules, so board views/automation from `.github/project-v2.json` should be mirrored manually in the project UI.
+Board metadata from `.github/project-v2.json` (field definitions and labels) is bootstrapped by script. Runtime status movement and Codex routing are handled by GitHub Actions workflows.
 
 ### Option B: Labels-only sync
 
@@ -114,3 +114,40 @@ pnpm bootstrap:labels
 
 - `.github/task-manifest.json` is the source of truth for roadmap structure, milestone ordering, dependencies, and file-touch maps.
 - Update milestone/task definitions in `.github/task-manifest.json` first, then sync GitHub issues/projects.
+
+## Automated project flow
+
+The repository enforces issue/PR progression through these workflows:
+
+- `.github/workflows/codex-routing.yml`
+- `.github/workflows/project-board-automation.yml`
+- `.github/workflows/pr-template-guard.yml`
+
+### Status transitions (Project v2 `Status` field)
+
+- Issue opened/reopened/labeled:
+  - `status:triage` -> `Backlog`
+  - otherwise with assignee or `codex` label -> `In Progress`
+  - otherwise -> `Ready`
+- PR opened/reopened/synchronized:
+  - draft PR -> `In Progress`
+  - ready PR -> `In Review`
+- PR merged or Issue closed -> `Done`
+- PR closed without merge -> `Ready`
+
+### Codex routing behavior
+
+- Issues and PRs receive the `codex` label.
+- Items are assigned to the default human assignee (`DigitalHerencia`) to keep queue ownership explicit.
+- Workflows tag `@codex` in comments when reviewer assignment cannot be requested.
+
+Important: `@codex` is an organization account on GitHub, so reviewer assignment APIs can fail unless you configure a collaborator account as the reviewer target.
+
+### PR template enforcement
+
+`pr-template-guard.yml` requires every PR body to include:
+
+- `## Summary`
+- `## Architecture / Security Checklist`
+- `## Testing`
+- An issue-closing reference, for example `Closes #123`
