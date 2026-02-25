@@ -30,7 +30,6 @@ export async function createUploadPreviewAction(
   const permissionContext = await requirePermission({
     headers: input.headers,
     tenantId,
-    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'catalog:write'
   });
 

@@ -2,7 +2,6 @@ import { isRole, type Role } from '../../features/authz/permissions';
 
 interface TenantRoleMetadata {
   readonly tenantRoles?: Readonly<Record<string, string>>;
-  readonly orgRoles?: Readonly<Record<string, string>>;
 }
 
 type TenantRoleBindings = Readonly<Record<string, Readonly<Record<string, Role>>>>;
@@ -25,8 +24,6 @@ const DEFAULT_NON_PRODUCTION_ROLE_BINDINGS: TenantRoleBindings = {
 
 export interface ResolveTenantRoleInput {
   readonly tenantId: string;
-  readonly tenantClerkOrgId: string;
-  readonly activeOrgId: string | null;
   readonly actorUserId: string;
   readonly privateMetadata: unknown;
 }
@@ -78,16 +75,11 @@ function parsePrivateMetadata(privateMetadata: unknown): TenantRoleMetadata {
 
   const metadata = privateMetadata as Record<string, unknown>;
   const tenantRoles = metadata.tenantRoles;
-  const orgRoles = metadata.orgRoles;
 
   return {
     tenantRoles:
       tenantRoles && typeof tenantRoles === 'object' && !Array.isArray(tenantRoles)
         ? (tenantRoles as Record<string, string>)
-        : undefined,
-    orgRoles:
-      orgRoles && typeof orgRoles === 'object' && !Array.isArray(orgRoles)
-        ? (orgRoles as Record<string, string>)
         : undefined
   };
 }
@@ -101,19 +93,10 @@ function readRole(candidate: string | undefined): Role | null {
 }
 
 export function resolveTenantRole(input: ResolveTenantRoleInput): Role | null {
-  if (input.activeOrgId !== input.tenantClerkOrgId) {
-    return null;
-  }
-
   const metadata = parsePrivateMetadata(input.privateMetadata);
   const tenantRole = readRole(metadata.tenantRoles?.[input.tenantId]);
   if (tenantRole) {
     return tenantRole;
-  }
-
-  const orgRole = readRole(metadata.orgRoles?.[input.tenantClerkOrgId]);
-  if (orgRole) {
-    return orgRole;
   }
 
   return readRoleBindings()[input.tenantId]?.[input.actorUserId] ?? null;

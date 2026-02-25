@@ -25,7 +25,6 @@ export default async function AdminDashboardPage() {
   await requirePermission({
     headers: headerMap,
     tenantId: tenant.tenantId,
-    tenantClerkOrgId: tenant.clerkOrgId,
     permission: 'admin:read'
   });
 

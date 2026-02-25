@@ -18,7 +18,6 @@ export async function updateWrapDesign(input: UpdateWrapDesignActionInput): Prom
   await requirePermission({
     headers: input.headers,
     tenantId,
-    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'catalog:write'
   });
 
