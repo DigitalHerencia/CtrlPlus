@@ -23,7 +23,7 @@ export default async function WrapDetailsPage({ params }: WrapDetailsPageProps) 
   return (
     <main className="mx-auto grid w-full max-w-4xl gap-4 px-5 py-10 md:px-6">
       <p className="text-sm uppercase tracking-[0.08em] text-[color:var(--text-muted)]">
-        {tenant.slug.toUpperCase()} / Wrap Details
+        {tenant.slug.toUpperCase()} / Wraps
       </p>
       <WrapCatalogDetail wrap={wrap} />
     </main>
