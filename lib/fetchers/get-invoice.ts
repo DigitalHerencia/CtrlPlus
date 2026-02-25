@@ -121,7 +121,6 @@ export async function getInvoice(input: GetInvoiceInput): Promise<InvoiceRecord>
   await requirePermission({
     headers: input.headers,
     tenantId,
-    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'billing:read'
   });
 

@@ -15,7 +15,6 @@ export class PermissionError extends Error {
 export interface RequirePermissionInput {
   readonly headers: Readonly<Record<string, string | undefined>>;
   readonly tenantId: string;
-  readonly tenantClerkOrgId: string;
   readonly permission: Permission;
 }
 
@@ -32,8 +31,6 @@ export async function requirePermission(input: RequirePermissionInput): Promise<
 
   const role = resolveTenantRole({
     tenantId: input.tenantId,
-    tenantClerkOrgId: input.tenantClerkOrgId,
-    activeOrgId: user.orgId,
     actorUserId: user.userId,
     privateMetadata: user.privateMetadata
   });

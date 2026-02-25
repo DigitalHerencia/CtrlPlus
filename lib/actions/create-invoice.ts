@@ -34,7 +34,6 @@ export async function createInvoice(input: CreateInvoiceInput): Promise<InvoiceR
   await requirePermission({
     headers: input.headers,
     tenantId,
-    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'billing:write'
   });
 

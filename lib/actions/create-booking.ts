@@ -34,7 +34,6 @@ export async function createBooking(input: CreateBookingActionInput): Promise<Bo
   await requirePermission({
     headers: input.headers,
     tenantId,
-    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'schedule:write'
   });
 

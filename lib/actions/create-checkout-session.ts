@@ -32,7 +32,6 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
   await requirePermission({
     headers: input.headers,
     tenantId,
-    tenantClerkOrgId: tenantContext.tenant.clerkOrgId,
     permission: 'billing:write'
   });
 
