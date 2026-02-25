@@ -12,20 +12,12 @@ const e2eTriggerGlobs = [
   'features/catalog/**',
   'features/scheduling/**',
   'features/visualizer/**',
-  'lib/actions/catalog/**',
-  'lib/actions/create-booking.ts',
-  'lib/actions/create-checkout-session.ts',
-  'lib/actions/create-invoice.ts',
-  'lib/actions/create-template-preview.ts',
-  'lib/actions/create-upload-preview.ts',
+  'lib/actions/**',
   'lib/auth/**',
-  'lib/fetchers/booking-store.ts',
-  'lib/fetchers/catalog/**',
-  'lib/fetchers/get-availability.ts',
-  'lib/fetchers/get-invoice.ts',
-  'lib/rate-limit/fixed-window-limiter.ts',
-  'lib/rate-limit/upload-rate-limit.ts',
-  'lib/storage/upload-store.ts',
+  'lib/db/**',
+  'lib/fetchers/**',
+  'lib/rate-limit/**',
+  'lib/storage/**',
   'lib/tenancy/**',
   'prisma/**',
   'proxy.ts',
@@ -37,12 +29,63 @@ const e2eTriggerGlobs = [
   '.github/workflows/**'
 ] as const;
 
-const staleE2eTriggerGlobs = [
-  'app/(tenant)/schedule/**',
-  'app/(tenant)/checkout/**',
-  'app/(tenant)/visualizer/**',
-  'features/billing/**'
-] as const;
+function extractWorkflowE2eGlobs(workflow: string): string[] {
+  const lines = workflow.split('\n');
+  const globs: string[] = [];
+  let inE2eBlock = false;
+
+  for (const line of lines) {
+    if (line.trim() === 'e2e:') {
+      inE2eBlock = true;
+      continue;
+    }
+
+    if (inE2eBlock) {
+      const match = line.match(/^\s+- '([^']+)'$/);
+      if (match) {
+        globs.push(match[1]);
+        continue;
+      }
+
+      if (line.trim() !== '' && !line.startsWith(' '.repeat(14))) {
+        break;
+      }
+    }
+  }
+
+  return globs;
+}
+
+function extractCiDesignE2eGlobs(ciDesign: string): string[] {
+  const lines = ciDesign.split('\n');
+  const globs: string[] = [];
+  let inE2eSection = false;
+
+  for (const line of lines) {
+    if (line.startsWith('Run `test-e2e` for PRs that modify files in any of these paths')) {
+      inE2eSection = true;
+      continue;
+    }
+
+    if (inE2eSection) {
+      const match = line.match(/^- `([^`]+)`$/);
+      if (match) {
+        globs.push(match[1]);
+        continue;
+      }
+
+      if (line.startsWith('## ')) {
+        break;
+      }
+    }
+  }
+
+  if (globs.length === 0) {
+    throw new Error('Could not find e2e glob list in docs/ci-design.md');
+  }
+
+  return globs;
+}
 
 describe('github governance assets', () => {
   it('keeps task labels aligned with .github/labels.json', () => {
@@ -90,14 +133,10 @@ describe('github governance assets', () => {
     const workflow = readFileSync('.github/workflows/pr-quality-gates.yml', 'utf8');
     const ciDesign = readFileSync('docs/ci-design.md', 'utf8');
 
-    for (const glob of e2eTriggerGlobs) {
-      expect(workflow).toContain(`- '${glob}'`);
-      expect(ciDesign).toContain(`- \`${glob}\``);
-    }
+    const workflowGlobs = extractWorkflowE2eGlobs(workflow);
+    const ciDesignGlobs = extractCiDesignE2eGlobs(ciDesign);
 
-    for (const staleGlob of staleE2eTriggerGlobs) {
-      expect(workflow).not.toContain(staleGlob);
-      expect(ciDesign).not.toContain(staleGlob);
-    }
+    expect(workflowGlobs).toEqual([...e2eTriggerGlobs]);
+    expect(ciDesignGlobs).toEqual([...e2eTriggerGlobs]);
   });
 });
