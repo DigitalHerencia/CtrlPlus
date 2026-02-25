@@ -1,35 +1,64 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-const routeFiles = [
-  'app/page.tsx',
-  'app/about/page.tsx',
-  'app/features/page.tsx',
-  'app/contact/page.tsx',
-  'app/(auth)/sign-in/[[...sign-in]]/page.tsx',
-  'app/(auth)/sign-up/[[...sign-up]]/page.tsx',
-  'app/(tenant)/wraps/page.tsx',
-  'app/(tenant)/wraps/[id]/page.tsx',
-  'app/(tenant)/admin/page.tsx',
-  'components/public/public-site-shell.tsx',
-  'features/catalog/components/wrap-catalog-list.tsx',
-  'features/catalog/components/wrap-catalog-detail.tsx'
-] as const;
+import {
+  DESIGN_000_BLOCKED_TERMS,
+  DESIGN_000_ROUTE_MATRIX
+} from '../fixtures/design-000-route-matrix.fixture';
 
-const blockedTerms = ['premium', 'luxury', 'elite', 'best-in-class', 'world-class', 'exclusive'] as const;
+async function collectRoutePageFiles(directory: string): Promise<string[]> {
+  const results: string[] = [];
+  const entries = await readdir(directory, { withFileTypes: true });
+
+  for (const entry of entries) {
+    const absolutePath = path.join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      results.push(...(await collectRoutePageFiles(absolutePath)));
+      continue;
+    }
+
+    if (entry.isFile() && entry.name === 'page.tsx') {
+      results.push(path.relative(process.cwd(), absolutePath).replaceAll('\\', '/'));
+    }
+  }
+
+  return results;
+}
 
 describe('site copy governance', () => {
-  it('avoids blocked hype terms in user-facing routes and components', async () => {
-    for (const routeFile of routeFiles) {
-      const absolutePath = path.resolve(process.cwd(), routeFile);
+  it('keeps DESIGN-000 route matrix aligned with app route pages', async () => {
+    const appPageFiles = await collectRoutePageFiles(path.resolve(process.cwd(), 'app'));
+    const matrixFiles = DESIGN_000_ROUTE_MATRIX.map((entry) => entry.filePath).sort();
+
+    expect(matrixFiles).toEqual(appPageFiles.sort());
+  });
+
+  it('enforces required route-by-route copy and visual snippets', async () => {
+    for (const routeExpectation of DESIGN_000_ROUTE_MATRIX) {
+      const absolutePath = path.resolve(process.cwd(), routeExpectation.filePath);
+      const content = await readFile(absolutePath, 'utf8');
+
+      for (const requiredSnippet of routeExpectation.requiredSnippets) {
+        expect(
+          content,
+          `${routeExpectation.route} (${routeExpectation.filePath}) missing snippet: ${requiredSnippet}`
+        ).toContain(requiredSnippet);
+      }
+    }
+  });
+
+  it('avoids blocked hype terms in DESIGN-000 route files', async () => {
+    for (const routeExpectation of DESIGN_000_ROUTE_MATRIX) {
+      const absolutePath = path.resolve(process.cwd(), routeExpectation.filePath);
       const content = (await readFile(absolutePath, 'utf8')).toLowerCase();
 
-      for (const blockedTerm of blockedTerms) {
+      for (const blockedTerm of DESIGN_000_BLOCKED_TERMS) {
         expect(
           content.includes(blockedTerm),
-          `${routeFile} must not include blocked term: ${blockedTerm}`
+          `${routeExpectation.route} (${routeExpectation.filePath}) must not include blocked term: ${blockedTerm}`
         ).toBe(false);
       }
     }
