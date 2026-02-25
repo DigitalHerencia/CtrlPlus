@@ -2,6 +2,10 @@
 
 - Describe the change and why it is needed.
 
+## Linked Issue
+
+- Closes #<issue-number>
+
 ## Architecture / Security Checklist
 
 - [ ] No Prisma usage was added in `app/`.
