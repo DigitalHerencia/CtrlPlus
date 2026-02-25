@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { requirePermission } from '../auth/require-permission';
 import { invoiceStore } from '../fetchers/get-invoice';
+import { createLogContext, logEvent } from '../observability/structured-logger';
 import { requireTenant } from '../tenancy/require-tenant';
 import { headerSchema, validateActionInput } from './validation';
 
@@ -41,6 +42,22 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
     routeTenantId: validatedInput.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
+  const logContext = createLogContext({
+    headers: validatedInput.headers,
+    tenantId,
+    source: 'action.create-checkout-session'
+  });
+
+  logEvent({
+    event: 'checkout.create.requested',
+    context: logContext,
+    data: {
+      tenantId,
+      invoiceId: validatedInput.invoiceId,
+      successUrl: validatedInput.successUrl,
+      cancelUrl: validatedInput.cancelUrl
+    }
+  });
 
   await requirePermission({
     headers: validatedInput.headers,
@@ -50,6 +67,16 @@ export async function createCheckoutSession(input: CreateCheckoutSessionInput): 
 
   const sessionId = createSessionId(tenantId, validatedInput.invoiceId);
   invoiceStore.markCheckoutSession(tenantId, validatedInput.invoiceId, sessionId);
+
+  logEvent({
+    event: 'checkout.create.succeeded',
+    context: logContext,
+    data: {
+      tenantId,
+      invoiceId: validatedInput.invoiceId,
+      sessionId
+    }
+  });
 
   return {
     sessionId,

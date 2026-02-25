@@ -4,7 +4,7 @@
 
 ## Linked Issue
 
-- Closes #57
+- Closes #58
 
 ## Architecture / Security Checklist
 
@@ -13,6 +13,7 @@
 - [ ] Server-side authz checks were added/updated where required.
 - [ ] Inputs for mutations are validated with Zod in server actions.
 - [ ] Validation failures return deterministic, safe action errors.
+- [ ] Structured logs include correlation IDs and explicit redaction for secrets/sensitive payloads.
 
 ## Testing
 

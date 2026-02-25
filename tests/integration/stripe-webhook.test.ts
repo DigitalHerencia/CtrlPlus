@@ -1,10 +1,11 @@
 import { createHmac } from 'node:crypto';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createInvoice } from '../../lib/actions/create-invoice';
-import { createCheckoutSession } from '../../lib/actions/create-checkout-session';
-import { getInvoice, invoiceStore } from '../../lib/fetchers/get-invoice';
 import { __internal, POST } from '../../app/api/stripe/webhook/route';
+import { createCheckoutSession } from '../../lib/actions/create-checkout-session';
+import { createInvoice } from '../../lib/actions/create-invoice';
+import { getInvoice, invoiceStore } from '../../lib/fetchers/get-invoice';
+import { resetLogSink, setLogSink, type StructuredLogEntry } from '../../lib/observability/structured-logger';
 
 const ownerHeaders = {
   host: 'acme.localhost:3000',
@@ -21,10 +22,20 @@ function signPayload(payload: string): string {
 }
 
 describe('stripe checkout + webhook integration', () => {
+  const entries: StructuredLogEntry[] = [];
+
   beforeEach(() => {
     process.env.STRIPE_WEBHOOK_SECRET = webhookSecret;
     invoiceStore.reset();
     __internal.resetProcessedEvents();
+    entries.length = 0;
+    setLogSink((entry) => {
+      entries.push(entry);
+    });
+  });
+
+  afterEach(() => {
+    resetLogSink();
   });
 
   it('creates a checkout session and marks invoice paid from webhook', async () => {
@@ -171,14 +182,20 @@ describe('stripe checkout + webhook integration', () => {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
-          'stripe-signature': 't=123,v1=deadbeef'
+          'stripe-signature': 't=123,v1=deadbeef',
+          'x-correlation-id': 'corr_webhook_invalid'
         },
         body: payload
       })
     );
 
     expect(response.status).toBe(400);
+
+    const invalidSigLog = entries.find((entry) => entry.event === 'stripe.webhook.invalid_signature');
+    expect(invalidSigLog?.context.correlationId).toBe('corr_webhook_invalid');
+    expect(invalidSigLog?.data).toMatchObject({
+      payload: '[REDACTED]',
+      stripeSignature: '[REDACTED]'
+    });
   });
 });
-
-

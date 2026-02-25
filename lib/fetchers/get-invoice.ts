@@ -1,5 +1,6 @@
 import { requirePermission } from '../auth/require-permission';
 import { tenantScopedPrisma, type InvoiceRecord } from '../db/prisma';
+import { createLogContext, logEvent } from '../observability/structured-logger';
 import { requireTenant } from '../tenancy/require-tenant';
 
 export type { InvoiceRecord };
@@ -82,6 +83,20 @@ export async function getInvoice(input: GetInvoiceInput): Promise<InvoiceRecord>
     routeTenantId: input.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
+  const logContext = createLogContext({
+    headers: input.headers,
+    tenantId,
+    source: 'fetcher.get-invoice'
+  });
+
+  logEvent({
+    event: 'invoice.fetch.requested',
+    context: logContext,
+    data: {
+      tenantId,
+      invoiceId: input.invoiceId
+    }
+  });
 
   await requirePermission({
     headers: input.headers,
@@ -91,8 +106,30 @@ export async function getInvoice(input: GetInvoiceInput): Promise<InvoiceRecord>
 
   const invoice = invoiceStore.findByTenant(tenantId, input.invoiceId);
   if (!invoice) {
+    logEvent({
+      level: 'warn',
+      event: 'invoice.fetch.not_found',
+      context: logContext,
+      data: {
+        tenantId,
+        invoiceId: input.invoiceId
+      }
+    });
+
     throw new InvoiceNotFoundError('Invoice not found');
   }
+
+  logEvent({
+    event: 'invoice.fetch.succeeded',
+    context: logContext,
+    data: {
+      tenantId,
+      invoiceId: invoice.id,
+      status: invoice.status,
+      amountCents: invoice.amountCents,
+      customerEmail: invoice.customerEmail
+    }
+  });
 
   return invoice;
 }

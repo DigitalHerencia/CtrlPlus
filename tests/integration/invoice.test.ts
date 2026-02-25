@@ -1,9 +1,10 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { PermissionError } from '../../lib/auth/require-permission';
 import { createInvoice } from '../../lib/actions/create-invoice';
 import { ActionInputValidationError } from '../../lib/actions/validation';
+import { PermissionError } from '../../lib/auth/require-permission';
 import { getInvoice, invoiceStore, InvoiceNotFoundError } from '../../lib/fetchers/get-invoice';
+import { resetLogSink, setLogSink, type StructuredLogEntry } from '../../lib/observability/structured-logger';
 
 const ownerHeaders = {
   host: 'acme.localhost:3000',
@@ -27,8 +28,18 @@ const viewerHeaders = {
 } as const;
 
 describe('invoice domain', () => {
+  const entries: StructuredLogEntry[] = [];
+
   beforeEach(() => {
     invoiceStore.reset();
+    entries.length = 0;
+    setLogSink((entry) => {
+      entries.push(entry);
+    });
+  });
+
+  afterEach(() => {
+    resetLogSink();
   });
 
   it('creates and fetches an invoice for the same tenant', async () => {
@@ -74,7 +85,6 @@ describe('invoice domain', () => {
     ).rejects.toThrowError(ActionInputValidationError);
   });
 
-
   it('rejects malformed invoice payloads with deterministic validation errors', async () => {
     await expect(
       createInvoice({
@@ -84,6 +94,34 @@ describe('invoice domain', () => {
         amountCents: 0
       })
     ).rejects.toThrowError(ActionInputValidationError);
+  });
+
+  it('propagates correlation id and redacts invoice logs', async () => {
+    const headersWithCorrelation = {
+      ...ownerHeaders,
+      'x-correlation-id': 'corr_invoice_1'
+    };
+
+    const created = await createInvoice({
+      headers: headersWithCorrelation,
+      tenantId: 'tenant_acme',
+      customerEmail: 'acme@example.com',
+      amountCents: 180000
+    });
+
+    await getInvoice({
+      headers: headersWithCorrelation,
+      tenantId: 'tenant_acme',
+      invoiceId: created.id
+    });
+
+    const createRequestedLog = entries.find((entry) => entry.event === 'invoice.create.requested');
+    const fetchSucceededLog = entries.find((entry) => entry.event === 'invoice.fetch.succeeded');
+
+    expect(createRequestedLog?.context.correlationId).toBe('corr_invoice_1');
+    expect(fetchSucceededLog?.context.correlationId).toBe('corr_invoice_1');
+    expect(createRequestedLog?.data).toMatchObject({ customerEmail: '[REDACTED]' });
+    expect(fetchSucceededLog?.data).toMatchObject({ customerEmail: '[REDACTED]' });
   });
 
   it('enforces tenant isolation when reading invoices', async () => {
@@ -107,4 +145,3 @@ describe('invoice domain', () => {
     ).rejects.toThrowError(InvoiceNotFoundError);
   });
 });
-
