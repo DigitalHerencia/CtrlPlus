@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { requirePermission } from '../auth/require-permission';
 import { invoiceStore, type InvoiceRecord } from '../fetchers/get-invoice';
+import { createLogContext, logEvent } from '../observability/structured-logger';
 import { requireTenant } from '../tenancy/require-tenant';
 import { headerSchema, validateActionInput } from './validation';
 
@@ -39,6 +40,22 @@ export async function createInvoice(input: CreateInvoiceInput): Promise<InvoiceR
     routeTenantId: validatedInput.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
+  const logContext = createLogContext({
+    headers: validatedInput.headers,
+    tenantId,
+    source: 'action.create-invoice'
+  });
+
+  logEvent({
+    event: 'invoice.create.requested',
+    context: logContext,
+    data: {
+      tenantId,
+      bookingId: validatedInput.bookingId,
+      customerEmail: validatedInput.customerEmail,
+      amountCents: validatedInput.amountCents
+    }
+  });
 
   await requirePermission({
     headers: validatedInput.headers,
@@ -46,10 +63,24 @@ export async function createInvoice(input: CreateInvoiceInput): Promise<InvoiceR
     permission: 'billing:write'
   });
 
-  return invoiceStore.create({
+  const invoice = invoiceStore.create({
     tenantId,
     bookingId: validatedInput.bookingId,
     customerEmail: validatedInput.customerEmail.trim().toLowerCase(),
     amountCents: validatedInput.amountCents
   });
+
+  logEvent({
+    event: 'invoice.create.succeeded',
+    context: logContext,
+    data: {
+      tenantId,
+      invoiceId: invoice.id,
+      status: invoice.status,
+      customerEmail: invoice.customerEmail,
+      amountCents: invoice.amountCents
+    }
+  });
+
+  return invoice;
 }

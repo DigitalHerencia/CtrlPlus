@@ -1,10 +1,11 @@
 import { z } from 'zod';
 
 import { requirePermission } from '../auth/require-permission';
-import { validateActionInput, headerSchema } from './validation';
 import { bookingStore, type BookingRecord } from '../fetchers/booking-store';
 import { getAvailability } from '../fetchers/get-availability';
+import { createLogContext, logEvent } from '../observability/structured-logger';
 import { requireTenant } from '../tenancy/require-tenant';
+import { headerSchema, validateActionInput } from './validation';
 
 export class BookingValidationError extends Error {
   readonly statusCode: number;
@@ -46,6 +47,22 @@ export async function createBooking(input: CreateBookingActionInput): Promise<Bo
     routeTenantId: validatedInput.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
+  const logContext = createLogContext({
+    headers: validatedInput.headers,
+    tenantId,
+    source: 'action.create-booking'
+  });
+
+  logEvent({
+    event: 'booking.create.requested',
+    context: logContext,
+    data: {
+      tenantId,
+      startsAtIso: validatedInput.startsAtIso,
+      endsAtIso: validatedInput.endsAtIso,
+      customerName: validatedInput.customerName
+    }
+  });
 
   await requirePermission({
     headers: validatedInput.headers,
@@ -57,7 +74,8 @@ export async function createBooking(input: CreateBookingActionInput): Promise<Bo
     tenantId,
     dayStartIso: validatedInput.dayStartIso,
     dayEndIso: validatedInput.dayEndIso,
-    slotMinutes: validatedInput.slotMinutes
+    slotMinutes: validatedInput.slotMinutes,
+    logContext
   });
 
   const requestedSlot = availableSlots.find(
@@ -65,13 +83,39 @@ export async function createBooking(input: CreateBookingActionInput): Promise<Bo
   );
 
   if (!requestedSlot) {
+    logEvent({
+      level: 'warn',
+      event: 'booking.create.rejected',
+      context: logContext,
+      data: {
+        tenantId,
+        startsAtIso: validatedInput.startsAtIso,
+        endsAtIso: validatedInput.endsAtIso,
+        reason: 'requested_slot_unavailable'
+      }
+    });
+
     throw new BookingValidationError('Requested slot is no longer available');
   }
 
-  return bookingStore.create({
+  const booking = bookingStore.create({
     tenantId,
     startsAtIso: validatedInput.startsAtIso,
     endsAtIso: validatedInput.endsAtIso,
     customerName: validatedInput.customerName
   });
+
+  logEvent({
+    event: 'booking.create.succeeded',
+    context: logContext,
+    data: {
+      tenantId,
+      bookingId: booking.id,
+      startsAtIso: booking.startsAtIso,
+      endsAtIso: booking.endsAtIso,
+      customerName: booking.customerName
+    }
+  });
+
+  return booking;
 }
