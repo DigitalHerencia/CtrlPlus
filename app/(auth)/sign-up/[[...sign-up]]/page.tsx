@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { PublicSiteShell } from '../../../../components/public/public-site-shell';
 
 const signUpBenefits = [
-  'Start with high-impact wrap discovery and visual previews.',
-  'Save choices and continue through scheduling when ready.',
-  'Complete secure checkout with clear booking confirmation.'
+  'Browse premium wraps and save high-intent options in one place.',
+  'Launch previews quickly with upload and template-based visualizer flows.',
+  'Schedule installation and complete secure checkout with clear confirmation.'
 ];
 
 export const metadata: Metadata = {
@@ -20,11 +20,11 @@ export default function SignUpPage() {
       <main className="auth-main" id="main-content">
         <section className="section-shell auth-section auth-section--reverse">
           <article className="card auth-card">
-            <p className="eyebrow">Get Started</p>
-            <h1 className="auth-card__title">Create your CTRL+ account and launch your first wrap flow.</h1>
+            <p className="eyebrow">Sign Up</p>
+            <h1 className="auth-card__title">Create your CTRL+ account.</h1>
             <p className="auth-card__description">
-              Sign up once to unlock the full conversion journey from browse and visualize to
-              schedule and secure payment.
+              Sign up once to unlock the complete journey from wrap discovery and visual previews to
+              scheduling and payment.
             </p>
 
             <ul className="auth-card__list">
@@ -35,24 +35,24 @@ export default function SignUpPage() {
 
             <div className="auth-card__actions">
               <Link className="button button--primary" href="/features">
-                Explore Features First
+                Explore Features
               </Link>
               <Link className="button button--ghost" href="/contact">
-                Talk to the Team
+                Contact Team
               </Link>
             </div>
 
             <p className="auth-card__support">
               Already have an account?{' '}
               <Link className="inline-link" href="/sign-in">
-                Sign in now
+                Sign in
               </Link>
             </p>
           </article>
 
           <aside className="card auth-panel">
             <div className="auth-panel__content">
-              <p className="eyebrow">Why Sign Up</p>
+              <p className="eyebrow">Fast Onboarding</p>
               <h2>Create your account with Clerk.</h2>
               <SignUp fallbackRedirectUrl="/wraps" path="/sign-up" routing="path" signInUrl="/sign-in" />
             </div>
