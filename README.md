@@ -28,7 +28,22 @@ This repository now includes baseline engineering and GitHub automation scaffold
    pnpm dlx vercel env pull .env.local --environment development
    ```
 
-4. Run baseline quality checks:
+4. Runtime environment contract (from `.env.example`) for local and deployed environments:
+
+   - `AUTH_CLERK_SECRET_KEY`
+   - `NEXT_PUBLIC_AUTH_CLERK_PUBLISHABLE_KEY`
+   - `CLERK_SECRET_KEY` (alias)
+   - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (alias)
+   - `NEXT_PUBLIC_CLERK_FRONTEND_API_URL` (optional)
+   - `NEXT_PUBLIC_AUTH_CLERK_FRONTEND_API_URL` (optional)
+   - `DATABASE_URL`
+   - `DATABASE_URL_UNPOOLED`
+   - `NEON_API_KEY` (optional for MCP/API workflows)
+   - `AUTH_TENANT_ROLE_BINDINGS` (optional, non-production mappings)
+   - `STRIPE_WEBHOOK_SECRET`
+   - `VERCEL_OIDC_TOKEN` (optional)
+
+5. Run baseline quality checks:
 
    ```bash
    pnpm lint
@@ -36,7 +51,7 @@ This repository now includes baseline engineering and GitHub automation scaffold
    pnpm test
    ```
 
-5. Start the Next.js app locally:
+6. Start the Next.js app locally:
 
    ```bash
    pnpm dev
@@ -53,4 +68,6 @@ pnpm bootstrap:github
 This syncs labels, milestones, roadmap issues, and project board field metadata.
 
 See `docs/github-workflow.md` and `docs/ci-design.md` for governance details.
+Use `docs/deployment-runbook.md` for migration/rollback/verification deployment steps.
+Use `docs/demo-release-checklist.md` for demo release readiness checks.
 Use `docs/README.md` for the documentation index and report locations.

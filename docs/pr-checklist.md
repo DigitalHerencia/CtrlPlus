@@ -17,3 +17,6 @@ Use this checklist for every PR.
 - [ ] Auth + permission validated server-side
 - [ ] Zod validation added (if input)
 - [ ] No `console.log`s
+- [ ] Deployment updates documented in `docs/deployment-runbook.md` (migration + rollback + verification)
+- [ ] Environment contract remains synchronized across `.env.example`, `README.md`, and deployment docs
+- [ ] Demo release criteria validated using `docs/demo-release-checklist.md` when applicable
