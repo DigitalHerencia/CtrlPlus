@@ -37,11 +37,11 @@ describe('upload preview pipeline', () => {
       vehicleName: 'Transit Van'
     });
 
-    expect(result.uploadId).toBe('upload_1');
-    expect(result.storageUrl).toBe('/storage/tenant_acme/upload_1');
+    expect(result.uploadId).toMatch(/^upload_/);
+    expect(result.storageUrl).toBe(`/storage/tenant_acme/${result.uploadId}`);
     expect(result.html).toContain('Acme Upload Preview');
     expect(result.svgDataUrl.startsWith('data:image/svg+xml,')).toBe(true);
-    expect(uploadStore.get(result.uploadId)?.checksum.length).toBe(64);
+    expect(uploadStore.get('tenant_acme', result.uploadId)?.checksum.length).toBe(64);
   });
 
   it('rejects unsupported mime types and unsafe file names', async () => {
@@ -70,6 +70,22 @@ describe('upload preview pipeline', () => {
     ).rejects.toThrowError(UploadValidationError);
   });
 
+
+
+  it('does not allow cross-tenant upload reads', async () => {
+    const result = await createUploadPreviewAction({
+      headers: ownerHeaders,
+      tenantId: 'tenant_acme',
+      fileName: 'tenant-scope.png',
+      mimeType: 'image/png',
+      bytes: encodePngMock(),
+      wrapName: 'Tenant Scope',
+      vehicleName: 'Van'
+    });
+
+    expect(uploadStore.get('tenant_beta', result.uploadId)).toBeNull();
+  });
+
   it('enforces tenant-scoped rate limiting for upload previews', async () => {
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const result = await createUploadPreviewAction({
@@ -82,7 +98,7 @@ describe('upload preview pipeline', () => {
         vehicleName: 'Van'
       });
 
-      expect(result.uploadId).toBe(`upload_${attempt + 1}`);
+      expect(result.uploadId).toMatch(/^upload_/);
     }
 
     await expect(

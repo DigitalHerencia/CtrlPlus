@@ -39,7 +39,7 @@ describe('invoice domain', () => {
       amountCents: 250000
     });
 
-    expect(created.id).toBe('invoice_1');
+    expect(created.id).toMatch(/^invoice_/);
     expect(created.customerEmail).toBe('customer@example.com');
     expect(created.status).toBe('draft');
 

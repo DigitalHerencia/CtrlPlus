@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { tenantScopedPrisma } from '../db/prisma';
 
 export interface SaveUploadInput {
   readonly tenantId: string;
@@ -76,11 +76,9 @@ function matchesMimeSignature(mimeType: string, bytes: Uint8Array): boolean {
   return false;
 }
 
-export class InMemoryUploadStore {
-  private readonly uploads = new Map<string, StoredUpload>();
-
+export class PrismaUploadStore {
   reset(): void {
-    this.uploads.clear();
+    tenantScopedPrisma.reset();
   }
 
   save(input: SaveUploadInput): StoredUpload {
@@ -110,25 +108,12 @@ export class InMemoryUploadStore {
       throw new UploadValidationError('Upload payload signature does not match mime type', 415);
     }
 
-    const id = `upload_${this.uploads.size + 1}`;
-    const checksum = createHash('sha256').update(input.bytes).digest('hex');
-    const upload: StoredUpload = {
-      id,
-      tenantId: input.tenantId,
-      fileName: input.fileName,
-      mimeType: input.mimeType,
-      byteLength: input.bytes.byteLength,
-      checksum,
-      storageUrl: `/storage/${input.tenantId}/${id}`
-    };
-
-    this.uploads.set(id, upload);
-    return upload;
+    return tenantScopedPrisma.createUpload(input);
   }
 
-  get(id: string): StoredUpload | null {
-    return this.uploads.get(id) ?? null;
+  get(tenantId: string, id: string): StoredUpload | null {
+    return tenantScopedPrisma.getUploadByTenant(tenantId, id);
   }
 }
 
-export const uploadStore = new InMemoryUploadStore();
+export const uploadStore = new PrismaUploadStore();

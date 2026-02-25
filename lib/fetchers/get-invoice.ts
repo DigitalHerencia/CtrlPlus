@@ -1,16 +1,8 @@
 import { requirePermission } from '../auth/require-permission';
+import { tenantScopedPrisma, type InvoiceRecord } from '../db/prisma';
 import { requireTenant } from '../tenancy/require-tenant';
 
-export interface InvoiceRecord {
-  readonly id: string;
-  readonly tenantId: string;
-  readonly bookingId?: string;
-  readonly customerEmail: string;
-  readonly amountCents: number;
-  readonly status: 'draft' | 'open' | 'paid';
-  readonly stripeCheckoutSessionId?: string;
-  readonly stripePaymentIntentId?: string;
-}
+export type { InvoiceRecord };
 
 export interface CreateInvoiceRecordInput {
   readonly tenantId: string;
@@ -30,54 +22,29 @@ export class InvoiceNotFoundError extends Error {
 }
 
 export class InvoiceStore {
-  private readonly invoices = new Map<string, InvoiceRecord>();
-
   reset(): void {
-    this.invoices.clear();
+    tenantScopedPrisma.reset();
   }
 
   create(input: CreateInvoiceRecordInput): InvoiceRecord {
-    const id = `invoice_${this.invoices.size + 1}`;
-    const invoice: InvoiceRecord = {
-      id,
-      tenantId: input.tenantId,
-      bookingId: input.bookingId,
-      customerEmail: input.customerEmail,
-      amountCents: input.amountCents,
-      status: 'draft'
-    };
-
-    this.invoices.set(id, invoice);
-    return invoice;
+    return tenantScopedPrisma.createInvoice(input);
   }
 
   findByTenant(tenantId: string, invoiceId: string): InvoiceRecord | null {
-    const invoice = this.invoices.get(invoiceId);
-    if (!invoice || invoice.tenantId !== tenantId) {
-      return null;
-    }
-
-    return invoice;
+    return tenantScopedPrisma.getInvoiceByTenant(tenantId, invoiceId);
   }
 
   listByTenant(tenantId: string): readonly InvoiceRecord[] {
-    return Array.from(this.invoices.values()).filter((invoice) => invoice.tenantId === tenantId);
+    return tenantScopedPrisma.listInvoicesByTenant(tenantId);
   }
 
   markCheckoutSession(tenantId: string, invoiceId: string, checkoutSessionId: string): InvoiceRecord {
-    const invoice = this.findByTenant(tenantId, invoiceId);
+    const invoice = tenantScopedPrisma.markInvoiceCheckoutSession(tenantId, invoiceId, checkoutSessionId);
     if (!invoice) {
       throw new InvoiceNotFoundError('Invoice not found');
     }
 
-    const updated: InvoiceRecord = {
-      ...invoice,
-      stripeCheckoutSessionId: checkoutSessionId,
-      status: 'open'
-    };
-
-    this.invoices.set(invoiceId, updated);
-    return updated;
+    return invoice;
   }
 
   markPaid(
@@ -86,20 +53,18 @@ export class InvoiceStore {
     checkoutSessionId: string,
     paymentIntentId: string
   ): InvoiceRecord {
-    const invoice = this.findByTenant(tenantId, invoiceId);
+    const invoice = tenantScopedPrisma.markInvoicePaid(
+      tenantId,
+      invoiceId,
+      checkoutSessionId,
+      paymentIntentId
+    );
+
     if (!invoice) {
       throw new InvoiceNotFoundError('Invoice not found');
     }
 
-    const updated: InvoiceRecord = {
-      ...invoice,
-      stripeCheckoutSessionId: checkoutSessionId,
-      stripePaymentIntentId: paymentIntentId,
-      status: 'paid'
-    };
-
-    this.invoices.set(invoiceId, updated);
-    return updated;
+    return invoice;
   }
 }
 

@@ -39,7 +39,7 @@ describe('booking action + availability fetcher', () => {
       ...dayWindow
     });
 
-    expect(booking.id).toBe('booking_1');
+    expect(booking.id).toMatch(/^booking_/);
 
     const updatedSlots = getAvailability({
       tenantId: 'tenant_acme',
