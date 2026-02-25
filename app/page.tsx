@@ -71,7 +71,7 @@ export default function HomePage() {
           <div className="hero__content">
             <p className="eyebrow">Command Your Brand · El Paso, Texas</p>
             <h1 className="hero__title">
-              Premium vehicle wraps, tint, and signage with a clear digital booking path.
+              Vehicle wraps, tint, and signage with a clear digital booking path.
             </h1>
             <p className="hero__description">
               CTRL+ helps customers move from initial concept to confirmed install in one guided
@@ -105,13 +105,13 @@ export default function HomePage() {
             <figure className="media-card media-card--primary">
               <Image
                 src="/0001-7280563191036061234.png"
-                alt="CTRL+ premium wrap showcase"
+                alt="CTRL+ wrap showcase"
                 fill
                 priority
                 sizes="(max-width: 980px) 100vw, 52vw"
               />
               <figcaption className="media-card__overlay">
-                Premium wraps presented with high-impact visuals.
+                Wrap options shown with clear visual references.
               </figcaption>
             </figure>
 
@@ -204,7 +204,7 @@ export default function HomePage() {
                 Create Account
               </Link>
               <Link className="button button--ghost" href="/about">
-                About CTRL+
+                About Us
               </Link>
             </div>
           </div>

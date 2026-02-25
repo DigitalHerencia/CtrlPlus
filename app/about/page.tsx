@@ -40,7 +40,7 @@ export default function AboutPage() {
           <div className="content-hero__copy">
             <p className="eyebrow">About CTRL+</p>
             <h1 className="content-hero__title">
-              Premium vehicle wrap services built around clarity, speed, and execution.
+              Vehicle wrap services built around clarity, speed, and execution.
             </h1>
             <p>
               CTRL+ helps customers and businesses move from concept to confirmed install through
@@ -94,10 +94,10 @@ export default function AboutPage() {
             </ul>
             <div className="split-section__actions">
               <Link className="button button--primary" href="/sign-up">
-                Start Now
+                Create Account
               </Link>
               <Link className="button button--ghost" href="/contact">
-                Contact Team
+                Contact Us
               </Link>
             </div>
           </div>

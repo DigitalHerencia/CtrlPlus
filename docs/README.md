@@ -9,6 +9,8 @@ This directory contains project guidance and report snapshots.
 - `docs/github-workflow.md`: labels, roadmap sync, and governance bootstrap.
 - `docs/ci-design.md`: CI quality gates and flaky-test handling policy.
 - `docs/pr-checklist.md`: merge checklist used by pull requests.
+- `docs/copy-style-guide.md`: approved sitewide copy tone and phrasing standards.
+- `docs/copy-qa-checklist.md`: route-level copy consistency and QA checklist.
 - `docs/deployment-runbook.md`: deployment sequence, migration safety, rollback, and verification flow.
 - `docs/demo-release-checklist.md`: M9 demo release readiness checklist.
 

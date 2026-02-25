@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { PublicSiteShell } from '../../../../components/public/public-site-shell';
 
 const signUpBenefits = [
-  'Browse premium wraps and save high-intent options in one place.',
+  'Browse wraps and save options in one place.',
   'Launch previews quickly with upload and template-based visualizer flows.',
   'Schedule installation and complete secure checkout with clear confirmation.'
 ];
@@ -52,7 +52,7 @@ export default function SignUpPage() {
 
           <aside className="card auth-panel">
             <div className="auth-panel__content">
-              <p className="eyebrow">Fast Onboarding</p>
+              <p className="eyebrow">Account Setup</p>
               <h2>Create your account with Clerk.</h2>
               <SignUp fallbackRedirectUrl="/wraps" path="/sign-up" routing="path" signInUrl="/sign-in" />
             </div>
