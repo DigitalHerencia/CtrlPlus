@@ -8,24 +8,24 @@ const operatingPrinciples = [
   {
     title: 'Visualizer First',
     description:
-      'We lead with visual confidence so customers can approve designs faster and with less risk.'
+      'We prioritize preview clarity so customers can approve designs with confidence.'
   },
   {
-    title: 'Low-Friction Booking',
+    title: 'Structured Booking',
     description:
-      'Scheduling, invoicing, and payment are connected to reduce abandoned appointments.'
+      'Scheduling, invoicing, and payment are connected to reduce abandoned requests.'
   },
   {
-    title: 'Future-Ready Tenancy',
+    title: 'Secure Multi-Tenant Foundation',
     description:
-      'Subdomain-based tenant isolation supports secure expansion for future locations or brands.'
+      'Subdomain-based tenant isolation supports secure growth across future locations.'
   }
 ];
 
 const customerFocus = [
   'Drivers who want to preview a wrap before committing.',
-  'Local businesses needing branded fleet visibility.',
-  'Teams that need transparent scheduling and payment workflows.'
+  'Local businesses that need consistent fleet branding.',
+  'Teams that value clear scheduling and payment workflows.'
 ];
 
 export const metadata: Metadata = {
@@ -39,17 +39,19 @@ export default function AboutPage() {
         <section className="section-shell content-hero">
           <div className="content-hero__copy">
             <p className="eyebrow">About CTRL+</p>
-            <h1 className="content-hero__title">Command Your Brand with premium wraps built to convert attention.</h1>
+            <h1 className="content-hero__title">
+              Premium vehicle wrap services built around clarity, speed, and execution.
+            </h1>
             <p>
-              CTRL+ is focused on helping El Paso customers and businesses move from concept to
-              confirmed wrap project in a single, polished experience.
+              CTRL+ helps customers and businesses move from concept to confirmed install through
+              a reliable digital workflow.
             </p>
             <div className="content-hero__actions">
               <Link className="button button--primary" href="/sign-up">
-                Sign Up to Get Started
+                Create Account
               </Link>
               <Link className="button button--ghost" href="/features">
-                View Platform Features
+                View Features
               </Link>
             </div>
           </div>
@@ -68,7 +70,7 @@ export default function AboutPage() {
         <section className="section-shell landing-section">
           <header className="section-head">
             <p className="eyebrow">How We Operate</p>
-            <h2>Built around speed, confidence, and secure growth.</h2>
+            <h2>Built around visual confidence, operational flow, and secure growth.</h2>
           </header>
 
           <div className="info-grid">
@@ -84,7 +86,7 @@ export default function AboutPage() {
         <section className="section-shell split-section">
           <div className="card split-section__content">
             <p className="eyebrow">Who We Serve</p>
-            <h2>Designed for customers who want a clear path to purchase.</h2>
+            <h2>Designed for customers who need a direct path to purchase.</h2>
             <ul className="split-section__list">
               {customerFocus.map((focusArea) => (
                 <li key={focusArea}>{focusArea}</li>
@@ -92,10 +94,10 @@ export default function AboutPage() {
             </ul>
             <div className="split-section__actions">
               <Link className="button button--primary" href="/sign-up">
-                Create Account
+                Start Now
               </Link>
               <Link className="button button--ghost" href="/contact">
-                Contact the Team
+                Contact Team
               </Link>
             </div>
           </div>

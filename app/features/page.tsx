@@ -8,11 +8,11 @@ const featureRows = [
   {
     title: 'Wrap Catalog + Design Discovery',
     description:
-      'Curated design browsing with clear categories, compatible vehicle types, and pricing signals that reduce decision fatigue.',
+      'Curated design browsing with clear categories, compatible vehicle types, and transparent pricing cues.',
     points: [
       'Filter by finish, style, and visual theme.',
-      'Present estimated install duration upfront.',
-      'Push users into “Try on my vehicle” quickly.'
+      'Review estimated install duration upfront.',
+      'Move directly into the “Try on my vehicle” flow.'
     ],
     image: '/0001-3395082611040874149.png',
     imageAlt: 'CTRL+ designs showcase'
@@ -20,11 +20,11 @@ const featureRows = [
   {
     title: 'Visualizer with Smart Fallbacks',
     description:
-      'Upload-based previews build confidence while template previews ensure the funnel never stalls.',
+      'Upload previews build confidence while template previews preserve momentum when speed matters.',
     points: [
       'Upload a front, side, or 3/4 image for personalized previews.',
-      'Fallback to template mode when speed is critical.',
-      'Proceed to scheduling even when upload preview fails.'
+      'Switch to template mode when speed is critical.',
+      'Continue to scheduling even if upload preview fails.'
     ],
     image: '/0001-1137653301909815874.png',
     imageAlt: 'Vehicle wrap close-up details'
@@ -32,11 +32,11 @@ const featureRows = [
   {
     title: 'Scheduling + Capacity Rules',
     description:
-      'Capture drop-off and pick-up windows while enforcing business hours, buffer times, and capacity.',
+      'Capture drop-off and pick-up windows while enforcing business hours, buffers, and capacity.',
     points: [
       'Guide customers to valid appointment windows only.',
       'Protect operations with server-side scheduling rules.',
-      'Reduce back-and-forth with structured confirmation flows.'
+      'Reduce back-and-forth through structured confirmation flows.'
     ],
     image: '/0001-8036042029217284237.png',
     imageAlt: 'CTRL+ wraps promotional artwork'
@@ -44,10 +44,10 @@ const featureRows = [
   {
     title: 'Invoicing + Stripe Checkout',
     description:
-      'Move from quote to paid booking using secure checkout and webhook-confirmed status changes.',
+      'Move from quote to paid booking through secure checkout and webhook-confirmed status updates.',
     points: [
       'Generate invoice context directly from booking details.',
-      'Use secure checkout for fast conversion.',
+      'Use secure checkout for faster conversion.',
       'Reflect payment state in booking confirmations.'
     ],
     image: '/0001-5948623603194756924.png',
@@ -66,14 +66,16 @@ export default function FeaturesPage() {
         <section className="section-shell content-hero">
           <div className="content-hero__copy">
             <p className="eyebrow">Platform Features</p>
-            <h1 className="content-hero__title">Core capabilities built to convert browsing into paid bookings.</h1>
+            <h1 className="content-hero__title">
+              Core capabilities built to convert browsing into confirmed bookings.
+            </h1>
             <p>
-              Every feature supports the same objective: reduce friction and move customers from
-              curiosity to confident purchase.
+              Each feature supports the same objective: reduce friction and move customers from
+              interest to payment.
             </p>
             <div className="content-hero__actions">
               <Link className="button button--primary" href="/sign-up">
-                Start with Sign Up
+                Create Account
               </Link>
               <Link className="button button--ghost" href="/sign-in">
                 Sign In
@@ -116,7 +118,7 @@ export default function FeaturesPage() {
                       ))}
                     </ul>
                     <Link className="inline-link" href="/sign-up">
-                      Activate this with Sign Up
+                      Create Account
                     </Link>
                   </div>
 
@@ -137,9 +139,9 @@ export default function FeaturesPage() {
         <section className="section-shell cta-panel">
           <div>
             <p className="eyebrow">Next Step</p>
-            <h2>Sign up and launch your first conversion-ready wrap flow today.</h2>
+            <h2>Create an account and launch your first wrap flow.</h2>
             <p>
-              Already using CTRL+? Sign in to continue with active previews, bookings, and invoices.
+              Existing customers can sign in to continue active previews, bookings, and invoices.
             </p>
           </div>
           <div className="cta-panel__actions">
