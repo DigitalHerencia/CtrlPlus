@@ -1,3 +1,5 @@
+import { tenantScopedPrisma } from '../db/prisma';
+
 export interface BookingRecord {
   readonly id: string;
   readonly tenantId: string;
@@ -14,30 +16,17 @@ export interface CreateBookingRecordInput {
 }
 
 export class BookingStore {
-  private readonly bookings = new Map<string, BookingRecord>();
-
   reset(): void {
-    this.bookings.clear();
+    tenantScopedPrisma.reset();
   }
 
   listByTenant(tenantId: string): readonly BookingRecord[] {
-    return Array.from(this.bookings.values()).filter((booking) => booking.tenantId === tenantId);
+    return tenantScopedPrisma.listBookingsByTenant(tenantId);
   }
 
   create(input: CreateBookingRecordInput): BookingRecord {
-    const id = `booking_${this.bookings.size + 1}`;
-    const booking: BookingRecord = {
-      id,
-      tenantId: input.tenantId,
-      startsAtIso: input.startsAtIso,
-      endsAtIso: input.endsAtIso,
-      customerName: input.customerName
-    };
-
-    this.bookings.set(id, booking);
-    return booking;
+    return tenantScopedPrisma.createBooking(input);
   }
 }
 
 export const bookingStore = new BookingStore();
-

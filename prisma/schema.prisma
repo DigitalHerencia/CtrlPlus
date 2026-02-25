@@ -18,6 +18,7 @@ model Tenant {
   wrapDesigns   WrapDesign[]
   bookings      Booking[]
   invoices      Invoice[]
+  uploads       Upload[]
   paymentEvents PaymentEvent[]
 }
 
@@ -78,6 +79,21 @@ model Invoice {
 
   @@index([tenantId])
   @@index([tenantId, bookingId])
+}
+
+
+model Upload {
+  id         String   @id @default(cuid())
+  tenantId   String
+  fileName   String
+  mimeType   String
+  byteLength Int
+  checksum   String
+  storageUrl String
+  createdAt  DateTime @default(now())
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
 }
 
 model PaymentEvent {

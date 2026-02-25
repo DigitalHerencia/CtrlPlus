@@ -16,6 +16,7 @@ describe('prisma multi-tenant schema', () => {
     expect(schema).toContain('model User');
     expect(schema).toContain('model WrapDesign');
     expect(schema).toContain('tenantId  String');
+    expect(schema).toContain('model Upload');
     expect(schema).toContain('@@index([tenantId])');
   });
 
@@ -33,16 +34,34 @@ describe('prisma multi-tenant schema', () => {
     expect(migrationSql).toContain('CREATE INDEX "WrapDesign_tenantId_idx"');
   });
 
+
+
+  it('ships an upload migration with tenant scoping', () => {
+    const migrationSql = readRepositoryFile(
+      'prisma',
+      'migrations',
+      '20260225000100_upload_table',
+      'migration.sql'
+    );
+
+    expect(migrationSql).toContain('CREATE TABLE "Upload"');
+    expect(migrationSql).toContain('"tenantId" TEXT NOT NULL');
+    expect(migrationSql).toContain('CREATE INDEX "Upload_tenantId_idx"');
+  });
   it('validates tenant isolation in integration flow', () => {
     const tenantDb = new TenantScopedPrisma();
 
     tenantDb.createWrapDesign({
       tenantId: 'tenant_acme',
-      name: 'Acme Matte Black'
+      name: 'Acme Matte Black',
+      priceCents: 50000,
+      isPublished: false
     });
     tenantDb.createWrapDesign({
       tenantId: 'tenant_beta',
-      name: 'Beta Gloss White'
+      name: 'Beta Gloss White',
+      priceCents: 45000,
+      isPublished: false
     });
 
     const acmeWraps = tenantDb.listWrapDesignsByTenant('tenant_acme');

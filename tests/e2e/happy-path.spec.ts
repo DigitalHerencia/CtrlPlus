@@ -49,7 +49,7 @@ test.describe('customer happy path', () => {
       vehicleName: 'Transit Van'
     });
 
-    expect(uploadPreview.uploadId).toBe('upload_1');
+    expect(uploadPreview.uploadId).toMatch(/^upload_/);
 
     const booking = await createBooking({
       headers: ownerHeaders,

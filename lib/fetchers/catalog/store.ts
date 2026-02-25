@@ -3,70 +3,62 @@ import type {
   UpdateWrapDesignPayload,
   WrapDesign
 } from '../../../features/catalog/types';
+import { tenantScopedPrisma } from '../../db/prisma';
+
+function mapWrapDesign(record: ReturnType<typeof tenantScopedPrisma.createWrapDesign>): WrapDesign {
+  return {
+    id: record.id,
+    tenantId: record.tenantId,
+    name: record.name,
+    description: record.description,
+    priceCents: record.priceCents,
+    isPublished: record.isPublished,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt
+  };
+}
 
 export class CatalogStore {
-  private readonly designs = new Map<string, WrapDesign>();
-
   reset(): void {
-    this.designs.clear();
+    tenantScopedPrisma.reset();
   }
 
   create(payload: CreateWrapDesignPayload): WrapDesign {
-    const timestamp = new Date();
-    const design: WrapDesign = {
-      id: `design_${this.designs.size + 1}`,
-      tenantId: payload.tenantId,
-      name: payload.name,
-      description: payload.description,
-      priceCents: payload.priceCents ?? 0,
-      isPublished: false,
-      createdAt: timestamp,
-      updatedAt: timestamp
-    };
-
-    this.designs.set(design.id, design);
-    return design;
+    return mapWrapDesign(
+      tenantScopedPrisma.createWrapDesign({
+        tenantId: payload.tenantId,
+        name: payload.name,
+        description: payload.description,
+        priceCents: payload.priceCents ?? 0,
+        isPublished: false
+      })
+    );
   }
 
   listByTenant(tenantId: string): readonly WrapDesign[] {
-    return Array.from(this.designs.values()).filter((design) => design.tenantId === tenantId);
+    return tenantScopedPrisma.listWrapDesignsByTenant(tenantId).map((record) => mapWrapDesign(record));
   }
 
   getById(tenantId: string, id: string): WrapDesign | null {
-    const design = this.designs.get(id);
-    if (!design || design.tenantId !== tenantId) {
-      return null;
-    }
-
-    return design;
+    const record = tenantScopedPrisma.getWrapDesignByTenant(tenantId, id);
+    return record ? mapWrapDesign(record) : null;
   }
 
   update(payload: UpdateWrapDesignPayload): WrapDesign | null {
-    const existing = this.getById(payload.tenantId, payload.id);
-    if (!existing) {
-      return null;
-    }
+    const record = tenantScopedPrisma.updateWrapDesign({
+      tenantId: payload.tenantId,
+      id: payload.id,
+      name: payload.name,
+      description: payload.description,
+      priceCents: payload.priceCents,
+      isPublished: payload.isPublished
+    });
 
-    const updated: WrapDesign = {
-      ...existing,
-      name: payload.name ?? existing.name,
-      description: payload.description ?? existing.description,
-      priceCents: payload.priceCents ?? existing.priceCents,
-      isPublished: payload.isPublished ?? existing.isPublished,
-      updatedAt: new Date()
-    };
-
-    this.designs.set(updated.id, updated);
-    return updated;
+    return record ? mapWrapDesign(record) : null;
   }
 
   delete(tenantId: string, id: string): boolean {
-    const existing = this.getById(tenantId, id);
-    if (!existing) {
-      return false;
-    }
-
-    return this.designs.delete(id);
+    return tenantScopedPrisma.deleteWrapDesign(tenantId, id);
   }
 }
 
