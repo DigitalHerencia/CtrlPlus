@@ -95,7 +95,7 @@ export default function ContactPage() {
         <section className="section-shell split-section">
           <div className="card split-section__content">
             <p className="eyebrow">What Happens Next</p>
-            <h2>A straightforward workflow designed to turn intent into booked work.</h2>
+            <h2>A straightforward workflow designed to turn interest into booked work.</h2>
             <ul className="split-section__list">
               {nextSteps.map((nextStep) => (
                 <li key={nextStep}>{nextStep}</li>

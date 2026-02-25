@@ -84,8 +84,7 @@ export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) 
           <div className="site-footer__brand">
             <Image src="/0001-3757622370303829961.png" alt="CTRL+ mark" width={52} height={52} />
             <p>
-              Premium vehicle wraps, tint, and signage for El Paso businesses and drivers ready to
-              stand out.
+              Vehicle wraps, tint, and signage for El Paso businesses and drivers.
             </p>
           </div>
 
@@ -98,13 +97,13 @@ export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) 
           </div>
 
           <div className="site-footer__cta">
-            <p>Ready to start your wrap project?</p>
+            <p>Ready to start your project?</p>
             <div className="site-footer__cta-actions">
               <Link className="button button--primary" href="/sign-up">
                 Create Account
               </Link>
               <Link className="button button--ghost" href="/sign-in">
-                Existing Client
+                Existing Customer
               </Link>
             </div>
           </div>

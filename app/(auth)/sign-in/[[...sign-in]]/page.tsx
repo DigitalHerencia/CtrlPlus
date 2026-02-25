@@ -43,7 +43,7 @@ export default function SignInPage() {
             </div>
 
             <p className="auth-card__support">
-              Need an account?{' '}
+              Need an account to continue?{' '}
               <Link className="inline-link" href="/sign-up">
                 Sign up
               </Link>

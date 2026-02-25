@@ -47,7 +47,7 @@ const featureRows = [
       'Move from quote to paid booking through secure checkout and webhook-confirmed status updates.',
     points: [
       'Generate invoice context directly from booking details.',
-      'Use secure checkout for faster conversion.',
+      'Use secure checkout for direct payment completion.',
       'Reflect payment state in booking confirmations.'
     ],
     image: '/0001-5948623603194756924.png',
@@ -67,7 +67,7 @@ export default function FeaturesPage() {
           <div className="content-hero__copy">
             <p className="eyebrow">Platform Features</p>
             <h1 className="content-hero__title">
-              Core capabilities built to convert browsing into confirmed bookings.
+              Core capabilities built to move browsing into confirmed bookings.
             </h1>
             <p>
               Each feature supports the same objective: reduce friction and move customers from
@@ -86,7 +86,7 @@ export default function FeaturesPage() {
           <figure className="media-card media-card--feature">
             <Image
               src="/0001-6683836236957800475.png"
-              alt="CTRL+ premium vehicle wrap solutions"
+              alt="CTRL+ vehicle wrap workflow overview"
               fill
               priority
               sizes="(max-width: 980px) 100vw, 46vw"

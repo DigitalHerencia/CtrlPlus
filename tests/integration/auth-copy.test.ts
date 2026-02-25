@@ -14,7 +14,7 @@ describe('auth page copy conventions', () => {
     expect(signInPage).toContain('Welcome back to CTRL+.');
     expect(signInPage).toContain('Create Account');
     expect(signInPage).toContain('Explore Features');
-    expect(signInPage).toContain('Need an account?');
+    expect(signInPage).toContain('Need an account to continue?');
     expect(signInPage).toContain('signUpUrl="/sign-up"');
   });
 
