@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { createUploadPreviewAction } from '../../lib/actions/create-upload-preview';
+import { ActionInputValidationError } from '../../lib/actions/validation';
 import { RateLimitError } from '../../lib/rate-limit/fixed-window-limiter';
 import { uploadRateLimiter } from '../../lib/rate-limit/upload-rate-limit';
 import { UploadValidationError, uploadStore } from '../../lib/storage/upload-store';
@@ -71,6 +72,22 @@ describe('upload preview pipeline', () => {
   });
 
 
+
+
+  it('rejects malformed upload preview payloads before persisting uploads', async () => {
+    await expect(
+      createUploadPreviewAction({
+        headers: ownerHeaders,
+        tenantId: 'tenant_acme',
+        fileName: '',
+        mimeType: 'image/png',
+        bytes: Uint8Array.from([]),
+        wrapName: '',
+        vehicleName: 'Van'
+      })
+    ).rejects.toThrowError(ActionInputValidationError);
+
+  });
 
   it('does not allow cross-tenant upload reads', async () => {
     const result = await createUploadPreviewAction({

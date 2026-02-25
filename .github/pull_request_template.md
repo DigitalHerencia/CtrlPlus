@@ -4,7 +4,7 @@
 
 ## Linked Issue
 
-- Closes #<issue-number>
+- Closes #57
 
 ## Architecture / Security Checklist
 
@@ -12,6 +12,7 @@
 - [ ] Tenant scope is resolved server-side from host/subdomain.
 - [ ] Server-side authz checks were added/updated where required.
 - [ ] Inputs for mutations are validated with Zod in server actions.
+- [ ] Validation failures return deterministic, safe action errors.
 
 ## Testing
 

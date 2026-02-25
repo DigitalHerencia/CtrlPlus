@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { BookingValidationError, createBooking } from '../../lib/actions/create-booking';
+import { ActionInputValidationError } from '../../lib/actions/validation';
 import { bookingStore } from '../../lib/fetchers/booking-store';
 import { getAvailability } from '../../lib/fetchers/get-availability';
 
@@ -70,6 +71,20 @@ describe('booking action + availability fetcher', () => {
         ...dayWindow
       })
     ).rejects.toThrowError(BookingValidationError);
+  });
+
+
+  it('rejects invalid booking payloads before evaluating availability', async () => {
+    await expect(
+      createBooking({
+        headers: ownerHeaders,
+        tenantId: 'tenant_acme',
+        startsAtIso: 'not-an-iso-date',
+        endsAtIso: '2026-02-18T09:00:00.000Z',
+        customerName: '',
+        ...dayWindow
+      })
+    ).rejects.toThrowError(ActionInputValidationError);
   });
 
   it('keeps availability tenant-scoped', async () => {

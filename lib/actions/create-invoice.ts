@@ -1,6 +1,9 @@
+import { z } from 'zod';
+
 import { requirePermission } from '../auth/require-permission';
 import { invoiceStore, type InvoiceRecord } from '../fetchers/get-invoice';
 import { requireTenant } from '../tenancy/require-tenant';
+import { headerSchema, validateActionInput } from './validation';
 
 export class InvoiceValidationError extends Error {
   readonly statusCode: number;
@@ -20,35 +23,33 @@ export interface CreateInvoiceInput {
   readonly amountCents: number;
 }
 
-function isValidEmail(value: string): boolean {
-  return /.+@.+\..+/.test(value);
-}
+const createInvoiceInputSchema = z.object({
+  headers: headerSchema,
+  tenantId: z.string().min(1),
+  bookingId: z.string().min(1).optional(),
+  customerEmail: z.email(),
+  amountCents: z.number().int().positive()
+});
 
 export async function createInvoice(input: CreateInvoiceInput): Promise<InvoiceRecord> {
+  const validatedInput = validateActionInput(createInvoiceInputSchema, input);
+
   const tenantContext = requireTenant({
-    headers: input.headers,
-    routeTenantId: input.tenantId
+    headers: validatedInput.headers,
+    routeTenantId: validatedInput.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
 
   await requirePermission({
-    headers: input.headers,
+    headers: validatedInput.headers,
     tenantId,
     permission: 'billing:write'
   });
 
-  if (!isValidEmail(input.customerEmail.trim())) {
-    throw new InvoiceValidationError('Customer email is invalid');
-  }
-
-  if (!Number.isInteger(input.amountCents) || input.amountCents <= 0) {
-    throw new InvoiceValidationError('Invoice amount must be a positive integer in cents');
-  }
-
   return invoiceStore.create({
     tenantId,
-    bookingId: input.bookingId,
-    customerEmail: input.customerEmail.trim().toLowerCase(),
-    amountCents: input.amountCents
+    bookingId: validatedInput.bookingId,
+    customerEmail: validatedInput.customerEmail.trim().toLowerCase(),
+    amountCents: validatedInput.amountCents
   });
 }
