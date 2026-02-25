@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import { PermissionError } from '../../lib/auth/require-permission';
-import { createInvoice, InvoiceValidationError } from '../../lib/actions/create-invoice';
+import { createInvoice } from '../../lib/actions/create-invoice';
+import { ActionInputValidationError } from '../../lib/actions/validation';
 import { getInvoice, invoiceStore, InvoiceNotFoundError } from '../../lib/fetchers/get-invoice';
 
 const ownerHeaders = {
@@ -70,7 +71,19 @@ describe('invoice domain', () => {
         customerEmail: 'invalid-email',
         amountCents: 1000
       })
-    ).rejects.toThrowError(InvoiceValidationError);
+    ).rejects.toThrowError(ActionInputValidationError);
+  });
+
+
+  it('rejects malformed invoice payloads with deterministic validation errors', async () => {
+    await expect(
+      createInvoice({
+        headers: ownerHeaders,
+        tenantId: 'tenant_acme',
+        customerEmail: 'invalid-email',
+        amountCents: 0
+      })
+    ).rejects.toThrowError(ActionInputValidationError);
   });
 
   it('enforces tenant isolation when reading invoices', async () => {

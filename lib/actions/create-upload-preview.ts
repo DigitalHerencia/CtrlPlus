@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import {
   createUploadPreview,
   type UploadPreviewResult
@@ -7,6 +9,7 @@ import { RateLimitError } from '../rate-limit/fixed-window-limiter';
 import { uploadRateLimiter } from '../rate-limit/upload-rate-limit';
 import { uploadStore } from '../storage/upload-store';
 import { requireTenant } from '../tenancy/require-tenant';
+import { headerSchema, validateActionInput } from './validation';
 
 export interface CreateUploadPreviewActionInput {
   readonly headers: Readonly<Record<string, string | undefined>>;
@@ -18,17 +21,31 @@ export interface CreateUploadPreviewActionInput {
   readonly vehicleName: string;
 }
 
+const createUploadPreviewActionInputSchema = z.object({
+  headers: headerSchema,
+  tenantId: z.string().min(1),
+  fileName: z.string().trim().min(1).max(255),
+  mimeType: z.string().trim().min(1).max(100),
+  bytes: z.instanceof(Uint8Array).refine((bytes) => bytes.byteLength > 0, {
+    message: 'Upload payload cannot be empty'
+  }),
+  wrapName: z.string().trim().min(1).max(120),
+  vehicleName: z.string().trim().min(1).max(120)
+});
+
 export async function createUploadPreviewAction(
   input: CreateUploadPreviewActionInput
 ): Promise<UploadPreviewResult> {
+  const validatedInput = validateActionInput(createUploadPreviewActionInputSchema, input);
+
   const tenantContext = requireTenant({
-    headers: input.headers,
-    routeTenantId: input.tenantId
+    headers: validatedInput.headers,
+    routeTenantId: validatedInput.tenantId
   });
   const tenantId = tenantContext.tenant.tenantId;
 
   const permissionContext = await requirePermission({
-    headers: input.headers,
+    headers: validatedInput.headers,
     tenantId,
     permission: 'catalog:write'
   });
@@ -40,14 +57,14 @@ export async function createUploadPreviewAction(
 
   const storedUpload = uploadStore.save({
     tenantId,
-    fileName: input.fileName,
-    mimeType: input.mimeType,
-    bytes: input.bytes
+    fileName: validatedInput.fileName,
+    mimeType: validatedInput.mimeType,
+    bytes: validatedInput.bytes
   });
 
   return createUploadPreview({
     upload: storedUpload,
-    wrapName: input.wrapName,
-    vehicleName: input.vehicleName
+    wrapName: validatedInput.wrapName,
+    vehicleName: validatedInput.vehicleName
   });
 }
