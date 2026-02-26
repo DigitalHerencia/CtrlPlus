@@ -6,52 +6,51 @@ import { PublicSiteShell } from '../../components/public/public-site-shell';
 
 const featureRows = [
   {
-    title: 'Wrap Catalog + Design Discovery',
-    description:
-      'Curated design browsing with clear categories, compatible vehicle types, and transparent pricing cues.',
+    title: 'Catalog Discovery',
+    description: 'Find wrap options by service type and keep your shortlist tied to one account.',
     points: [
-      'Filter by finish, style, and visual theme.',
-      'Review estimated install duration upfront.',
-      'Move directly into the “Try on my vehicle” flow.'
+      'Review options with practical descriptions and install expectations.',
+      'Use one account to save and compare choices across visits.',
+      'Move directly into preview and scheduling after selection.'
     ],
-    image: '/0001-3395082611040874149.png',
-    imageAlt: 'CTRL+ designs showcase'
+    image: '/visuals/feature-discovery.png',
+    imageAlt: 'Vehicle lineup and wrap detail composition'
   },
   {
-    title: 'Visualizer with Smart Fallbacks',
+    title: 'Preview With Fallback',
     description:
-      'Upload previews build confidence while template previews preserve momentum when speed matters.',
+      'Start with upload preview support, then switch to template-based preview when speed matters.',
     points: [
-      'Upload a front, side, or 3/4 image for personalized previews.',
-      'Switch to template mode when speed is critical.',
-      'Continue to scheduling even if upload preview fails.'
+      'Keep the booking path active even if an upload preview is unavailable.',
+      'Review wrap texture and placement before scheduling.',
+      'Continue to next steps without restarting the project.'
     ],
-    image: '/0001-1137653301909815874.png',
-    imageAlt: 'Vehicle wrap close-up details'
+    image: '/visuals/feature-preview.png',
+    imageAlt: 'Wrap material and vehicle preview collage'
   },
   {
-    title: 'Scheduling + Capacity Rules',
+    title: 'Scheduling Controls',
     description:
-      'Capture drop-off and pick-up windows while enforcing business hours, buffers, and capacity.',
+      'Select valid drop-off and pick-up windows based on business hours and current capacity.',
     points: [
-      'Guide customers to valid appointment windows only.',
-      'Protect operations with server-side scheduling rules.',
-      'Reduce back-and-forth through structured confirmation flows.'
+      'Present valid windows only for consistent booking decisions.',
+      'Reduce manual back-and-forth with structured appointment steps.',
+      'Keep booking details linked to the customer account.'
     ],
-    image: '/0001-8036042029217284237.png',
-    imageAlt: 'CTRL+ wraps promotional artwork'
+    image: '/visuals/feature-scheduling.png',
+    imageAlt: 'Scheduling workflow visual composition'
   },
   {
-    title: 'Invoicing + Stripe Checkout',
+    title: 'Invoice + Checkout',
     description:
-      'Move from quote to paid booking through secure checkout and webhook-confirmed status updates.',
+      'Complete payment through secure checkout and keep invoice status connected to the booking.',
     points: [
-      'Generate invoice context directly from booking details.',
-      'Use secure checkout for direct payment completion.',
-      'Reflect payment state in booking confirmations.'
+      'Review payment context before submitting checkout.',
+      'Receive confirmation in the same flow after payment.',
+      'Track booking and invoice progress in one account.'
     ],
-    image: '/0001-5948623603194756924.png',
-    imageAlt: 'CTRL+ El Paso fleet lineup at dusk'
+    image: '/visuals/contact-service.png',
+    imageAlt: 'Customer booking and service visual collage'
   }
 ];
 
@@ -62,18 +61,18 @@ export const metadata: Metadata = {
 export default function FeaturesPage() {
   return (
     <PublicSiteShell activePath="/features">
-      <main className="content-main" id="main-content">
+      <main className="public-main" id="main-content">
         <section className="section-shell content-hero">
           <div className="content-hero__copy">
             <p className="eyebrow">Platform Features</p>
             <h1 className="content-hero__title">
-              Core capabilities built to move browsing into confirmed bookings.
+              Customer-facing tools that keep wrap projects moving.
             </h1>
             <p>
-              Each feature supports the same objective: reduce friction and move customers from
-              interest to payment.
+              Each feature supports the same goal: clear decisions, valid scheduling, and secure
+              payment completion.
             </p>
-            <div className="content-hero__actions">
+            <div className="button-row">
               <Link className="button button--primary" href="/sign-up">
                 Create Account
               </Link>
@@ -83,36 +82,36 @@ export default function FeaturesPage() {
             </div>
           </div>
 
-          <figure className="media-card media-card--feature">
+          <figure className="visual-frame visual-frame--content">
             <Image
-              src="/0001-6683836236957800475.png"
-              alt="CTRL+ vehicle wrap workflow overview"
+              src="/visuals/feature-discovery.png"
+              alt="Feature overview collage"
               fill
               priority
-              sizes="(max-width: 980px) 100vw, 46vw"
+              sizes="(max-width: 1040px) 100vw, 45vw"
             />
           </figure>
         </section>
 
-        <section className="section-shell landing-section">
+        <section className="section-shell panel-section">
           <header className="section-head">
             <p className="eyebrow">Feature Breakdown</p>
-            <h2>Designed to support the full customer journey end-to-end.</h2>
+            <h2>Designed to support the full customer journey from first click to payment.</h2>
           </header>
 
-          <div className="feature-layout">
+          <div className="feature-stack">
             {featureRows.map((featureRow, index) => {
               const shouldReverse = index % 2 === 1;
 
               return (
                 <article
-                  className={`feature-row card ${shouldReverse ? 'feature-row--reverse' : ''}`}
+                  className={`surface-card feature-row ${shouldReverse ? 'feature-row--reverse' : ''}`}
                   key={featureRow.title}
                 >
                   <div className="feature-row__copy">
                     <h3>{featureRow.title}</h3>
                     <p>{featureRow.description}</p>
-                    <ul className="bullet-list">
+                    <ul className="dot-list">
                       {featureRow.points.map((point) => (
                         <li key={point}>{point}</li>
                       ))}
@@ -122,12 +121,12 @@ export default function FeaturesPage() {
                     </Link>
                   </div>
 
-                  <figure className="media-card media-card--feature-row">
+                  <figure className="visual-frame visual-frame--row">
                     <Image
                       src={featureRow.image}
                       alt={featureRow.imageAlt}
                       fill
-                      sizes="(max-width: 980px) 100vw, 42vw"
+                      sizes="(max-width: 1040px) 100vw, 42vw"
                     />
                   </figure>
                 </article>
@@ -136,17 +135,15 @@ export default function FeaturesPage() {
           </div>
         </section>
 
-        <section className="section-shell cta-panel">
+        <section className="section-shell cta-banner">
           <div>
             <p className="eyebrow">Next Step</p>
-            <h2>Create an account and launch your first wrap flow.</h2>
-            <p>
-              Existing customers can sign in to continue active previews, bookings, and invoices.
-            </p>
+            <h2>Create an account and launch your first project flow.</h2>
+            <p>Existing customers can sign in to continue active previews, bookings, and invoices.</p>
           </div>
-          <div className="cta-panel__actions">
+          <div className="button-row">
             <Link className="button button--primary" href="/sign-up">
-              Sign Up
+              Create Account
             </Link>
             <Link className="button button--ghost" href="/sign-in">
               Sign In

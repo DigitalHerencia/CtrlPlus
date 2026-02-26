@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
-const navigationLinks = [
+const primaryLinks = [
   { href: '/', label: 'Home' },
   { href: '/features', label: 'Features' },
   { href: '/about', label: 'About' },
@@ -32,14 +32,7 @@ export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) 
       <header className="site-header">
         <div className="site-header__inner section-shell">
           <Link className="brand" href="/">
-            <span className="brand__mark">
-              <Image
-                src="/0001-762728619053843625.png"
-                alt="CTRL+ logo"
-                width={42}
-                height={42}
-              />
-            </span>
+            <Image src="/logo_blue_spec.png" alt="CTRL+ logo" width={44} height={44} />
             <span className="brand__copy">
               <span className="brand__name">CTRL+</span>
               <span className="brand__tagline">Command Your Brand</span>
@@ -47,7 +40,7 @@ export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) 
           </Link>
 
           <nav aria-label="Primary" className="site-nav">
-            {navigationLinks.map((navigationLink) => (
+            {primaryLinks.map((navigationLink) => (
               <Link
                 key={navigationLink.href}
                 className={getNavigationLinkClassName(navigationLink.href, activePath)}
@@ -60,11 +53,11 @@ export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) 
 
           <div className="site-header__actions">
             <SignedOut>
+              <Link className="button button--primary" href="/sign-up">
+                Create Account
+              </Link>
               <Link className="button button--ghost" href="/sign-in">
                 Sign In
-              </Link>
-              <Link className="button button--primary" href="/sign-up">
-                Sign Up
               </Link>
             </SignedOut>
             <SignedIn>
@@ -82,14 +75,15 @@ export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) 
       <footer className="site-footer">
         <div className="site-footer__inner section-shell">
           <div className="site-footer__brand">
-            <Image src="/0001-3757622370303829961.png" alt="CTRL+ mark" width={52} height={52} />
-            <p>
-              Vehicle wraps, tint, and signage for El Paso businesses and drivers.
-            </p>
+            <Image src="/logo_white_spec.png" alt="CTRL+ mark" width={56} height={56} />
+            <p>Vehicle wraps, tint, and signage for El Paso drivers and business fleets.</p>
+            <a className="inline-link" href="tel:+19159992191">
+              (915) 999-2191
+            </a>
           </div>
 
           <div className="site-footer__links" role="navigation" aria-label="Footer">
-            {navigationLinks.map((navigationLink) => (
+            {primaryLinks.map((navigationLink) => (
               <Link key={navigationLink.href} href={navigationLink.href}>
                 {navigationLink.label}
               </Link>
@@ -97,7 +91,7 @@ export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) 
           </div>
 
           <div className="site-footer__cta">
-            <p>Ready to start your project?</p>
+            <p>Start with account setup, then move through browse, preview, schedule, and pay.</p>
             <div className="site-footer__cta-actions">
               <Link className="button button--primary" href="/sign-up">
                 Create Account

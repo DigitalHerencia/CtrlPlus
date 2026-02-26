@@ -19,9 +19,9 @@ export const DESIGN_000_ROUTE_MATRIX: readonly DesignRouteExpectation[] = [
     filePath: 'app/page.tsx',
     requiredSnippets: [
       'Vehicle wraps, tint, and signage with a clear digital booking path.',
-      'className="hero__title"',
+      'className="public-hero__title"',
       'Create Account',
-      'Sign In'
+      'View Features'
     ]
   },
   {
@@ -29,9 +29,9 @@ export const DESIGN_000_ROUTE_MATRIX: readonly DesignRouteExpectation[] = [
     filePath: 'app/about/page.tsx',
     requiredSnippets: [
       '<p className="eyebrow">About CTRL+</p>',
-      'Vehicle wrap services built around clarity, speed, and execution.',
+      'Vehicle wrap services built around clear planning and dependable execution.',
       'className="content-hero__title"',
-      'View Features'
+      'Contact Us'
     ]
   },
   {
@@ -39,9 +39,9 @@ export const DESIGN_000_ROUTE_MATRIX: readonly DesignRouteExpectation[] = [
     filePath: 'app/features/page.tsx',
     requiredSnippets: [
       '<p className="eyebrow">Platform Features</p>',
-      'Each feature supports the same objective: reduce friction and move customers from',
-      'feature-row card',
-      'Sign Up'
+      'Customer-facing tools that keep wrap projects moving.',
+      'surface-card feature-row',
+      'Create Account'
     ]
   },
   {
@@ -49,8 +49,8 @@ export const DESIGN_000_ROUTE_MATRIX: readonly DesignRouteExpectation[] = [
     filePath: 'app/contact/page.tsx',
     requiredSnippets: [
       '<p className="eyebrow">Contact</p>',
-      'Whether you are wrapping one vehicle or a full fleet, we provide a direct path from',
-      'className="contact-grid"',
+      'Whether you are planning one vehicle or a fleet project, the team can help you move',
+      'className="service-grid"',
       'Create Account'
     ]
   },

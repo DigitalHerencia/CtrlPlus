@@ -11,7 +11,7 @@ export const metadata: Metadata = {
     template: '%s | CTRL+'
   },
   description:
-    'Premium vehicle wraps, tint, and signage with a guided browse, visualize, schedule, and payment flow.'
+    'Vehicle wraps, tint, and signage with a guided browse, preview, schedule, and payment flow.'
 };
 
 type RootLayoutProps = {
