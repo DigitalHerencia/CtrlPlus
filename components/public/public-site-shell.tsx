@@ -1,10 +1,9 @@
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
-import { CtrlLogoMark } from './ctrl-logo-mark';
-
-const primaryLinks = [
+const navigationLinks = [
   { href: '/', label: 'Home' },
   { href: '/features', label: 'Features' },
   { href: '/about', label: 'About' },
@@ -14,16 +13,19 @@ const primaryLinks = [
 type PublicSiteShellProps = {
   readonly activePath: string;
   readonly children: ReactNode;
+  readonly variant?: 'default' | 'auth';
 };
 
-function getFooterLinkClassName(href: string, activePath: string): string {
+function getNavigationLinkClassName(href: string, activePath: string): string {
   const isHomepage = href === '/';
   const isActive = isHomepage ? activePath === '/' : activePath.startsWith(href);
 
-  return isActive ? 'site-footer__link site-footer__link--active' : 'site-footer__link';
+  return isActive ? 'site-nav__link site-nav__link--active' : 'site-nav__link';
 }
 
-export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) {
+export function PublicSiteShell({ activePath, children, variant = 'default' }: PublicSiteShellProps) {
+  const isAuthVariant = variant === 'auth';
+
   return (
     <div className="public-site">
       <a className="skip-link" href="#main-content">
@@ -33,18 +35,45 @@ export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) 
       <header className="site-header">
         <div className="site-header__inner section-shell">
           <Link className="brand" href="/">
-            <CtrlLogoMark size="lg" tone="light" />
+            <span className="brand__mark">
+              <Image
+                src="/0001-762728619053843625.png"
+                alt="CTRL+ logo"
+                width={42}
+                height={42}
+              />
+            </span>
+            <span className="brand__copy">
+              <span className="brand__name">CTRL+</span>
+              <span className="brand__tagline">Command Your Brand</span>
+            </span>
           </Link>
 
+          {!isAuthVariant ? (
+            <nav aria-label="Primary" className="site-nav">
+              {navigationLinks.map((navigationLink) => (
+                <Link
+                  key={navigationLink.href}
+                  className={getNavigationLinkClassName(navigationLink.href, activePath)}
+                  href={navigationLink.href}
+                >
+                  {navigationLink.label}
+                </Link>
+              ))}
+            </nav>
+          ) : null}
+
           <div className="site-header__actions">
-            <SignedOut>
-              <Link className="button button--primary" href="/sign-up">
-                Create Account
-              </Link>
-              <Link className="button button--ghost" href="/sign-in">
-                Sign In
-              </Link>
-            </SignedOut>
+            {!isAuthVariant ? (
+              <SignedOut>
+                <Link className="button button--ghost" href="/sign-in">
+                  Sign In
+                </Link>
+                <Link className="button button--primary" href="/sign-up">
+                  Sign Up
+                </Link>
+              </SignedOut>
+            ) : null}
             <SignedIn>
               <Link className="button button--ghost" href="/wraps">
                 Dashboard
@@ -60,32 +89,30 @@ export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) 
       <footer className="site-footer">
         <div className="site-footer__inner section-shell">
           <div className="site-footer__brand">
-            <CtrlLogoMark size="lg" tone="light" />
-            <p>Vehicle wraps, tint, and signage for El Paso drivers and business fleets.</p>
-            <a className="inline-link" href="tel:+19159992191">
-              (915) 999-2191
-            </a>
+            <Image src="/0001-3757622370303829961.png" alt="CTRL+ mark" width={52} height={52} />
+            <p>
+              Vehicle wraps, tint, and signage for El Paso businesses and drivers.
+            </p>
           </div>
 
           <div className="site-footer__links" role="navigation" aria-label="Footer">
-            {primaryLinks.map((navigationLink) => (
-              <Link
-                key={navigationLink.href}
-                aria-current={
-                  navigationLink.href === '/'
-                    ? activePath === '/'
-                      ? 'page'
-                      : undefined
-                    : activePath.startsWith(navigationLink.href)
-                      ? 'page'
-                      : undefined
-                }
-                className={getFooterLinkClassName(navigationLink.href, activePath)}
-                href={navigationLink.href}
-              >
+            {navigationLinks.map((navigationLink) => (
+              <Link key={navigationLink.href} href={navigationLink.href}>
                 {navigationLink.label}
               </Link>
             ))}
+          </div>
+
+          <div className="site-footer__cta">
+            <p>Ready to start your project?</p>
+            <div className="site-footer__cta-actions">
+              <Link className="button button--primary" href="/sign-up">
+                Create Account
+              </Link>
+              <Link className="button button--ghost" href="/sign-in">
+                Existing Customer
+              </Link>
+            </div>
           </div>
         </div>
       </footer>

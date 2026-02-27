@@ -59,8 +59,8 @@ export const DESIGN_000_ROUTE_MATRIX: readonly DesignRouteExpectation[] = [
     route: '/sign-in',
     filePath: 'app/(auth)/sign-in/[[...sign-in]]/page.tsx',
     requiredSnippets: [
-      '<p className="eyebrow">Sign In</p>',
-      'Welcome back to CTRL+.',
+      "eyebrow: 'Sign In'",
+      "title: 'Welcome back to CTRL+.'",
       '<SignIn fallbackRedirectUrl="/wraps" path="/sign-in" routing="path" signUpUrl="/sign-up" />'
     ]
   },
@@ -68,8 +68,8 @@ export const DESIGN_000_ROUTE_MATRIX: readonly DesignRouteExpectation[] = [
     route: '/sign-up',
     filePath: 'app/(auth)/sign-up/[[...sign-up]]/page.tsx',
     requiredSnippets: [
-      '<p className="eyebrow">Sign Up</p>',
-      'Create your CTRL+ account.',
+      "eyebrow: 'Sign Up'",
+      "title: 'Create your CTRL+ account.'",
       '<SignUp fallbackRedirectUrl="/wraps" path="/sign-up" routing="path" signInUrl="/sign-in" />'
     ]
   },
