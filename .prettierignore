@@ -1,0 +1,24 @@
+# dependencies and build artifacts
+node_modules
+.pnpm-store
+.next
+out
+dist
+coverage
+
+# lock and generated metadata
+pnpm-lock.yaml
+
+# test reports and snapshots
+playwright-report
+test-results
+
+# local env and cache
+.env
+.env.*.local
+.vercel
+.cache
+
+# codex artifacts
+.codex/artifacts
+.codex/tmp

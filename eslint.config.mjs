@@ -21,6 +21,15 @@ export default [
   },
   eslintConfigPrettier,
   {
-    ignores: ['dist/**', 'node_modules/**', '.next/**', 'coverage/**']
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      '.next/**',
+      'coverage/**',
+      'playwright-report/**',
+      'test-results/**',
+      '.vercel/**',
+      '.cache/**'
+    ]
   }
 ];

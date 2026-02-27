@@ -1,0 +1,12 @@
+# Global fallback owners
+* @scree
+
+# Core architecture and tenancy/auth boundaries
+/app/ @scree
+/features/ @scree
+/lib/ @scree
+/prisma/ @scree
+
+# CI/CD and governance
+/.github/ @scree
+/docs/ @scree

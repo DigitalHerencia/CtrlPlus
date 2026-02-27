@@ -74,7 +74,19 @@ function requestHeadersToObject(request: Request): Readonly<Record<string, strin
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET ?? 'stripe_test_secret';
+  const webhookSecret =
+    process.env.STRIPE_WEBHOOK_SECRET ?? (process.env.NODE_ENV === 'test' ? 'stripe_test_secret' : null);
+  if (!webhookSecret) {
+    return Response.json(
+      {
+        error: 'Stripe webhook secret is not configured'
+      },
+      {
+        status: 500
+      }
+    );
+  }
+
   const payload = await request.text();
   const requestHeaders = requestHeadersToObject(request);
   const baseLogContext = createLogContext({

@@ -1,7 +1,8 @@
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
-import Image from 'next/image';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+
+import { CtrlLogoMark } from './ctrl-logo-mark';
 
 const primaryLinks = [
   { href: '/', label: 'Home' },
@@ -15,11 +16,11 @@ type PublicSiteShellProps = {
   readonly children: ReactNode;
 };
 
-function getNavigationLinkClassName(href: string, activePath: string): string {
+function getFooterLinkClassName(href: string, activePath: string): string {
   const isHomepage = href === '/';
   const isActive = isHomepage ? activePath === '/' : activePath.startsWith(href);
 
-  return isActive ? 'site-nav__link site-nav__link--active' : 'site-nav__link';
+  return isActive ? 'site-footer__link site-footer__link--active' : 'site-footer__link';
 }
 
 export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) {
@@ -32,24 +33,8 @@ export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) 
       <header className="site-header">
         <div className="site-header__inner section-shell">
           <Link className="brand" href="/">
-            <Image src="/logo_blue_spec.png" alt="CTRL+ logo" width={44} height={44} />
-            <span className="brand__copy">
-              <span className="brand__name">CTRL+</span>
-              <span className="brand__tagline">Command Your Brand</span>
-            </span>
+            <CtrlLogoMark size="lg" tone="light" />
           </Link>
-
-          <nav aria-label="Primary" className="site-nav">
-            {primaryLinks.map((navigationLink) => (
-              <Link
-                key={navigationLink.href}
-                className={getNavigationLinkClassName(navigationLink.href, activePath)}
-                href={navigationLink.href}
-              >
-                {navigationLink.label}
-              </Link>
-            ))}
-          </nav>
 
           <div className="site-header__actions">
             <SignedOut>
@@ -75,7 +60,7 @@ export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) 
       <footer className="site-footer">
         <div className="site-footer__inner section-shell">
           <div className="site-footer__brand">
-            <Image src="/logo_white_spec.png" alt="CTRL+ mark" width={56} height={56} />
+            <CtrlLogoMark size="lg" tone="light" />
             <p>Vehicle wraps, tint, and signage for El Paso drivers and business fleets.</p>
             <a className="inline-link" href="tel:+19159992191">
               (915) 999-2191
@@ -84,22 +69,23 @@ export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) 
 
           <div className="site-footer__links" role="navigation" aria-label="Footer">
             {primaryLinks.map((navigationLink) => (
-              <Link key={navigationLink.href} href={navigationLink.href}>
+              <Link
+                key={navigationLink.href}
+                aria-current={
+                  navigationLink.href === '/'
+                    ? activePath === '/'
+                      ? 'page'
+                      : undefined
+                    : activePath.startsWith(navigationLink.href)
+                      ? 'page'
+                      : undefined
+                }
+                className={getFooterLinkClassName(navigationLink.href, activePath)}
+                href={navigationLink.href}
+              >
                 {navigationLink.label}
               </Link>
             ))}
-          </div>
-
-          <div className="site-footer__cta">
-            <p>Start with account setup, then move through browse, preview, schedule, and pay.</p>
-            <div className="site-footer__cta-actions">
-              <Link className="button button--primary" href="/sign-up">
-                Create Account
-              </Link>
-              <Link className="button button--ghost" href="/sign-in">
-                Existing Customer
-              </Link>
-            </div>
           </div>
         </div>
       </footer>

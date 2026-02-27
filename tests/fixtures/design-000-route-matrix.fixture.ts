@@ -21,7 +21,8 @@ export const DESIGN_000_ROUTE_MATRIX: readonly DesignRouteExpectation[] = [
       'Vehicle wraps, tint, and signage with a clear digital booking path.',
       'className="public-hero__title"',
       'Create Account',
-      'View Features'
+      'Realistic El Paso Service Estimates',
+      'className="pricing-card__typical"'
     ]
   },
   {

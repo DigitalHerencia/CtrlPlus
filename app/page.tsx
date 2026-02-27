@@ -5,77 +5,92 @@ import { PublicSiteShell } from '../components/public/public-site-shell';
 
 const featureHighlights = [
   {
-    title: 'Service Discovery',
-    description: 'Review wrap, tint, and signage options with practical details.'
+    title: 'Built for El Paso Drivers',
+    description: 'Choose wrap, tint, and signage services designed for daily heat, sun, and desert dust.'
   },
   {
-    title: 'Vehicle Compatibility',
-    description: 'Filter options by vehicle type before moving to preview.'
+    title: 'Clear Options for Your Vehicle',
+    description: 'See recommendations for trucks, SUVs, and work vehicles before you commit.'
   },
   {
-    title: 'Upload Preview',
-    description: 'Start with customer photo previews when available.'
+    title: 'Preview Your Look',
+    description: 'Upload a photo to preview your style and color direction before installation.'
   },
   {
-    title: 'Template Fallback',
-    description: 'Continue the booking path even if upload rendering is unavailable.'
+    title: 'No-Stress Backup Preview',
+    description: 'If photo rendering is unavailable, template previews keep your project moving.'
   },
   {
-    title: 'Scheduling Windows',
-    description: 'Select valid drop-off and pick-up times based on current availability.'
+    title: 'Book Around Your Schedule',
+    description: 'Pick convenient drop-off and pickup windows that fit your week in El Paso.'
   },
   {
-    title: 'Capacity Checks',
-    description: 'Use server-validated appointment rules during booking.'
+    title: 'Reliable Appointment Times',
+    description: 'Available slots are confirmed in real time to reduce delays and reschedules.'
   },
   {
-    title: 'Invoice Tracking',
-    description: 'Keep project totals and invoice details tied to each booking.'
+    title: 'Simple Project Pricing',
+    description: 'Track estimates, totals, and service details in one clear project view.'
   },
   {
-    title: 'Secure Checkout',
-    description: 'Complete payment through a guided checkout experience.'
+    title: 'Secure Online Checkout',
+    description: 'Confirm your booking with secure payment and instant confirmation.'
   },
   {
-    title: 'Account Continuity',
-    description: 'Save active previews, appointments, and confirmations in one account.'
+    title: 'Everything in One Account',
+    description: 'Keep previews, appointments, and confirmations organized from first quote to install day.'
   }
 ];
 
-const pricingPlans = [
+const serviceEstimates = [
   {
-    name: 'Starter',
-    price: '$149/mo',
-    description: 'For single-vehicle and small project volume.',
-    points: [
-      'Up to 5 active projects',
-      '1 scheduling calendar',
-      'Standard checkout flow',
-      'Booking status tracking'
-    ]
+    category: 'Wrap',
+    name: 'Full Vehicle Wrap',
+    range: '$2,600-$4,500',
+    typical: '$3,400',
+    timeline: '3-5 days',
+    description: 'Best for complete color changes and full-body branding coverage.'
   },
   {
-    name: 'Growth',
-    price: '$349/mo',
-    description: 'For repeat customer bookings and team operations.',
-    points: [
-      'Up to 25 active projects',
-      'Team scheduling support',
-      'Invoice workflow controls',
-      'Priority account support'
-    ],
+    category: 'Wrap',
+    name: 'Partial Wrap Package',
+    range: '$850-$1,900',
+    typical: '$1,250',
+    timeline: '1-2 days',
+    description: 'Great for hood, roof, side panel, and accent-focused installs.',
     featured: true
   },
   {
-    name: 'Enterprise',
-    price: '$15/truck',
-    description: 'For fleet-focused scheduling and booking operations.',
-    points: [
-      'High-volume fleet projects',
-      'Advanced booking oversight',
-      'Dedicated workflow support',
-      'Custom operational alignment'
-    ]
+    category: 'Tint',
+    name: 'Ceramic Window Tint',
+    range: '$220-$550',
+    typical: '$360',
+    timeline: '2-5 hours',
+    description: 'Heat and glare reduction with daily-driver durability in El Paso weather.'
+  },
+  {
+    category: 'Fleet',
+    name: 'Fleet Graphics (per vehicle)',
+    range: '$1,200-$3,200',
+    typical: '$2,050',
+    timeline: '1-3 days',
+    description: 'Consistent business branding for vans, work trucks, and service fleets.'
+  },
+  {
+    category: 'Signage',
+    name: 'Business Signage',
+    range: '$700-$2,600',
+    typical: '$1,500',
+    timeline: '2-7 days',
+    description: 'Exterior and storefront signage sized for small and mid-size businesses.'
+  },
+  {
+    category: 'Graphics',
+    name: 'Vinyl Lettering & Decals',
+    range: '$180-$900',
+    typical: '$420',
+    timeline: '2-6 hours',
+    description: 'Door logos, cut lettering, and spot decals for quick brand visibility.'
   }
 ];
 
@@ -95,12 +110,11 @@ export default function HomePage() {
             <div className="hero-stage__scrim" />
 
             <div className="hero-stage__content">
-              <Image src="/logo_white_spec.png" alt="CTRL+ logo" width={48} height={48} />
-              <p className="eyebrow">El Paso Vehicle Wrap Workflow</p>
+              <p className="eyebrow">Print + Tint + Signage</p>
               <h1 className="public-hero__title">
-                Vehicle wraps, tint, and signage with a clear digital booking path.
+                Command Your Brand
               </h1>
-              <p className="hero-stage__description">
+              <p  className="hero-stage__description">
                 Review services, preview options, schedule valid appointment windows, and complete
                 secure checkout in one customer flow.
               </p>
@@ -112,23 +126,18 @@ export default function HomePage() {
                 <Link className="button button--ghost" href="/sign-in">
                   Sign In
                 </Link>
-                <Link className="button button--secondary" href="/features">
-                  View Features
-                </Link>
               </div>
-
-              <p className="public-hero__phone">
-                Need guidance? Call <a href="tel:+19159992191">(915) 999-2191</a>
-              </p>
             </div>
           </div>
         </section>
 
         <section aria-label="Feature highlights" className="section-shell landing-feature-zone">
           <header className="section-head section-head--centered">
-            <p className="eyebrow">Core Platform Features</p>
-            <h2>Comprehensive customer booking features.</h2>
-            <p>Everything needed to move from service review to booking confirmation.</p>
+            <h2>Why El Paso customers choose Ctrl Plus.</h2>
+            <p>
+              From first preview to final checkout, every step is built to make your wrap project
+              straightforward, fast, and dependable.
+            </p>
           </header>
 
           <div className="landing-feature-grid">
@@ -156,116 +165,37 @@ export default function HomePage() {
           <div className="section-shell landing-pricing-shell">
             <header className="section-head section-head--centered">
               <p className="eyebrow">Pricing</p>
-              <h2>Simple, Transparent Pricing</h2>
-              <p>Clear plan options for different booking volumes and service scope.</p>
+              <h2>Realistic El Paso Service Estimates</h2>
+              <p>
+                Final quote depends on vehicle size, coverage, and material selection.
+              </p>
             </header>
 
             <div className="landing-pricing-grid">
-              {pricingPlans.map((pricingPlan) => (
+              {serviceEstimates.map((serviceEstimate) => (
                 <article
-                  className={`surface-card pricing-card ${pricingPlan.featured ? 'pricing-card--featured' : ''}`}
-                  key={pricingPlan.name}
+                  className={`surface-card pricing-card ${serviceEstimate.featured ? 'pricing-card--featured' : ''}`}
+                  key={serviceEstimate.name}
                 >
-                  <h3>{pricingPlan.name}</h3>
-                  <p className="pricing-card__price">{pricingPlan.price}</p>
-                  <p>{pricingPlan.description}</p>
-                  <ul className="pricing-list">
-                    {pricingPlan.points.map((point) => (
-                      <li key={point}>{point}</li>
-                    ))}
-                  </ul>
-                  <div className="button-row">
-                    <Link className="button button--primary" href="/sign-up">
-                      Create Account
+                  <header className="pricing-card__head">
+                    <p className="pricing-card__category">{serviceEstimate.category}</p>
+                    <p className="pricing-card__timeline">{serviceEstimate.timeline}</p>
+                  </header>
+                  <h3 className="pricing-card__name">{serviceEstimate.name}</h3>
+                  <p className="pricing-card__range">
+                    <span className="pricing-card__range-label">Estimate range</span>
+                    <span className="pricing-card__range-value">{serviceEstimate.range}</span>
+                  </p>
+                  <p className="pricing-card__typical">Typical quote: {serviceEstimate.typical}</p>
+                  <p className="pricing-card__description">{serviceEstimate.description}</p>
+                  <div className="pricing-card__actions">
+                    <Link className="inline-link" href="/contact">
+                      Request estimate
                     </Link>
                   </div>
                 </article>
               ))}
             </div>
-          </div>
-        </section>
-
-        <section className="section-shell cta-banner">
-          <div>
-            <p className="eyebrow">Ready To Begin</p>
-            <h2>Create an account and launch your first wrap project.</h2>
-            <p>Returning customers can sign in to continue active previews and booking work.</p>
-          </div>
-          <div className="button-row">
-            <Link className="button button--primary" href="/sign-up">
-              Create Account
-            </Link>
-            <Link className="button button--ghost" href="/sign-in">
-              Sign In
-            </Link>
-            <Link className="button button--secondary" href="/features">
-              View Features
-            </Link>
-          </div>
-        </section>
-
-        <section className="section-shell panel-section two-column-section">
-          <div className="surface-card emphasis-card">
-            <p className="eyebrow">Need Help Choosing?</p>
-            <h2>Compare services with the team before you book.</h2>
-            <ul className="chip-list">
-              <li>Get help matching service type to your vehicle.</li>
-              <li>Review timeline expectations before scheduling.</li>
-              <li>Confirm project scope for personal or fleet needs.</li>
-              <li>Move directly to booking once details are clear.</li>
-            </ul>
-            <div className="button-row">
-              <Link className="button button--primary" href="/contact">
-                Contact Us
-              </Link>
-              <Link className="button button--ghost" href="/features">
-                View Features
-              </Link>
-            </div>
-          </div>
-
-          <figure className="visual-frame visual-frame--tall">
-            <Image
-              src="/hero_landing.png"
-              alt="Wrap service collage"
-              fill
-              sizes="(max-width: 1040px) 100vw, 42vw"
-            />
-          </figure>
-        </section>
-
-        <section className="section-shell panel-section">
-          <header className="section-head">
-            <p className="eyebrow">Customer Journey</p>
-            <h2>Browse → Preview → Schedule → Pay</h2>
-          </header>
-          <div className="service-grid">
-            {[
-              {
-                title: 'Browse',
-                description: 'Review service options and choose a project direction.'
-              },
-              {
-                title: 'Preview',
-                description: 'Use upload or template-based preview to move forward.'
-              },
-              {
-                title: 'Schedule',
-                description: 'Select valid appointment windows from available slots.'
-              },
-              {
-                title: 'Pay',
-                description: 'Complete secure checkout and receive confirmation.'
-              }
-            ].map((step) => (
-              <article className="surface-card service-card" key={step.title}>
-                <h3>{step.title}</h3>
-                <p>{step.description}</p>
-                <Link className="inline-link" href="/sign-up">
-                  Create Account
-                </Link>
-              </article>
-            ))}
           </div>
         </section>
       </main>
