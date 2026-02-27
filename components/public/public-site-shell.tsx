@@ -13,6 +13,7 @@ const navigationLinks = [
 type PublicSiteShellProps = {
   readonly activePath: string;
   readonly children: ReactNode;
+  readonly variant?: 'default' | 'auth';
 };
 
 function getNavigationLinkClassName(href: string, activePath: string): string {
@@ -22,7 +23,9 @@ function getNavigationLinkClassName(href: string, activePath: string): string {
   return isActive ? 'site-nav__link site-nav__link--active' : 'site-nav__link';
 }
 
-export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) {
+export function PublicSiteShell({ activePath, children, variant = 'default' }: PublicSiteShellProps) {
+  const isAuthVariant = variant === 'auth';
+
   return (
     <div className="public-site">
       <a className="skip-link" href="#main-content">
@@ -46,27 +49,31 @@ export function PublicSiteShell({ activePath, children }: PublicSiteShellProps) 
             </span>
           </Link>
 
-          <nav aria-label="Primary" className="site-nav">
-            {navigationLinks.map((navigationLink) => (
-              <Link
-                key={navigationLink.href}
-                className={getNavigationLinkClassName(navigationLink.href, activePath)}
-                href={navigationLink.href}
-              >
-                {navigationLink.label}
-              </Link>
-            ))}
-          </nav>
+          {!isAuthVariant ? (
+            <nav aria-label="Primary" className="site-nav">
+              {navigationLinks.map((navigationLink) => (
+                <Link
+                  key={navigationLink.href}
+                  className={getNavigationLinkClassName(navigationLink.href, activePath)}
+                  href={navigationLink.href}
+                >
+                  {navigationLink.label}
+                </Link>
+              ))}
+            </nav>
+          ) : null}
 
           <div className="site-header__actions">
-            <SignedOut>
-              <Link className="button button--ghost" href="/sign-in">
-                Sign In
-              </Link>
-              <Link className="button button--primary" href="/sign-up">
-                Sign Up
-              </Link>
-            </SignedOut>
+            {!isAuthVariant ? (
+              <SignedOut>
+                <Link className="button button--ghost" href="/sign-in">
+                  Sign In
+                </Link>
+                <Link className="button button--primary" href="/sign-up">
+                  Sign Up
+                </Link>
+              </SignedOut>
+            ) : null}
             <SignedIn>
               <Link className="button button--ghost" href="/wraps">
                 Dashboard
