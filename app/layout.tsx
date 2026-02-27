@@ -3,6 +3,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
+import { appearance } from '../lib/auth/clerk-appearance';
 import { getClerkPublishableKey } from '../lib/auth/clerk-config';
 
 export const metadata: Metadata = {
@@ -22,7 +23,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   const publishableKey = getClerkPublishableKey();
 
   return (
-    <ClerkProvider publishableKey={publishableKey}>
+    <ClerkProvider appearance={appearance} publishableKey={publishableKey}>
       <html lang="en">
         <body>{children}</body>
       </html>

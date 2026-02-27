@@ -286,7 +286,6 @@ p {
   padding: 2.25rem 0 4.8rem;
 }
 
-
 .eyebrow {
   display: inline-flex;
   align-items: center;
@@ -771,6 +770,10 @@ p {
     grid-template-columns: 1fr;
   }
 
+  .feature-row--reverse .feature-row__copy,
+  .feature-row--reverse .media-card {
+    order: unset;
+  }
 }
 
 @media (max-width: 660px) {

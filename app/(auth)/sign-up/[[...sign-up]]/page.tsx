@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 export default function SignUpPage() {
   return (
-    <PublicSiteShell activePath="/sign-up">
+    <PublicSiteShell activePath="/sign-up" variant="auth">
       <AuthShell reverse>
         <AuthMarketingPanel
           actions={
