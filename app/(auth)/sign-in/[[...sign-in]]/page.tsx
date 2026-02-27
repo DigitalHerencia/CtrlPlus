@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function SignInPage() {
   return (
-    <PublicSiteShell activePath="/sign-in">
+    <PublicSiteShell activePath="/sign-in" variant="auth">
       <main className="auth-main" id="main-content">
         <section className="section-shell auth-section">
           <article className="card auth-card">
