@@ -35,19 +35,21 @@ function extractWorkflowE2eGlobs(workflow: string): string[] {
   let inE2eBlock = false;
 
   for (const line of lines) {
-    if (line.trim() === 'e2e:') {
+    const trimmedLine = line.trim();
+
+    if (trimmedLine === 'e2e:') {
       inE2eBlock = true;
       continue;
     }
 
     if (inE2eBlock) {
-      const match = line.match(/^\s+- '([^']+)'$/);
+      const match = trimmedLine.match(/^- '([^']+)'$/);
       if (match) {
         globs.push(match[1]);
         continue;
       }
 
-      if (line.trim() !== '' && !line.startsWith(' '.repeat(14))) {
+      if (trimmedLine !== '' && !line.startsWith(' '.repeat(14))) {
         break;
       }
     }
@@ -62,19 +64,21 @@ function extractCiDesignE2eGlobs(ciDesign: string): string[] {
   let inE2eSection = false;
 
   for (const line of lines) {
-    if (line.startsWith('Run `test-e2e` for PRs that modify files in any of these paths')) {
+    const trimmedLine = line.trim();
+
+    if (trimmedLine.startsWith('Run `test-e2e` for PRs that modify files in any of these paths')) {
       inE2eSection = true;
       continue;
     }
 
     if (inE2eSection) {
-      const match = line.match(/^- `([^`]+)`$/);
+      const match = trimmedLine.match(/^- `([^`]+)`$/);
       if (match) {
         globs.push(match[1]);
         continue;
       }
 
-      if (line.startsWith('## ')) {
+      if (trimmedLine.startsWith('## ')) {
         break;
       }
     }

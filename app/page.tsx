@@ -114,7 +114,10 @@ export default function HomePage() {
               <h1 className="public-hero__title">
                 Command Your Brand
               </h1>
-              <p  className="hero-stage__description">
+              <p className="hero-stage__description">
+                Vehicle wraps, tint, and signage with a clear digital booking path.
+              </p>
+              <p className="hero-stage__description">
                 Review services, preview options, schedule valid appointment windows, and complete
                 secure checkout in one customer flow.
               </p>
