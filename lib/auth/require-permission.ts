@@ -16,6 +16,7 @@ export interface RequirePermissionInput {
   readonly headers: Readonly<Record<string, string | undefined>>;
   readonly tenantId: string;
   readonly permission: Permission;
+  readonly user?: AuthenticatedUser;
 }
 
 export interface PermissionContext {
@@ -25,9 +26,10 @@ export interface PermissionContext {
 }
 
 export async function requirePermission(input: RequirePermissionInput): Promise<PermissionContext> {
-  const user = await requireAuth({
-    headers: input.headers
-  });
+  const user = input.user
+    ?? await requireAuth({
+      headers: input.headers
+    });
 
   const role = resolveTenantRole({
     tenantId: input.tenantId,

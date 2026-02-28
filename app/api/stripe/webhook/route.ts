@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-import { invoiceStore } from '../../../../lib/fetchers/get-invoice';
+import { markInvoicePaidFromWebhook } from '../../../../lib/actions/billing';
 import { createLogContext, logEvent } from '../../../../lib/observability/structured-logger';
 
 interface StripeCheckoutSessionObject {
@@ -169,12 +169,12 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    invoiceStore.markPaid(
+    markInvoicePaidFromWebhook({
       tenantId,
       invoiceId,
-      session.id,
-      session.payment_intent ?? `pi_fallback_${event.id}`
-    );
+      checkoutSessionId: session.id,
+      paymentIntentId: session.payment_intent ?? `pi_fallback_${event.id}`
+    });
 
     logEvent({
       event: 'stripe.webhook.invoice_marked_paid',
@@ -200,3 +200,4 @@ export const __internal = {
     processedStripeEvents.reset();
   }
 };
+

@@ -14,6 +14,7 @@ describe('requireAuth', () => {
 
     expect(user).toEqual({
       userId: 'user_123',
+      clerkUserId: 'user_123',
       email: 'owner@example.com',
       orgId: 'org_acme',
       privateMetadata: {}

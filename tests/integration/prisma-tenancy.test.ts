@@ -34,6 +34,33 @@ describe('prisma multi-tenant schema', () => {
     expect(migrationSql).toContain('CREATE INDEX "WrapDesign_tenantId_idx"');
   });
 
+  it('defines normalized Clerk sync models and tenant-safe indexes', () => {
+    const schema = readRepositoryFile('prisma', 'schema.prisma');
+
+    expect(schema).toContain('model ClerkUser');
+    expect(schema).toContain('model TenantUserMembership');
+    expect(schema).toContain('model ClerkWebhookEvent');
+    expect(schema).toContain('@@unique([tenantId, clerkUserId])');
+    expect(schema).toContain('@@index([tenantId, isActive])');
+    expect(schema).toContain('@@index([tenantId, role, isActive])');
+    expect(schema).toContain('@@index([tenantId, receivedAt])');
+  });
+
+  it('ships a migration that provisions Clerk sync tables', () => {
+    const migrationSql = readRepositoryFile(
+      'prisma',
+      'migrations',
+      '20260228010000_clerk_sync_tables',
+      'migration.sql'
+    );
+
+    expect(migrationSql).toContain('CREATE TABLE "ClerkUser"');
+    expect(migrationSql).toContain('CREATE TABLE "TenantUserMembership"');
+    expect(migrationSql).toContain('CREATE TABLE "ClerkWebhookEvent"');
+    expect(migrationSql).toContain('CREATE UNIQUE INDEX "TenantUserMembership_tenantId_clerkUserId_key"');
+    expect(migrationSql).toContain('CREATE UNIQUE INDEX "ClerkWebhookEvent_clerkEventId_key"');
+  });
+
 
 
   it('ships an upload migration with tenant scoping', () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { assertTenantScope } from '../../lib/tenancy/assert-tenant-scope';
 import { TenantAccessError, requireTenant } from '../../lib/tenancy/require-tenant';
 import { resolveTenant } from '../../lib/tenancy/resolve-tenant';
 
@@ -27,14 +28,7 @@ describe('tenant resolution middleware primitives', () => {
   });
 
   it('fails on cross-tenant access attempts', () => {
-    expect(() =>
-      requireTenant({
-        headers: {
-          host: 'acme.localhost:3000'
-        },
-        routeTenantId: 'tenant_beta'
-      })
-    ).toThrowError(TenantAccessError);
+    expect(() => assertTenantScope('tenant_acme', 'tenant_beta')).toThrowError(TenantAccessError);
   });
 
   it('prefers host header over x-forwarded-host for tenant resolution', () => {
@@ -60,6 +54,6 @@ describe('tenant resolution middleware primitives', () => {
       }
     });
 
-    expect(context.tenant.tenantId).toBe('tenant_acme');
+    expect(context.tenantId).toBe('tenant_acme');
   });
 });

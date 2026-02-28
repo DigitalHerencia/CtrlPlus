@@ -1,0 +1,1 @@
+export { WrapCatalogPagination } from '../../../../components/domains/catalog';

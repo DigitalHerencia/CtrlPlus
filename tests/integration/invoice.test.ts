@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createInvoice } from '../../lib/actions/create-invoice';
-import { ActionInputValidationError } from '../../lib/actions/validation';
+import { createInvoice } from '../../lib/actions/billing';
+import { ActionInputValidationError } from '../../lib/actions/shared';
 import { PermissionError } from '../../lib/auth/require-permission';
-import { getInvoice, invoiceStore, InvoiceNotFoundError } from '../../lib/fetchers/get-invoice';
+import { getInvoice, invoiceStore, InvoiceNotFoundError } from '../../lib/fetchers/billing';
 import { resetLogSink, setLogSink, type StructuredLogEntry } from '../../lib/observability/structured-logger';
+import { TenantAccessError } from '../../lib/tenancy/require-tenant';
 
 const ownerHeaders = {
   host: 'acme.localhost:3000',
@@ -85,6 +86,23 @@ describe('invoice domain', () => {
     ).rejects.toThrowError(ActionInputValidationError);
   });
 
+  it('rejects invoice reads for users without billing read permission', async () => {
+    const created = await createInvoice({
+      headers: ownerHeaders,
+      tenantId: 'tenant_acme',
+      customerEmail: 'acme@example.com',
+      amountCents: 100000
+    });
+
+    await expect(
+      getInvoice({
+        headers: viewerHeaders,
+        tenantId: 'tenant_acme',
+        invoiceId: created.id
+      })
+    ).rejects.toThrowError(PermissionError);
+  });
+
   it('rejects malformed invoice payloads with deterministic validation errors', async () => {
     await expect(
       createInvoice({
@@ -144,4 +162,17 @@ describe('invoice domain', () => {
       })
     ).rejects.toThrowError(InvoiceNotFoundError);
   });
+
+  it('rejects tenant ids that do not match the host-derived tenant context', async () => {
+    await expect(
+      createInvoice({
+        headers: ownerHeaders,
+        tenantId: 'tenant_beta',
+        customerEmail: 'acme@example.com',
+        amountCents: 180000
+      })
+    ).rejects.toThrowError(TenantAccessError);
+  });
 });
+
+

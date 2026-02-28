@@ -2,6 +2,7 @@ import { auth, clerkClient } from '@clerk/nextjs/server';
 
 export interface AuthenticatedUser {
   readonly userId: string;
+  readonly clerkUserId: string;
   readonly email: string;
   readonly orgId: string | null;
   readonly privateMetadata: unknown;
@@ -36,22 +37,23 @@ function readHeader(
 }
 
 function resolveFromHeaders(headers: Readonly<Record<string, string | undefined>>): AuthenticatedUser | null {
-  const userId = readHeader(headers, 'x-clerk-user-id');
+  const clerkUserId = readHeader(headers, 'x-clerk-user-id');
   const email = readHeader(headers, 'x-clerk-user-email');
 
-  if (!userId || !email) {
+  if (!clerkUserId || !email) {
     return null;
   }
 
   return {
-    userId,
+    userId: clerkUserId,
+    clerkUserId,
     email,
     orgId: readHeader(headers, 'x-clerk-org-id') ?? null,
     privateMetadata: {}
   };
 }
 
-export async function requireAuth(input: RequireAuthInput): Promise<AuthenticatedUser> {
+export async function requireAuth(input: RequireAuthInput = {}): Promise<AuthenticatedUser> {
   try {
     const authResult = await auth();
     if (!authResult.userId) {
@@ -66,6 +68,7 @@ export async function requireAuth(input: RequireAuthInput): Promise<Authenticate
 
     return {
       userId: authResult.userId,
+      clerkUserId: authResult.userId,
       email: primaryEmail?.emailAddress ?? '',
       orgId: authResult.orgId ?? null,
       privateMetadata: user.privateMetadata

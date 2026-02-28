@@ -9,6 +9,7 @@ This repo is a **subdomain-based multi-tenant** Next.js App Router application f
 * This root-level `AGENTS.md` is the canonical instruction file for the repository.
 * `PLANS.md` at repository root is the canonical ExecPlan standard.
 * `.codex/` is reserved for repository-local Codex config and transient artifacts, not primary engineering policy.
+* Exception: `.codex/TODO.md` may be used as a migration execution checklist/tracker, but it is non-canonical and must stay aligned to `AGENTS.md` + `docs/tech-requirements.md`.
 
 ## Non-negotiable rules
 

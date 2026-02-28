@@ -24,19 +24,19 @@ These gates are non-optional and must stay aligned with the [Standard PR Checkli
 Run `test-e2e` for PRs that modify files in any of these paths (or their descendants):
 
 - `app/(auth)/**`
-- `app/(tenant)/wraps/**`
+- `app/(tenant)/**`
 - `app/api/stripe/**`
-- `features/authz/**`
-- `features/catalog/**`
-- `features/scheduling/**`
-- `features/visualizer/**`
-- `lib/actions/**`
+- `app/api/clerk/**`
+- `components/shared-ui/**`
+- `features/**`
 - `lib/auth/**`
 - `lib/db/**`
-- `lib/fetchers/**`
 - `lib/rate-limit/**`
 - `lib/storage/**`
 - `lib/tenancy/**`
+- `lib/server/**`
+- `lib/shared/schemas/**`
+- `types/**`
 - `prisma/**`
 - `proxy.ts`
 - `tests/e2e/**`
@@ -57,7 +57,7 @@ Configure branch protection to require these checks before merge:
 2. `typecheck`
 3. `test-unit`
 4. `test-integration`
-5. `test-e2e` (required when triggered by §3 conditions)
+5. `test-e2e` (required when triggered by section 3 conditions)
 
 Reviewers should verify this list against the [Standard PR Checklist](./pr-checklist.md#quality-gates-must-be-green) whenever CI policy changes.
 
@@ -65,18 +65,18 @@ Reviewers should verify this list against the [Standard PR Checklist](./pr-check
 
 ### Retry policy
 
-- CI retries failed E2E specs up to **2 retries** (3 total attempts per failing spec).
-- A test that passes only after retry is marked **flaky** and reported in the workflow summary.
+- CI retries failed E2E specs up to 2 retries (3 total attempts per failing spec).
+- A test that passes only after retry is marked flaky and reported in the workflow summary.
 
 ### Quarantine policy
 
-- A test may be quarantined only after **3 flaky incidents in 7 days** or **2 consecutive red builds** attributed to the same spec.
+- A test may be quarantined only after 3 flaky incidents in 7 days or 2 consecutive red builds attributed to the same spec.
 - Quarantined specs are moved behind an explicit quarantine tag (for example `@quarantine`) and excluded from merge-blocking E2E jobs.
 - Quarantine requires an owner and linked tracking issue.
 
 ### SLA policy
 
-- Quarantined test fix SLA: **2 business days**.
+- Quarantined test fix SLA: 2 business days.
 - If SLA is breached, the owning team must either:
   - submit a fix PR immediately, or
   - disable the risky feature path behind a guard until fixed.

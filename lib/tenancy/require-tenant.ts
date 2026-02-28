@@ -12,10 +12,11 @@ export class TenantAccessError extends Error {
 
 export interface RequireTenantInput {
   readonly headers: Readonly<Record<string, string | undefined>>;
-  readonly routeTenantId?: string;
 }
 
 export interface TenantContext {
+  readonly tenantId: string;
+  readonly tenantSlug: string;
   readonly tenant: TenantRecord;
 }
 
@@ -47,12 +48,9 @@ export function requireTenant(input: RequireTenantInput): TenantContext {
     throw new TenantAccessError('Tenant not found', 404);
   }
 
-  if (input.routeTenantId && input.routeTenantId !== tenant.tenantId) {
-    throw new TenantAccessError('Cross-tenant access denied', 403);
-  }
-
   return {
+    tenantId: tenant.tenantId,
+    tenantSlug: tenant.slug,
     tenant
   };
 }
-

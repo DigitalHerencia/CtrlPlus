@@ -3,13 +3,13 @@ import { join } from 'node:path';
 
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createWrapDesign } from '../../lib/actions/catalog/create-wrap-design';
-import { updateWrapDesign } from '../../lib/actions/catalog/update-wrap-design';
+import { createWrapDesign } from '../../lib/actions/catalog';
+import { updateWrapDesign } from '../../lib/actions/catalog';
 import {
   getPublicWrapById,
-  getPublicWraps
-} from '../../lib/fetchers/catalog/get-public-wraps';
-import { catalogStore } from '../../lib/fetchers/catalog/store';
+  getPublicWraps,
+} from '../../lib/fetchers/catalog';
+import { catalogStore } from '../../lib/fetchers/catalog';
 
 const ownerHeaders = {
   host: 'acme.localhost:3000',
@@ -27,7 +27,6 @@ describe('catalog public rsc surface', () => {
     const draftWrap = await createWrapDesign({
       headers: ownerHeaders,
       payload: {
-        tenantId: 'tenant_acme',
         name: 'Acme Draft'
       }
     });
@@ -35,7 +34,6 @@ describe('catalog public rsc surface', () => {
     const publishedWrap = await createWrapDesign({
       headers: ownerHeaders,
       payload: {
-        tenantId: 'tenant_acme',
         name: 'Acme Published'
       }
     });
@@ -43,7 +41,6 @@ describe('catalog public rsc surface', () => {
     await updateWrapDesign({
       headers: ownerHeaders,
       payload: {
-        tenantId: 'tenant_acme',
         id: publishedWrap.id,
         isPublished: true
       }
@@ -63,7 +60,6 @@ describe('catalog public rsc surface', () => {
     const publishedWrap = await createWrapDesign({
       headers: ownerHeaders,
       payload: {
-        tenantId: 'tenant_acme',
         name: 'Acme Fast'
       }
     });
@@ -71,7 +67,6 @@ describe('catalog public rsc surface', () => {
     await updateWrapDesign({
       headers: ownerHeaders,
       payload: {
-        tenantId: 'tenant_acme',
         id: publishedWrap.id,
         isPublished: true
       }
@@ -94,13 +89,19 @@ describe('catalog public rsc surface', () => {
 
   it('ensures app catalog routes do not import prisma directly', () => {
     const appFiles = [
-      'app/(tenant)/wraps/page.tsx',
-      'app/(tenant)/wraps/[id]/page.tsx'
+      'app/(tenant)/catalog/wraps/page.tsx',
+      'app/(tenant)/catalog/wraps/[id]/page.tsx',
+      'app/(tenant)/catalog/wraps/new/page.tsx',
+      'app/(tenant)/catalog/wraps/[id]/edit/page.tsx'
     ].map((filePath) => readFileSync(join(process.cwd(), filePath), 'utf8').toLowerCase());
 
     expect(appFiles[0]).not.toContain('prisma');
     expect(appFiles[1]).not.toContain('prisma');
+    expect(appFiles[2]).not.toContain('prisma');
+    expect(appFiles[3]).not.toContain('prisma');
   });
 });
+
+
 
 

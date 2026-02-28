@@ -1,20 +1,26 @@
 # Documentation Index
 
-This directory contains project guidance and report snapshots.
+This directory contains canonical requirements, governance, and historical reports.
 
-## Core docs
+## Canonical architecture and process docs
 
+- `AGENTS.md` (repo root): hard implementation constraints and guardrails.
+- `PLANS.md` (repo root): ExecPlan standard for complex changes.
+- `docs/tech-requirements.md`: canonical architecture requirements for the server-first redesign.
 - `docs/product-requirements.md`: product goals and user flows.
-- `docs/tech-requirements.md`: architecture and implementation requirements.
-- `docs/github-workflow.md`: labels, roadmap sync, and governance bootstrap.
-- `docs/ci-design.md`: CI quality gates and flaky-test handling policy.
+- `docs/ci-design.md`: CI gates and E2E trigger policy.
 - `docs/pr-checklist.md`: merge checklist used by pull requests.
-- `docs/copy-style-guide.md`: approved sitewide copy tone and phrasing standards.
-- `docs/copy-qa-checklist.md`: route-level copy consistency and QA checklist.
-- `docs/deployment-runbook.md`: deployment sequence, migration safety, rollback, and verification flow.
-- `docs/demo-release-checklist.md`: M9 demo release readiness checklist.
+- `docs/github-workflow.md`: labels, roadmap sync, and governance bootstrap.
+- `docs/deployment-runbook.md`: deployment, migration safety, rollback, verification.
+- `docs/demo-release-checklist.md`: demo release readiness checklist.
 
-## Design system docs
+## Working migration backlog
+
+- `.codex/TODO.md` (repo root): active migration checklist and execution tracker.
+
+Note: `.codex/TODO.md` is an execution artifact, not policy. If it conflicts with canonical docs, update canonical docs and then align TODO.
+
+## Design docs
 
 - `docs/design/README.md`
 - `docs/design/manifest.json`
@@ -22,8 +28,8 @@ This directory contains project guidance and report snapshots.
 - `docs/design/visual-system.spec.v1.md`
 - `docs/design/tailwind-v4.contract.v1.md`
 
-## Reports
+## Historical reports
 
 - `docs/reports/README.md`
 
-Reports are point-in-time audits and security analyses. They inform decisions but do not replace the core requirement documents.
+Reports are dated snapshots. They are non-authoritative and may reference pre-redesign file paths.

@@ -15,6 +15,8 @@ model Tenant {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   users         User[]
+  tenantMemberships TenantUserMembership[]
+  clerkWebhookEvents ClerkWebhookEvent[]
   wrapDesigns   WrapDesign[]
   bookings      Booking[]
   invoices      Invoice[]
@@ -106,4 +108,56 @@ model PaymentEvent {
 
   @@index([tenantId])
   @@index([tenantId, eventType])
+}
+
+model ClerkUser {
+  id                String                 @id
+  primaryEmail      String?
+  firstName         String?
+  lastName          String?
+  imageUrl          String?
+  isDeleted         Boolean                @default(false)
+  lastSyncedAt      DateTime               @default(now())
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  tenantMemberships TenantUserMembership[]
+  webhookEvents     ClerkWebhookEvent[]
+
+  @@index([primaryEmail])
+  @@index([isDeleted, updatedAt])
+}
+
+model TenantUserMembership {
+  id          String    @id @default(cuid())
+  tenantId    String
+  clerkUserId String
+  role        String
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  clerkUser   ClerkUser @relation(fields: [clerkUserId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, clerkUserId])
+  @@index([tenantId, isActive])
+  @@index([tenantId, role, isActive])
+  @@index([clerkUserId, isActive])
+}
+
+model ClerkWebhookEvent {
+  id              String    @id @default(cuid())
+  clerkEventId    String    @unique
+  eventType       String
+  clerkUserId     String?
+  tenantId        String?
+  payloadChecksum String
+  status          String    @default("received")
+  receivedAt      DateTime  @default(now())
+  processedAt     DateTime?
+  clerkUser       ClerkUser? @relation(fields: [clerkUserId], references: [id], onDelete: SetNull)
+  tenant          Tenant?    @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@index([eventType, receivedAt])
+  @@index([tenantId, receivedAt])
+  @@index([clerkUserId, receivedAt])
 }

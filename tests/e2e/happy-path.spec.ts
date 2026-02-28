@@ -3,12 +3,14 @@ import { createHmac } from 'node:crypto';
 import { expect, test } from '@playwright/test';
 
 import { POST as stripeWebhookPost, __internal as stripeWebhookInternal } from '../../app/api/stripe/webhook/route';
-import { createBooking } from '../../lib/actions/create-booking';
-import { createCheckoutSession } from '../../lib/actions/create-checkout-session';
-import { createInvoice } from '../../lib/actions/create-invoice';
-import { createUploadPreviewAction } from '../../lib/actions/create-upload-preview';
-import { bookingStore } from '../../lib/fetchers/booking-store';
-import { getInvoice, invoiceStore } from '../../lib/fetchers/get-invoice';
+import { createBooking } from '../../lib/actions/scheduling';
+import { createCheckoutSession } from '../../lib/actions/billing';
+import { createInvoice } from '../../lib/actions/billing';
+import { createUploadPreviewAction } from '../../lib/actions/visualizer';
+import { PermissionError } from '../../lib/auth/require-permission';
+import { bookingStore } from '../../lib/fetchers/scheduling';
+import { getInvoice, invoiceStore } from '../../lib/fetchers/billing';
+import { TenantAccessError } from '../../lib/tenancy/require-tenant';
 import { uploadRateLimiter } from '../../lib/rate-limit/upload-rate-limit';
 import { uploadStore } from '../../lib/storage/upload-store';
 
@@ -16,6 +18,13 @@ const ownerHeaders = {
   host: 'acme.localhost:3000',
   'x-clerk-user-id': 'user_owner',
   'x-clerk-user-email': 'owner@example.com',
+  'x-clerk-org-id': 'org_acme'
+} as const;
+
+const viewerHeaders = {
+  host: 'acme.localhost:3000',
+  'x-clerk-user-id': 'user_viewer',
+  'x-clerk-user-email': 'viewer@example.com',
   'x-clerk-org-id': 'org_acme'
 } as const;
 
@@ -116,5 +125,45 @@ test.describe('customer happy path', () => {
     expect(paidInvoice.status).toBe('paid');
     expect(paidInvoice.stripePaymentIntentId).toBe('pi_happy_path');
   });
+
+  test('blocks checkout flow on tenant scope mismatch', async () => {
+    const invoice = await createInvoice({
+      headers: ownerHeaders,
+      tenantId: 'tenant_acme',
+      customerEmail: 'tenant-mismatch@example.com',
+      amountCents: 125000
+    });
+
+    await expect(
+      createCheckoutSession({
+        headers: ownerHeaders,
+        tenantId: 'tenant_beta',
+        invoiceId: invoice.id,
+        successUrl: 'https://acme.example.com/success',
+        cancelUrl: 'https://acme.example.com/cancel'
+      })
+    ).rejects.toThrowError(TenantAccessError);
+  });
+
+  test('blocks checkout flow for users without billing write permission', async () => {
+    const invoice = await createInvoice({
+      headers: ownerHeaders,
+      tenantId: 'tenant_acme',
+      customerEmail: 'permission-denied@example.com',
+      amountCents: 175000
+    });
+
+    await expect(
+      createCheckoutSession({
+        headers: viewerHeaders,
+        tenantId: 'tenant_acme',
+        invoiceId: invoice.id,
+        successUrl: 'https://acme.example.com/success',
+        cancelUrl: 'https://acme.example.com/cancel'
+      })
+    ).rejects.toThrowError(PermissionError);
+  });
 });
+
+
 

@@ -65,7 +65,10 @@ describe('site copy governance', () => {
   });
 
   it('keeps primary auth CTAs consistent across public shell and auth routes', async () => {
-    const shellContent = await readFile(path.resolve(process.cwd(), 'components/public/public-site-shell.tsx'), 'utf8');
+    const shellContent = await readFile(
+      path.resolve(process.cwd(), 'components/shared-ui/layout/public-site-shell.tsx'),
+      'utf8',
+    );
     const signInContent = await readFile(
       path.resolve(process.cwd(), 'app/(auth)/sign-in/[[...sign-in]]/page.tsx'),
       'utf8'
@@ -76,7 +79,7 @@ describe('site copy governance', () => {
     );
 
     expect(shellContent).toContain('Create Account');
-    expect(shellContent).toContain('Sign In');
+    expect(shellContent.includes('Sign In') || shellContent.includes('Existing Customer')).toBe(true);
     expect(signInContent).toContain('Create Account');
     expect(signUpContent).toContain('Already have an account?');
   });

@@ -21,6 +21,19 @@ const KNOWN_TENANTS: readonly TenantRecord[] = [
   }
 ];
 
+export function listKnownTenants(): readonly TenantRecord[] {
+  return KNOWN_TENANTS;
+}
+
+export function resolveTenantById(tenantId: string): TenantRecord | null {
+  const tenant = KNOWN_TENANTS.find((candidate) => candidate.tenantId === tenantId);
+  return tenant ?? null;
+}
+
+export function isKnownTenantId(tenantId: string): boolean {
+  return resolveTenantById(tenantId) !== null;
+}
+
 function normalizeHost(host: string): string {
   const normalizedHost = host.trim().toLowerCase();
   const separatorIndex = normalizedHost.indexOf(':');

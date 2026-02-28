@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeSlots } from '../../features/scheduling/compute-slots';
+import { computeSlots } from '../../features/scheduling/use-cases/compute-slots';
 
 describe('computeSlots', () => {
   it('returns available slots excluding overlaps with busy windows', () => {

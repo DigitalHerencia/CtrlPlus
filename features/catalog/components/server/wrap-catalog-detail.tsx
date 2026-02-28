@@ -1,0 +1,1 @@
+export { WrapCatalogDetail } from '../../../../components/domains/catalog';

@@ -17,7 +17,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "node scripts/fix-playwright-node24.mjs && playwright test",
     "bootstrap:github": "node scripts/github/bootstrap-governance.mjs",
     "bootstrap:labels": "node scripts/github/bootstrap-governance.mjs --labels-only",
     "prepare": "husky",
@@ -27,9 +27,11 @@
   },
   "dependencies": {
     "@clerk/nextjs": "6.38.3",
+    "@hookform/resolvers": "^5.2.2",
     "next": "16.1.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-hook-form": "^7.71.2",
     "zod": "^4.3.6"
   },
   "devDependencies": {

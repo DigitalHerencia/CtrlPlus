@@ -2,7 +2,15 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { PublicSiteShell } from '../../components/public/public-site-shell';
+import { PublicSiteShell } from '../../components/shared-ui/layout/public-site-shell';
+import {
+  Badge,
+  buttonVariants,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+} from '../../components/ui';
 
 const featureRows = [
   {
@@ -11,10 +19,10 @@ const featureRows = [
     points: [
       'Review options with practical descriptions and install expectations.',
       'Use one account to save and compare choices across visits.',
-      'Move directly into preview and scheduling after selection.'
+      'Move directly into preview and scheduling after selection.',
     ],
     image: '/visuals/feature-discovery.png',
-    imageAlt: 'Vehicle lineup and wrap detail composition'
+    imageAlt: 'Vehicle lineup and wrap detail composition',
   },
   {
     title: 'Preview With Fallback',
@@ -23,10 +31,10 @@ const featureRows = [
     points: [
       'Keep the booking path active even if an upload preview is unavailable.',
       'Review wrap texture and placement before scheduling.',
-      'Continue to next steps without restarting the project.'
+      'Continue to next steps without restarting the project.',
     ],
     image: '/visuals/feature-preview.png',
-    imageAlt: 'Wrap material and vehicle preview collage'
+    imageAlt: 'Wrap material and vehicle preview collage',
   },
   {
     title: 'Scheduling Controls',
@@ -35,10 +43,10 @@ const featureRows = [
     points: [
       'Present valid windows only for consistent booking decisions.',
       'Reduce manual back-and-forth with structured appointment steps.',
-      'Keep booking details linked to the customer account.'
+      'Keep booking details linked to the customer account.',
     ],
     image: '/visuals/feature-scheduling.png',
-    imageAlt: 'Scheduling workflow visual composition'
+    imageAlt: 'Scheduling workflow visual composition',
   },
   {
     title: 'Invoice + Checkout',
@@ -47,109 +55,130 @@ const featureRows = [
     points: [
       'Review payment context before submitting checkout.',
       'Receive confirmation in the same flow after payment.',
-      'Track booking and invoice progress in one account.'
+      'Track booking and invoice progress in one account.',
     ],
     image: '/visuals/contact-service.png',
-    imageAlt: 'Customer booking and service visual collage'
-  }
+    imageAlt: 'Customer booking and service visual collage',
+  },
 ];
 
 export const metadata: Metadata = {
-  title: 'Features'
+  title: 'Features',
 };
 
 export default function FeaturesPage() {
   return (
-    <PublicSiteShell activePath="/features">
-      <main className="public-main" id="main-content">
-        <section className="section-shell content-hero">
-          <div className="content-hero__copy">
-            <p className="eyebrow">Platform Features</p>
-            <h1 className="content-hero__title">
-              Customer-facing tools that keep wrap projects moving.
-            </h1>
-            <p>
-              Each feature supports the same goal: clear decisions, valid scheduling, and secure
-              payment completion.
-            </p>
-            <div className="button-row">
-              <Link className="button button--primary" href="/sign-up">
-                Create Account
-              </Link>
-              <Link className="button button--ghost" href="/sign-in">
-                Sign In
-              </Link>
-            </div>
-          </div>
+    <PublicSiteShell activePath='/features'>
+      <main className='mx-auto grid w-full max-w-6xl gap-10 px-4 py-10 md:px-6 md:py-12' id='main-content'>
+        <section className='grid gap-5 lg:grid-cols-[1.1fr_0.9fr]'>
+          <Card>
+            <CardHeader className='gap-3'>
+              <p className='text-xs font-semibold uppercase tracking-[0.08em] text-[color:var(--text-muted)]'>
+                Platform Features
+              </p>
+              <h1 className='text-4xl font-semibold tracking-[0.02em] text-[color:var(--text)] md:text-5xl'>
+                Customer-facing tools that keep wrap projects moving.
+              </h1>
+              <CardDescription className='text-base'>
+                Each feature supports the same goal: clear decisions, valid scheduling, and secure payment completion.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='flex flex-wrap items-center gap-2'>
+                <Link className={buttonVariants()} href='/sign-up'>
+                  Create Account
+                </Link>
+                <Link className={buttonVariants({ variant: 'outline' })} href='/sign-in'>
+                  Sign In
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
 
-          <figure className="visual-frame visual-frame--content">
-            <Image
-              src="/visuals/feature-discovery.png"
-              alt="Feature overview collage"
-              fill
-              priority
-              sizes="(max-width: 1040px) 100vw, 45vw"
-            />
-          </figure>
+          <Card className='overflow-hidden'>
+            <CardContent className='relative min-h-[320px] px-0 pb-0 pt-0'>
+              <Image
+                alt='Feature overview collage'
+                className='object-cover'
+                fill
+                priority
+                sizes='(max-width: 1024px) 100vw, 45vw'
+                src='/visuals/feature-discovery.png'
+              />
+            </CardContent>
+          </Card>
         </section>
 
-        <section className="section-shell panel-section">
-          <header className="section-head">
-            <p className="eyebrow">Feature Breakdown</p>
-            <h2>Designed to support the full customer journey from first click to payment.</h2>
+        <section className='grid gap-5'>
+          <header className='grid gap-2'>
+            <Badge variant='outline'>Feature Breakdown</Badge>
+            <h2 className='text-3xl font-semibold tracking-[0.02em] text-[color:var(--text)]'>
+              Designed to support the full customer journey from first click to payment.
+            </h2>
           </header>
 
-          <div className="feature-stack">
+          <div className='grid gap-4'>
             {featureRows.map((featureRow, index) => {
               const shouldReverse = index % 2 === 1;
 
               return (
-                <article
-                  className={`surface-card feature-row ${shouldReverse ? 'feature-row--reverse' : ''}`}
-                  key={featureRow.title}
-                >
-                  <div className="feature-row__copy">
-                    <h3>{featureRow.title}</h3>
-                    <p>{featureRow.description}</p>
-                    <ul className="dot-list">
-                      {featureRow.points.map((point) => (
-                        <li key={point}>{point}</li>
-                      ))}
-                    </ul>
-                    <Link className="inline-link" href="/sign-up">
-                      Create Account
-                    </Link>
-                  </div>
+                <Card key={featureRow.title}>
+                  <CardContent className='grid gap-4 pt-5 lg:grid-cols-2'>
+                    <div className={shouldReverse ? 'grid gap-3 lg:order-2' : 'grid gap-3'}>
+                      <h3 className='text-2xl font-semibold text-[color:var(--text)]'>{featureRow.title}</h3>
+                      <p className='text-[color:var(--text-muted)]'>{featureRow.description}</p>
+                      <ul className='grid list-none gap-2 p-0'>
+                        {featureRow.points.map((point) => (
+                          <li
+                            className='rounded-lg border border-[color:var(--border)] bg-[color:var(--surface-muted)] px-3 py-2 text-sm text-[color:var(--text)]'
+                            key={point}
+                          >
+                            {point}
+                          </li>
+                        ))}
+                      </ul>
+                      <Link className={buttonVariants({ variant: 'link' })} href='/sign-up'>
+                        Create Account
+                      </Link>
+                    </div>
 
-                  <figure className="visual-frame visual-frame--row">
-                    <Image
-                      src={featureRow.image}
-                      alt={featureRow.imageAlt}
-                      fill
-                      sizes="(max-width: 1040px) 100vw, 42vw"
-                    />
-                  </figure>
-                </article>
+                    <div className={shouldReverse ? 'relative min-h-[250px] overflow-hidden rounded-lg border border-[color:var(--border)] lg:order-1' : 'relative min-h-[250px] overflow-hidden rounded-lg border border-[color:var(--border)]'}>
+                      <Image
+                        alt={featureRow.imageAlt}
+                        className='object-cover'
+                        fill
+                        sizes='(max-width: 1024px) 100vw, 42vw'
+                        src={featureRow.image}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
               );
             })}
           </div>
         </section>
 
-        <section className="section-shell cta-banner">
-          <div>
-            <p className="eyebrow">Next Step</p>
-            <h2>Create an account and launch your first project flow.</h2>
-            <p>Existing customers can sign in to continue active previews, bookings, and invoices.</p>
-          </div>
-          <div className="button-row">
-            <Link className="button button--primary" href="/sign-up">
-              Create Account
-            </Link>
-            <Link className="button button--ghost" href="/sign-in">
-              Sign In
-            </Link>
-          </div>
-        </section>
+        <Card>
+          <CardContent className='flex flex-wrap items-center justify-between gap-4 pt-5'>
+            <div className='grid gap-2'>
+              <Badge variant='outline'>Next Step</Badge>
+              <h2 className='text-2xl font-semibold text-[color:var(--text)]'>
+                Create an account and launch your first project flow.
+              </h2>
+              <p className='text-[color:var(--text-muted)]'>
+                Existing customers can sign in to continue active previews, bookings, and invoices.
+              </p>
+            </div>
+            <div className='flex flex-wrap items-center gap-2'>
+              <Link className={buttonVariants()} href='/sign-up'>
+                Create Account
+              </Link>
+              <Link className={buttonVariants({ variant: 'outline' })} href='/sign-in'>
+                Sign In
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </PublicSiteShell>
   );

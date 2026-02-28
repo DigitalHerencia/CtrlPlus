@@ -1,15 +1,24 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { BookingValidationError, createBooking } from '../../lib/actions/create-booking';
-import { ActionInputValidationError } from '../../lib/actions/validation';
-import { bookingStore } from '../../lib/fetchers/booking-store';
-import { getAvailability } from '../../lib/fetchers/get-availability';
+import { BookingValidationError, createBooking } from '../../lib/actions/scheduling';
+import { ActionInputValidationError } from '../../lib/actions/shared';
+import { PermissionError } from '../../lib/auth/require-permission';
+import { bookingStore } from '../../lib/fetchers/scheduling';
+import { getAvailability } from '../../lib/fetchers/scheduling';
 import { resetLogSink, setLogSink, type StructuredLogEntry } from '../../lib/observability/structured-logger';
+import { TenantAccessError } from '../../lib/tenancy/require-tenant';
 
 const ownerHeaders = {
   host: 'acme.localhost:3000',
   'x-clerk-user-id': 'user_owner',
   'x-clerk-user-email': 'owner@example.com',
+  'x-clerk-org-id': 'org_acme'
+} as const;
+
+const viewerHeaders = {
+  host: 'acme.localhost:3000',
+  'x-clerk-user-id': 'user_viewer',
+  'x-clerk-user-email': 'viewer@example.com',
   'x-clerk-org-id': 'org_acme'
 } as const;
 
@@ -35,7 +44,7 @@ describe('booking action + availability fetcher', () => {
   });
 
   it('creates a booking and removes the slot from availability', async () => {
-    const initialSlots = getAvailability({
+    const initialSlots = await getAvailability({
       tenantId: 'tenant_acme',
       ...dayWindow
     });
@@ -53,7 +62,7 @@ describe('booking action + availability fetcher', () => {
 
     expect(booking.id).toMatch(/^booking_/);
 
-    const updatedSlots = getAvailability({
+    const updatedSlots = await getAvailability({
       tenantId: 'tenant_acme',
       ...dayWindow
     });
@@ -120,6 +129,32 @@ describe('booking action + availability fetcher', () => {
     ).rejects.toThrowError(ActionInputValidationError);
   });
 
+  it('rejects booking writes for users without schedule write permission', async () => {
+    await expect(
+      createBooking({
+        headers: viewerHeaders,
+        tenantId: 'tenant_acme',
+        startsAtIso: '2026-02-18T08:30:00.000Z',
+        endsAtIso: '2026-02-18T09:00:00.000Z',
+        customerName: 'Viewer Attempt',
+        ...dayWindow
+      })
+    ).rejects.toThrowError(PermissionError);
+  });
+
+  it('rejects tenant ids that do not match host-derived tenant context', async () => {
+    await expect(
+      createBooking({
+        headers: ownerHeaders,
+        tenantId: 'tenant_beta',
+        startsAtIso: '2026-02-18T08:30:00.000Z',
+        endsAtIso: '2026-02-18T09:00:00.000Z',
+        customerName: 'Tenant Mismatch',
+        ...dayWindow
+      })
+    ).rejects.toThrowError(TenantAccessError);
+  });
+
   it('keeps availability tenant-scoped', async () => {
     await createBooking({
       headers: ownerHeaders,
@@ -130,7 +165,7 @@ describe('booking action + availability fetcher', () => {
       ...dayWindow
     });
 
-    const betaSlots = getAvailability({
+    const betaSlots = await getAvailability({
       tenantId: 'tenant_beta',
       ...dayWindow
     });
@@ -138,3 +173,5 @@ describe('booking action + availability fetcher', () => {
     expect(betaSlots).toHaveLength(4);
   });
 });
+
+

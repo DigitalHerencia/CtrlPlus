@@ -1,32 +1,9 @@
-import './globals.css';
-import { ClerkProvider } from '@clerk/nextjs';
-import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 
-import { appearance } from '../lib/auth/clerk-appearance';
-import { getClerkPublishableKey } from '../lib/auth/clerk-config';
-
-export const metadata: Metadata = {
-  title: {
-    default: 'CTRL+ Vehicle Wraps',
-    template: '%s | CTRL+'
-  },
-  description:
-    'Vehicle wraps, tint, and signage with a guided browse, preview, schedule, and payment flow.'
+type PublicLayoutProps = {
+  readonly children: ReactNode;
 };
 
-type RootLayoutProps = {
-  children: ReactNode;
-};
-
-export default function RootLayout({ children }: RootLayoutProps) {
-  const publishableKey = getClerkPublishableKey();
-
-  return (
-    <ClerkProvider appearance={appearance} publishableKey={publishableKey}>
-      <html lang="en">
-        <body>{children}</body>
-      </html>
-    </ClerkProvider>
-  );
+export default function PublicLayout({ children }: PublicLayoutProps) {
+  return children;
 }

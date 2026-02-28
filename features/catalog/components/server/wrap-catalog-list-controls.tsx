@@ -1,0 +1,1 @@
+export { WrapCatalogListControls } from '../../../../components/domains/catalog';

@@ -1,15 +1,24 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { createUploadPreviewAction } from '../../lib/actions/create-upload-preview';
-import { ActionInputValidationError } from '../../lib/actions/validation';
+import { createUploadPreviewAction } from '../../lib/actions/visualizer';
+import { ActionInputValidationError } from '../../lib/actions/shared';
+import { PermissionError } from '../../lib/auth/require-permission';
 import { RateLimitError } from '../../lib/rate-limit/fixed-window-limiter';
 import { uploadRateLimiter } from '../../lib/rate-limit/upload-rate-limit';
+import { TenantAccessError } from '../../lib/tenancy/require-tenant';
 import { UploadValidationError, uploadStore } from '../../lib/storage/upload-store';
 
 const ownerHeaders = {
   host: 'acme.localhost:3000',
   'x-clerk-user-id': 'user_owner',
   'x-clerk-user-email': 'owner@example.com',
+  'x-clerk-org-id': 'org_acme'
+} as const;
+
+const viewerHeaders = {
+  host: 'acme.localhost:3000',
+  'x-clerk-user-id': 'user_viewer',
+  'x-clerk-user-email': 'viewer@example.com',
   'x-clerk-org-id': 'org_acme'
 } as const;
 
@@ -89,6 +98,34 @@ describe('upload preview pipeline', () => {
 
   });
 
+  it('rejects upload preview writes for users without catalog write permission', async () => {
+    await expect(
+      createUploadPreviewAction({
+        headers: viewerHeaders,
+        tenantId: 'tenant_acme',
+        fileName: 'viewer-denied.png',
+        mimeType: 'image/png',
+        bytes: encodePngMock(),
+        wrapName: 'Viewer Attempt',
+        vehicleName: 'Van'
+      })
+    ).rejects.toThrowError(PermissionError);
+  });
+
+  it('rejects tenant ids that do not match host-derived tenant context', async () => {
+    await expect(
+      createUploadPreviewAction({
+        headers: ownerHeaders,
+        tenantId: 'tenant_beta',
+        fileName: 'cross-tenant.png',
+        mimeType: 'image/png',
+        bytes: encodePngMock(),
+        wrapName: 'Cross Tenant',
+        vehicleName: 'Van'
+      })
+    ).rejects.toThrowError(TenantAccessError);
+  });
+
   it('does not allow cross-tenant upload reads', async () => {
     const result = await createUploadPreviewAction({
       headers: ownerHeaders,
@@ -131,4 +168,5 @@ describe('upload preview pipeline', () => {
     ).rejects.toThrowError(RateLimitError);
   });
 });
+
 

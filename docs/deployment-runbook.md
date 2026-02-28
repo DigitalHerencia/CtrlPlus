@@ -33,7 +33,22 @@ The following variables are the canonical runtime contract and must stay aligned
 | `NEON_API_KEY` | Optional | Neon API key for MCP/API workflows (not required at runtime). |
 | `AUTH_TENANT_ROLE_BINDINGS` | Optional | Static tenant-role binding map for local/non-production workflows. |
 | `STRIPE_WEBHOOK_SECRET` | Yes in deployed envs | Stripe webhook signature secret. |
+| `CLERK_WEBHOOK_SIGNING_SECRET` | Yes in deployed envs | Clerk Svix webhook signature secret. |
 | `VERCEL_OIDC_TOKEN` | Optional | OIDC token when using Vercel identity integrations. |
+
+### 2.1 Clerk webhook endpoint contract
+
+For each deployed environment (preview/staging/production), configure a Clerk webhook endpoint that targets:
+
+- `https://<environment-domain>/api/clerk/webhook`
+
+Required Clerk event subscriptions:
+
+- `user.created`
+- `user.updated`
+- `user.deleted`
+
+Set `CLERK_WEBHOOK_SIGNING_SECRET` in that environment to the signing secret from the matching Clerk endpoint configuration.
 
 ## 3) Standard deployment sequence
 

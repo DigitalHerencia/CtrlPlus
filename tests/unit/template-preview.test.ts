@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   TEMPLATE_STYLES,
   createTemplatePreview
-} from '../../features/visualizer/template-preview';
-import { createTemplatePreviewAction } from '../../lib/actions/create-template-preview';
+} from '../../features/visualizer/use-cases/template-preview';
+import { createTemplatePreviewAction } from '../../lib/actions/visualizer';
 import { AuthError } from '../../lib/auth/require-auth';
 
 describe('template preview engine', () => {
@@ -56,3 +56,4 @@ describe('template preview engine', () => {
     ).rejects.toThrowError(AuthError);
   });
 });
+

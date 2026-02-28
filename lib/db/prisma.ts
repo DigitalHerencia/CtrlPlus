@@ -78,9 +78,73 @@ export interface UploadRecord {
   readonly storageUrl: string;
 }
 
+export interface ClerkUserRecord {
+  readonly id: string;
+  readonly primaryEmail?: string;
+  readonly firstName?: string;
+  readonly lastName?: string;
+  readonly imageUrl?: string;
+  readonly isDeleted: boolean;
+  readonly lastSyncedAt: Date;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+}
+
+export interface UpsertClerkUserInput {
+  readonly id: string;
+  readonly primaryEmail?: string;
+  readonly firstName?: string;
+  readonly lastName?: string;
+  readonly imageUrl?: string;
+  readonly isDeleted: boolean;
+  readonly lastSyncedAt: Date;
+}
+
+export interface TenantUserMembershipRecord {
+  readonly id: string;
+  readonly tenantId: string;
+  readonly clerkUserId: string;
+  readonly role: string;
+  readonly isActive: boolean;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+}
+
+export interface UpsertTenantUserMembershipInput {
+  readonly tenantId: string;
+  readonly clerkUserId: string;
+  readonly role: string;
+  readonly isActive: boolean;
+}
+
+export interface ClerkWebhookEventRecord {
+  readonly id: string;
+  readonly clerkEventId: string;
+  readonly eventType: string;
+  readonly clerkUserId?: string;
+  readonly tenantId?: string;
+  readonly payloadChecksum: string;
+  readonly status: string;
+  readonly receivedAt: Date;
+  readonly processedAt?: Date;
+}
+
+export interface CreateClerkWebhookEventInput {
+  readonly clerkEventId: string;
+  readonly eventType: string;
+  readonly clerkUserId?: string;
+  readonly tenantId?: string;
+  readonly payloadChecksum: string;
+  readonly status?: string;
+}
+
 function createId(prefix: string): string {
   const token = createHash('sha256').update(`${prefix}:${Date.now().toString()}:${Math.random().toString()}`).digest('hex').slice(0, 18);
   return `${prefix}_${token}`;
+}
+
+function createTenantMembershipKey(tenantId: string, clerkUserId: string): string {
+  return `${tenantId}:${clerkUserId}`;
 }
 
 export class TenantScopedPrisma {
@@ -88,12 +152,18 @@ export class TenantScopedPrisma {
   private readonly bookings = new Map<string, BookingRecord>();
   private readonly invoices = new Map<string, InvoiceRecord>();
   private readonly uploads = new Map<string, UploadRecord>();
+  private readonly clerkUsers = new Map<string, ClerkUserRecord>();
+  private readonly tenantUserMemberships = new Map<string, TenantUserMembershipRecord>();
+  private readonly clerkWebhookEvents = new Map<string, ClerkWebhookEventRecord>();
 
   reset(): void {
     this.wrapDesigns.clear();
     this.bookings.clear();
     this.invoices.clear();
     this.uploads.clear();
+    this.clerkUsers.clear();
+    this.tenantUserMemberships.clear();
+    this.clerkWebhookEvents.clear();
   }
 
   createWrapDesign(input: CreateWrapDesignInput): WrapDesignRecord {
@@ -244,6 +314,153 @@ export class TenantScopedPrisma {
   getUploadByTenant(tenantId: string, id: string): UploadRecord | null {
     const record = this.uploads.get(id);
     return record && record.tenantId === tenantId ? record : null;
+  }
+
+  getClerkUserById(clerkUserId: string): ClerkUserRecord | null {
+    return this.clerkUsers.get(clerkUserId) ?? null;
+  }
+
+  upsertClerkUser(input: UpsertClerkUserInput): ClerkUserRecord {
+    const existing = this.getClerkUserById(input.id);
+    const record: ClerkUserRecord = existing
+      ? {
+        ...existing,
+        primaryEmail: input.primaryEmail ?? existing.primaryEmail,
+        firstName: input.firstName ?? existing.firstName,
+        lastName: input.lastName ?? existing.lastName,
+        imageUrl: input.imageUrl ?? existing.imageUrl,
+        isDeleted: input.isDeleted,
+        lastSyncedAt: input.lastSyncedAt,
+        updatedAt: input.lastSyncedAt
+      }
+      : {
+        id: input.id,
+        primaryEmail: input.primaryEmail,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        imageUrl: input.imageUrl,
+        isDeleted: input.isDeleted,
+        lastSyncedAt: input.lastSyncedAt,
+        createdAt: input.lastSyncedAt,
+        updatedAt: input.lastSyncedAt
+      };
+
+    this.clerkUsers.set(record.id, record);
+    return record;
+  }
+
+  upsertTenantUserMembership(input: UpsertTenantUserMembershipInput): TenantUserMembershipRecord {
+    const key = createTenantMembershipKey(input.tenantId, input.clerkUserId);
+    const existing = this.tenantUserMemberships.get(key);
+    const now = new Date();
+    const record: TenantUserMembershipRecord = existing
+      ? {
+        ...existing,
+        role: input.role,
+        isActive: input.isActive,
+        updatedAt: now
+      }
+      : {
+        id: createId('membership'),
+        tenantId: input.tenantId,
+        clerkUserId: input.clerkUserId,
+        role: input.role,
+        isActive: input.isActive,
+        createdAt: now,
+        updatedAt: now
+      };
+
+    this.tenantUserMemberships.set(key, record);
+    return record;
+  }
+
+  listTenantUserMembershipsByClerkUser(clerkUserId: string): readonly TenantUserMembershipRecord[] {
+    return Array.from(this.tenantUserMemberships.values()).filter((record) => record.clerkUserId === clerkUserId);
+  }
+
+  deactivateMembershipsForClerkUser(clerkUserId: string): number {
+    let changedCount = 0;
+
+    for (const record of this.tenantUserMemberships.values()) {
+      if (record.clerkUserId !== clerkUserId || !record.isActive) {
+        continue;
+      }
+
+      this.tenantUserMemberships.set(createTenantMembershipKey(record.tenantId, record.clerkUserId), {
+        ...record,
+        isActive: false,
+        updatedAt: new Date()
+      });
+      changedCount += 1;
+    }
+
+    return changedCount;
+  }
+
+  deactivateMembershipsForClerkUserExcludingTenants(
+    clerkUserId: string,
+    activeTenantIds: ReadonlySet<string>
+  ): number {
+    let changedCount = 0;
+
+    for (const record of this.tenantUserMemberships.values()) {
+      if (record.clerkUserId !== clerkUserId || activeTenantIds.has(record.tenantId) || !record.isActive) {
+        continue;
+      }
+
+      this.tenantUserMemberships.set(createTenantMembershipKey(record.tenantId, record.clerkUserId), {
+        ...record,
+        isActive: false,
+        updatedAt: new Date()
+      });
+      changedCount += 1;
+    }
+
+    return changedCount;
+  }
+
+  listClerkWebhookEvents(): readonly ClerkWebhookEventRecord[] {
+    return Array.from(this.clerkWebhookEvents.values());
+  }
+
+  getClerkWebhookEventByEventId(clerkEventId: string): ClerkWebhookEventRecord | null {
+    return this.clerkWebhookEvents.get(clerkEventId) ?? null;
+  }
+
+  createClerkWebhookEvent(input: CreateClerkWebhookEventInput): ClerkWebhookEventRecord | null {
+    if (this.clerkWebhookEvents.has(input.clerkEventId)) {
+      return null;
+    }
+
+    const record: ClerkWebhookEventRecord = {
+      id: createId('clerk_evt'),
+      clerkEventId: input.clerkEventId,
+      eventType: input.eventType,
+      clerkUserId: input.clerkUserId,
+      tenantId: input.tenantId,
+      payloadChecksum: input.payloadChecksum,
+      status: input.status ?? 'received',
+      receivedAt: new Date()
+    };
+
+    this.clerkWebhookEvents.set(record.clerkEventId, record);
+    return record;
+  }
+
+  markClerkWebhookEventStatus(clerkEventId: string, status: string): ClerkWebhookEventRecord | null {
+    const existing = this.getClerkWebhookEventByEventId(clerkEventId);
+    if (!existing) {
+      return null;
+    }
+
+    const updated: ClerkWebhookEventRecord = {
+      ...existing,
+      status,
+      processedAt: status === 'processed' ? new Date() : existing.processedAt
+    };
+
+    this.clerkWebhookEvents.set(clerkEventId, updated);
+    return updated;
   }
 }
 

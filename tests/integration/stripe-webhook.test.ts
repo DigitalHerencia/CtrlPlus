@@ -2,9 +2,9 @@ import { createHmac } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { __internal, POST } from '../../app/api/stripe/webhook/route';
-import { createCheckoutSession } from '../../lib/actions/create-checkout-session';
-import { createInvoice } from '../../lib/actions/create-invoice';
-import { getInvoice, invoiceStore } from '../../lib/fetchers/get-invoice';
+import { createCheckoutSession } from '../../lib/actions/billing';
+import { createInvoice } from '../../lib/actions/billing';
+import { getInvoice, invoiceStore } from '../../lib/fetchers/billing';
 import { resetLogSink, setLogSink, type StructuredLogEntry } from '../../lib/observability/structured-logger';
 
 const ownerHeaders = {
@@ -199,3 +199,5 @@ describe('stripe checkout + webhook integration', () => {
     });
   });
 });
+
+

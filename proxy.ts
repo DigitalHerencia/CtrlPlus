@@ -13,7 +13,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-up(.*)'
 ]);
 
-const isTenantRoute = createRouteMatcher(['/wraps(.*)', '/admin(.*)']);
+const isTenantRoute = createRouteMatcher(['/catalog(.*)', '/operations(.*)']);
 const isApiRoute = createRouteMatcher(['/api(.*)']);
 const CLERK_CAPTCHA_CSP_SOURCES = ['https://challenges.cloudflare.com'] as const;
 

@@ -24,13 +24,13 @@ describe('auth route integration contracts', () => {
     ]);
 
     expect(signInPage).toMatch(/<SignIn\b/);
-    expect(signInPage).toContain('path="/sign-in"');
-    expect(signInPage).toContain('routing="path"');
-    expect(signInPage).toContain('signUpUrl="/sign-up"');
+    expect(signInPage).toMatch(/path=['"]\/sign-in['"]/);
+    expect(signInPage).toMatch(/routing=['"]path['"]/);
+    expect(signInPage).toMatch(/signUpUrl=['"]\/sign-up['"]/);
 
     expect(signUpPage).toMatch(/<SignUp\b/);
-    expect(signUpPage).toContain('path="/sign-up"');
-    expect(signUpPage).toContain('routing="path"');
-    expect(signUpPage).toContain('signInUrl="/sign-in"');
+    expect(signUpPage).toMatch(/path=['"]\/sign-up['"]/);
+    expect(signUpPage).toMatch(/routing=['"]path['"]/);
+    expect(signUpPage).toMatch(/signInUrl=['"]\/sign-in['"]/);
   });
 });
