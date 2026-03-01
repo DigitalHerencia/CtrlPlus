@@ -1,0 +1,968 @@
+{
+  "project": "CtrlPlus",
+  "schema_version": 3,
+  "canonical_task_id_format": "AAA-000",
+  "authoritative_source": "task-manifest.json",
+  "architecture_constraints": {
+    "tenancy": {
+      "host_resolved_tenant_required": true,
+      "client_tenant_id_trusted": false,
+      "all_tenant_scoped_queries_require_tenant_id": true,
+      "required_helpers": [
+        "requireTenant",
+        "assertTenantScope"
+      ]
+    },
+    "auth": {
+      "clerk_orgs_enabled": false,
+      "server_side_auth_required": true,
+      "required_helpers": [
+        "requireAuth",
+        "requirePermission"
+      ],
+      "authorization_client_only_forbidden": true
+    },
+    "fetcher_action_boundaries": {
+      "prisma_in_app_forbidden": true,
+      "reads_must_use": "lib/fetchers/**",
+      "writes_must_use": "lib/actions/**",
+      "fetchers_read_only": true,
+      "actions_write_only": true,
+      "action_validation_required": "zod"
+    }
+  },
+  "milestone_order": [
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "M6",
+    "M7",
+    "M8",
+    "M9"
+  ],
+  "milestones": [
+    {
+      "id": "M1",
+      "title": "Core Infrastructure & Tenancy",
+      "tasks": [
+        {
+          "id": "TEN-001",
+          "legacy_ids": [
+            "1.1"
+          ],
+          "title": "Tenant resolution middleware",
+          "labels": [
+            "type:feature",
+            "domain:tenancy",
+            "scope:backend",
+            "p0"
+          ],
+          "depends_on": [],
+          "file_map": {
+            "app": [
+              "proxy.ts"
+            ],
+            "domain": [
+              "lib/tenancy/resolve-tenant.ts",
+              "lib/tenancy/require-tenant.ts"
+            ],
+            "tests": [
+              "tests/integration/tenancy.test.ts"
+            ]
+          },
+          "acceptance_criteria": [
+            "Valid subdomain resolves tenantId.",
+            "Unknown subdomain returns 404.",
+            "Cross-tenant access attempt fails in integration test.",
+            "No client-provided tenantId is trusted."
+          ],
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "TEN-002",
+          "legacy_ids": [
+            "1.2"
+          ],
+          "title": "Prisma multi-tenant schema",
+          "labels": [
+            "type:feature",
+            "domain:tenancy",
+            "scope:db",
+            "p0"
+          ],
+          "depends_on": [],
+          "file_map": {
+            "db": [
+              "prisma/schema.prisma",
+              "prisma/migrations/**"
+            ],
+            "infra": [
+              "lib/db/prisma.ts"
+            ]
+          },
+          "acceptance_criteria": [
+            "All scoped models include tenantId.",
+            "Migration applies cleanly.",
+            "Integration test validates isolation."
+          ],
+          "requires_migration": true,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "AUTH-001",
+          "legacy_ids": [
+            "1.3"
+          ],
+          "title": "Clerk integration without orgs",
+          "labels": [
+            "type:feature",
+            "domain:auth",
+            "scope:backend",
+            "scope:frontend",
+            "p0"
+          ],
+          "depends_on": [
+            "TEN-001"
+          ],
+          "file_map": {
+            "app": [
+              "app/(auth)/sign-in/[[...sign-in]]/page.tsx",
+              "app/(auth)/sign-up/[[...sign-up]]/page.tsx"
+            ],
+            "components": [
+              "components/auth/user-menu.tsx"
+            ],
+            "domain": [
+              "lib/auth/require-auth.ts"
+            ],
+            "tests": [
+              "tests/integration/auth.test.ts"
+            ]
+          },
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "AUTH-002",
+          "legacy_ids": [
+            "1.4"
+          ],
+          "title": "RBAC permission layer",
+          "labels": [
+            "type:feature",
+            "domain:auth",
+            "scope:backend",
+            "p0"
+          ],
+          "depends_on": [
+            "AUTH-001"
+          ],
+          "file_map": {
+            "domain": [
+              "features/authz/permissions.ts",
+              "lib/auth/require-permission.ts"
+            ],
+            "tests": [
+              "tests/unit/rbac.test.ts"
+            ]
+          },
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "unit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "title": "Wrap Catalog & RSC Foundation",
+      "tasks": [
+        {
+          "id": "CAT-001",
+          "legacy_ids": [
+            "2.1"
+          ],
+          "title": "WrapDesign schema + CRUD fetchers/actions",
+          "labels": [
+            "type:feature",
+            "domain:catalog",
+            "scope:backend",
+            "p0"
+          ],
+          "depends_on": [
+            "TEN-001",
+            "AUTH-002"
+          ],
+          "file_map": {
+            "db": [
+              "prisma/schema.prisma"
+            ],
+            "domain": [
+              "features/catalog/types.ts"
+            ],
+            "fetchers": [
+              "lib/fetchers/catalog/**"
+            ],
+            "actions": [
+              "lib/actions/catalog/**"
+            ],
+            "tests": [
+              "tests/integration/catalog.test.ts"
+            ]
+          },
+          "requires_migration": true,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "CAT-002",
+          "legacy_ids": [
+            "2.2"
+          ],
+          "title": "Public catalog RSC pages",
+          "labels": [
+            "type:feature",
+            "domain:catalog",
+            "scope:rsc",
+            "p1"
+          ],
+          "depends_on": [
+            "CAT-001"
+          ],
+          "file_map": {
+            "app": [
+              "app/(tenant)/wraps/page.tsx",
+              "app/(tenant)/wraps/[id]/page.tsx"
+            ],
+            "components": [
+              "features/catalog/components/**"
+            ]
+          },
+          "acceptance_criteria": [
+            "RSC-first rendering.",
+            "No Prisma usage in app/.",
+            "Caching enabled.",
+            "p95 server render < 200ms."
+          ],
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Visualizer Engine",
+      "tasks": [
+        {
+          "id": "VIS-001",
+          "legacy_ids": [
+            "3.1"
+          ],
+          "title": "Template-based preview engine",
+          "labels": [
+            "type:feature",
+            "domain:visualizer",
+            "scope:backend",
+            "p0"
+          ],
+          "depends_on": [
+            "CAT-001"
+          ],
+          "file_map": {
+            "domain": [
+              "features/visualizer/template-preview.ts"
+            ],
+            "actions": [
+              "lib/actions/create-template-preview.ts"
+            ],
+            "tests": [
+              "tests/unit/template-preview.test.ts"
+            ]
+          },
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "unit"
+          ]
+        },
+        {
+          "id": "VIS-002",
+          "legacy_ids": [
+            "3.2"
+          ],
+          "title": "Upload-based preview pipeline",
+          "labels": [
+            "type:feature",
+            "domain:visualizer",
+            "scope:backend",
+            "scope:security",
+            "p1"
+          ],
+          "depends_on": [
+            "VIS-001"
+          ],
+          "file_map": {
+            "actions": [
+              "lib/actions/create-upload-preview.ts"
+            ],
+            "domain": [
+              "features/visualizer/upload-preview.ts"
+            ],
+            "infra": [
+              "lib/storage/**"
+            ],
+            "tests": [
+              "tests/integration/upload-preview.test.ts"
+            ]
+          },
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M4",
+      "title": "Scheduling Engine",
+      "tasks": [
+        {
+          "id": "SCH-001",
+          "legacy_ids": [
+            "4.1"
+          ],
+          "title": "Slot computation engine",
+          "labels": [
+            "type:feature",
+            "domain:scheduling",
+            "scope:backend",
+            "p0"
+          ],
+          "depends_on": [],
+          "file_map": {
+            "domain": [
+              "features/scheduling/compute-slots.ts"
+            ],
+            "tests": [
+              "tests/unit/scheduling.test.ts"
+            ]
+          },
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "unit"
+          ]
+        },
+        {
+          "id": "SCH-002",
+          "legacy_ids": [
+            "4.2"
+          ],
+          "title": "Booking action + validation",
+          "labels": [
+            "type:feature",
+            "domain:scheduling",
+            "scope:backend",
+            "p0"
+          ],
+          "depends_on": [
+            "SCH-001"
+          ],
+          "file_map": {
+            "actions": [
+              "lib/actions/create-booking.ts"
+            ],
+            "fetchers": [
+              "lib/fetchers/get-availability.ts"
+            ],
+            "tests": [
+              "tests/integration/booking.test.ts"
+            ]
+          },
+          "requires_migration": true,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M5",
+      "title": "Billing & Stripe",
+      "tasks": [
+        {
+          "id": "BILL-001",
+          "legacy_ids": [
+            "5.1"
+          ],
+          "title": "Invoice domain",
+          "labels": [
+            "type:feature",
+            "domain:billing",
+            "scope:backend",
+            "p0"
+          ],
+          "depends_on": [
+            "SCH-002"
+          ],
+          "file_map": {
+            "db": [
+              "prisma/schema.prisma"
+            ],
+            "actions": [
+              "lib/actions/create-invoice.ts"
+            ],
+            "fetchers": [
+              "lib/fetchers/get-invoice.ts"
+            ],
+            "tests": [
+              "tests/integration/invoice.test.ts"
+            ]
+          },
+          "requires_migration": true,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "BILL-002",
+          "legacy_ids": [
+            "5.2"
+          ],
+          "title": "Stripe checkout integration",
+          "labels": [
+            "type:feature",
+            "domain:billing",
+            "scope:webhook",
+            "p0"
+          ],
+          "depends_on": [
+            "BILL-001"
+          ],
+          "file_map": {
+            "actions": [
+              "lib/actions/create-checkout-session.ts"
+            ],
+            "app": [
+              "app/api/stripe/webhook/route.ts"
+            ],
+            "tests": [
+              "tests/integration/stripe-webhook.test.ts"
+            ]
+          },
+          "requires_migration": true,
+          "requires_e2e": true,
+          "test_types": [
+            "integration",
+            "e2e"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M6",
+      "title": "Admin Console",
+      "tasks": [
+        {
+          "id": "ADM-001",
+          "legacy_ids": [
+            "6.1"
+          ],
+          "title": "Admin dashboard RSC shell",
+          "labels": [
+            "type:feature",
+            "domain:admin",
+            "scope:rsc",
+            "p1"
+          ],
+          "depends_on": [
+            "AUTH-002"
+          ],
+          "file_map": {
+            "app": [
+              "app/(tenant)/admin/**"
+            ]
+          },
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M7",
+      "title": "Testing & CI/CD Hardening",
+      "tasks": [
+        {
+          "id": "CI-001",
+          "legacy_ids": [
+            "7.1"
+          ],
+          "title": "Husky + lint-staged setup",
+          "labels": [
+            "type:infra",
+            "domain:ci",
+            "scope:backend",
+            "p0"
+          ],
+          "depends_on": [],
+          "file_map": {
+            "infra": [
+              ".husky/**",
+              "package.json"
+            ]
+          },
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "CI-002",
+          "legacy_ids": [
+            "7.2"
+          ],
+          "title": "GitHub Actions CI pipeline",
+          "labels": [
+            "type:infra",
+            "domain:ci",
+            "scope:backend",
+            "p0"
+          ],
+          "depends_on": [
+            "CI-001"
+          ],
+          "file_map": {
+            "infra": [
+              ".github/workflows/**"
+            ]
+          },
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "CI-003",
+          "legacy_ids": [
+            "7.3"
+          ],
+          "title": "Playwright E2E happy path flow",
+          "labels": [
+            "type:test",
+            "domain:ci",
+            "scope:e2e",
+            "p1"
+          ],
+          "depends_on": [
+            "VIS-002",
+            "SCH-002",
+            "BILL-002"
+          ],
+          "file_map": {
+            "tests": [
+              "tests/e2e/**"
+            ]
+          },
+          "requires_migration": false,
+          "requires_e2e": true,
+          "test_types": [
+            "e2e"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M8",
+      "title": "Security & Performance Hardening",
+      "tasks": [
+        {
+          "id": "SEC-001",
+          "legacy_ids": [
+            "8.1"
+          ],
+          "title": "Rate limiting + upload hardening",
+          "labels": [
+            "type:security",
+            "domain:ci",
+            "scope:backend",
+            "p1"
+          ],
+          "depends_on": [
+            "VIS-002"
+          ],
+          "file_map": {
+            "infra": [
+              "lib/rate-limit/**",
+              "lib/storage/**"
+            ]
+          },
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "SEC-002",
+          "legacy_ids": [
+            "8.2"
+          ],
+          "title": "CSP + secure headers",
+          "labels": [
+            "type:security",
+            "domain:ci",
+            "scope:backend",
+            "p1"
+          ],
+          "depends_on": [],
+          "file_map": {
+            "app": [
+              "proxy.ts",
+              "next.config.js"
+            ]
+          },
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M9",
+      "title": "Demo Visual Approval Readiness",
+      "tasks": [
+        {
+          "id": "DEMO-001",
+          "legacy_ids": [
+            "9.1"
+          ],
+          "title": "Replace in-memory stores with Prisma-backed repositories",
+          "labels": [
+            "type:feature",
+            "domain:catalog",
+            "scope:backend",
+            "scope:db",
+            "p0"
+          ],
+          "depends_on": [
+            "TEN-002",
+            "CAT-001",
+            "SCH-002",
+            "BILL-001"
+          ],
+          "file_map": {
+            "infra": [
+              "lib/fetchers/catalog/store.ts",
+              "lib/fetchers/booking-store.ts",
+              "lib/fetchers/get-invoice.ts",
+              "lib/storage/upload-store.ts",
+              "lib/db/prisma.ts"
+            ],
+            "tests": [
+              "tests/integration/**"
+            ]
+          },
+          "acceptance_criteria": [
+            "Catalog, booking, invoice, and upload persistence uses Prisma-backed repositories.",
+            "Tenant isolation is enforced through tenantId-scoped queries for all read and write paths.",
+            "In-memory store implementations are removed from runtime code paths.",
+            "Integration tests validate persistence and tenant isolation after process restart boundaries."
+          ],
+          "requires_migration": true,
+          "requires_e2e": true,
+          "test_types": [
+            "integration",
+            "e2e"
+          ]
+        },
+        {
+          "id": "DEMO-002",
+          "legacy_ids": [
+            "9.2"
+          ],
+          "title": "Migrate Prisma datasource from SQLite to Neon Postgres",
+          "labels": [
+            "type:infra",
+            "domain:tenancy",
+            "scope:db",
+            "p0"
+          ],
+          "depends_on": [
+            "TEN-002"
+          ],
+          "file_map": {
+            "db": [
+              "prisma/schema.prisma",
+              "prisma/migrations/**"
+            ],
+            "docs": [
+              ".codex/docs/20-architecture.md",
+              "README.md"
+            ]
+          },
+          "acceptance_criteria": [
+            "Prisma datasource provider is postgres and validated against Neon serverless Postgres.",
+            "Migrations apply cleanly in CI/test database environments.",
+            "Local and CI environment variable contract documents Neon connection requirements."
+          ],
+          "requires_migration": true,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "DEMO-003",
+          "legacy_ids": [
+            "9.3"
+          ],
+          "title": "Align Clerk authorization model with no-org requirement",
+          "labels": [
+            "type:feature",
+            "domain:auth",
+            "scope:backend",
+            "scope:security",
+            "p0"
+          ],
+          "depends_on": [
+            "AUTH-001",
+            "AUTH-002"
+          ],
+          "file_map": {
+            "domain": [
+              "lib/auth/resolve-tenant-role.ts",
+              "lib/auth/require-permission.ts",
+              "lib/auth/require-auth.ts"
+            ],
+            "tests": [
+              "tests/integration/auth.test.ts",
+              "tests/unit/rbac.test.ts"
+            ]
+          },
+          "acceptance_criteria": [
+            "Authorization no longer depends on Clerk org context.",
+            "Tenant membership and role resolution is validated server-side using trusted storage.",
+            "Regression tests cover valid membership, cross-tenant denial, and missing membership paths."
+          ],
+          "requires_migration": true,
+          "requires_e2e": true,
+          "test_types": [
+            "unit",
+            "integration",
+            "e2e"
+          ]
+        },
+        {
+          "id": "DEMO-004",
+          "legacy_ids": [
+            "9.4"
+          ],
+          "title": "Fix sign-up catch-all route segment naming and auth route regression coverage",
+          "labels": [
+            "type:bug",
+            "domain:auth",
+            "scope:frontend",
+            "scope:e2e",
+            "p0"
+          ],
+          "depends_on": [
+            "AUTH-001"
+          ],
+          "file_map": {
+            "app": [
+              "app/(auth)/sign-up/**"
+            ],
+            "tests": [
+              "tests/e2e/**"
+            ]
+          },
+          "acceptance_criteria": [
+            "Sign-up catch-all route segment matches Clerk and Next.js App Router conventions.",
+            "Sign-in/sign-up navigation and callback routing are covered by automated test flow.",
+            "No broken auth routes remain in tenant and public navigation."
+          ],
+          "requires_migration": false,
+          "requires_e2e": true,
+          "test_types": [
+            "integration",
+            "e2e"
+          ]
+        },
+        {
+          "id": "DEMO-005",
+          "legacy_ids": [
+            "9.5"
+          ],
+          "title": "Realign PR e2e path filters to current repository topology",
+          "labels": [
+            "type:infra",
+            "domain:ci",
+            "scope:ci",
+            "p1"
+          ],
+          "depends_on": [
+            "CI-002"
+          ],
+          "file_map": {
+            "ci": [
+              ".github/workflows/pr-quality-gates.yml",
+              ".codex/docs/40-quality-gates.md",
+              "tests/unit/github-governance.test.ts"
+            ]
+          },
+          "acceptance_criteria": [
+            "Conditional e2e triggers include currently used auth, wraps, visualizer, scheduling, persistence, and shared runtime paths.",
+            "Workflow rules in docs and YAML are synchronized.",
+            "A governance test asserts expected critical-path trigger globs."
+          ],
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "unit"
+          ]
+        },
+        {
+          "id": "DEMO-006",
+          "legacy_ids": [
+            "9.6"
+          ],
+          "title": "Enforce Zod validation for all server action inputs",
+          "labels": [
+            "type:security",
+            "domain:ci",
+            "scope:backend",
+            "scope:security",
+            "p1"
+          ],
+          "depends_on": [
+            "DEMO-001"
+          ],
+          "file_map": {
+            "domain": [
+              "lib/actions/**"
+            ],
+            "tests": [
+              "tests/integration/**"
+            ]
+          },
+          "acceptance_criteria": [
+            "All server actions validate input via explicit Zod schemas before mutation side effects.",
+            "Validation errors return deterministic, non-sensitive error responses.",
+            "Integration coverage includes invalid payload edge cases for billing, booking, and preview actions."
+          ],
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "DEMO-007",
+          "legacy_ids": [
+            "9.7"
+          ],
+          "title": "Introduce baseline structured logging with request correlation",
+          "labels": [
+            "type:infra",
+            "domain:ci",
+            "scope:backend",
+            "p2"
+          ],
+          "depends_on": [
+            "DEMO-001"
+          ],
+          "file_map": {
+            "infra": [
+              "lib/**",
+              "app/api/**"
+            ],
+            "docs": [
+              ".codex/docs/20-architecture.md"
+            ]
+          },
+          "acceptance_criteria": [
+            "Server actions, fetchers, and webhook handlers emit structured logs with correlation IDs.",
+            "Logs exclude secrets, auth tokens, and raw personal data.",
+            "Error logs include enough context to debug tenant-scoped failures safely."
+          ],
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "integration"
+          ]
+        },
+        {
+          "id": "DEMO-008",
+          "legacy_ids": [
+            "9.8"
+          ],
+          "title": "Ship environment template and deployment runbook for demo-critical infrastructure",
+          "labels": [
+            "type:docs",
+            "domain:ci",
+            "scope:docs",
+            "p2"
+          ],
+          "depends_on": [
+            "DEMO-002",
+            "DEMO-003"
+          ],
+          "file_map": {
+            "docs": [
+              "README.md",
+              ".codex/docs/**",
+              ".codex/docs/50-release-operations.md",
+              ".env.example"
+            ]
+          },
+          "acceptance_criteria": [
+            "Repository contains a complete .env.example for Neon, Clerk, Stripe, and app runtime settings.",
+            "Deployment runbook documents migration, rollback, and verification steps.",
+            "Onboarding commands for labels/issues/project sync are documented for maintainers."
+          ],
+          "requires_migration": false,
+          "requires_e2e": false,
+          "test_types": [
+            "docs"
+          ]
+        }
+      ]
+    }
+  ],
+  "quality_gates": {
+    "require_lint": true,
+    "require_typecheck": true,
+    "require_unit": true,
+    "require_integration": true,
+    "require_e2e": true
+  }
+}
+

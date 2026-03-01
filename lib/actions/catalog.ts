@@ -1,5 +1,5 @@
 import type { WrapCatalogCreatePayloadContract, WrapCatalogDeletePayloadContract, WrapCatalogDeleteResultContract, WrapCatalogUpdatePayloadContract, WrapCatalogWriteResultContract } from '../../types/catalog';
-import { wrapCatalogCreatePayloadSchema, wrapCatalogDeletePayloadSchema, wrapCatalogUpdatePayloadSchema } from '../shared/schemas/catalog/schema';
+import { wrapCatalogCreatePayloadSchema, wrapCatalogDeletePayloadSchema, wrapCatalogUpdatePayloadSchema } from '../../schemas/catalog';
 import { createMutationAuditLogger } from '../audit/log-mutation-event';
 import { requireAuth } from '../auth/require-auth';
 import { requirePermission } from '../auth/require-permission';

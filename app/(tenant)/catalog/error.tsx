@@ -1,6 +1,6 @@
 'use client';
 
-import { RouteErrorBlock } from '../../../components/shared-ui/blocks/route-error-block';
+import { RouteErrorBlock } from '../../../components/shared/blocks/route-error-block';
 
 export default function CatalogError({
   error,

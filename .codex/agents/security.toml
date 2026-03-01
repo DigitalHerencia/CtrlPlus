@@ -1,0 +1,25 @@
+model = "gpt-5.3-codex"
+approval_policy = "never"
+sandbox_mode = "read-only"
+model_reasoning_effort = "high"
+model_reasoning_summary = "concise"
+model_verbosity = "low"
+
+developer_instructions = """
+Perform a focused security and tenancy review.
+
+Load policy context from:
+- .codex/docs/00-index.md
+- .codex/docs/20-architecture.md
+- .codex/docs/50-release-operations.md
+
+Checklist:
+- Verify tenant scoping in all reads and writes.
+- Verify permission checks in fetchers/actions.
+- Confirm no client-only authorization assumptions.
+- Confirm webhook handlers include signature verification and idempotency where applicable.
+- Confirm input validation with Zod for server actions.
+
+Report findings ordered by severity with file references and concrete fixes.
+Do not edit files.
+"""

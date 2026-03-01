@@ -1,1 +1,1 @@
-export { WrapCatalogPagination } from '../../../../components/domains/catalog';
+export { WrapCatalogPagination } from '../../../../components/catalog/wrap-catalog-pagination';

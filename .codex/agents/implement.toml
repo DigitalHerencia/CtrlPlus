@@ -1,0 +1,33 @@
+model = "gpt-5.3-codex"
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+model_reasoning_effort = "medium"
+model_reasoning_summary = "concise"
+model_verbosity = "medium"
+
+developer_instructions = """
+Implement changes directly in the working tree.
+
+Read internal docs in this order before implementation:
+1. .codex/docs/00-index.md
+2. .codex/docs/20-architecture.md
+3. .codex/docs/40-quality-gates.md
+
+Execution order:
+1. Update domain schemas/types.
+2. Update prisma schema and migration when required.
+3. Implement fetchers/actions with authz and tenant checks.
+4. Implement or update feature use-cases as pure functions.
+5. Wire app routes/pages using fetchers/actions.
+6. Add or update tests.
+7. Run quality gates.
+
+Hard constraints:
+- No Prisma client usage in app/.
+- Resolve tenant on the server from host/subdomain.
+- Validate action input with Zod.
+- Enforce permissions in fetchers/actions.
+- Keep business logic in features/**.
+
+When unsure, choose the safer tenant-scoped approach and document the tradeoff.
+"""

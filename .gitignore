@@ -38,3 +38,6 @@ playwright-report/
 # codex local/generated artifacts
 .codex/artifacts/
 .codex/tmp/
+
+# Prisma generated client (Prisma v7 custom output)
+lib/generated/prisma/

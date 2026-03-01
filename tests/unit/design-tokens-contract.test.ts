@@ -6,7 +6,7 @@ describe('design token and tailwind v4 contract', () => {
   const projectRoot = resolve(__dirname, '../..');
   const globalsCss = readFileSync(resolve(projectRoot, 'app/globals.css'), 'utf8');
   const tokens = JSON.parse(
-    readFileSync(resolve(projectRoot, 'docs/design/system.tokens.v1.json'), 'utf8')
+    readFileSync(resolve(projectRoot, '.codex/docs/61-design-tokens.json'), 'utf8')
   ) as {
     tailwindV4: {
       sources: string[];
@@ -36,3 +36,5 @@ describe('design token and tailwind v4 contract', () => {
     expect(globalsCss).not.toContain('Times New Roman');
   });
 });
+
+

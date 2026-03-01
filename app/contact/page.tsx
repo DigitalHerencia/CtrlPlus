@@ -2,16 +2,10 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { PublicSiteShell } from '../../components/shared-ui/layout/public-site-shell';
-import {
-  Badge,
-  buttonVariants,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '../../components/ui';
+import { PublicSiteShell } from '../../components/shared/layout/public-site-shell';
+import { Badge } from '../../components/ui/badge';
+import { buttonVariants } from '../../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card';
 
 const contactOptions = [
   {

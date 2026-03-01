@@ -12,8 +12,8 @@ describe('clerk webhook configuration contract', () => {
     const [envExample, readme, runbook, techRequirements] = await Promise.all([
       readFile(repositoryPath('.env.example'), 'utf8'),
       readFile(repositoryPath('README.md'), 'utf8'),
-      readFile(repositoryPath('docs', 'deployment-runbook.md'), 'utf8'),
-      readFile(repositoryPath('docs', 'tech-requirements.md'), 'utf8'),
+      readFile(repositoryPath('.codex', 'docs', '50-release-operations.md'), 'utf8'),
+      readFile(repositoryPath('.codex', 'docs', '20-architecture.md'), 'utf8'),
     ]);
 
     expect(envExample).toContain('CLERK_WEBHOOK_SIGNING_SECRET');
@@ -30,7 +30,10 @@ describe('clerk webhook configuration contract', () => {
   });
 
   it('keeps Clerk webhook route verification tied to explicit signing-secret input', async () => {
-    const routeSource = await readFile(repositoryPath('app', 'api', 'clerk', 'webhook', 'route.ts'), 'utf8');
+    const routeSource = await readFile(
+      repositoryPath('app', 'api', 'clerk', 'webhook-handler', 'route.ts'),
+      'utf8'
+    );
 
     expect(routeSource).toContain('CLERK_WEBHOOK_SIGNING_SECRET');
     expect(routeSource).toContain('verifyWebhook');

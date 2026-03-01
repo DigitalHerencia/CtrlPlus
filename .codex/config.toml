@@ -1,0 +1,39 @@
+# CtrlPlus project-level Codex overrides.
+# Loaded in addition to ~/.codex/config.toml when running inside this repository.
+# Internal docs are standardized under .codex/docs/.
+# Start with .codex/docs/00-index.md for deterministic load order.
+
+[features]
+multi_agent = true
+
+[agents]
+max_threads = 4
+
+[agents.scout]
+description = "Maps impacted files and proposes a tenant-safe implementation plan before edits."
+config_file = "agents/scout.toml"
+max_turns = 6
+
+[agents.implement]
+description = "Implements feature-first changes through schemas, fetchers/actions, and use-cases."
+config_file = "agents/implement.toml"
+max_turns = 10
+
+[agents.security]
+description = "Audits tenant isolation, authz checks, and webhook safety requirements."
+config_file = "agents/security.toml"
+max_turns = 6
+
+[agents.qa]
+description = "Runs quality gates and reports regressions with file-level findings."
+config_file = "agents/qa.toml"
+max_turns = 8
+
+[agents.review]
+description = "Performs final code review for bugs, regressions, and test coverage gaps."
+config_file = "agents/review.toml"
+max_turns = 6
+
+[mcp_servers.shadcn]
+command = "npx"
+args = ["shadcn@latest", "mcp"]

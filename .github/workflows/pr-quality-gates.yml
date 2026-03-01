@@ -11,7 +11,7 @@ on:
   pull_request:
     branches: ["**"]
     paths-ignore:
-      - 'docs/**'
+      - '.codex/docs/**'
       - '**/*.md'
 
 concurrency:
@@ -34,7 +34,7 @@ jobs:
               - 'app/(tenant)/**'
               - 'app/api/stripe/**'
               - 'app/api/clerk/**'
-              - 'components/shared-ui/**'
+              - 'components/shared/**'
               - 'features/**'
               - 'lib/auth/**'
               - 'lib/db/**'
@@ -42,7 +42,7 @@ jobs:
               - 'lib/storage/**'
               - 'lib/tenancy/**'
               - 'lib/server/**'
-              - 'lib/shared/schemas/**'
+              - 'schemas/**'
               - 'types/**'
               - 'prisma/**'
               - 'proxy.ts'
@@ -124,3 +124,4 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:e2e
+

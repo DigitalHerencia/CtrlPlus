@@ -1,7 +1,7 @@
 # CtrlPlus Unified Migration TODO
 
 ## 0) Governance and baseline hardening
-- [x] Keep this file checklist-only; keep design rationale in `PLANS.md` and requirements in `docs/tech-requirements.md`.
+- [x] Keep this file checklist-only; keep design rationale in `PLANS.md` and requirements in `.codex/docs/20-architecture.md`.
 - [x] Add a no-legacy-import lint rule to block new imports from `lib/fetchers/**` and `lib/actions/**`.
 - [x] Add a lint rule that enforces shared/domain type contracts in `types/**` while allowing small non-exported local UI prop types when one-file scoped.
 - [x] Record migration defaults: full redesign now, Prisma + Neon, Clerk sync-only rollout (no authz DB cutover in this phase).
@@ -145,3 +145,5 @@
 - [x] Shared/domain contracts live in `types/**`; tiny one-file, non-exported local UI prop types are allowed by exception.
 - [x] Clerk sync rollout is sync-only first; runtime authz DB cutover is a separate phase.
 - [x] Unknown tenant IDs in Clerk metadata are ignored with warnings, not fatal for valid memberships.
+
+

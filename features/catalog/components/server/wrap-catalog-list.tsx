@@ -1,1 +1,1 @@
-export { WrapCatalogList } from '../../../../components/domains/catalog';
+export { WrapCatalogList } from '../../../../components/catalog/wrap-catalog-list';

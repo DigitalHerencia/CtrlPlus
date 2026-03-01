@@ -7,11 +7,11 @@ A subdomain-based multi-tenant Next.js 16 platform for vehicle wrap operations. 
 Authoritative architecture policy:
 
 - `AGENTS.md` (hard constraints and implementation rules)
-- `docs/tech-requirements.md` (canonical technical architecture)
-- `docs/ci-design.md` (quality gates + E2E trigger policy)
-- `docs/pr-checklist.md` (PR merge checklist)
+- `.codex/docs/20-architecture.md` (canonical technical architecture)
+- `.codex/docs/40-quality-gates.md` (quality gates + E2E trigger policy + PR checklist)
+- `.codex/docs/50-release-operations.md` (deployment and release procedures)
 
-Execution backlog for the redesign lives in `.codex/TODO.md` (tracker only; canonical policy remains `AGENTS.md` + `docs/tech-requirements.md`).
+Execution backlog for the redesign lives in `.codex/TODO.md` (tracker only; canonical policy remains `AGENTS.md` + `.codex/docs/20-architecture.md`).
 
 ## Core conventions
 
@@ -68,7 +68,14 @@ pnpm typecheck
 pnpm test
 ```
 
-6. Start the app:
+6. Generate Prisma client and run migrations:
+
+```bash
+pnpm db:generate
+pnpm db:migrate:dev
+```
+
+7. Start the app:
 
 ```bash
 pnpm dev
@@ -86,7 +93,10 @@ This syncs labels, milestones, roadmap issues, and project board metadata.
 
 ## Additional docs
 
-- `docs/README.md` for documentation index
-- `docs/github-workflow.md` for governance automation
-- `docs/deployment-runbook.md` for deploy/rollback flow
-- `docs/demo-release-checklist.md` for demo readiness
+- `docs/README.md` for end-user documentation
+- `.codex/docs/00-index.md` for developer/internal documentation load order
+- `.codex/docs/30-engineering-workflows.md` for governance automation
+- `.codex/docs/50-release-operations.md` for deploy/rollback flow
+- `.codex/docs/70-history.md` for archived historical snapshots
+
+

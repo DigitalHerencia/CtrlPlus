@@ -1,15 +1,21 @@
-# `.codex` Folder
+# `.codex` Developer Workspace
 
-This directory is reserved for repository-local Codex configuration and temporary/generated artifacts.
+This directory is the repository home for developer-facing documentation, manifests, scripts, and Codex-local artifacts.
 
-## Canonical instruction files
+## Structure
+
+- `.codex/config.toml`: project-scoped Codex overrides (including multi-agent roles).
+- `.codex/agents/`: role-specific agent configuration files.
+- `.codex/docs/`: flattened internal engineering docs optimized for Codex load order.
+- `.codex/manifests/`: machine-readable manifests and governance config.
+- `.codex/scripts/`: setup/bootstrap/maintenance scripts.
+- `.codex/rules/`: Codex execution-policy rules (`*.rules`) for out-of-sandbox command control.
+- `.codex/TODO.md`: non-canonical execution tracker.
+
+## Canonical policy sources
 
 - `AGENTS.md` (repo root)
 - `PLANS.md` (repo root)
-
-## Expected contents
-
-- `.codex/config.toml`: repository-local Codex defaults.
-- `.codex/artifacts/` and `.codex/tmp/`: optional local outputs (gitignored).
-
-Keep long-lived engineering policy and project requirements in `docs/`, not in `.codex/`.
+- `.codex/docs/00-index.md`
+- `.codex/docs/20-architecture.md`
+- `.codex/docs/40-quality-gates.md`

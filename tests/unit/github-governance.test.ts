@@ -1,23 +1,23 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import labels from '../../.github/labels.json';
-import manifest from '../../.github/task-manifest.json';
-import project from '../../.github/project-v2.json';
+import labels from '../../.codex/manifests/github/labels.json';
+import manifest from '../../.codex/manifests/github/task-manifest.json';
+import project from '../../.codex/manifests/github/project-v2.json';
 
 const e2eTriggerGlobs = [
   'app/(auth)/**',
   'app/(tenant)/**',
   'app/api/stripe/**',
   'app/api/clerk/**',
-  'components/shared-ui/**',
+  'components/shared/**',
   'features/**',
   'lib/auth/**',
   'lib/db/**',
   'lib/rate-limit/**',
   'lib/storage/**',
   'lib/tenancy/**',
-  'lib/**',
-  'lib/shared/schemas/**',
+  'lib/server/**',
+  'schemas/**',
   'types/**',
   'prisma/**',
   'proxy.ts',
@@ -85,14 +85,14 @@ function extractCiDesignE2eGlobs(ciDesign: string): string[] {
   }
 
   if (globs.length === 0) {
-    throw new Error('Could not find e2e glob list in docs/ci-design.md');
+    throw new Error('Could not find e2e glob list in .codex/docs/40-quality-gates.md');
   }
 
   return globs;
 }
 
 describe('github governance assets', () => {
-  it('keeps task labels aligned with .github/labels.json', () => {
+  it('keeps task labels aligned with .codex/manifests/github/labels.json', () => {
     const knownLabels = new Set(labels.labels.map((label) => label.name));
     const unknownLabels: string[] = [];
 
@@ -128,14 +128,14 @@ describe('github governance assets', () => {
   });
 
   it('keeps docs label taxonomy aligned with scope labels', () => {
-    const workflowDoc = readFileSync('docs/github-workflow.md', 'utf8');
+    const workflowDoc = readFileSync('.codex/docs/30-engineering-workflows.md', 'utf8');
 
     expect(workflowDoc).toContain('`scope:ci`');
   });
 
   it('keeps PR e2e trigger filters aligned across workflow and docs', () => {
     const workflow = readFileSync('.github/workflows/pr-quality-gates.yml', 'utf8');
-    const ciDesign = readFileSync('docs/ci-design.md', 'utf8');
+    const ciDesign = readFileSync('.codex/docs/40-quality-gates.md', 'utf8');
 
     const workflowGlobs = extractWorkflowE2eGlobs(workflow);
     const ciDesignGlobs = extractCiDesignE2eGlobs(ciDesign);
@@ -144,3 +144,5 @@ describe('github governance assets', () => {
     expect(ciDesignGlobs).toEqual([...e2eTriggerGlobs]);
   });
 });
+
+

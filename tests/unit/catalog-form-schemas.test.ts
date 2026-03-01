@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   wrapCatalogEditorFormSchema,
   wrapCatalogListControlsFormSchema,
-} from '../../lib/shared/schemas/catalog/schema';
+} from '../../schemas/catalog';
 
 describe('catalog form schemas', () => {
   it('accepts valid list controls values', () => {

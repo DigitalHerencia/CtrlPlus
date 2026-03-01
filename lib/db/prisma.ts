@@ -1,5 +1,9 @@
 import { createHash } from 'node:crypto';
 
+/**
+ * Legacy in-memory tenant store used by current tests and local flows.
+ * Production database access should use `lib/server/db/prisma-client.ts`.
+ */
 export interface WrapDesignRecord {
   readonly id: string;
   readonly tenantId: string;

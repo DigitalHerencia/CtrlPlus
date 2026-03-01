@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation';
 
-import { getPublicWrapDesign } from '../../../../lib/fetchers/catalog';
-import { WrapCatalogDetail, WrapCatalogHeader } from '../../../../components/domains/catalog';
+import { getPublicWrapDesign } from '../../../../lib/server/fetchers/catalog';
+import { WrapCatalogDetail } from '../../../../components/catalog/wrap-catalog-detail';
+import { WrapCatalogHeader } from '../../../../components/catalog/wrap-catalog-header';
 
 type WrapCatalogDetailPageProps = {
   readonly tenantId: string;

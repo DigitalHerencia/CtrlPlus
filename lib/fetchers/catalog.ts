@@ -14,7 +14,7 @@ import type {
 } from '../../types/catalog';
 import { requirePermission } from '../auth/require-permission';
 import { tenantScopedPrisma, type WrapDesignRecord } from '../db/prisma';
-import { wrapCatalogGetRequestSchema, wrapCatalogListRequestSchema } from '../shared/schemas/catalog/schema';
+import { wrapCatalogGetRequestSchema, wrapCatalogListRequestSchema } from '../../schemas/catalog';
 import { assertTenantScope } from '../tenancy/assert-tenant-scope';
 import { requireTenant } from '../tenancy/require-tenant';
 

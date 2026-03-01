@@ -7,9 +7,11 @@ import { listBookings } from '../../../../lib/fetchers/scheduling';
 import { listInvoices } from '../../../../lib/fetchers/billing';
 import { getRequestTenant } from '../../../../lib/tenancy/get-request-tenant';
 import { BookingCountMetric } from '../../../../features/scheduling/components/server';
-import { Badge, Card, CardHeader } from '../../../../components/ui';
-import { SectionBlock } from '../../../../components/shared-ui/blocks/section-block';
-import { OperationsSnapshotSkeleton } from '../../../../components/shared-ui/feedback';
+import { Dashboard01 } from '../../../../components/operations/dashboard/dashboard-01';
+import { Badge } from '../../../../components/ui/badge';
+import { Card, CardHeader } from '../../../../components/ui/card';
+import { SectionBlock } from '../../../../components/shared/blocks/section-block';
+import { OperationsSnapshotSkeleton } from '../../../../components/shared/feedback/operations-snapshot-skeleton';
 
 export const dynamic = 'force-dynamic';
 
@@ -129,6 +131,12 @@ export default async function AdminDashboardPage() {
       <Suspense fallback={<OperationsSnapshotSkeleton />}>
         <OperationsSnapshotSection headers={headerMap} tenantId={tenantId} />
       </Suspense>
+
+      <SectionBlock title='Dashboard 01 Block'>
+        <div className='overflow-hidden rounded-lg border border-[color:var(--border)]'>
+          <Dashboard01 />
+        </div>
+      </SectionBlock>
 
       <SectionBlock title='Operational Priorities'>
         <ul className='grid list-none gap-2 p-0 text-[color:var(--text-muted)]'>

@@ -4,7 +4,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const appRoot = path.resolve(process.cwd(), 'app', '(auth)');
-const authPanelsPath = path.resolve(process.cwd(), 'components/shared-ui/auth/auth-panels.tsx');
+const authPanelsPath = path.resolve(process.cwd(), 'components/auth/auth-panels.tsx');
 const signInPath = path.join(appRoot, 'sign-in', '[[...sign-in]]', 'page.tsx');
 const signUpPath = path.join(appRoot, 'sign-up', '[[...sign-up]]', 'page.tsx');
 

@@ -9,4 +9,8 @@
 
 # CI/CD and governance
 /.github/ @scree
+/.codex/docs/ @scree
+/.codex/manifests/ @scree
+/.codex/scripts/ @scree
 /docs/ @scree
+

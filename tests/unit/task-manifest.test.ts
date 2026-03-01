@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import manifest from '../../.github/task-manifest.json';
+import manifest from '../../.codex/manifests/github/task-manifest.json';
 
 describe('task-manifest governance contract', () => {
   it('defines milestone order and matching milestone entries', () => {

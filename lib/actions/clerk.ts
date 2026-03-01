@@ -4,7 +4,7 @@ import { isRole, type Role } from '../../features/authz/permissions';
 import { runTransactionWithRetry, type TransactionRunner } from '../db/transaction';
 import { type TenantScopedPrisma, tenantScopedPrisma } from '../db/prisma';
 import { isKnownTenantId } from '../tenancy/resolve-tenant';
-import { clerkWebhookSyncInputSchema } from '../shared/schemas/auth';
+import { clerkWebhookSyncInputSchema } from '../../schemas/auth';
 import { validateActionInput } from './shared';
 
 type ClerkUserLifecycleEventType = 'user.created' | 'user.updated' | 'user.deleted';

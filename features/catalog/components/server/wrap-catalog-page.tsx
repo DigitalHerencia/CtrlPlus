@@ -1,14 +1,12 @@
-import { listPublicWrapDesigns } from '../../../../lib/fetchers/catalog';
+import { listPublicWrapDesigns } from '../../../../lib/server/fetchers/catalog';
 import {
   buildWrapCatalogListQuery,
   type WrapCatalogRouteSearchParams,
 } from '../../use-cases';
-import {
-  WrapCatalogHeader,
-  WrapCatalogList,
-  WrapCatalogListControls,
-  WrapCatalogPagination,
-} from '../../../../components/domains/catalog';
+import { WrapCatalogHeader } from '../../../../components/catalog/wrap-catalog-header';
+import { WrapCatalogList } from '../../../../components/catalog/wrap-catalog-list';
+import { WrapCatalogListControls } from '../../../../components/catalog/wrap-catalog-list-controls';
+import { WrapCatalogPagination } from '../../../../components/catalog/wrap-catalog-pagination';
 
 type WrapCatalogPageProps = {
   readonly tenantId: string;

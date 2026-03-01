@@ -66,7 +66,7 @@ describe('site copy governance', () => {
 
   it('keeps primary auth CTAs consistent across public shell and auth routes', async () => {
     const shellContent = await readFile(
-      path.resolve(process.cwd(), 'components/shared-ui/layout/public-site-shell.tsx'),
+      path.resolve(process.cwd(), 'components/shared/layout/public-site-shell.tsx'),
       'utf8',
     );
     const signInContent = await readFile(

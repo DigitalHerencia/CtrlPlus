@@ -14,6 +14,8 @@ When discussing an executable specification (ExecPlan), record decisions in a lo
 
 When researching a design with challenging requirements or significant unknowns, use milestones to implement proof of concepts, "toy implementations", etc., that allow validating whether the user's proposal is feasible. Read the source code of libraries by finding or acquiring them, research deeply, and include prototypes to guide a fuller implementation.
 
+When writing ExecPlans in this repository, load internal context from `.codex/docs/00-index.md` and follow its canonical load order before drafting implementation details.
+
 ## Requirements
 
 NON-NEGOTIABLE REQUIREMENTS:

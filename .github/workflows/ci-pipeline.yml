@@ -12,7 +12,7 @@ on:
     branches:
       - main
     paths-ignore:
-      - 'docs/**'
+      - '.codex/docs/**'
       - '**/*.md'
   workflow_dispatch:
 
@@ -77,3 +77,4 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:e2e
+

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-import { AuthShell } from '../../components/shared-ui/layout/auth-shell';
-import { PublicSiteShell } from '../../components/shared-ui/layout/public-site-shell';
+import { AuthShell } from '../../components/shared/layout/auth-shell';
+import { PublicSiteShell } from '../../components/shared/layout/public-site-shell';
 
 type AuthLayoutProps = {
   readonly children: ReactNode;

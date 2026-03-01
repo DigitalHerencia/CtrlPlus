@@ -1,17 +1,11 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { WrapCatalogEditorForm } from '../../../../../components/domains/catalog';
-import { createWrapDesign } from '../../../../../lib/actions/catalog';
+import { WrapCatalogEditorForm } from '../../../../../components/catalog/wrap-catalog-editor-form';
+import { createWrapDesign } from '../../../../../lib/server/actions/catalog';
 import { getRequestTenant } from '../../../../../lib/tenancy/get-request-tenant';
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '../../../../../components/ui';
+import { Badge } from '../../../../../components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../../components/ui/card';
 
 function toHeaderMap(requestHeaders: Headers): Record<string, string | undefined> {
   const values: Record<string, string | undefined> = {};

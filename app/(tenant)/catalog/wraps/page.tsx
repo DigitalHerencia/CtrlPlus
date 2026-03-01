@@ -1,14 +1,12 @@
 import { Suspense } from 'react';
 
-import {
-  WrapCatalogHeader,
-  WrapCatalogList,
-  WrapCatalogListControls,
-  WrapCatalogPagination,
-} from '../../../../components/domains/catalog';
-import { CatalogListSectionSkeleton } from '../../../../components/shared-ui/feedback';
+import { WrapCatalogHeader } from '../../../../components/catalog/wrap-catalog-header';
+import { WrapCatalogList } from '../../../../components/catalog/wrap-catalog-list';
+import { WrapCatalogListControls } from '../../../../components/catalog/wrap-catalog-list-controls';
+import { WrapCatalogPagination } from '../../../../components/catalog/wrap-catalog-pagination';
+import { CatalogListSectionSkeleton } from '../../../../components/shared/feedback/catalog-sections-skeleton';
 import { buildWrapCatalogListQuery } from '../../../../features/catalog/use-cases';
-import { listPublicWrapDesigns } from '../../../../lib/fetchers/catalog';
+import { listPublicWrapDesigns } from '../../../../lib/server/fetchers/catalog';
 import { getRequestTenant } from '../../../../lib/tenancy/get-request-tenant';
 import type { WrapCatalogListRequestContract } from '../../../../types/catalog';
 

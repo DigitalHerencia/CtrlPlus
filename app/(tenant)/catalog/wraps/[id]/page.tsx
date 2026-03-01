@@ -2,10 +2,11 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
-import { WrapCatalogDetail, WrapCatalogHeader } from '../../../../../components/domains/catalog';
-import { CatalogDetailSectionSkeleton } from '../../../../../components/shared-ui/feedback';
-import { buttonVariants } from '../../../../../components/ui';
-import { getPublicWrapDesign } from '../../../../../lib/fetchers/catalog';
+import { WrapCatalogDetail } from '../../../../../components/catalog/wrap-catalog-detail';
+import { WrapCatalogHeader } from '../../../../../components/catalog/wrap-catalog-header';
+import { CatalogDetailSectionSkeleton } from '../../../../../components/shared/feedback/catalog-sections-skeleton';
+import { buttonVariants } from '../../../../../components/ui/button';
+import { getPublicWrapDesign } from '../../../../../lib/server/fetchers/catalog';
 import { getRequestTenant } from '../../../../../lib/tenancy/get-request-tenant';
 
 export const revalidate = 60;

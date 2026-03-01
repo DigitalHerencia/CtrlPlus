@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { TenantShell } from '../../components/shared-ui/layout/tenant-shell';
+import { TenantShell } from '../../components/shared/layout/tenant-shell';
 
 type TenantLayoutProps = {
   readonly children: ReactNode;

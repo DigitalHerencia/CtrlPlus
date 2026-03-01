@@ -1,18 +1,12 @@
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 
-import { WrapCatalogEditorForm } from '../../../../../../components/domains/catalog';
-import { updateWrapDesign } from '../../../../../../lib/actions/catalog';
-import { getWrapDesign } from '../../../../../../lib/fetchers/catalog';
+import { WrapCatalogEditorForm } from '../../../../../../components/catalog/wrap-catalog-editor-form';
+import { updateWrapDesign } from '../../../../../../lib/server/actions/catalog';
+import { getWrapDesign } from '../../../../../../lib/server/fetchers/catalog';
 import { getRequestTenant } from '../../../../../../lib/tenancy/get-request-tenant';
-import {
-  Badge,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '../../../../../../components/ui';
+import { Badge } from '../../../../../../components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../../../../components/ui/card';
 
 type EditWrapPageProps = {
   readonly params: {

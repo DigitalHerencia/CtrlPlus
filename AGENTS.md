@@ -8,8 +8,10 @@ This repo is a **subdomain-based multi-tenant** Next.js App Router application f
 
 * This root-level `AGENTS.md` is the canonical instruction file for the repository.
 * `PLANS.md` at repository root is the canonical ExecPlan standard.
-* `.codex/` is reserved for repository-local Codex config and transient artifacts, not primary engineering policy.
-* Exception: `.codex/TODO.md` may be used as a migration execution checklist/tracker, but it is non-canonical and must stay aligned to `AGENTS.md` + `docs/tech-requirements.md`.
+* `.codex/` is the repository home for developer-facing docs, scripts, manifests, and Codex-local artifacts.
+* `.codex/docs/` is flattened and standardized; start internal-doc loading from `.codex/docs/00-index.md`.
+* End-user documentation lives in `docs/`.
+* `.codex/TODO.md` remains a non-canonical execution checklist/tracker and must stay aligned to canonical requirements.
 
 ## Non-negotiable rules
 
@@ -82,7 +84,7 @@ When asked to implement a feature, follow this order:
 
 1. **Update domain types/schemas**
 
-   * Add/adjust Zod schemas in `lib/shared/schemas/**` or within the feature module.
+   * Add/adjust Zod schemas in `schemas/**` or within the feature module.
 
 2. **Update Prisma schema + migration (if needed)**
 
@@ -158,3 +160,5 @@ When asked to implement a feature, follow this order:
 * Any mutation implemented outside server actions.
 * Any authorization performed only on the client.
 * Any webhook handler without signature verification + idempotency.
+
+

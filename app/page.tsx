@@ -1,16 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { PublicSiteShell } from '../components/shared-ui/layout/public-site-shell';
-import {
-  Badge,
-  buttonVariants,
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '../components/ui';
+import { PublicSiteShell } from '../components/shared/layout/public-site-shell';
+import { Badge } from '../components/ui/badge';
+import { buttonVariants } from '../components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 
 const featureHighlights = [
   {
@@ -176,7 +170,7 @@ export default function HomePage() {
             {featureHighlights.map((featureHighlight, index) => (
               <Card key={featureHighlight.title}>
                 <CardHeader>
-                  <Badge variant='accent'>0{index + 1}</Badge>
+                  <Badge variant='secondary'>0{index + 1}</Badge>
                   <CardTitle className='text-xl'>{featureHighlight.title}</CardTitle>
                   <CardDescription>{featureHighlight.description}</CardDescription>
                 </CardHeader>
