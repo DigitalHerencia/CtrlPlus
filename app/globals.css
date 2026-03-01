@@ -7,9 +7,15 @@
 @source "../features/**/*.{ts,tsx}";
 
 :root {
+  --color-ctrl-bg: #0e1a3a;
+  --color-ctrl-primary: #1f46e0;
+  --color-ctrl-secondary: #1234b5;
+  --color-ctrl-text: #f8f9fb;
+  --color-ctrl-decorative: #d8dbf4;
   --font-sans: "Inter Tight", ui-sans-serif, system-ui, sans-serif;
   --tracking-headline: 0.024em;
   --tracking-subtext: 0.005em;
+  --radius-ui: 0.875rem;
   --radius: 0.875rem;
 
   --background: #0e1a3a;
