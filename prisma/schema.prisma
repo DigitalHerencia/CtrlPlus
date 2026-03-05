@@ -1,0 +1,309 @@
+// This is your Prisma schema file for CtrlPlus
+// Learn more at https://pris.ly/d/prisma-schema
+
+// Prisma 7 Configuration for Neon Serverless Postgres
+//
+// Connection Strategy:
+// - DATABASE_URL (pooled with -pooler suffix): Used by PrismaClient via Neon adapter in lib/prisma.ts
+// - DATABASE_URL_UNPOOLED (direct): Used for migrations via prisma.config.ts
+//
+// Connection strings are passed to PrismaClient constructor, not in datasource block.
+// See lib/prisma.ts for adapter configuration.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================================
+// TENANCY & AUTH MODELS
+// ============================================================================
+
+/// Represents a tenant (vehicle wrap business)
+model Tenant {
+  id                      String                    @id @default(cuid())
+  name                    String
+  slug                    String                    @unique
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  deletedAt               DateTime?
+
+  // Relations
+  members                 TenantUserMembership[]
+  wraps                   Wrap[]
+  wrapCategories          WrapCategory[]
+  availabilityRules       AvailabilityRule[]
+  bookings                Booking[]
+  previews                VisualizerPreview[]
+  invoices                Invoice[]
+  auditLogs               AuditLog[]
+
+  @@index([slug])
+  @@index([deletedAt])
+}
+
+/// Tracks user membership and roles within a tenant (RBAC)
+model TenantUserMembership {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String   // Clerk user ID
+  role      String   @default("member") // "owner" | "admin" | "member"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId])
+  @@index([tenantId])
+  @@index([userId])
+  @@index([deletedAt])
+}
+
+// ============================================================================
+// CATALOG MODELS
+// ============================================================================
+
+/// Represents a wrap design
+model Wrap {
+  id                    String                  @id @default(cuid())
+  tenantId              String
+  name                  String
+  description           String?
+  price                 Float // in cents
+  installationMinutes   Int?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  deletedAt             DateTime?
+
+  // Relations
+  tenant                Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  images                WrapImage[]
+  categoryMappings      WrapCategoryMapping[]
+  bookings              Booking[]
+  previews              VisualizerPreview[]
+
+  @@index([tenantId])
+  @@index([deletedAt])
+  @@unique([tenantId, id])
+}
+
+/// Categories for organizing wraps
+model WrapCategory {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  slug      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  tenant    Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  wraps     WrapCategoryMapping[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([deletedAt])
+}
+
+/// Junction table: many wraps to many categories
+model WrapCategoryMapping {
+  wrapId     String
+  categoryId String
+
+  wrap       Wrap         @relation(fields: [wrapId], references: [id], onDelete: Cascade)
+  category   WrapCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([wrapId, categoryId])
+}
+
+/// Images for wrap designs
+model WrapImage {
+  id            String   @id @default(cuid())
+  wrapId        String
+  url           String
+  displayOrder  Int      @default(0)
+  createdAt     DateTime @default(now())
+  deletedAt     DateTime?
+
+  wrap          Wrap     @relation(fields: [wrapId], references: [id], onDelete: Cascade)
+
+  @@index([wrapId])
+  @@index([deletedAt])
+}
+
+// ============================================================================
+// SCHEDULING MODELS
+// ============================================================================
+
+/// Availability rules for time slots
+model AvailabilityRule {
+  id             String   @id @default(cuid())
+  tenantId       String
+  dayOfWeek      Int      // 0=Sunday, 6=Saturday
+  startTime      String   // HH:MM format
+  endTime        String   // HH:MM format
+  capacitySlots  Int      // How many concurrent bookings
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([dayOfWeek])
+  @@index([deletedAt])
+}
+
+/// Customer bookings
+model Booking {
+  id                String                @id @default(cuid())
+  tenantId          String
+  customerId        String                // Clerk user ID of customer
+  wrapId            String
+  startTime         DateTime
+  endTime           DateTime
+  status            String                @default("pending") // "pending" | "confirmed" | "completed" | "cancelled"
+  totalPrice        Float                 // in cents
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  deletedAt         DateTime?
+
+  // Relations
+  tenant            Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  wrap              Wrap                  @relation(fields: [wrapId], references: [id], onDelete: Cascade)
+  reservation       BookingReservation?
+  invoice           Invoice?
+
+  @@index([tenantId])
+  @@index([customerId])
+  @@index([status])
+  @@index([deletedAt])
+  @@unique([tenantId, id])
+}
+
+/// 15-minute reservation hold on booking slots
+model BookingReservation {
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  expiresAt  DateTime
+  reservedAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
+// ============================================================================
+// VISUALIZER MODELS
+// ============================================================================
+
+/// Preview generation results (cached for 24h)
+model VisualizerPreview {
+  id                 String   @id @default(cuid())
+  tenantId           String
+  wrapId             String
+  customerPhotoUrl   String
+  processedImageUrl  String?  // Filled after processing
+  status             String   @default("pending") // "pending" | "processing" | "complete" | "failed"
+  cacheKey           String   @unique // Deterministic hash for caching
+  expiresAt          DateTime
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  deletedAt          DateTime?
+
+  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  wrap               Wrap     @relation(fields: [wrapId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([deletedAt])
+}
+
+// ============================================================================
+// BILLING MODELS
+// ============================================================================
+
+/// Invoices for bookings
+model Invoice {
+  id         String   @id @default(cuid())
+  tenantId   String
+  bookingId  String   @unique
+  status     String   @default("draft") // "draft" | "sent" | "paid" | "failed" | "refunded"
+  totalAmount Float   // in cents
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+
+  tenant     Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  booking    Booking            @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  lineItems  InvoiceLineItem[]
+  payments   Payment[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+/// Line items for invoices
+model InvoiceLineItem {
+  id         String @id @default(cuid())
+  invoiceId  String
+  description String
+  quantity   Int
+  unitPrice  Float  // in cents
+  totalPrice Float  // in cents
+
+  invoice    Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+/// Payment records (Stripe integration)
+model Payment {
+  id                    String   @id @default(cuid())
+  invoiceId             String
+  stripePaymentIntentId String   @unique
+  status                String   @default("pending") // "pending" | "succeeded" | "failed"
+  amount                Float    // in cents
+  createdAt             DateTime @default(now())
+  deletedAt             DateTime?
+
+  invoice               Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([stripePaymentIntentId])
+  @@index([deletedAt])
+}
+
+// ============================================================================
+// AUDIT LOGGING
+// ============================================================================
+
+/// Audit trail for security and compliance
+model AuditLog {
+  id            String   @id @default(cuid())
+  tenantId      String
+  userId        String   // Clerk user ID
+  action        String   // e.g., "CREATE_WRAP", "CANCEL_BOOKING"
+  resourceType  String   // e.g., "Wrap", "Booking", "Invoice"
+  resourceId    String
+  details       String?  // JSON details
+  timestamp     DateTime @default(now())
+  deletedAt     DateTime?
+
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([action])
+  @@index([timestamp])
+  @@index([deletedAt])
+}
