@@ -1,0 +1,147 @@
+// Prisma schema for CtrlPlus
+// NOTE: datasource block has no `url` field — it is passed via prisma.config.ts
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum TenantUserRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+// ---------------------------------------------------------------------------
+// Core Models
+// ---------------------------------------------------------------------------
+
+model Tenant {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships TenantUserMembership[]
+  bookings    Booking[]
+  invoices    Invoice[]
+  auditLogs   AuditLog[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships TenantUserMembership[]
+  auditLogs   AuditLog[]
+}
+
+model TenantUserMembership {
+  id       String         @id @default(cuid())
+  tenantId String
+  userId   String
+  role     TenantUserRole @default(MEMBER)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId])
+  @@index([tenantId])
+}
+
+// ---------------------------------------------------------------------------
+// Scheduling & Billing
+// ---------------------------------------------------------------------------
+
+model Booking {
+  id       String        @id @default(cuid())
+  tenantId String
+  status   BookingStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoice Invoice?
+
+  @@index([tenantId, status])
+}
+
+model Invoice {
+  id        String        @id @default(cuid())
+  tenantId  String
+  bookingId String        @unique
+  amount    Decimal       @db.Decimal(10, 2)
+  status    InvoiceStatus @default(PENDING)
+
+  stripeCheckoutSessionId String?
+  stripePaymentIntentId   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@index([stripeCheckoutSessionId])
+  @@index([stripePaymentIntentId])
+}
+
+// ---------------------------------------------------------------------------
+// Webhook Idempotency
+// ---------------------------------------------------------------------------
+
+model StripeWebhookEvent {
+  id          String   @id // Stripe event id (e.g. "evt_xxx") — primary key for idempotency
+  type        String
+  processedAt DateTime @default(now())
+  payload     Json
+
+  @@index([type])
+}
+
+// ---------------------------------------------------------------------------
+// Audit
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  tenantId   String
+  userId     String?
+  action     String
+  resourceId String?
+  details    Json?
+  timestamp  DateTime @default(now())
+
+  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, action])
+  @@index([resourceId])
+}
