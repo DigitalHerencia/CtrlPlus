@@ -34,19 +34,16 @@ test.describe("Payment / Billing", () => {
     await expect(payBtn).toBeVisible();
   });
 
-  test("clicking pay now initiates a Stripe checkout redirect", async ({
-    page,
-  }) => {
+  test("clicking pay now initiates a Stripe checkout redirect", async ({ page }) => {
     await page.goto(ROUTES.billingCheckout);
 
     const payBtn = page.getByTestId(TEST_IDS.payNowBtn);
     await expect(payBtn).toBeVisible();
 
     // Listen for navigation; Stripe redirects to checkout.stripe.com
-    const navigationPromise = page.waitForURL(
-      /checkout\.stripe\.com|\/billing\/.+/,
-      { timeout: 10_000 }
-    );
+    const navigationPromise = page.waitForURL(/checkout\.stripe\.com|\/billing\/.+/, {
+      timeout: 10_000,
+    });
     await payBtn.click();
 
     // If the app redirects to Stripe, the URL will change.
@@ -73,9 +70,7 @@ test.describe("Payment / Billing", () => {
     await expect(successEl).toBeVisible();
   });
 
-  test("payment cancel page renders a cancellation message and retry option", async ({
-    page,
-  }) => {
+  test("payment cancel page renders a cancellation message and retry option", async ({ page }) => {
     await page.goto(ROUTES.billingCancel);
     await expect(page).toHaveURL(new RegExp(ROUTES.billingCancel));
 
@@ -87,9 +82,7 @@ test.describe("Payment / Billing", () => {
   // Failure / edge cases
   // ---------------------------------------------------------------------------
 
-  test("checkout page without a booking redirects or shows an error", async ({
-    page,
-  }) => {
+  test("checkout page without a booking redirects or shows an error", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 

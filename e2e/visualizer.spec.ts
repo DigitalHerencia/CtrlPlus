@@ -26,9 +26,7 @@ test.describe("Visualizer", () => {
   // Happy path — upload flow
   // ---------------------------------------------------------------------------
 
-  test("visualizer page loads with upload and template options", async ({
-    page,
-  }) => {
+  test("visualizer page loads with upload and template options", async ({ page }) => {
     await expect(page).toHaveURL(new RegExp(ROUTES.visualizer));
     const container = page.getByTestId(TEST_IDS.visualizerContainer);
     await expect(container).toBeVisible();
@@ -59,9 +57,7 @@ test.describe("Visualizer", () => {
     await expect(preview).toBeVisible({ timeout: 10_000 });
   });
 
-  test("proceed to booking button is visible after upload", async ({
-    page,
-  }) => {
+  test("proceed to booking button is visible after upload", async ({ page }) => {
     const tmpPath = path.join(os.tmpdir(), "vehicle-proceed.png");
     const { writeFileSync } = await import("fs");
     writeFileSync(tmpPath, Buffer.from(TINY_PNG_BASE64, "base64"));
@@ -80,9 +76,7 @@ test.describe("Visualizer", () => {
   // Template / fallback flow (no upload)
   // ---------------------------------------------------------------------------
 
-  test("visualizer works without uploading a photo (template mode)", async ({
-    page,
-  }) => {
+  test("visualizer works without uploading a photo (template mode)", async ({ page }) => {
     // If a template/fallback preview exists it should be visible without upload
     const container = page.getByTestId(TEST_IDS.visualizerContainer);
     await expect(container).toBeVisible();
@@ -98,9 +92,7 @@ test.describe("Visualizer", () => {
   // Failure / edge cases
   // ---------------------------------------------------------------------------
 
-  test("uploading a non-image file shows a validation error", async ({
-    page,
-  }) => {
+  test("uploading a non-image file shows a validation error", async ({ page }) => {
     const tmpPath = path.join(os.tmpdir(), "not-an-image.txt");
     const { writeFileSync } = await import("fs");
     writeFileSync(tmpPath, "this is not an image");
@@ -121,9 +113,7 @@ test.describe("Visualizer", () => {
     }
   });
 
-  test("visualizer does not crash when navigated to without a selected wrap", async ({
-    page,
-  }) => {
+  test("visualizer does not crash when navigated to without a selected wrap", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 

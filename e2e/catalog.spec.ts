@@ -37,9 +37,7 @@ test.describe("Catalog", () => {
     await expect(firstCard.getByTestId(TEST_IDS.wrapCardCTA)).toBeVisible();
   });
 
-  test("clicking a wrap card navigates to wrap detail page", async ({
-    page,
-  }) => {
+  test("clicking a wrap card navigates to wrap detail page", async ({ page }) => {
     const firstCardCTA = page
       .getByTestId(TEST_IDS.wrapCard)
       .first()
@@ -54,9 +52,7 @@ test.describe("Catalog", () => {
     await expect(page.getByTestId(TEST_IDS.wrapDetailPrice)).toBeVisible();
   });
 
-  test("wrap detail page has a Preview button linking to visualizer", async ({
-    page,
-  }) => {
+  test("wrap detail page has a Preview button linking to visualizer", async ({ page }) => {
     // Navigate directly to a detail page via the first card
     const firstCardCTA = page
       .getByTestId(TEST_IDS.wrapCard)
@@ -117,22 +113,18 @@ test.describe("Catalog", () => {
   // Failure / edge cases
   // ---------------------------------------------------------------------------
 
-  test("navigating to an invalid wrap ID shows 404 or error state", async ({
-    page,
-  }) => {
+  test("navigating to an invalid wrap ID shows 404 or error state", async ({ page }) => {
     await page.goto(ROUTES.catalogWrap("non-existent-wrap-id-00000"));
     // Expect either a 404 page or an error message — not a blank screen
     const body = page.locator("body");
     const text = await body.innerText();
     expect(
       text.match(/not found|404|error/i) !== null ||
-        (await page.getByTestId(TEST_IDS.wrapDetailTitle).count()) === 0
+        (await page.getByTestId(TEST_IDS.wrapDetailTitle).count()) === 0,
     ).toBeTruthy();
   });
 
-  test("empty catalog shows an empty state message instead of a broken grid", async ({
-    page,
-  }) => {
+  test("empty catalog shows an empty state message instead of a broken grid", async ({ page }) => {
     // This test documents the expected behaviour; the implementation may
     // show zero cards. Ensure the page doesn't crash.
     const grid = page.getByTestId(TEST_IDS.catalogGrid);

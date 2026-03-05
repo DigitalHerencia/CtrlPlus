@@ -82,9 +82,7 @@ test.describe("Core happy-path journey: catalog → visualizer → booking → p
     await firstSlot.click();
 
     await page.getByTestId(TEST_IDS.bookingNameInput).fill("Alex Turner");
-    await page
-      .getByTestId(TEST_IDS.bookingEmailInput)
-      .fill("alex.turner@example.com");
+    await page.getByTestId(TEST_IDS.bookingEmailInput).fill("alex.turner@example.com");
     await page.getByTestId(TEST_IDS.bookingPhoneInput).fill("555-0200");
 
     await page.getByTestId(TEST_IDS.bookingSubmitBtn).click();
@@ -114,11 +112,7 @@ test.describe("Regression gates — failure paths must not crash the app", () =>
   test("unauthenticated user visiting a protected route is redirected or shown an auth prompt", async ({
     page,
   }) => {
-    const protectedRoutes = [
-      ROUTES.scheduling,
-      ROUTES.billingCheckout,
-      ROUTES.adminDashboard,
-    ];
+    const protectedRoutes = [ROUTES.scheduling, ROUTES.billingCheckout, ROUTES.adminDashboard];
 
     for (const route of protectedRoutes) {
       const errors: string[] = [];
@@ -132,15 +126,14 @@ test.describe("Regression gates — failure paths must not crash the app", () =>
 
       // Either redirected to sign-in OR auth prompt is displayed
       const url = page.url();
-      const hasAuthRedirect =
-        url.includes(ROUTES.signIn) || url.includes(ROUTES.signUp);
+      const hasAuthRedirect = url.includes(ROUTES.signIn) || url.includes(ROUTES.signUp);
       const hasAuthPrompt =
         (await page.getByRole("heading", { name: /sign in/i }).count()) > 0 ||
         (await page.getByRole("link", { name: /sign in/i }).count()) > 0;
 
       expect(
         hasAuthRedirect || hasAuthPrompt,
-        `Expected auth gate on ${route}, got ${url}`
+        `Expected auth gate on ${route}, got ${url}`,
       ).toBeTruthy();
     }
   });
@@ -156,9 +149,7 @@ test.describe("Regression gates — failure paths must not crash the app", () =>
     await expect(page.locator("body")).toBeVisible();
   });
 
-  test("navigating between main sections does not produce console errors", async ({
-    page,
-  }) => {
+  test("navigating between main sections does not produce console errors", async ({ page }) => {
     const consoleErrors: string[] = [];
     page.on("console", (msg) => {
       if (msg.type() === "error") consoleErrors.push(msg.text());
@@ -172,11 +163,9 @@ test.describe("Regression gates — failure paths must not crash the app", () =>
     }
 
     // Filter out known third-party / network errors that are outside our control
-    const thirdPartyPattern =
-      /\bhttps?:\/\/([^/]*\.)?(stripe\.com|clerk\.com)\b/;
+    const thirdPartyPattern = /\bhttps?:\/\/([^/]*\.)?(stripe\.com|clerk\.com)\b/;
     const appErrors = consoleErrors.filter(
-      (e) =>
-        !thirdPartyPattern.test(e) && !e.includes("Failed to load resource")
+      (e) => !thirdPartyPattern.test(e) && !e.includes("Failed to load resource"),
     );
 
     expect(appErrors).toHaveLength(0);
@@ -214,9 +203,7 @@ test.describe("Regression gates — failure paths must not crash the app", () =>
 // ===========================================================================
 
 test.describe("Admin journey smoke test", () => {
-  test("admin dashboard is accessible to authenticated admin users", async ({
-    page,
-  }) => {
+  test("admin dashboard is accessible to authenticated admin users", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
@@ -232,9 +219,7 @@ test.describe("Admin journey smoke test", () => {
     expect(isAdmin || isAuth).toBeTruthy();
   });
 
-  test("admin catalog management page loads without JS errors", async ({
-    page,
-  }) => {
+  test("admin catalog management page loads without JS errors", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 

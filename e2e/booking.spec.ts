@@ -43,18 +43,14 @@ test.describe("Booking / Scheduling", () => {
     await expect(bookingForm).toBeVisible();
   });
 
-  test("completing the booking form and submitting shows a confirmation", async ({
-    page,
-  }) => {
+  test("completing the booking form and submitting shows a confirmation", async ({ page }) => {
     // Select the first available slot
     const firstSlot = page.getByTestId(TEST_IDS.timeSlot).first();
     await firstSlot.click();
 
     // Fill in the booking form
     await page.getByTestId(TEST_IDS.bookingNameInput).fill("Jane Doe");
-    await page
-      .getByTestId(TEST_IDS.bookingEmailInput)
-      .fill("jane.doe@example.com");
+    await page.getByTestId(TEST_IDS.bookingEmailInput).fill("jane.doe@example.com");
     await page.getByTestId(TEST_IDS.bookingPhoneInput).fill("555-0100");
 
     // Submit
@@ -67,16 +63,12 @@ test.describe("Booking / Scheduling", () => {
     await expect(confirmation).toBeVisible({ timeout: 10_000 });
   });
 
-  test("booking confirmation displays a unique confirmation ID", async ({
-    page,
-  }) => {
+  test("booking confirmation displays a unique confirmation ID", async ({ page }) => {
     const firstSlot = page.getByTestId(TEST_IDS.timeSlot).first();
     await firstSlot.click();
 
     await page.getByTestId(TEST_IDS.bookingNameInput).fill("John Smith");
-    await page
-      .getByTestId(TEST_IDS.bookingEmailInput)
-      .fill("john.smith@example.com");
+    await page.getByTestId(TEST_IDS.bookingEmailInput).fill("john.smith@example.com");
     await page.getByTestId(TEST_IDS.bookingPhoneInput).fill("555-0101");
 
     await page.getByTestId(TEST_IDS.bookingSubmitBtn).click();
@@ -88,16 +80,12 @@ test.describe("Booking / Scheduling", () => {
     expect(idText.trim().length).toBeGreaterThan(0);
   });
 
-  test("booking form shows a proceed-to-payment button after confirmation", async ({
-    page,
-  }) => {
+  test("booking form shows a proceed-to-payment button after confirmation", async ({ page }) => {
     const firstSlot = page.getByTestId(TEST_IDS.timeSlot).first();
     await firstSlot.click();
 
     await page.getByTestId(TEST_IDS.bookingNameInput).fill("Pay Test");
-    await page
-      .getByTestId(TEST_IDS.bookingEmailInput)
-      .fill("pay.test@example.com");
+    await page.getByTestId(TEST_IDS.bookingEmailInput).fill("pay.test@example.com");
     await page.getByTestId(TEST_IDS.bookingPhoneInput).fill("555-0102");
 
     await page.getByTestId(TEST_IDS.bookingSubmitBtn).click();
@@ -124,14 +112,11 @@ test.describe("Booking / Scheduling", () => {
     // Expect validation error messages
     const errorMessages = page.getByRole("alert");
     const inputErrors = page.locator("[aria-invalid='true']");
-    const hasErrors =
-      (await errorMessages.count()) > 0 || (await inputErrors.count()) > 0;
+    const hasErrors = (await errorMessages.count()) > 0 || (await inputErrors.count()) > 0;
     expect(hasErrors).toBeTruthy();
   });
 
-  test("submitting with an invalid email shows a validation error", async ({
-    page,
-  }) => {
+  test("submitting with an invalid email shows a validation error", async ({ page }) => {
     const firstSlot = page.getByTestId(TEST_IDS.timeSlot).first();
     await firstSlot.click();
 
