@@ -1,0 +1,105 @@
+# .github/labeler.yml
+# Maps labels to file-path globs. When any file in a PR matches the pattern,
+# the corresponding label is applied automatically.
+# See: https://github.com/actions/labeler
+
+# ── Domain labels ────────────────────────────────────────────────────────────
+
+"area: catalog":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "lib/catalog/**"
+      - "components/catalog/**"
+      - "app/**/catalog/**"
+
+"area: scheduling":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "lib/scheduling/**"
+      - "components/scheduling/**"
+      - "app/**/scheduling/**"
+
+"area: billing":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "lib/billing/**"
+      - "components/billing/**"
+      - "app/**/billing/**"
+      - "app/api/stripe/**"
+
+"area: visualizer":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "lib/visualizer/**"
+      - "components/visualizer/**"
+      - "app/**/visualizer/**"
+
+"area: auth":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "lib/auth/**"
+      - "lib/tenancy/**"
+      - "app/**/sign-in/**"
+      - "app/**/sign-up/**"
+      - "app/api/clerk/**"
+
+"area: admin":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "lib/admin/**"
+      - "components/admin/**"
+      - "app/**/admin/**"
+
+# ── Technical labels ─────────────────────────────────────────────────────────
+
+"area: database":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "prisma/**"
+      - "prisma.config.ts"
+      - "lib/prisma.ts"
+
+"area: ui":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "components/ui/**"
+      - "app/globals.css"
+
+"area: config":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "next.config.*"
+      - "tsconfig.json"
+      - "eslint.config.*"
+      - ".eslintrc*"
+      - ".prettierrc*"
+      - "postcss.config.*"
+      - "tailwind.config.*"
+      - "vitest.config.*"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+
+"area: ci":
+  - changed-files:
+    - any-glob-to-any-file:
+      - ".github/**"
+
+"area: docs":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "**/*.md"
+      - "**/*.mdx"
+      - "docs/**"
+
+# ── Change-type labels ───────────────────────────────────────────────────────
+
+"type: tests":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "**/__tests__/**"
+      - "**/*.test.ts"
+      - "**/*.test.tsx"
+      - "**/*.spec.ts"
+      - "**/*.spec.tsx"
+      - "e2e/**"

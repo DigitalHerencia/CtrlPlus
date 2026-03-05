@@ -1,0 +1,39 @@
+name: Copilot Auto-Review
+
+on:
+  pull_request:
+    types:
+      - opened
+      - ready_for_review
+
+permissions:
+  pull-requests: write
+
+jobs:
+  request-review:
+    name: Request Copilot review on new PRs
+    runs-on: ubuntu-latest
+    # Only run on PRs that are not drafts
+    if: ${{ !github.event.pull_request.draft }}
+    steps:
+      - name: Request GitHub Copilot code review
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const pull_number = context.payload.pull_request.number;
+
+            // Request a review from Copilot (the copilot reviewer slug)
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner,
+                repo,
+                pull_number,
+                reviewers: ['copilot'],
+              });
+              console.log('Requested Copilot review for PR #' + pull_number);
+            } catch (err) {
+              // Copilot reviewer may not be available in all repos — non-fatal
+              console.warn('Could not request Copilot review:', err.message);
+            }

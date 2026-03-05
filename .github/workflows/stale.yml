@@ -1,0 +1,60 @@
+name: Stale Issues & PRs
+
+on:
+  schedule:
+    # Run daily at 02:00 UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    name: Mark and close stale issues and PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run stale action
+        uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+          # ── Issues ──────────────────────────────────────────────────────
+          stale-issue-message: >
+            👋 This issue has been automatically marked as **stale** because it
+            has not had recent activity. It will be closed in **14 days** if no
+            further activity occurs. If this is still relevant, please leave a
+            comment or remove the `stale` label to keep it open. Thank you!
+          close-issue-message: >
+            🔒 This issue has been **automatically closed** due to inactivity.
+            Feel free to reopen if the problem persists or you have additional
+            information to share.
+          days-before-issue-stale: 30
+          days-before-issue-close: 14
+          stale-issue-label: stale
+
+          # ── Pull Requests ────────────────────────────────────────────────
+          stale-pr-message: >
+            👋 This pull request has been automatically marked as **stale**
+            because it has not had recent activity. It will be closed in
+            **7 days** unless it is updated. Please rebase, address review
+            comments, or leave a note if you are still working on it.
+          close-pr-message: >
+            🔒 This pull request has been **automatically closed** due to
+            inactivity. Feel free to reopen once you are ready to continue.
+          days-before-pr-stale: 30
+          days-before-pr-close: 7
+          stale-pr-label: stale
+
+          # ── Exemptions ──────────────────────────────────────────────────
+          # Labels that prevent an issue/PR from being marked stale
+          exempt-issue-labels: "pinned,security,in-progress,blocked"
+          exempt-pr-labels: "pinned,security,in-progress,blocked,do-not-merge"
+
+          # Only consider issues/PRs with no assignees as stale candidates
+          exempt-all-assignees: false
+
+          # Optionally exempt milestoned issues
+          exempt-issue-milestones: ""
+          exempt-pr-milestones: ""
