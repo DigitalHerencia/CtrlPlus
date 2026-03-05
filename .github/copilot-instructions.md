@@ -457,7 +457,7 @@ describe("createWrapSchema", () => {
       createWrapSchema.parse({
         price: 1200,
         imageUrl: "https://example.com/cf.jpg",
-      })
+      }),
     ).toThrow();
   });
 });
