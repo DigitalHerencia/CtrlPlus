@@ -329,23 +329,26 @@ All fetchers in `lib/fetchers/**` must follow this pattern:
  */
 export async function fetchWrapList(
   params: WrapListParams,
-  context: { tenantId: string; userId?: string },
+  context: { tenantId: string; userId?: string }
 ): Promise<WrapListResult> {
   // 1. Optional: Check read permissions
   if (requiresAuth) {
-    await requirePermission('catalog:read', { tenantId: context.tenantId, userId: context.userId });
+    await requirePermission("catalog:read", {
+      tenantId: context.tenantId,
+      userId: context.userId,
+    });
   }
 
   // 2. Build query with tenant scope
   const wraps = await prisma.wrap.findMany({
     where: {
       tenantId: context.tenantId, // MANDATORY
-      status: 'ACTIVE',
+      status: "ACTIVE",
       ...(params.category && { category: params.category }),
       ...(params.search && {
         OR: [
-          { name: { contains: params.search, mode: 'insensitive' } },
-          { description: { contains: params.search, mode: 'insensitive' } },
+          { name: { contains: params.search, mode: "insensitive" } },
+          { description: { contains: params.search, mode: "insensitive" } },
         ],
       }),
     },
@@ -359,7 +362,9 @@ export async function fetchWrapList(
     items: wraps.map((w) => toWrapDTO(w)),
     page: params.page,
     pageSize: params.pageSize,
-    total: await prisma.wrap.count({ where: { tenantId: context.tenantId, status: 'ACTIVE' } }),
+    total: await prisma.wrap.count({
+      where: { tenantId: context.tenantId, status: "ACTIVE" },
+    }),
   };
 }
 ```
@@ -369,7 +374,7 @@ export async function fetchWrapList(
 All actions in `lib/actions/**` must follow this pipeline:
 
 ```typescript
-'use server';
+"use server";
 
 /**
  * Server action with full security pipeline
@@ -379,7 +384,9 @@ All actions in `lib/actions/**` must follow this pipeline:
  * @param input - User input (validated with Zod)
  * @returns Minimal DTO or error
  */
-export async function createWrapAction(input: unknown): Promise<ActionResult<WrapDTO>> {
+export async function createWrapAction(
+  input: unknown
+): Promise<ActionResult<WrapDTO>> {
   try {
     // 1. Resolve auth
     const { userId, clerkUserId } = await requireAuth();
@@ -388,7 +395,7 @@ export async function createWrapAction(input: unknown): Promise<ActionResult<Wra
     const { tenantId } = await requireTenant();
 
     // 3. Check permissions
-    await requirePermission('catalog:write', { tenantId, userId });
+    await requirePermission("catalog:write", { tenantId, userId });
 
     // 4. Validate input with Zod
     const validated = createWrapSchema.parse(input);
@@ -411,7 +418,7 @@ export async function createWrapAction(input: unknown): Promise<ActionResult<Wra
     await writeAuditEvent({
       tenantId,
       userId,
-      action: 'wrap.created',
+      action: "wrap.created",
       resource: `wrap:${wrap.id}`,
       metadata: { name: wrap.name },
     });
@@ -421,7 +428,7 @@ export async function createWrapAction(input: unknown): Promise<ActionResult<Wra
   } catch (error) {
     // Error handling
     if (error instanceof ZodError) {
-      return { success: false, error: 'Invalid input', details: error.errors };
+      return { success: false, error: "Invalid input", details: error.errors };
     }
     throw error; // Re-throw unexpected errors
   }
