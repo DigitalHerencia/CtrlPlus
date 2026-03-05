@@ -1,0 +1,181 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum TenantRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum WrapStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+enum WrapCategory {
+  FULL_WRAP
+  PARTIAL_WRAP
+  DECAL
+  TINT
+  PAINT_PROTECTION
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model Tenant {
+  id        String       @id @default(cuid())
+  slug      String       @unique
+  name      String
+  status    TenantStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  wraps       Wrap[]
+  bookings    Booking[]
+  memberships TenantUserMembership[]
+}
+
+model ClerkUser {
+  id          String   @id @default(cuid())
+  clerkUserId String   @unique
+  email       String   @unique
+  firstName   String?
+  lastName    String?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships TenantUserMembership[]
+}
+
+model TenantUserMembership {
+  id       String           @id @default(cuid())
+  tenantId String
+  userId   String
+  role     TenantRole
+  status   MembershipStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   ClerkUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId])
+  @@index([userId])
+  @@index([tenantId, role])
+}
+
+model Wrap {
+  id             String       @id @default(cuid())
+  tenantId       String
+  name           String
+  description    String?
+  price          Decimal      @db.Decimal(10, 2)
+  estimatedHours Int
+  status         WrapStatus   @default(ACTIVE)
+  imageUrls      String[]
+  category       WrapCategory
+  deletedAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@index([tenantId, status])
+  @@index([tenantId, category])
+}
+
+model Booking {
+  id           String        @id @default(cuid())
+  tenantId     String
+  customerId   String
+  wrapId       String
+  dropOffStart DateTime
+  dropOffEnd   DateTime
+  pickUpStart  DateTime
+  pickUpEnd    DateTime
+  status       BookingStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  wrap    Wrap     @relation(fields: [wrapId], references: [id])
+  invoice Invoice?
+
+  @@index([tenantId, status])
+  @@index([tenantId, dropOffStart])
+}
+
+model Invoice {
+  id                      String        @id @default(cuid())
+  tenantId                String
+  bookingId               String        @unique
+  amount                  Decimal       @db.Decimal(10, 2)
+  status                  InvoiceStatus @default(PENDING)
+  stripeCheckoutSessionId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  tenantId  String?
+  userId    String?
+  action    String
+  resource  String
+  metadata  Json
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, createdAt])
+  @@index([userId, createdAt])
+  @@index([action, createdAt])
+}
