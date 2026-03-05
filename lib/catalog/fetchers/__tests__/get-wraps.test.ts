@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ─── Prisma mock ─────────────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ const mockWrap = {
 
 // ─── Import fetchers after mock is set up ────────────────────────────────────
 
-import { getWrapsForTenant, getWrapById, searchWraps } from "../get-wraps";
+import { getWrapById, getWrapsForTenant, searchWraps } from "../get-wraps";
 
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
@@ -66,7 +66,7 @@ describe("getWrapsForTenant", () => {
     expect(prismaMock.wrap.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ tenantId: "tenant-abc" }),
-      })
+      }),
     );
   });
 
@@ -78,7 +78,7 @@ describe("getWrapsForTenant", () => {
     expect(prismaMock.wrap.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ status: "ACTIVE" }),
-      })
+      }),
     );
   });
 
@@ -90,7 +90,7 @@ describe("getWrapsForTenant", () => {
     expect(prismaMock.wrap.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ deletedAt: null }),
-      })
+      }),
     );
   });
 
@@ -156,7 +156,7 @@ describe("getWrapById", () => {
           tenantId: "tenant-abc",
           id: "wrap-001",
         }),
-      })
+      }),
     );
   });
 
@@ -171,7 +171,7 @@ describe("getWrapById", () => {
           status: "ACTIVE",
           deletedAt: null,
         }),
-      })
+      }),
     );
   });
 });
@@ -208,12 +208,12 @@ describe("searchWraps", () => {
     expect(prismaMock.wrap.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ tenantId: "tenant-abc" }),
-      })
+      }),
     );
     expect(prismaMock.wrap.count).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ tenantId: "tenant-abc" }),
-      })
+      }),
     );
   });
 
@@ -226,24 +226,7 @@ describe("searchWraps", () => {
     expect(prismaMock.wrap.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ status: "ACTIVE", deletedAt: null }),
-      })
-    );
-  });
-
-  it("applies category filter when provided", async () => {
-    prismaMock.wrap.findMany.mockResolvedValue([]);
-    prismaMock.wrap.count.mockResolvedValue(0);
-
-    await searchWraps("tenant-abc", {
-      category: "FULL_WRAP",
-      page: 1,
-      pageSize: 20,
-    });
-
-    expect(prismaMock.wrap.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ category: "FULL_WRAP" }),
-      })
+      }),
     );
   });
 
@@ -260,7 +243,7 @@ describe("searchWraps", () => {
     expect(prismaMock.wrap.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ price: { lte: 1500 } }),
-      })
+      }),
     );
   });
 
@@ -286,7 +269,7 @@ describe("searchWraps", () => {
             }),
           ]),
         }),
-      })
+      }),
     );
   });
 

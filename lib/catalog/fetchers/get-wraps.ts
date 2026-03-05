@@ -1,36 +1,27 @@
 import { prisma } from "@/lib/prisma";
-import {
-  type WrapDTO,
-  type WrapListDTO,
-  type SearchWrapsInput,
-  WrapStatus,
-  wrapDTOFields,
-} from "../types";
+import { type SearchWrapsInput, type WrapDTO, wrapDTOFields, type WrapListDTO } from "../types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function toWrapDTO(
-  prismaWrap: Record<string, unknown> & {
-    price: { toString(): string } | string | number;
-    status: string;
-    category: string;
-  }
-): WrapDTO {
+function toWrapDTO(prismaWrap: {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string | null;
+  price: number;
+  installationMinutes: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+}): WrapDTO {
   return {
-    id: prismaWrap.id as string,
-    tenantId: prismaWrap.tenantId as string,
-    name: prismaWrap.name as string,
-    description: (prismaWrap.description as string | null) ?? null,
-    price:
-      typeof prismaWrap.price === "object" && prismaWrap.price !== null
-        ? (prismaWrap.price as { toString(): string }).toString()
-        : String(prismaWrap.price),
-    estimatedHours: prismaWrap.estimatedHours as number,
-    status: prismaWrap.status as WrapDTO["status"],
-    imageUrls: prismaWrap.imageUrls as string[],
-    category: prismaWrap.category as WrapDTO["category"],
-    createdAt: prismaWrap.createdAt as Date,
-    updatedAt: prismaWrap.updatedAt as Date,
+    id: prismaWrap.id,
+    tenantId: prismaWrap.tenantId,
+    name: prismaWrap.name,
+    description: prismaWrap.description,
+    price: prismaWrap.price,
+    installationMinutes: prismaWrap.installationMinutes,
+    createdAt: prismaWrap.createdAt,
+    updatedAt: prismaWrap.updatedAt,
   };
 }
 
@@ -46,7 +37,6 @@ export async function getWrapsForTenant(tenantId: string): Promise<WrapDTO[]> {
   const wraps = await prisma.wrap.findMany({
     where: {
       tenantId,
-      status: WrapStatus.ACTIVE,
       deletedAt: null,
     },
     orderBy: { createdAt: "desc" },
@@ -63,15 +53,11 @@ export async function getWrapsForTenant(tenantId: string): Promise<WrapDTO[]> {
  * @param wrapId - Wrap ID to look up
  * @returns WrapDTO or null if not found / wrong tenant
  */
-export async function getWrapById(
-  tenantId: string,
-  wrapId: string
-): Promise<WrapDTO | null> {
+export async function getWrapById(tenantId: string, wrapId: string): Promise<WrapDTO | null> {
   const wrap = await prisma.wrap.findFirst({
     where: {
       id: wrapId,
       tenantId,
-      status: WrapStatus.ACTIVE,
       deletedAt: null,
     },
     select: wrapDTOFields,
@@ -84,19 +70,18 @@ export async function getWrapById(
  * Searches and paginates active wraps for a tenant.
  *
  * @param tenantId - Tenant scope (server-side verified)
- * @param filters  - Optional search query, category, price cap, and pagination
+ * @param filters  - Optional search query, price cap, and pagination
  * @returns Paginated WrapListDTO
  */
 export async function searchWraps(
   tenantId: string,
-  filters: SearchWrapsInput = { page: 1, pageSize: 20 }
+  filters: SearchWrapsInput = { page: 1, pageSize: 20 },
 ): Promise<WrapListDTO> {
-  const { query, category, maxPrice, page, pageSize } = filters;
+  const { query, maxPrice, page, pageSize } = filters;
   const skip = (page - 1) * pageSize;
 
   const where = {
     tenantId,
-    status: WrapStatus.ACTIVE,
     deletedAt: null,
     ...(query && {
       OR: [
@@ -104,7 +89,6 @@ export async function searchWraps(
         { description: { contains: query, mode: "insensitive" as const } },
       ],
     }),
-    ...(category && { category }),
     ...(maxPrice !== undefined && { price: { lte: maxPrice } }),
   };
 

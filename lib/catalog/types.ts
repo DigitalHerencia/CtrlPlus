@@ -27,12 +27,9 @@ export interface WrapDTO {
   tenantId: string;
   name: string;
   description: string | null;
-  /** Price as a string to preserve decimal precision (Prisma Decimal → string) */
-  price: string;
-  estimatedHours: number;
-  status: WrapStatus;
-  imageUrls: string[];
-  category: WrapCategory;
+  /** Price in cents as a number */
+  price: number;
+  installationMinutes: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,10 +51,7 @@ export const wrapDTOFields = {
   name: true,
   description: true,
   price: true,
-  estimatedHours: true,
-  status: true,
-  imageUrls: true,
-  category: true,
+  installationMinutes: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -68,17 +62,11 @@ export const createWrapSchema = z.object({
   name: z.string().min(1, "Name is required").max(120),
   description: z.string().max(500).optional(),
   price: z.number().positive("Price must be positive"),
-  estimatedHours: z
+  installationMinutes: z
     .number()
     .int()
-    .positive("Estimated hours must be a positive integer"),
-  imageUrls: z.array(z.url()).min(1, "At least one image is required"),
-  category: z.enum([
-    "FULL_WRAP",
-    "PARTIAL_WRAP",
-    "ACCENT",
-    "PAINT_PROTECTION_FILM",
-  ]),
+    .positive("Installation minutes must be a positive integer")
+    .optional(),
 });
 
 export type CreateWrapInput = z.infer<typeof createWrapSchema>;
@@ -89,9 +77,6 @@ export type UpdateWrapInput = z.infer<typeof updateWrapSchema>;
 
 export const searchWrapsSchema = z.object({
   query: z.string().max(200).optional(),
-  category: z
-    .enum(["FULL_WRAP", "PARTIAL_WRAP", "ACCENT", "PAINT_PROTECTION_FILM"])
-    .optional(),
   maxPrice: z.number().positive().optional(),
   page: z.number().int().min(1).default(1),
   pageSize: z.number().int().min(1).max(100).default(20),
