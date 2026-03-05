@@ -1,0 +1,41 @@
+domain:catalog:
+  - "app/(tenant)/catalog/**"
+  - "components/catalog/**"
+  - "lib/catalog/**"
+
+domain:visualizer:
+  - "app/(tenant)/visualizer/**"
+  - "components/visualizer/**"
+  - "lib/visualizer/**"
+
+domain:scheduling:
+  - "app/(tenant)/scheduling/**"
+  - "components/scheduling/**"
+  - "lib/scheduling/**"
+
+domain:billing:
+  - "app/(tenant)/billing/**"
+  - "app/api/stripe/**"
+  - "components/billing/**"
+  - "lib/billing/**"
+
+domain:admin:
+  - "app/(tenant)/admin/**"
+  - "components/admin/**"
+  - "lib/admin/**"
+
+domain:auth:
+  - "app/(auth)/**"
+  - "app/api/clerk/**"
+  - "components/auth/**"
+  - "lib/auth/**"
+
+domain:tenancy:
+  - "lib/tenancy/**"
+
+domain:ci:
+  - ".github/workflows/**"
+  - ".github/labeler.yml"
+  - ".husky/**"
+  - "package.json"
+  - "pnpm-lock.yaml"

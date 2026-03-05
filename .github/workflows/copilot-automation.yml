@@ -1,0 +1,41 @@
+name: Copilot Automation
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  request-copilot-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Attempt to request Copilot Cloud review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.payload.pull_request.number,
+                reviewers: ["copilot-swe-agent"]
+              });
+              core.info("Requested review from copilot-swe-agent.");
+            } catch (error) {
+              core.warning(`Could not request Copilot reviewer automatically: ${error.message}`);
+            }
+
+  enable-auto-merge:
+    needs: request-copilot-review
+    if: contains(join(github.event.pull_request.labels.*.name, ','), 'codex')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable auto-merge when checks and reviews pass
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ github.event.pull_request.number }}
+          merge-method: squash
