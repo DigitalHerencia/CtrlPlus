@@ -329,7 +329,7 @@ All fetchers in `lib/fetchers/**` must follow this pattern:
  */
 export async function fetchWrapList(
   params: WrapListParams,
-  context: { tenantId: string; userId?: string }
+  context: { tenantId: string; userId?: string },
 ): Promise<WrapListResult> {
   // 1. Optional: Check read permissions
   if (requiresAuth) {
@@ -385,7 +385,7 @@ All actions in `lib/actions/**` must follow this pipeline:
  * @returns Minimal DTO or error
  */
 export async function createWrapAction(
-  input: unknown
+  input: unknown,
 ): Promise<ActionResult<WrapDTO>> {
   try {
     // 1. Resolve auth

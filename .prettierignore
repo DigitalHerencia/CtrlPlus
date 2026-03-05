@@ -27,3 +27,9 @@ next-env.d.ts
 
 # pnpm
 pnpm-lock.yaml
+
+# generated artifacts
+lib/generated/
+
+# prisma migration SQL snapshots
+prisma/migrations/

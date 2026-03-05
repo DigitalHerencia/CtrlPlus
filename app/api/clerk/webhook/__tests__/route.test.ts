@@ -204,7 +204,7 @@ describe("POST /api/clerk/webhook", () => {
           lastName: "Smith",
           imageUrl: "https://example.com/alice.jpg",
         }),
-      })
+      }),
     );
     // Idempotency record must be saved
     expect(mockPrisma.clerkWebhookEvent.create).toHaveBeenCalledWith(
@@ -213,7 +213,7 @@ describe("POST /api/clerk/webhook", () => {
           svixId: "svix-abc-123",
           eventType: "user.created",
         }),
-      })
+      }),
     );
   });
 
@@ -229,7 +229,7 @@ describe("POST /api/clerk/webhook", () => {
     expect(mockPrisma.clerkUser.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         create: expect.objectContaining({ email: "alice@example.com" }),
-      })
+      }),
     );
   });
 
@@ -247,7 +247,7 @@ describe("POST /api/clerk/webhook", () => {
     expect(mockPrisma.clerkUser.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { clerkUserId: "user_test_123" },
-      })
+      }),
     );
   });
 
@@ -277,7 +277,7 @@ describe("POST /api/clerk/webhook", () => {
         expect(txMock.clerkUser.delete).toHaveBeenCalledWith({
           where: { id: "local-user-1" },
         });
-      }
+      },
     );
 
     const res = await POST(makeRequest());
@@ -302,7 +302,7 @@ describe("POST /api/clerk/webhook", () => {
         };
         await fn(txMock as unknown as typeof mockPrisma);
         expect(txMock.clerkUser.delete).not.toHaveBeenCalled();
-      }
+      },
     );
 
     const res = await POST(makeRequest());
@@ -353,9 +353,7 @@ describe("POST /api/clerk/webhook", () => {
   it("returns 500 on DB error so Clerk retries delivery", async () => {
     const event = makeUserCreatedEvent();
     mockVerifyWebhook.mockResolvedValueOnce(event);
-    mockPrisma.clerkUser.upsert.mockRejectedValueOnce(
-      new Error("DB connection lost")
-    );
+    mockPrisma.clerkUser.upsert.mockRejectedValueOnce(new Error("DB connection lost"));
 
     const res = await POST(makeRequest());
 

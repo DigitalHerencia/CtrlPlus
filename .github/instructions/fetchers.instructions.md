@@ -27,7 +27,7 @@ import { type RecordDTO } from "../types";
  * @returns Array of record DTOs
  */
 export async function getRecordsForTenant(
-  tenantId: string
+  tenantId: string,
 ): Promise<RecordDTO[]> {
   const records = await prisma.record.findMany({
     where: {
@@ -62,7 +62,7 @@ export async function getRecordsForTenant(
  */
 export async function getRecordById(
   tenantId: string,
-  recordId: string
+  recordId: string,
 ): Promise<RecordDTO | null> {
   const record = await prisma.record.findFirst({
     where: {
@@ -96,7 +96,7 @@ export async function getRecordById(
  */
 export async function getRecordsPaginated(
   tenantId: string,
-  options: { page: number; limit: number }
+  options: { page: number; limit: number },
 ) {
   const { page, limit } = options;
   const skip = (page - 1) * limit;
@@ -229,7 +229,7 @@ where: { tenantId }
 
 ```tsx
 export async function getCatalogsForTenant(
-  tenantId: string
+  tenantId: string,
 ): Promise<CatalogDTO[]> {
   const catalogs = await prisma.catalog.findMany({
     where: { tenantId, deletedAt: null },
@@ -254,7 +254,7 @@ function transformCatalogToDTO(catalog: any): CatalogDTO {
 ```tsx
 export async function getWrapById(
   tenantId: string,
-  wrapId: string
+  wrapId: string,
 ): Promise<WrapDTO | null> {
   const wrap = await prisma.wrap.findFirst({
     where: { id: wrapId, tenantId, deletedAt: null },
@@ -274,7 +274,7 @@ export async function searchWraps(
     query?: string;
     categoryId?: string;
     maxPrice?: number;
-  }
+  },
 ): Promise<WrapDTO[]> {
   const { query, categoryId, maxPrice } = filters;
 
@@ -328,7 +328,7 @@ describe("getRecordsForTenant", () => {
           tenantId,
           deletedAt: null,
         }),
-      })
+      }),
     );
     expect(result).toHaveLength(1);
   });
@@ -344,7 +344,7 @@ describe("getRecordsForTenant", () => {
         where: expect.objectContaining({
           deletedAt: null,
         }),
-      })
+      }),
     );
   });
 });
@@ -368,7 +368,7 @@ describe("getRecordById", () => {
           tenantId,
           id: recordId,
         }),
-      })
+      }),
     );
     expect(result?.id).toBe(recordId);
   });
