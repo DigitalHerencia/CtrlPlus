@@ -99,15 +99,9 @@ describe("requireRole", () => {
   });
 
   it("throws 'Forbidden: insufficient role' for insufficient roles", () => {
-    expect(() => requireRole("MEMBER", "ADMIN")).toThrow(
-      "Forbidden: insufficient role"
-    );
-    expect(() => requireRole("MEMBER", "OWNER")).toThrow(
-      "Forbidden: insufficient role"
-    );
-    expect(() => requireRole("ADMIN", "OWNER")).toThrow(
-      "Forbidden: insufficient role"
-    );
+    expect(() => requireRole("MEMBER", "ADMIN")).toThrow("Forbidden: insufficient role");
+    expect(() => requireRole("MEMBER", "OWNER")).toThrow("Forbidden: insufficient role");
+    expect(() => requireRole("ADMIN", "OWNER")).toThrow("Forbidden: insufficient role");
   });
 
   it("does not throw when the user role satisfies any role in an array", () => {
@@ -116,9 +110,7 @@ describe("requireRole", () => {
   });
 
   it("throws 'Forbidden: insufficient role' when no role in array is satisfied", () => {
-    expect(() => requireRole("MEMBER", ["OWNER", "ADMIN"])).toThrow(
-      "Forbidden: insufficient role"
-    );
+    expect(() => requireRole("MEMBER", ["OWNER", "ADMIN"])).toThrow("Forbidden: insufficient role");
   });
 
   // Type safety: verify the function accepts all valid TenantRole values

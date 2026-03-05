@@ -1,133 +1,71 @@
 /**
- * Role-Based Access Control (RBAC) for tenant membership.
+ * Role-Based Access Control (RBAC)
  *
- * Roles follow a strict hierarchy: OWNER > ADMIN > MEMBER
- * Permissions use the {domain}:{operation} format defined in TECH-REQUIREMENTS.md.
+ * Permission checking utilities for authorization.
+ * Use in conjunction with lib/tenancy/assert.ts for full security pipeline.
  */
 
-/** Tenant membership role */
-export type TenantRole = "OWNER" | "ADMIN" | "MEMBER";
+import { assertTenantMembership, hasMinimumRole } from "@/lib/tenancy/assert";
+import { type TenantRole } from "@/lib/tenancy/types";
 
-/** Membership status stored in TenantUserMembership */
-export type MembershipStatus = "ACTIVE" | "INACTIVE" | "SUSPENDED";
+export { assertTenantMembership, hasMinimumRole };
+export type { TenantRole };
 
-/** Numeric weight used for role hierarchy comparisons (higher = more privileged) */
-export const ROLE_HIERARCHY: Record<TenantRole, number> = {
-  OWNER: 3,
-  ADMIN: 2,
-  MEMBER: 1,
-};
-
-/** Permission constants in {domain}:{operation} format */
-export const PERMISSIONS = {
-  catalog: {
-    read: "catalog:read",
-    write: "catalog:write",
-    delete: "catalog:delete",
-  },
-  scheduling: {
-    read: "scheduling:read",
-    write: "scheduling:write",
-    delete: "scheduling:delete",
-  },
-  billing: {
-    read: "billing:read",
-    write: "billing:write",
-  },
-  visualizer: {
-    read: "visualizer:read",
-    write: "visualizer:write",
+/**
+ * Role definitions with descriptions
+ */
+export const ROLES = {
+  owner: {
+    name: "Owner",
+    description: "Full control over tenant, can manage all resources and users",
   },
   admin: {
-    read: "admin:read",
-    write: "admin:write",
-    users: "admin:users",
+    name: "Admin",
+    description: "Can manage catalog, bookings, and view billing",
+  },
+  member: {
+    name: "Member",
+    description: "Can view catalog and create bookings",
   },
 } as const;
 
-/** Union type of all known permission strings */
-export type Permission =
-  (typeof PERMISSIONS)[keyof typeof PERMISSIONS][keyof (typeof PERMISSIONS)[keyof typeof PERMISSIONS]];
+/**
+ * Permission definitions
+ * Define what each role can do
+ */
+export const PERMISSIONS = {
+  // Catalog permissions
+  "catalog:view": ["owner", "admin", "member"],
+  "catalog:create": ["owner", "admin"],
+  "catalog:update": ["owner", "admin"],
+  "catalog:delete": ["owner", "admin"],
 
-/** Permissions granted to each role (cumulative — higher roles include lower-role permissions) */
-export const ROLE_PERMISSIONS: Record<TenantRole, readonly string[]> = {
-  OWNER: [
-    PERMISSIONS.catalog.read,
-    PERMISSIONS.catalog.write,
-    PERMISSIONS.catalog.delete,
-    PERMISSIONS.scheduling.read,
-    PERMISSIONS.scheduling.write,
-    PERMISSIONS.scheduling.delete,
-    PERMISSIONS.billing.read,
-    PERMISSIONS.billing.write,
-    PERMISSIONS.visualizer.read,
-    PERMISSIONS.visualizer.write,
-    PERMISSIONS.admin.read,
-    PERMISSIONS.admin.write,
-    PERMISSIONS.admin.users,
-  ],
-  ADMIN: [
-    PERMISSIONS.catalog.read,
-    PERMISSIONS.catalog.write,
-    PERMISSIONS.catalog.delete,
-    PERMISSIONS.scheduling.read,
-    PERMISSIONS.scheduling.write,
-    PERMISSIONS.scheduling.delete,
-    PERMISSIONS.billing.read,
-    PERMISSIONS.billing.write,
-    PERMISSIONS.visualizer.read,
-    PERMISSIONS.visualizer.write,
-    PERMISSIONS.admin.read,
-  ],
-  MEMBER: [
-    PERMISSIONS.catalog.read,
-    PERMISSIONS.scheduling.read,
-    PERMISSIONS.visualizer.read,
-    PERMISSIONS.visualizer.write,
-  ],
-};
+  // Booking permissions
+  "booking:view": ["owner", "admin", "member"],
+  "booking:create": ["owner", "admin", "member"],
+  "booking:update": ["owner", "admin"],
+  "booking:cancel": ["owner", "admin"],
+
+  // Billing permissions
+  "billing:view": ["owner", "admin"],
+  "billing:manage": ["owner"],
+
+  // User management permissions
+  "users:view": ["owner", "admin"],
+  "users:invite": ["owner", "admin"],
+  "users:manage": ["owner"],
+
+  // Tenant settings permissions
+  "settings:view": ["owner", "admin"],
+  "settings:update": ["owner"],
+} as const;
+
+export type Permission = keyof typeof PERMISSIONS;
 
 /**
- * Returns true if `userRole` satisfies `required`.
- *
- * When `required` is an array, the check passes if the user's role meets
- * **any** of the listed roles (i.e. logical OR across the array).
- * Role hierarchy is respected: OWNER satisfies ADMIN or MEMBER requirements.
- *
- * @param userRole - The user's actual membership role
- * @param required - Single role or array of acceptable roles
+ * Check if a role has a specific permission.
  */
-export function hasRole(
-  userRole: TenantRole,
-  required: TenantRole | TenantRole[]
-): boolean {
-  const roles = Array.isArray(required) ? required : [required];
-  return roles.some((r) => ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[r]);
-}
-
-/**
- * Returns true if the given role grants the specified permission.
- *
- * @param role       - Membership role to check
- * @param permission - Permission string in `{domain}:{operation}` format
- */
-export function hasPermission(role: TenantRole, permission: string): boolean {
-  return ROLE_PERMISSIONS[role].includes(permission);
-}
-
-/**
- * Throws a "Forbidden" error if `userRole` does not satisfy `required`.
- * Use this as a hard authorization gate inside server actions and fetchers.
- *
- * @param userRole - The user's actual membership role
- * @param required - Required role or array of acceptable roles
- * @throws {Error} "Forbidden: insufficient role"
- */
-export function requireRole(
-  userRole: TenantRole,
-  required: TenantRole | TenantRole[]
-): void {
-  if (!hasRole(userRole, required)) {
-    throw new Error("Forbidden: insufficient role");
-  }
+export function roleHasPermission(role: TenantRole, permission: Permission): boolean {
+  const allowedRoles = PERMISSIONS[permission] as readonly string[];
+  return allowedRoles.includes(role);
 }

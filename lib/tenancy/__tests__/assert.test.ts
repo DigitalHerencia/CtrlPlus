@@ -23,9 +23,7 @@ const mockFindFirst = vi.mocked(prisma.tenantUserMembership.findFirst);
 // Helpers
 // ---------------------------------------------------------------------------
 
-function membership(
-  overrides: Partial<TenantUserMembership> = {}
-): TenantUserMembership {
+function membership(overrides: Partial<TenantUserMembership> = {}): TenantUserMembership {
   return {
     id: "mem-1",
     tenantId: "tenant-abc",
@@ -52,17 +50,17 @@ describe("assertTenantMembership", () => {
   it("throws 'Unauthorized' when no membership record exists", async () => {
     mockFindFirst.mockResolvedValue(null);
 
-    await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "MEMBER")
-    ).rejects.toThrow("Unauthorized: not a member of this tenant");
+    await expect(assertTenantMembership("tenant-abc", "user-xyz", "MEMBER")).rejects.toThrow(
+      "Unauthorized: not a member of this tenant",
+    );
   });
 
   it("throws 'Unauthorized' for an entirely different tenant", async () => {
     mockFindFirst.mockResolvedValue(null);
 
-    await expect(
-      assertTenantMembership("tenant-other", "user-xyz", "MEMBER")
-    ).rejects.toThrow("Unauthorized: not a member of this tenant");
+    await expect(assertTenantMembership("tenant-other", "user-xyz", "MEMBER")).rejects.toThrow(
+      "Unauthorized: not a member of this tenant",
+    );
   });
 
   // --- Forbidden (insufficient role) ---------------------------------------
@@ -70,32 +68,32 @@ describe("assertTenantMembership", () => {
   it("throws 'Forbidden' when MEMBER tries to satisfy ADMIN requirement", async () => {
     mockFindFirst.mockResolvedValue(membership({ role: "MEMBER" }));
 
-    await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "ADMIN")
-    ).rejects.toThrow("Forbidden: insufficient role");
+    await expect(assertTenantMembership("tenant-abc", "user-xyz", "ADMIN")).rejects.toThrow(
+      "Forbidden: insufficient role",
+    );
   });
 
   it("throws 'Forbidden' when MEMBER tries to satisfy OWNER requirement", async () => {
     mockFindFirst.mockResolvedValue(membership({ role: "MEMBER" }));
 
-    await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "OWNER")
-    ).rejects.toThrow("Forbidden: insufficient role");
+    await expect(assertTenantMembership("tenant-abc", "user-xyz", "OWNER")).rejects.toThrow(
+      "Forbidden: insufficient role",
+    );
   });
 
   it("throws 'Forbidden' when ADMIN tries to satisfy OWNER requirement", async () => {
     mockFindFirst.mockResolvedValue(membership({ role: "ADMIN" }));
 
-    await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "OWNER")
-    ).rejects.toThrow("Forbidden: insufficient role");
+    await expect(assertTenantMembership("tenant-abc", "user-xyz", "OWNER")).rejects.toThrow(
+      "Forbidden: insufficient role",
+    );
   });
 
   it("throws 'Forbidden' when role does not satisfy any role in an array", async () => {
     mockFindFirst.mockResolvedValue(membership({ role: "MEMBER" }));
 
     await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", ["OWNER", "ADMIN"])
+      assertTenantMembership("tenant-abc", "user-xyz", ["OWNER", "ADMIN"]),
     ).rejects.toThrow("Forbidden: insufficient role");
   });
 
@@ -105,7 +103,7 @@ describe("assertTenantMembership", () => {
     mockFindFirst.mockResolvedValue(membership({ role: "MEMBER" }));
 
     await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "MEMBER")
+      assertTenantMembership("tenant-abc", "user-xyz", "MEMBER"),
     ).resolves.toBeUndefined();
   });
 
@@ -113,7 +111,7 @@ describe("assertTenantMembership", () => {
     mockFindFirst.mockResolvedValue(membership({ role: "ADMIN" }));
 
     await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "ADMIN")
+      assertTenantMembership("tenant-abc", "user-xyz", "ADMIN"),
     ).resolves.toBeUndefined();
   });
 
@@ -121,7 +119,7 @@ describe("assertTenantMembership", () => {
     mockFindFirst.mockResolvedValue(membership({ role: "OWNER" }));
 
     await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "ADMIN")
+      assertTenantMembership("tenant-abc", "user-xyz", "ADMIN"),
     ).resolves.toBeUndefined();
   });
 
@@ -129,7 +127,7 @@ describe("assertTenantMembership", () => {
     mockFindFirst.mockResolvedValue(membership({ role: "OWNER" }));
 
     await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "MEMBER")
+      assertTenantMembership("tenant-abc", "user-xyz", "MEMBER"),
     ).resolves.toBeUndefined();
   });
 
@@ -137,7 +135,7 @@ describe("assertTenantMembership", () => {
     mockFindFirst.mockResolvedValue(membership({ role: "ADMIN" }));
 
     await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", ["OWNER", "ADMIN"])
+      assertTenantMembership("tenant-abc", "user-xyz", ["OWNER", "ADMIN"]),
     ).resolves.toBeUndefined();
   });
 
@@ -169,19 +167,19 @@ describe("assertTenantScope", () => {
 
   it("throws 'Forbidden: cross-tenant access detected' when tenantIds differ", () => {
     expect(() => assertTenantScope("tenant-abc", "tenant-xyz")).toThrow(
-      "Forbidden: cross-tenant access detected"
+      "Forbidden: cross-tenant access detected",
     );
   });
 
   it("throws when record has an empty tenantId and session has a valid tenantId", () => {
     expect(() => assertTenantScope("", "tenant-abc")).toThrow(
-      "Forbidden: cross-tenant access detected"
+      "Forbidden: cross-tenant access detected",
     );
   });
 
   it("throws when record has a valid tenantId and session has an empty tenantId", () => {
     expect(() => assertTenantScope("tenant-abc", "")).toThrow(
-      "Forbidden: cross-tenant access detected"
+      "Forbidden: cross-tenant access detected",
     );
   });
 });

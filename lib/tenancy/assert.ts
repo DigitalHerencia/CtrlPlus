@@ -1,85 +1,131 @@
 /**
- * Tenancy assertion helpers.
+ * Tenancy Assertion Helpers
  *
- * These utilities enforce tenant isolation and role-based authorization
- * across all server actions and fetchers. They are the primary security
- * gatekeepers for the multi-tenant data layer.
+ * Defensive security checks for tenant scoping and permissions.
+ * Use these to prevent cross-tenant data leaks.
  */
 
 import { prisma } from "@/lib/prisma";
-import { hasRole, type TenantRole } from "@/lib/auth/rbac";
+import { type TenantRole, hasRolePermission } from "./types";
 
 /**
- * Asserts that the specified user is an **active** member of the given
- * tenant and holds at least the `required` role.
+ * Assert that a user is a member of a tenant with required role.
+ * Throws error if membership doesn't exist or insufficient permission.
  *
- * This is the canonical authorization check — call it in every server
- * action and authenticated fetcher immediately after `getSession()`.
- *
- * @param tenantId - Tenant to scope the membership lookup to
- * @param userId   - Clerk user ID from the current session
- * @param required - Minimum required role, or an array of acceptable roles
- *
- * @throws {Error} "Unauthorized: not a member of this tenant"
- *   when no active membership record is found.
- * @throws {Error} "Forbidden: insufficient role"
- *   when the membership role does not satisfy `required`.
+ * @param tenantId - Tenant ID to check
+ * @param userId - Clerk user ID
+ * @param requiredRole - Minimum role required (defaults to 'member')
+ * @throws Error if user is not a member or has insufficient permission
  *
  * @example
- * ```ts
- * // Require at least ADMIN
- * await assertTenantMembership(tenantId, user.id, "ADMIN");
+ * ```typescript
+ * // In Server Action
+ * export async function deleteWrap(wrapId: string) {
+ *   const { userId, tenantId } = await requireAuth();
  *
- * // Accept OWNER or ADMIN
- * await assertTenantMembership(tenantId, user.id, ["OWNER", "ADMIN"]);
+ *   // Only admins can delete wraps
+ *   await assertTenantMembership(tenantId, userId, 'admin');
+ *
+ *   // Proceed with deletion...
+ * }
  * ```
  */
 export async function assertTenantMembership(
   tenantId: string,
   userId: string,
-  required: TenantRole | TenantRole[]
+  requiredRole: TenantRole = "member",
 ): Promise<void> {
-  const membership = await prisma.tenantUserMembership.findFirst({
+  const membership = await prisma.tenantUserMembership.findUnique({
     where: {
-      tenantId,
-      userId,
-      status: "ACTIVE",
+      tenantId_userId: {
+        tenantId,
+        userId,
+      },
+      deletedAt: null,
+    },
+    select: {
+      role: true,
     },
   });
 
   if (!membership) {
-    throw new Error("Unauthorized: not a member of this tenant");
+    throw new Error(`Forbidden - User is not a member of tenant ${tenantId}`);
   }
 
-  if (!hasRole(membership.role, required)) {
-    throw new Error("Forbidden: insufficient role");
+  if (!hasRolePermission(membership.role as TenantRole, requiredRole)) {
+    throw new Error(
+      `Forbidden - User role '${membership.role}' insufficient, requires '${requiredRole}' or higher`,
+    );
   }
 }
 
 /**
- * Defensive scope guard: verifies that a fetched record belongs to the
- * current session's tenant.
+ * Assert that a record belongs to the current tenant.
+ * Use this as a defensive check before operating on tenant-owned resources.
  *
- * Call this before mutating any tenant-owned record that was fetched
- * **without** a `tenantId` filter to prevent cross-tenant data access.
- *
- * @param recordTenantId - The `tenantId` stored on the fetched record
- * @param tenantId       - The current session's resolved tenant ID
- *
- * @throws {Error} "Forbidden: cross-tenant access detected"
- *   when the two tenant IDs do not match.
+ * @param recordTenantId - The tenantId field from the database record
+ * @param currentTenantId - The tenantId from session context
+ * @throws Error if tenantIds don't match
  *
  * @example
- * ```ts
- * const wrap = await prisma.wrap.findUnique({ where: { id: wrapId } });
- * assertTenantScope(wrap.tenantId, tenantId); // throws if different tenant
+ * ```typescript
+ * export async function updateWrap(wrapId: string, data: WrapInput) {
+ *   const { userId, tenantId } = await requireAuth();
+ *
+ *   // Fetch the wrap
+ *   const wrap = await prisma.wrap.findUnique({ where: { id: wrapId } });
+ *   if (!wrap) throw new Error('Wrap not found');
+ *
+ *   // SECURITY: Verify wrap belongs to current tenant
+ *   assertTenantScope(wrap.tenantId, tenantId);
+ *
+ *   // Safe to proceed with update...
+ * }
  * ```
  */
-export function assertTenantScope(
-  recordTenantId: string,
-  tenantId: string
-): void {
-  if (recordTenantId !== tenantId) {
-    throw new Error("Forbidden: cross-tenant access detected");
+export function assertTenantScope(recordTenantId: string, currentTenantId: string): void {
+  if (recordTenantId !== currentTenantId) {
+    throw new Error(
+      "Forbidden - Record does not belong to current tenant (cross-tenant access attempt)",
+    );
   }
+}
+
+/**
+ * Get user's role within a tenant.
+ * Returns null if user is not a member.
+ */
+export async function getUserTenantRole(
+  tenantId: string,
+  userId: string,
+): Promise<TenantRole | null> {
+  const membership = await prisma.tenantUserMembership.findUnique({
+    where: {
+      tenantId_userId: {
+        tenantId,
+        userId,
+      },
+      deletedAt: null,
+    },
+    select: {
+      role: true,
+    },
+  });
+
+  return membership ? (membership.role as TenantRole) : null;
+}
+
+/**
+ * Check if user has a specific role or higher in tenant.
+ * Returns false if user is not a member.
+ */
+export async function hasMinimumRole(
+  tenantId: string,
+  userId: string,
+  requiredRole: TenantRole,
+): Promise<boolean> {
+  const userRole = await getUserTenantRole(tenantId, userId);
+  if (!userRole) return false;
+
+  return hasRolePermission(userRole, requiredRole);
 }
