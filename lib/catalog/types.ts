@@ -2,59 +2,84 @@ import { z } from "zod";
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
-export const WrapStatusEnum = z.enum(["ACTIVE", "ARCHIVED"]);
-export type WrapStatus = z.infer<typeof WrapStatusEnum>;
+export const WrapStatus = {
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+  DRAFT: "DRAFT",
+} as const;
 
-export const WrapCategoryEnum = z.enum([
-  "FULL_WRAP",
-  "PARTIAL_WRAP",
-  "DECAL",
-  "TINT",
-  "PAINT_PROTECTION",
-]);
-export type WrapCategory = z.infer<typeof WrapCategoryEnum>;
+export type WrapStatus = (typeof WrapStatus)[keyof typeof WrapStatus];
 
-// ─── DTO ──────────────────────────────────────────────────────────────────────
+export const WrapCategory = {
+  FULL_WRAP: "FULL_WRAP",
+  PARTIAL_WRAP: "PARTIAL_WRAP",
+  ACCENT: "ACCENT",
+  PAINT_PROTECTION_FILM: "PAINT_PROTECTION_FILM",
+} as const;
 
+export type WrapCategory = (typeof WrapCategory)[keyof typeof WrapCategory];
+
+// ─── DTOs ─────────────────────────────────────────────────────────────────────
+
+/** Read model returned by catalog fetchers. Never exposes raw Prisma model. */
 export interface WrapDTO {
   id: string;
   tenantId: string;
   name: string;
   description: string | null;
-  price: string; // Decimal serialised as string for safe JSON transport
-  estimatedHours: number;
-  status: WrapStatus;
-  imageUrls: string[];
-  category: WrapCategory;
+  /** Price in cents as a number */
+  price: number;
+  installationMinutes: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-// ─── Input schemas ────────────────────────────────────────────────────────────
+export interface WrapListDTO {
+  wraps: WrapDTO[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+// ─── Prisma Select Helpers ────────────────────────────────────────────────────
+
+/** Explicit Prisma `select` object for WrapDTO fields. */
+export const wrapDTOFields = {
+  id: true,
+  tenantId: true,
+  name: true,
+  description: true,
+  price: true,
+  installationMinutes: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
+// ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
 export const createWrapSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
-  description: z.string().max(1000).optional(),
+  name: z.string().min(1, "Name is required").max(120),
+  description: z.string().max(500).optional(),
   price: z.number().positive("Price must be positive"),
-  estimatedHours: z
+  installationMinutes: z
     .number()
     .int()
-    .positive("Estimated hours must be a positive integer"),
-  imageUrls: z.array(z.string().url()).default([]),
-  category: WrapCategoryEnum,
-  status: WrapStatusEnum.default("ACTIVE"),
+    .positive("Installation minutes must be a positive integer")
+    .optional(),
 });
 
 export type CreateWrapInput = z.infer<typeof createWrapSchema>;
 
-export const updateWrapSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  description: z.string().max(1000).optional(),
-  price: z.number().positive().optional(),
-  estimatedHours: z.number().int().positive().optional(),
-  imageUrls: z.array(z.string().url()).optional(),
-  category: WrapCategoryEnum.optional(),
-  status: WrapStatusEnum.optional(),
-});
+export const updateWrapSchema = createWrapSchema.partial();
 
 export type UpdateWrapInput = z.infer<typeof updateWrapSchema>;
+
+export const searchWrapsSchema = z.object({
+  query: z.string().max(200).optional(),
+  maxPrice: z.number().positive().optional(),
+  page: z.number().int().min(1).default(1),
+  pageSize: z.number().int().min(1).max(100).default(20),
+});
+
+export type SearchWrapsInput = z.infer<typeof searchWrapsSchema>;
