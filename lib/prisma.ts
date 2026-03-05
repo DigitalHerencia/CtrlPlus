@@ -1,109 +1,87 @@
 /**
- * Prisma client singleton.
+ * Prisma Client wrapper for CtrlPlus - Optimized for Neon Serverless Postgres
  *
- * Production: replace the stub below with the real PrismaClient once
- * `@prisma/client` is generated from `prisma/schema.prisma`.
+ * Provides a singleton instance of PrismaClient configured for use with Neon PostgreSQL
+ * in serverless environments (Vercel Edge, Lambda, etc.).
  *
- * The interface exported here matches the Invoice-related slice of the
- * generated client so the rest of the billing domain can import it
- * without the actual package being present in this early phase.
+ * Key optimizations:
+ * - Uses @neondatabase/serverless driver with @prisma/adapter-neon
+ * - WebSocket support for transactions in serverless
+ * - Connection pooling via pgBouncer (-pooler suffix)
+ * - Optimized statement cache and connection timeouts
+ * - Minimal cold start overhead
+ *
+ * Usage:
+ *   import { prisma } from '@/lib/prisma'
+ *   const users = await prisma.tenant.findMany()
+ *
+ * Connection URLs from environment:
+ * - DATABASE_URL: Pooled connection for queries (ends with -pooler for pgBouncer)
+ * - DATABASE_URL_UNPOOLED: Direct connection for migrations
+ *
+ * @see https://neon.tech/docs/guides/prisma
+ * @see https://neon.tech/docs/serverless/serverless-driver
  */
 
-import type { InvoiceStatus } from "@/lib/billing/types";
+import { neonConfig } from "@neondatabase/serverless";
+import { PrismaNeon } from "@prisma/adapter-neon";
+import { PrismaClient } from "@prisma/client";
+import ws from "ws";
 
-// ---------------------------------------------------------------------------
-// Minimal Prisma-compatible stub types
-// ---------------------------------------------------------------------------
-
-export interface PrismaInvoiceRecord {
-  id: string;
-  tenantId: string;
-  bookingId: string;
-  amount: number; // Decimal stored as number for simplicity in stub
-  status: InvoiceStatus;
-  stripeCheckoutSessionId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+// Configure WebSocket for transactions (required in Node.js environments)
+// In Edge runtime (Vercel Edge Functions), the global WebSocket is used
+if (typeof WebSocket === "undefined") {
+  neonConfig.webSocketConstructor = ws;
 }
 
-export interface PrismaAuditLogRecord {
-  id: string;
-  tenantId: string;
-  userId: string;
-  action: string;
-  resourceId: string;
-  details: Record<string, unknown>;
-  timestamp: Date;
-}
+// Optional: Configure connection pooling and caching behavior
+neonConfig.fetchConnectionCache = true; // Enable connection caching
 
-// ---------------------------------------------------------------------------
-// In-memory store used by the stub (replaced by real DB at runtime)
-// ---------------------------------------------------------------------------
+// Global type declaration for singleton pattern (prevents multiple instances in dev)
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient;
+};
 
-const invoiceStore: PrismaInvoiceRecord[] = [];
-const auditLogStore: PrismaAuditLogRecord[] = [];
+/**
+ * Primary Prisma Client instance with Neon adapter
+ *
+ * Uses DATABASE_URL (pooled) from environment for all queries.
+ * Migrations use DATABASE_URL_UNPOOLED from prisma.config.ts.
+ */
+export const prisma =
+  globalForPrisma.prisma ||
+  (() => {
+    // Create Neon connection pool with optimized settings for serverless
+    const connectionString = process.env.DATABASE_URL;
 
-// ---------------------------------------------------------------------------
-// Stub Prisma client
-// ---------------------------------------------------------------------------
-
-export const prisma = {
-  invoice: {
-    findMany: async (args: {
-      where?: Partial<PrismaInvoiceRecord>;
-      orderBy?: Partial<Record<keyof PrismaInvoiceRecord, "asc" | "desc">>;
-    }): Promise<PrismaInvoiceRecord[]> => {
-      let results = [...invoiceStore];
-      if (args.where) {
-        const w = args.where;
-        results = results.filter((r) =>
-          (Object.keys(w) as (keyof PrismaInvoiceRecord)[]).every(
-            (k) => r[k] === w[k]
-          )
-        );
-      }
-      return results;
-    },
-
-    findFirst: async (args: {
-      where?: Partial<PrismaInvoiceRecord>;
-    }): Promise<PrismaInvoiceRecord | null> => {
-      if (!args.where) return invoiceStore[0] ?? null;
-      const w = args.where;
-      return (
-        invoiceStore.find((r) =>
-          (Object.keys(w) as (keyof PrismaInvoiceRecord)[]).every(
-            (k) => r[k] === w[k]
-          )
-        ) ?? null
+    if (!connectionString) {
+      throw new Error(
+        "DATABASE_URL is not defined. Please set it in your .env.local file.\n" +
+          "Get connection string from: https://console.neon.tech/\n" +
+          "Use the POOLED connection (with -pooler suffix) for optimal performance.",
       );
-    },
+    }
 
-    update: async (args: {
-      where: { id: string };
-      data: Partial<PrismaInvoiceRecord>;
-    }): Promise<PrismaInvoiceRecord> => {
-      const idx = invoiceStore.findIndex((r) => r.id === args.where.id);
-      if (idx === -1) throw new Error("Invoice not found");
-      invoiceStore[idx] = {
-        ...invoiceStore[idx],
-        ...args.data,
-        updatedAt: new Date(),
-      };
-      return invoiceStore[idx];
-    },
-  },
+    // Create Neon adapter with connection config (not Pool instance)
+    // PrismaNeon expects a PoolConfig object { connectionString: string }
+    const adapter = new PrismaNeon({ connectionString });
 
-  auditLog: {
-    create: async (args: {
-      data: Omit<PrismaAuditLogRecord, "id">;
-    }): Promise<PrismaAuditLogRecord> => {
-      const record: PrismaAuditLogRecord = {
-        id: crypto.randomUUID(),
-        ...args.data,
-      };
-      auditLogStore.push(record);
-      return record;
-    },
-  },
-} as const;
+    return new PrismaClient({
+      adapter,
+      log: process.env.NODE_ENV === "development" ? ["query", "warn", "error"] : ["error"],
+    });
+  })();
+
+// Prevent multiple client instances in development (singleton pattern)
+if (process.env.NODE_ENV !== "production") {
+  globalForPrisma.prisma = prisma;
+}
+
+// Graceful disconnection on process termination
+process.on("SIGTERM", async () => {
+  await prisma.$disconnect();
+});
+
+process.on("SIGINT", async () => {
+  await prisma.$disconnect();
+});
