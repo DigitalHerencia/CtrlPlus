@@ -83,10 +83,7 @@ export interface BillingStatusDTO {
   hasActiveSubscription: boolean;
   currentPeriodEnd?: Date;
   /** Latest invoice, if any */
-  lastInvoice?: Pick<
-    InvoiceDTO,
-    "id" | "status" | "amountTotal" | "currency" | "createdAt"
-  >;
+  lastInvoice?: Pick<InvoiceDTO, "id" | "status" | "amountTotal" | "currency" | "createdAt">;
 }
 
 // ---------------------------------------------------------------------------
@@ -98,15 +95,9 @@ export const billingLineItemSchema = z.object({
   name: z.string().min(1, "Item name is required").max(200),
   description: z.string().max(500).optional(),
   /** Must be a positive integer (smallest currency unit). */
-  unitAmount: z
-    .number()
-    .int()
-    .positive("Unit amount must be a positive integer"),
+  unitAmount: z.number().int().positive("Unit amount must be a positive integer"),
   /** Lower-case ISO 4217 code, exactly 3 characters. */
-  currency: z
-    .string()
-    .length(3, "Currency must be a 3-character ISO 4217 code")
-    .toLowerCase(),
+  currency: z.string().length(3, "Currency must be a 3-character ISO 4217 code").toLowerCase(),
   quantity: z.number().int().positive("Quantity must be a positive integer"),
 });
 
@@ -114,20 +105,13 @@ export type BillingLineItemInput = z.infer<typeof billingLineItemSchema>;
 
 /** Input schema for creating a Stripe Checkout Session. */
 export const createCheckoutSessionSchema = z.object({
-  items: z
-    .array(billingLineItemSchema)
-    .min(1, "At least one line item is required"),
+  items: z.array(billingLineItemSchema).min(1, "At least one line item is required"),
   successUrl: z.string().url("successUrl must be a valid URL"),
   cancelUrl: z.string().url("cancelUrl must be a valid URL"),
-  customerEmail: z
-    .string()
-    .email("customerEmail must be a valid email")
-    .optional(),
+  customerEmail: z.string().email("customerEmail must be a valid email").optional(),
 });
 
-export type CreateCheckoutSessionInput = z.infer<
-  typeof createCheckoutSessionSchema
->;
+export type CreateCheckoutSessionInput = z.infer<typeof createCheckoutSessionSchema>;
 
 /** Input schema for retrieving payment status. */
 export const getPaymentStatusSchema = z.object({

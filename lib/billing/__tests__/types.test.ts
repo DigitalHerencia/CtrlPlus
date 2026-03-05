@@ -49,27 +49,19 @@ describe("billingLineItemSchema", () => {
   });
 
   it("rejects an empty name", () => {
-    expect(() =>
-      billingLineItemSchema.parse({ ...validItem, name: "" })
-    ).toThrow();
+    expect(() => billingLineItemSchema.parse({ ...validItem, name: "" })).toThrow();
   });
 
   it("rejects a non-positive unitAmount", () => {
-    expect(() =>
-      billingLineItemSchema.parse({ ...validItem, unitAmount: 0 })
-    ).toThrow();
+    expect(() => billingLineItemSchema.parse({ ...validItem, unitAmount: 0 })).toThrow();
   });
 
   it("rejects a currency code that is not 3 characters", () => {
-    expect(() =>
-      billingLineItemSchema.parse({ ...validItem, currency: "us" })
-    ).toThrow();
+    expect(() => billingLineItemSchema.parse({ ...validItem, currency: "us" })).toThrow();
   });
 
   it("rejects a non-integer quantity", () => {
-    expect(() =>
-      billingLineItemSchema.parse({ ...validItem, quantity: 1.5 })
-    ).toThrow();
+    expect(() => billingLineItemSchema.parse({ ...validItem, quantity: 1.5 })).toThrow();
   });
 });
 
@@ -106,14 +98,12 @@ describe("createCheckoutSessionSchema", () => {
       createCheckoutSessionSchema.parse({
         ...validInput,
         customerEmail: "not-an-email",
-      })
+      }),
     ).toThrow();
   });
 
   it("rejects an empty items array", () => {
-    expect(() =>
-      createCheckoutSessionSchema.parse({ ...validInput, items: [] })
-    ).toThrow();
+    expect(() => createCheckoutSessionSchema.parse({ ...validInput, items: [] })).toThrow();
   });
 
   it("rejects an invalid successUrl", () => {
@@ -121,7 +111,7 @@ describe("createCheckoutSessionSchema", () => {
       createCheckoutSessionSchema.parse({
         ...validInput,
         successUrl: "not-a-url",
-      })
+      }),
     ).toThrow();
   });
 });

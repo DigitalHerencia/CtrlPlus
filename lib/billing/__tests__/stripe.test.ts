@@ -3,12 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 /** Minimal Stripe StripeError shape for mocking. */
-function makeStripeError(
-  message: string,
-  code: string,
-  statusCode: number,
-  type = "card_error"
-) {
+function makeStripeError(message: string, code: string, statusCode: number, type = "card_error") {
   const err = new Error(message) as Error & {
     type: string;
     code: string;
@@ -25,17 +20,13 @@ function makeStripeError(
 // Use vi.hoisted() so these variables are available inside the vi.mock() factory,
 // which is hoisted to run before all other module-level code.
 
-const {
-  mockCreate,
-  mockRetrieveSession,
-  mockRetrievePaymentIntent,
-  mockConstructEvent,
-} = vi.hoisted(() => ({
-  mockCreate: vi.fn(),
-  mockRetrieveSession: vi.fn(),
-  mockRetrievePaymentIntent: vi.fn(),
-  mockConstructEvent: vi.fn(),
-}));
+const { mockCreate, mockRetrieveSession, mockRetrievePaymentIntent, mockConstructEvent } =
+  vi.hoisted(() => ({
+    mockCreate: vi.fn(),
+    mockRetrieveSession: vi.fn(),
+    mockRetrievePaymentIntent: vi.fn(),
+    mockConstructEvent: vi.fn(),
+  }));
 
 vi.mock("stripe", () => {
   class MockStripeErrors {
@@ -45,11 +36,7 @@ vi.mock("stripe", () => {
       statusCode?: number;
       constructor(
         message: string,
-        {
-          type,
-          code,
-          statusCode,
-        }: { type: string; code?: string; statusCode?: number }
+        { type, code, statusCode }: { type: string; code?: string; statusCode?: number },
       ) {
         super(message);
         this.name = "StripeError";
@@ -79,8 +66,7 @@ vi.mock("stripe", () => {
   }
   vi.fn().mockImplementation(MockStripe);
 
-  (MockStripe as unknown as { errors: typeof MockStripeErrors }).errors =
-    MockStripeErrors;
+  (MockStripe as unknown as { errors: typeof MockStripeErrors }).errors = MockStripeErrors;
 
   return { default: MockStripe };
 });
@@ -160,7 +146,7 @@ describe("createCheckoutSession", () => {
 
   it("wraps Stripe errors in BillingError", async () => {
     mockCreate.mockRejectedValueOnce(
-      makeStripeError("Your card was declined", "card_declined", 402)
+      makeStripeError("Your card was declined", "card_declined", 402),
     );
 
     await expect(
@@ -169,7 +155,7 @@ describe("createCheckoutSession", () => {
         line_items: [],
         success_url: "https://example.com/success",
         cancel_url: "https://example.com/cancel",
-      })
+      }),
     ).rejects.toBeInstanceOf(BillingError);
   });
 });
@@ -192,17 +178,10 @@ describe("retrieveCheckoutSession", () => {
 
   it("throws BillingError when session not found", async () => {
     mockRetrieveSession.mockRejectedValueOnce(
-      makeStripeError(
-        "No such checkout.session",
-        "resource_missing",
-        404,
-        "invalid_request_error"
-      )
+      makeStripeError("No such checkout.session", "resource_missing", 404, "invalid_request_error"),
     );
 
-    await expect(retrieveCheckoutSession("cs_bad")).rejects.toBeInstanceOf(
-      BillingError
-    );
+    await expect(retrieveCheckoutSession("cs_bad")).rejects.toBeInstanceOf(BillingError);
   });
 });
 
@@ -225,12 +204,10 @@ describe("retrievePaymentIntent", () => {
 
   it("throws BillingError on failure", async () => {
     mockRetrievePaymentIntent.mockRejectedValueOnce(
-      makeStripeError("No such payment_intent", "resource_missing", 404)
+      makeStripeError("No such payment_intent", "resource_missing", 404),
     );
 
-    await expect(retrievePaymentIntent("pi_bad")).rejects.toBeInstanceOf(
-      BillingError
-    );
+    await expect(retrievePaymentIntent("pi_bad")).rejects.toBeInstanceOf(BillingError);
   });
 });
 
@@ -246,19 +223,13 @@ describe("constructWebhookEvent", () => {
   it("returns the verified event on success", () => {
     mockConstructEvent.mockReturnValueOnce(FAKE_EVENT);
 
-    const event = constructWebhookEvent(
-      Buffer.from("payload"),
-      "t=123,v1=abc",
-      "whsec_test"
-    );
+    const event = constructWebhookEvent(Buffer.from("payload"), "t=123,v1=abc", "whsec_test");
 
-    expect((event as typeof FAKE_EVENT & { id: string }).id).toBe(
-      "evt_test_abc"
-    );
+    expect((event as typeof FAKE_EVENT & { id: string }).id).toBe("evt_test_abc");
     expect(mockConstructEvent).toHaveBeenCalledWith(
       expect.anything(),
       "t=123,v1=abc",
-      "whsec_test"
+      "whsec_test",
     );
   });
 
@@ -268,12 +239,12 @@ describe("constructWebhookEvent", () => {
         "No signatures found matching the expected signature for payload",
         "webhook_signature_verification_failed",
         400,
-        "StripeSignatureVerificationError"
+        "StripeSignatureVerificationError",
       );
     });
 
-    expect(() =>
-      constructWebhookEvent(Buffer.from("tampered"), "bad-sig", "whsec_test")
-    ).toThrow(BillingError);
+    expect(() => constructWebhookEvent(Buffer.from("tampered"), "bad-sig", "whsec_test")).toThrow(
+      BillingError,
+    );
   });
 });

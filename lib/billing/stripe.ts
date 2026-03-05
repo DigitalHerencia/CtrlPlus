@@ -60,17 +60,13 @@ function translateStripeError(error: unknown): BillingError {
     return new BillingError(
       error.message,
       error.code ?? error.type ?? "stripe_error",
-      error.statusCode ?? 500
+      error.statusCode ?? 500,
     );
   }
   if (error instanceof Error) {
     return new BillingError(error.message, "unknown_error", 500);
   }
-  return new BillingError(
-    "An unexpected billing error occurred",
-    "unknown_error",
-    500
-  );
+  return new BillingError("An unexpected billing error occurred", "unknown_error", 500);
 }
 
 /**
@@ -101,8 +97,7 @@ function createStripeClient(): Stripe {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) {
     throw new Error(
-      "Missing STRIPE_SECRET_KEY environment variable. " +
-        "Set it in .env.local for development."
+      "Missing STRIPE_SECRET_KEY environment variable. " + "Set it in .env.local for development.",
     );
   }
 
@@ -141,7 +136,7 @@ function getStripe(): Stripe {
  * @throws {BillingError} on any Stripe or network failure.
  */
 export async function createCheckoutSession(
-  params: Stripe.Checkout.SessionCreateParams
+  params: Stripe.Checkout.SessionCreateParams,
 ): Promise<Stripe.Checkout.Session> {
   try {
     return await getStripe().checkout.sessions.create(params);
@@ -158,9 +153,7 @@ export async function createCheckoutSession(
  * @returns The Stripe Checkout Session.
  * @throws {BillingError} if the session does not exist or a network error occurs.
  */
-export async function retrieveCheckoutSession(
-  sessionId: string
-): Promise<Stripe.Checkout.Session> {
+export async function retrieveCheckoutSession(sessionId: string): Promise<Stripe.Checkout.Session> {
   try {
     return await getStripe().checkout.sessions.retrieve(sessionId);
   } catch (error) {
@@ -181,7 +174,7 @@ export async function retrieveCheckoutSession(
  * @throws {BillingError} on failure.
  */
 export async function retrievePaymentIntent(
-  paymentIntentId: string
+  paymentIntentId: string,
 ): Promise<Stripe.PaymentIntent> {
   try {
     return await getStripe().paymentIntents.retrieve(paymentIntentId);
@@ -212,7 +205,7 @@ export async function retrievePaymentIntent(
 export function constructWebhookEvent(
   payload: string | Buffer,
   signature: string,
-  secret: string
+  secret: string,
 ): Stripe.Event {
   try {
     return getStripe().webhooks.constructEvent(payload, signature, secret);
