@@ -1,65 +1,21 @@
 import { z } from "zod";
 
-// ─── Booking Status ───────────────────────────────────────────────────────────
+// ─── Booking status constants ─────────────────────────────────────────────────
+// Defined locally since the Prisma schema uses plain String (not an enum).
 
-/** Booking status values as stored in the database (Booking.status String). */
-export const BOOKING_STATUS = {
+export const BookingStatus = {
   PENDING: "pending",
   CONFIRMED: "confirmed",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
 } as const;
 
-export type BookingStatusValue = (typeof BOOKING_STATUS)[keyof typeof BOOKING_STATUS];
-
-// ─── Action DTOs ──────────────────────────────────────────────────────────────
-
-/**
- * Booking data as returned by scheduling actions.
- * Maps directly to the Prisma `Booking` model fields.
- */
-export interface BookingActionDTO {
-  id: string;
-  tenantId: string;
-  customerId: string;
-  wrapId: string;
-  startTime: Date;
-  endTime: Date;
-  status: BookingStatusValue;
-  totalPrice: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// ─── Action Input Schemas ─────────────────────────────────────────────────────
-
-export const createBookingSchema = z
-  .object({
-    wrapId: z.string().min(1, "Wrap ID is required"),
-    startTime: z.date({ required_error: "Start time is required" }),
-    endTime: z.date({ required_error: "End time is required" }),
-    totalPrice: z.number().positive("Total price must be positive"),
-  })
-  .refine((data) => data.endTime > data.startTime, {
-    message: "End time must be after start time",
-    path: ["endTime"],
-  });
-
-export type CreateBookingInput = z.infer<typeof createBookingSchema>;
-
-export const updateBookingSchema = z
-  .object({
-    startTime: z.date({ required_error: "Start time is required" }),
-    endTime: z.date({ required_error: "End time is required" }),
-  })
-  .refine((data) => data.endTime > data.startTime, {
-    message: "End time must be after start time",
-    path: ["endTime"],
-  });
-
-export type UpdateBookingInput = z.infer<typeof updateBookingSchema>;
+export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus];
 
 // ─── Booking DTOs ─────────────────────────────────────────────────────────────
+
+/** Valid booking status values (plain strings, not enum) */
+export type BookingStatusValue = "pending" | "confirmed" | "completed" | "cancelled";
 
 export interface BookingDTO {
   id: string;
@@ -68,7 +24,7 @@ export interface BookingDTO {
   wrapId: string;
   startTime: Date;
   endTime: Date;
-  status: BookingStatusValue;
+  status: BookingStatus;
   totalPrice: number;
   createdAt: Date;
   updatedAt: Date;
@@ -85,23 +41,16 @@ export interface BookingListResult {
 export const bookingListParamsSchema = z.object({
   page: z.number().int().min(1).default(1),
   pageSize: z.number().int().min(1).max(100).default(20),
-  status: z
-    .enum([
-      BOOKING_STATUS.PENDING,
-      BOOKING_STATUS.CONFIRMED,
-      BOOKING_STATUS.COMPLETED,
-      BOOKING_STATUS.CANCELLED,
-    ])
-    .optional(),
+  status: z.enum(["pending", "confirmed", "completed", "cancelled"]).optional(),
   fromDate: z.date().optional(),
   toDate: z.date().optional(),
 });
 
 export type BookingListParams = z.infer<typeof bookingListParamsSchema>;
 
-// ─── Availability Window DTOs ─────────────────────────────────────────────────
+// ─── Availability Rule DTOs ───────────────────────────────────────────────────
 
-export interface AvailabilityWindowDTO {
+export interface AvailabilityRuleDTO {
   id: string;
   tenantId: string;
   /** 0 = Sunday … 6 = Saturday */
@@ -110,14 +59,16 @@ export interface AvailabilityWindowDTO {
   startTime: string;
   /** "HH:mm" 24-hour format */
   endTime: string;
-  capacity: number;
-  isActive: boolean;
+  capacitySlots: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
+/** @deprecated Use AvailabilityRuleDTO */
+export type AvailabilityWindowDTO = AvailabilityRuleDTO;
+
 export interface AvailabilityListResult {
-  items: AvailabilityWindowDTO[];
+  items: AvailabilityRuleDTO[];
   total: number;
   page: number;
   pageSize: number;
@@ -128,7 +79,6 @@ export const availabilityListParamsSchema = z.object({
   page: z.number().int().min(1).default(1),
   pageSize: z.number().int().min(1).max(100).default(20),
   dayOfWeek: z.number().int().min(0).max(6).optional(),
-  activeOnly: z.boolean().default(true),
 });
 
 export type AvailabilityListParams = z.infer<typeof availabilityListParamsSchema>;

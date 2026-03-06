@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // ── Mock Prisma client ────────────────────────────────────────────────────────
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    availabilityWindow: {
+    availabilityRule: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
       count: vi.fn(),
@@ -13,9 +13,9 @@ vi.mock("@/lib/prisma", () => ({
 
 import { prisma } from "@/lib/prisma";
 import {
-  getAvailabilityWindowsForTenant,
-  getAvailabilityWindowById,
-  getAvailabilityWindowsByDay,
+  getAvailabilityRulesForTenant,
+  getAvailabilityRuleById,
+  getAvailabilityRulesByDay,
 } from "../get-availability";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -26,34 +26,34 @@ function makeWindowRecord(overrides: Partial<ReturnType<typeof baseWindowRecord>
   return { ...baseWindowRecord(), ...overrides };
 }
 
-function baseWindowRecord() {
+function baseRuleRecord() {
   return {
-    id: "window-1",
+    id: "rule-1",
     tenantId: "tenant-a",
     dayOfWeek: 1, // Monday
     startTime: "09:00",
     endTime: "17:00",
-    capacity: 2,
-    isActive: true,
+    capacitySlots: 2,
     createdAt: NOW,
     updatedAt: NOW,
+    deletedAt: null,
   };
 }
 
-// ── getAvailabilityWindowsForTenant ──────────────────────────────────────────
+// ── getAvailabilityRulesForTenant ─────────────────────────────────────────────
 
-describe("getAvailabilityWindowsForTenant", () => {
+describe("getAvailabilityRulesForTenant", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("queries with tenant scope and soft-delete filter", async () => {
-    vi.mocked(prisma.availabilityWindow.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.availabilityWindow.count).mockResolvedValue(0);
+    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.availabilityRule.count).mockResolvedValue(0);
 
-    await getAvailabilityWindowsForTenant("tenant-a");
+    await getAvailabilityRulesForTenant("tenant-a");
 
-    expect(prisma.availabilityWindow.findMany).toHaveBeenCalledWith(
+    expect(prisma.availabilityRule.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           tenantId: "tenant-a",
@@ -61,7 +61,7 @@ describe("getAvailabilityWindowsForTenant", () => {
         }),
       }),
     );
-    expect(prisma.availabilityWindow.count).toHaveBeenCalledWith(
+    expect(prisma.availabilityRule.count).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           tenantId: "tenant-a",
@@ -69,64 +69,36 @@ describe("getAvailabilityWindowsForTenant", () => {
         }),
       }),
     );
-  });
-
-  it("filters active-only windows by default", async () => {
-    vi.mocked(prisma.availabilityWindow.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.availabilityWindow.count).mockResolvedValue(0);
-
-    await getAvailabilityWindowsForTenant("tenant-a");
-
-    expect(prisma.availabilityWindow.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ isActive: true }),
-      }),
-    );
-  });
-
-  it("includes inactive windows when activeOnly is false", async () => {
-    vi.mocked(prisma.availabilityWindow.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.availabilityWindow.count).mockResolvedValue(0);
-
-    await getAvailabilityWindowsForTenant("tenant-a", {
-      page: 1,
-      pageSize: 20,
-      activeOnly: false,
-    });
-
-    const call = vi.mocked(prisma.availabilityWindow.findMany).mock.calls[0][0];
-    expect(call?.where).not.toHaveProperty("isActive");
   });
 
   it("returns items mapped to DTOs (no deletedAt exposed)", async () => {
     const record = makeWindowRecord();
-    vi.mocked(prisma.availabilityWindow.findMany).mockResolvedValue([record]);
-    vi.mocked(prisma.availabilityWindow.count).mockResolvedValue(1);
+    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([record]);
+    vi.mocked(prisma.availabilityRule.count).mockResolvedValue(1);
 
-    const result = await getAvailabilityWindowsForTenant("tenant-a");
+    const result = await getAvailabilityRulesForTenant("tenant-a");
 
     expect(result.items).toHaveLength(1);
     const dto = result.items[0];
-    expect(dto.id).toBe("window-1");
+    expect(dto.id).toBe("rule-1");
     expect(dto.dayOfWeek).toBe(1);
     expect(dto.startTime).toBe("09:00");
     expect(dto.endTime).toBe("17:00");
-    expect(dto.capacity).toBe(2);
+    expect(dto.capacitySlots).toBe(2);
     expect("deletedAt" in dto).toBe(false);
   });
 
   it("applies optional dayOfWeek filter", async () => {
-    vi.mocked(prisma.availabilityWindow.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.availabilityWindow.count).mockResolvedValue(0);
+    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.availabilityRule.count).mockResolvedValue(0);
 
-    await getAvailabilityWindowsForTenant("tenant-a", {
+    await getAvailabilityRulesForTenant("tenant-a", {
       page: 1,
       pageSize: 20,
       dayOfWeek: 3,
-      activeOnly: true,
     });
 
-    expect(prisma.availabilityWindow.findMany).toHaveBeenCalledWith(
+    expect(prisma.availabilityRule.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ dayOfWeek: 3 }),
       }),
@@ -134,16 +106,15 @@ describe("getAvailabilityWindowsForTenant", () => {
   });
 
   it("applies pagination correctly", async () => {
-    vi.mocked(prisma.availabilityWindow.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.availabilityWindow.count).mockResolvedValue(45);
+    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.availabilityRule.count).mockResolvedValue(45);
 
-    const result = await getAvailabilityWindowsForTenant("tenant-a", {
+    const result = await getAvailabilityRulesForTenant("tenant-a", {
       page: 2,
       pageSize: 10,
-      activeOnly: true,
     });
 
-    expect(prisma.availabilityWindow.findMany).toHaveBeenCalledWith(
+    expect(prisma.availabilityRule.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ skip: 10, take: 10 }),
     );
     expect(result.page).toBe(2);
@@ -151,12 +122,12 @@ describe("getAvailabilityWindowsForTenant", () => {
   });
 
   it("orders by dayOfWeek then startTime ascending", async () => {
-    vi.mocked(prisma.availabilityWindow.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.availabilityWindow.count).mockResolvedValue(0);
+    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.availabilityRule.count).mockResolvedValue(0);
 
-    await getAvailabilityWindowsForTenant("tenant-a");
+    await getAvailabilityRulesForTenant("tenant-a");
 
-    expect(prisma.availabilityWindow.findMany).toHaveBeenCalledWith(
+    expect(prisma.availabilityRule.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
       }),
@@ -164,22 +135,22 @@ describe("getAvailabilityWindowsForTenant", () => {
   });
 });
 
-// ── getAvailabilityWindowById ─────────────────────────────────────────────────
+// ── getAvailabilityRuleById ───────────────────────────────────────────────────
 
-describe("getAvailabilityWindowById", () => {
+describe("getAvailabilityRuleById", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("queries with id, tenantId, and soft-delete filter", async () => {
-    vi.mocked(prisma.availabilityWindow.findFirst).mockResolvedValue(makeWindowRecord());
+    vi.mocked(prisma.availabilityRule.findFirst).mockResolvedValue(makeWindowRecord());
 
-    await getAvailabilityWindowById("tenant-a", "window-1");
+    await getAvailabilityRuleById("tenant-a", "rule-1");
 
-    expect(prisma.availabilityWindow.findFirst).toHaveBeenCalledWith(
+    expect(prisma.availabilityRule.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
-          id: "window-1",
+          id: "rule-1",
           tenantId: "tenant-a",
           deletedAt: null,
         },
@@ -188,42 +159,41 @@ describe("getAvailabilityWindowById", () => {
   });
 
   it("returns mapped DTO when record exists", async () => {
-    vi.mocked(prisma.availabilityWindow.findFirst).mockResolvedValue(makeWindowRecord());
+    vi.mocked(prisma.availabilityRule.findFirst).mockResolvedValue(makeWindowRecord());
 
-    const result = await getAvailabilityWindowById("tenant-a", "window-1");
+    const result = await getAvailabilityRuleById("tenant-a", "rule-1");
 
     expect(result).not.toBeNull();
-    expect(result?.id).toBe("window-1");
+    expect(result?.id).toBe("rule-1");
     expect(result?.tenantId).toBe("tenant-a");
   });
 
   it("returns null when record not found or belongs to another tenant", async () => {
-    vi.mocked(prisma.availabilityWindow.findFirst).mockResolvedValue(null);
+    vi.mocked(prisma.availabilityRule.findFirst).mockResolvedValue(null);
 
-    const result = await getAvailabilityWindowById("tenant-b", "window-1");
+    const result = await getAvailabilityRuleById("tenant-b", "rule-1");
 
     expect(result).toBeNull();
   });
 });
 
-// ── getAvailabilityWindowsByDay ───────────────────────────────────────────────
+// ── getAvailabilityRulesByDay ─────────────────────────────────────────────────
 
-describe("getAvailabilityWindowsByDay", () => {
+describe("getAvailabilityRulesByDay", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("queries active, non-deleted windows for the given day", async () => {
-    vi.mocked(prisma.availabilityWindow.findMany).mockResolvedValue([]);
+  it("queries non-deleted rules for the given day", async () => {
+    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([]);
 
-    await getAvailabilityWindowsByDay("tenant-a", 2);
+    await getAvailabilityRulesByDay("tenant-a", 2);
 
-    expect(prisma.availabilityWindow.findMany).toHaveBeenCalledWith(
+    expect(prisma.availabilityRule.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
           tenantId: "tenant-a",
           dayOfWeek: 2,
-          isActive: true,
           deletedAt: null,
         },
       }),
@@ -231,26 +201,26 @@ describe("getAvailabilityWindowsByDay", () => {
   });
 
   it("orders results by startTime ascending", async () => {
-    vi.mocked(prisma.availabilityWindow.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([]);
 
-    await getAvailabilityWindowsByDay("tenant-a", 5);
+    await getAvailabilityRulesByDay("tenant-a", 5);
 
-    expect(prisma.availabilityWindow.findMany).toHaveBeenCalledWith(
+    expect(prisma.availabilityRule.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ orderBy: { startTime: "asc" } }),
     );
   });
 
-  it("returns DTOs for all matching windows", async () => {
+  it("returns DTOs for all matching rules", async () => {
     const records = [
-      makeWindowRecord({ id: "w-1", startTime: "09:00" }),
-      makeWindowRecord({ id: "w-2", startTime: "14:00" }),
+      makeRuleRecord({ id: "r-1", startTime: "09:00" }),
+      makeRuleRecord({ id: "r-2", startTime: "14:00" }),
     ];
-    vi.mocked(prisma.availabilityWindow.findMany).mockResolvedValue(records);
+    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue(records);
 
-    const result = await getAvailabilityWindowsByDay("tenant-a", 1);
+    const result = await getAvailabilityRulesByDay("tenant-a", 1);
 
     expect(result).toHaveLength(2);
-    expect(result[0].id).toBe("w-1");
-    expect(result[1].id).toBe("w-2");
+    expect(result[0].id).toBe("r-1");
+    expect(result[1].id).toBe("r-2");
   });
 });

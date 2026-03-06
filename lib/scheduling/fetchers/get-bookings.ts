@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import {
-  BOOKING_STATUS,
+  BookingStatus,
   type BookingDTO,
   type BookingListParams,
   type BookingListResult,
@@ -34,7 +34,7 @@ function toBookingDTO(record: {
     wrapId: record.wrapId,
     startTime: record.startTime,
     endTime: record.endTime,
-    status: record.status as BookingDTO["status"],
+    status: record.status as BookingStatus,
     totalPrice: record.totalPrice,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
@@ -123,7 +123,7 @@ export async function getBookingById(
 }
 
 /**
- * Returns the count of upcoming (non-cancelled, non-deleted) bookings for a
+ * Returns the count of upcoming (non-cancelled, non-completed) bookings for a
  * tenant starting at or after `from` (defaults to now).
  *
  * @param tenantId - Tenant scope (server-side verified)
@@ -137,9 +137,7 @@ export async function getUpcomingBookingCount(
     where: {
       tenantId,
       deletedAt: null,
-      status: {
-        notIn: [BOOKING_STATUS.CANCELLED, BOOKING_STATUS.COMPLETED],
-      },
+      status: { notIn: [BookingStatus.CANCELLED, BookingStatus.COMPLETED] },
       startTime: { gte: from },
     },
   });
