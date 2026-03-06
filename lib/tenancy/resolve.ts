@@ -36,8 +36,11 @@ export async function resolveTenantFromRequest(): Promise<string | null> {
     return null;
   }
 
-  // Look up tenant by slug (subdomain)
-  const tenant = await prisma.tenant.findUnique({
+  // Look up tenant by slug (subdomain).
+  // findFirst (not findUnique) is required here because Prisma's findUnique
+  // only accepts unique fields in the where clause — adding deletedAt: null
+  // alongside a @unique slug would cause a type error.
+  const tenant = await prisma.tenant.findFirst({
     where: {
       slug: subdomain,
       deletedAt: null, // Only active tenants
@@ -94,7 +97,8 @@ function extractSubdomain(host: string): string | null {
 export async function getTenantBySlug(
   slug: string,
 ): Promise<{ id: string; name: string; slug: string } | null> {
-  const tenant = await prisma.tenant.findUnique({
+  // findFirst is used (not findUnique) because deletedAt is not a unique field.
+  const tenant = await prisma.tenant.findFirst({
     where: {
       slug,
       deletedAt: null,

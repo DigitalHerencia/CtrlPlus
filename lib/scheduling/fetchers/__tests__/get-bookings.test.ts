@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { BookingStatus } from "@prisma/client";
+import { BookingStatus } from "../../types";
 
 // ── Mock Prisma client ────────────────────────────────────────────────────────
 vi.mock("@/lib/prisma", () => ({
@@ -13,19 +13,13 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 import { prisma } from "@/lib/prisma";
-import {
-  getBookingsForTenant,
-  getBookingById,
-  getUpcomingBookingCount,
-} from "../get-bookings";
+import { getBookingsForTenant, getBookingById, getUpcomingBookingCount } from "../get-bookings";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const NOW = new Date("2025-01-15T10:00:00.000Z");
 
-function makeBookingRecord(
-  overrides: Partial<ReturnType<typeof baseRecord>> = {}
-) {
+function makeBookingRecord(overrides: Partial<ReturnType<typeof baseRecord>> = {}) {
   return { ...baseRecord(), ...overrides };
 }
 
@@ -35,13 +29,13 @@ function baseRecord() {
     tenantId: "tenant-a",
     customerId: "customer-1",
     wrapId: "wrap-1",
-    dropOffStart: NOW,
-    dropOffEnd: new Date(NOW.getTime() + 60 * 60 * 1000),
-    pickUpStart: new Date(NOW.getTime() + 24 * 60 * 60 * 1000),
-    pickUpEnd: new Date(NOW.getTime() + 25 * 60 * 60 * 1000),
+    startTime: NOW,
+    endTime: new Date(NOW.getTime() + 4 * 60 * 60 * 1000),
     status: BookingStatus.PENDING,
+    totalPrice: 1500,
     createdAt: NOW,
     updatedAt: NOW,
+    deletedAt: null,
   };
 }
 
@@ -65,7 +59,7 @@ describe("getBookingsForTenant", () => {
           tenantId: "tenant-a",
           deletedAt: null,
         }),
-      })
+      }),
     );
     expect(prisma.booking.count).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -73,7 +67,7 @@ describe("getBookingsForTenant", () => {
           tenantId: "tenant-a",
           deletedAt: null,
         }),
-      })
+      }),
     );
   });
 
@@ -102,7 +96,7 @@ describe("getBookingsForTenant", () => {
     });
 
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ skip: 20, take: 10 })
+      expect.objectContaining({ skip: 20, take: 10 }),
     );
     expect(result.page).toBe(3);
     expect(result.pageSize).toBe(10);
@@ -123,7 +117,7 @@ describe("getBookingsForTenant", () => {
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ status: BookingStatus.CONFIRMED }),
-      })
+      }),
     );
   });
 
@@ -144,20 +138,20 @@ describe("getBookingsForTenant", () => {
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          dropOffStart: expect.objectContaining({ gte: from, lte: to }),
+          startTime: expect.objectContaining({ gte: from, lte: to }),
         }),
-      })
+      }),
     );
   });
 
-  it("orders results by dropOffStart ascending", async () => {
+  it("orders results by startTime ascending", async () => {
     vi.mocked(prisma.booking.findMany).mockResolvedValue([]);
     vi.mocked(prisma.booking.count).mockResolvedValue(0);
 
     await getBookingsForTenant("tenant-a");
 
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ orderBy: { dropOffStart: "asc" } })
+      expect.objectContaining({ orderBy: { startTime: "asc" } }),
     );
   });
 
@@ -193,7 +187,7 @@ describe("getBookingById", () => {
           tenantId: "tenant-a",
           deletedAt: null,
         },
-      })
+      }),
     );
   });
 
@@ -236,9 +230,9 @@ describe("getUpcomingBookingCount", () => {
           status: {
             notIn: [BookingStatus.CANCELLED, BookingStatus.COMPLETED],
           },
-          dropOffStart: { gte: from },
+          startTime: { gte: from },
         }),
-      })
+      }),
     );
     expect(result).toBe(3);
   });

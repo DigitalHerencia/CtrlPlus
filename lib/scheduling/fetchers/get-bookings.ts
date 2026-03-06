@@ -1,6 +1,6 @@
-import { BookingStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
+  BookingStatus,
   type BookingDTO,
   type BookingListParams,
   type BookingListResult,
@@ -20,11 +20,10 @@ function toBookingDTO(record: {
   tenantId: string;
   customerId: string;
   wrapId: string;
-  dropOffStart: Date;
-  dropOffEnd: Date;
-  pickUpStart: Date;
-  pickUpEnd: Date;
-  status: BookingStatus;
+  startTime: Date;
+  endTime: Date;
+  status: string;
+  totalPrice: number;
   createdAt: Date;
   updatedAt: Date;
 }): BookingDTO {
@@ -33,11 +32,10 @@ function toBookingDTO(record: {
     tenantId: record.tenantId,
     customerId: record.customerId,
     wrapId: record.wrapId,
-    dropOffStart: record.dropOffStart,
-    dropOffEnd: record.dropOffEnd,
-    pickUpStart: record.pickUpStart,
-    pickUpEnd: record.pickUpEnd,
-    status: record.status,
+    startTime: record.startTime,
+    endTime: record.endTime,
+    status: record.status as BookingStatus,
+    totalPrice: record.totalPrice,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
   };
@@ -48,11 +46,10 @@ const bookingSelectFields = {
   tenantId: true,
   customerId: true,
   wrapId: true,
-  dropOffStart: true,
-  dropOffEnd: true,
-  pickUpStart: true,
-  pickUpEnd: true,
+  startTime: true,
+  endTime: true,
   status: true,
+  totalPrice: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -65,7 +62,7 @@ const bookingSelectFields = {
  */
 export async function getBookingsForTenant(
   tenantId: string,
-  params: BookingListParams = DEFAULT_BOOKING_LIST_PARAMS
+  params: BookingListParams = DEFAULT_BOOKING_LIST_PARAMS,
 ): Promise<BookingListResult> {
   const { page, pageSize, status, fromDate, toDate } = params;
   const skip = (page - 1) * pageSize;
@@ -75,7 +72,7 @@ export async function getBookingsForTenant(
     deletedAt: null, // soft-delete filter
     ...(status !== undefined && { status }),
     ...((fromDate !== undefined || toDate !== undefined) && {
-      dropOffStart: {
+      startTime: {
         ...(fromDate !== undefined && { gte: fromDate }),
         ...(toDate !== undefined && { lte: toDate }),
       },
@@ -86,7 +83,7 @@ export async function getBookingsForTenant(
     prisma.booking.findMany({
       where,
       select: bookingSelectFields,
-      orderBy: { dropOffStart: "asc" },
+      orderBy: { startTime: "asc" },
       skip,
       take: pageSize,
     }),
@@ -111,7 +108,7 @@ export async function getBookingsForTenant(
  */
 export async function getBookingById(
   tenantId: string,
-  bookingId: string
+  bookingId: string,
 ): Promise<BookingDTO | null> {
   const record = await prisma.booking.findFirst({
     where: {
@@ -126,7 +123,7 @@ export async function getBookingById(
 }
 
 /**
- * Returns the count of upcoming (non-cancelled, non-deleted) bookings for a
+ * Returns the count of upcoming (non-cancelled, non-completed) bookings for a
  * tenant starting at or after `from` (defaults to now).
  *
  * @param tenantId - Tenant scope (server-side verified)
@@ -134,14 +131,14 @@ export async function getBookingById(
  */
 export async function getUpcomingBookingCount(
   tenantId: string,
-  from: Date = new Date()
+  from: Date = new Date(),
 ): Promise<number> {
   return prisma.booking.count({
     where: {
       tenantId,
       deletedAt: null,
       status: { notIn: [BookingStatus.CANCELLED, BookingStatus.COMPLETED] },
-      dropOffStart: { gte: from },
+      startTime: { gte: from },
     },
   });
 }
