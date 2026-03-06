@@ -1,6 +1,6 @@
 "use server";
 
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
 import type { WrapDTO } from "../types";
@@ -14,15 +14,14 @@ import type { WrapDTO } from "../types";
  * 2. Authorize     — verify user is an owner of the tenant (elevated privilege)
  * 3. Tenant scope  — confirm the wrap belongs to the current tenant
  * 4. Mutate        — soft delete by setting deletedAt
- * 5. Audit         — write an immutable audit event
+ * 5. Audit         — write an immutable audit log entry
  */
 export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
   // 1. AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { userId, tenantId } = await requireAuth();
 
   // 2. AUTHORIZE — delete requires owner or admin role
-  await assertTenantMembership(tenantId, user.id, "admin");
+  await assertTenantMembership(tenantId, userId, ["OWNER", "ADMIN"]);
 
   // 3. TENANT SCOPE — defensive ownership check before mutation
   const existing = await prisma.wrap.findFirst({
@@ -44,11 +43,12 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: user.id,
+      userId,
       action: "wrap.deleted",
       resourceType: "Wrap",
       resourceId: wrap.id,
       details: JSON.stringify({ name: wrap.name }),
+      timestamp: new Date(),
     },
   });
 

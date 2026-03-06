@@ -22,8 +22,8 @@ import {
 
 const NOW = new Date("2025-01-15T10:00:00.000Z");
 
-function makeRuleRecord(overrides: Partial<ReturnType<typeof baseRuleRecord>> = {}) {
-  return { ...baseRuleRecord(), ...overrides };
+function makeWindowRecord(overrides: Partial<ReturnType<typeof baseWindowRecord>> = {}) {
+  return { ...baseWindowRecord(), ...overrides };
 }
 
 function baseRuleRecord() {
@@ -34,9 +34,9 @@ function baseRuleRecord() {
     startTime: "09:00",
     endTime: "17:00",
     capacitySlots: 2,
-    deletedAt: null,
     createdAt: NOW,
     updatedAt: NOW,
+    deletedAt: null,
   };
 }
 
@@ -72,7 +72,7 @@ describe("getAvailabilityRulesForTenant", () => {
   });
 
   it("returns items mapped to DTOs (no deletedAt exposed)", async () => {
-    const record = makeRuleRecord();
+    const record = makeWindowRecord();
     vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([record]);
     vi.mocked(prisma.availabilityRule.count).mockResolvedValue(1);
 
@@ -143,7 +143,7 @@ describe("getAvailabilityRuleById", () => {
   });
 
   it("queries with id, tenantId, and soft-delete filter", async () => {
-    vi.mocked(prisma.availabilityRule.findFirst).mockResolvedValue(makeRuleRecord());
+    vi.mocked(prisma.availabilityRule.findFirst).mockResolvedValue(makeWindowRecord());
 
     await getAvailabilityRuleById("tenant-a", "rule-1");
 
@@ -159,7 +159,7 @@ describe("getAvailabilityRuleById", () => {
   });
 
   it("returns mapped DTO when record exists", async () => {
-    vi.mocked(prisma.availabilityRule.findFirst).mockResolvedValue(makeRuleRecord());
+    vi.mocked(prisma.availabilityRule.findFirst).mockResolvedValue(makeWindowRecord());
 
     const result = await getAvailabilityRuleById("tenant-a", "rule-1");
 

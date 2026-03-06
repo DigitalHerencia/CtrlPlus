@@ -11,7 +11,7 @@ const DEFAULT_AVAILABILITY_LIST_PARAMS: AvailabilityListParams = {
 };
 
 /**
- * Maps a raw Prisma AvailabilityRule record to an AvailabilityRuleDTO.
+ * Maps a raw Prisma AvailabilityRule record to an AvailabilityWindowDTO.
  * Never exposes deletedAt or other internal fields.
  */
 function toAvailabilityRuleDTO(record: {
@@ -90,13 +90,13 @@ export async function getAvailabilityRulesForTenant(
  * Returns a single non-deleted availability rule by ID, scoped to a tenant.
  * Returns null when not found or when it belongs to a different tenant.
  *
- * @param tenantId - Tenant scope (server-side verified)
- * @param ruleId   - AvailabilityRule primary key
+ * @param tenantId  - Tenant scope (server-side verified)
+ * @param windowId  - AvailabilityRule primary key
  */
 export async function getAvailabilityRuleById(
   tenantId: string,
-  ruleId: string,
-): Promise<AvailabilityRuleDTO | null> {
+  windowId: string,
+): Promise<AvailabilityWindowDTO | null> {
   const record = await prisma.availabilityRule.findFirst({
     where: {
       id: ruleId,
@@ -119,7 +119,7 @@ export async function getAvailabilityRuleById(
 export async function getAvailabilityRulesByDay(
   tenantId: string,
   dayOfWeek: number,
-): Promise<AvailabilityRuleDTO[]> {
+): Promise<AvailabilityWindowDTO[]> {
   const records = await prisma.availabilityRule.findMany({
     where: {
       tenantId,

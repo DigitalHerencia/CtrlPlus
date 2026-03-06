@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
+// ── Mock Prisma to prevent DATABASE_URL error during module initialization ────
+// rbac.ts re-exports from lib/tenancy/assert.ts which imports lib/prisma.ts.
+// The pure RBAC functions tested here don't use Prisma at all.
+vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+
 // ── Mock prisma to prevent DATABASE_URL error (transitive import via tenancy/assert) ──
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 

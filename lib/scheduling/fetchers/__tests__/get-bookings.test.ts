@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { BookingStatus } from "../../types";
 
 // ── Mock Prisma client ────────────────────────────────────────────────────────
 vi.mock("@/lib/prisma", () => ({
@@ -29,12 +30,12 @@ function baseRecord() {
     customerId: "customer-1",
     wrapId: "wrap-1",
     startTime: NOW,
-    endTime: new Date(NOW.getTime() + 8 * 60 * 60 * 1000),
-    status: "pending",
-    totalPrice: 1200,
-    deletedAt: null,
+    endTime: new Date(NOW.getTime() + 4 * 60 * 60 * 1000),
+    status: BookingStatus.PENDING,
+    totalPrice: 1500,
     createdAt: NOW,
     updatedAt: NOW,
+    deletedAt: null,
   };
 }
 
@@ -115,7 +116,7 @@ describe("getBookingsForTenant", () => {
 
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ status: "confirmed" }),
+        where: expect.objectContaining({ status: BookingStatus.CONFIRMED }),
       }),
     );
   });
@@ -226,7 +227,9 @@ describe("getUpcomingBookingCount", () => {
         where: expect.objectContaining({
           tenantId: "tenant-a",
           deletedAt: null,
-          status: { notIn: ["cancelled", "completed"] },
+          status: {
+            notIn: [BookingStatus.CANCELLED, BookingStatus.COMPLETED],
+          },
           startTime: { gte: from },
         }),
       }),

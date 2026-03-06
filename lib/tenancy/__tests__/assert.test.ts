@@ -22,8 +22,36 @@ const mockFindUnique = vi.mocked(prisma.tenantUserMembership.findUnique);
 // Helpers
 // ---------------------------------------------------------------------------
 
-function membership(role: string = "member") {
-  return { role };
+/**
+ * Typed fixture that mirrors the full Prisma TenantUserMembership row shape.
+ * `role` is typed as `string` (not the uppercase `TenantRole`) because the
+ * database stores lowercase values ("owner" | "admin" | "member"), which is
+ * exactly what Prisma returns. `assertTenantMembership` passes this raw value
+ * to `hasRolePermission(membership.role, required)`, which uppercases and
+ * checks the role against the permission hierarchy (no `normalizeTenantRole`
+ * call is involved).
+ */
+interface MembershipFixture {
+  id: string;
+  tenantId: string;
+  userId: string;
+  role: string; // raw DB value: "owner" | "admin" | "member"
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
+function membership(overrides: Partial<MembershipFixture> = {}): MembershipFixture {
+  return {
+    id: "mem-1",
+    tenantId: "tenant-abc",
+    userId: "user-xyz",
+    role: "member",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+    ...overrides,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -55,82 +83,95 @@ describe("assertTenantMembership", () => {
 
   // --- Forbidden (insufficient role) ---------------------------------------
 
-  it("throws 'Forbidden' when member tries to satisfy admin requirement", async () => {
-    mockFindUnique.mockResolvedValue(membership("member") as never);
+  it("throws 'Forbidden' when MEMBER tries to satisfy ADMIN requirement", async () => {
+    mockFindFirst.mockResolvedValue(membership({ role: "member" }));
 
     await expect(assertTenantMembership("tenant-abc", "user-xyz", "admin")).rejects.toThrow(
       "Forbidden",
     );
   });
 
-  it("throws 'Forbidden' when member tries to satisfy owner requirement", async () => {
-    mockFindUnique.mockResolvedValue(membership("member") as never);
+  it("throws 'Forbidden' when MEMBER tries to satisfy OWNER requirement", async () => {
+    mockFindFirst.mockResolvedValue(membership({ role: "member" }));
 
     await expect(assertTenantMembership("tenant-abc", "user-xyz", "owner")).rejects.toThrow(
       "Forbidden",
     );
   });
 
-  it("throws 'Forbidden' when admin tries to satisfy owner requirement", async () => {
-    mockFindUnique.mockResolvedValue(membership("admin") as never);
+  it("throws 'Forbidden' when ADMIN tries to satisfy OWNER requirement", async () => {
+    mockFindFirst.mockResolvedValue(membership({ role: "admin" }));
 
     await expect(assertTenantMembership("tenant-abc", "user-xyz", "owner")).rejects.toThrow(
       "Forbidden",
     );
+  });
+
+  it("throws 'Forbidden' when role does not satisfy any role in an array", async () => {
+    mockFindFirst.mockResolvedValue(membership({ role: "member" }));
+
+    await expect(
+      assertTenantMembership("tenant-abc", "user-xyz", ["OWNER", "ADMIN"]),
+    ).rejects.toThrow("Forbidden: insufficient role");
   });
 
   // --- Authorized (happy path) -----------------------------------------------
 
-  it("resolves when member satisfies member requirement", async () => {
-    mockFindUnique.mockResolvedValue(membership("member") as never);
+  it("resolves when MEMBER satisfies MEMBER requirement", async () => {
+    mockFindFirst.mockResolvedValue(membership({ role: "member" }));
 
     await expect(
       assertTenantMembership("tenant-abc", "user-xyz", "member"),
     ).resolves.toBeUndefined();
   });
 
-  it("resolves when admin satisfies admin requirement", async () => {
-    mockFindUnique.mockResolvedValue(membership("admin") as never);
+  it("resolves when ADMIN satisfies ADMIN requirement", async () => {
+    mockFindFirst.mockResolvedValue(membership({ role: "admin" }));
 
     await expect(
       assertTenantMembership("tenant-abc", "user-xyz", "admin"),
     ).resolves.toBeUndefined();
   });
 
-  it("resolves when owner satisfies admin requirement (hierarchy)", async () => {
-    mockFindUnique.mockResolvedValue(membership("owner") as never);
+  it("resolves when OWNER satisfies ADMIN requirement (hierarchy)", async () => {
+    mockFindFirst.mockResolvedValue(membership({ role: "owner" }));
 
     await expect(
       assertTenantMembership("tenant-abc", "user-xyz", "admin"),
     ).resolves.toBeUndefined();
   });
 
-  it("resolves when owner satisfies member requirement (hierarchy)", async () => {
-    mockFindUnique.mockResolvedValue(membership("owner") as never);
+  it("resolves when OWNER satisfies MEMBER requirement (hierarchy)", async () => {
+    mockFindFirst.mockResolvedValue(membership({ role: "owner" }));
 
     await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "member"),
+      assertTenantMembership("tenant-abc", "user-xyz", "MEMBER"),
+    ).resolves.toBeUndefined();
+  });
+
+  it("resolves when ADMIN satisfies an array containing ADMIN", async () => {
+    mockFindFirst.mockResolvedValue(membership({ role: "admin" }));
+
+    await expect(
+      assertTenantMembership("tenant-abc", "user-xyz", ["OWNER", "ADMIN"]),
     ).resolves.toBeUndefined();
   });
 
   // --- Membership query scoping --------------------------------------------
 
-  it("queries with tenantId and userId composite key and deletedAt filter", async () => {
-    mockFindUnique.mockResolvedValue(membership("admin") as never);
+  it("queries with tenantId, userId, and deletedAt filter", async () => {
+    mockFindFirst.mockResolvedValue(membership({ role: "admin" }));
 
-    await assertTenantMembership("tenant-abc", "user-xyz", "admin");
+    await assertTenantMembership("tenant-abc", "user-xyz", "ADMIN");
 
-    expect(mockFindUnique).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          tenantId_userId: {
-            tenantId: "tenant-abc",
-            userId: "user-xyz",
-          },
-          deletedAt: null,
-        }),
-      }),
-    );
+    expect(mockFindFirst).toHaveBeenCalledWith({
+      where: {
+        tenantId: "tenant-abc",
+        userId: "user-xyz",
+        deletedAt: null,
+      },
+      select: { role: true },
+    });
   });
 });
 

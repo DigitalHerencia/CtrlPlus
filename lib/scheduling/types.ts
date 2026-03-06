@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+// ─── Booking status constants ─────────────────────────────────────────────────
+// Defined locally since the Prisma schema uses plain String (not an enum).
+
+export const BookingStatus = {
+  PENDING: "pending",
+  CONFIRMED: "confirmed",
+  COMPLETED: "completed",
+  CANCELLED: "cancelled",
+} as const;
+
+export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus];
+
 // ─── Booking DTOs ─────────────────────────────────────────────────────────────
 
 export interface BookingDTO {
@@ -9,7 +21,7 @@ export interface BookingDTO {
   wrapId: string;
   startTime: Date;
   endTime: Date;
-  status: string;
+  status: BookingStatus;
   totalPrice: number;
   createdAt: Date;
   updatedAt: Date;
@@ -26,7 +38,7 @@ export interface BookingListResult {
 export const bookingListParamsSchema = z.object({
   page: z.number().int().min(1).default(1),
   pageSize: z.number().int().min(1).max(100).default(20),
-  status: z.string().optional(),
+  status: z.enum(["pending", "confirmed", "completed", "cancelled"]).optional(),
   fromDate: z.date().optional(),
   toDate: z.date().optional(),
 });
