@@ -1,83 +1,84 @@
 import { prisma } from "@/lib/prisma";
 import {
-  type InvoiceDetailDTO,
-  type InvoiceStatus,
-  type PaymentStatus,
   invoiceDTOFields,
-  lineItemDTOFields,
+  invoiceLineItemDTOFields,
   paymentDTOFields,
+  type InvoiceDetailDTO,
+  type InvoiceLineItemDTO,
+  type PaymentDTO,
 } from "../types";
 
 /**
- * Returns a single non-deleted invoice by ID, scoped to a tenant.
- * Includes all line items and payment records.
- * Returns null when not found or when it belongs to a different tenant.
+ * Returns a single invoice with its line items and payment history, scoped to
+ * the given tenant.  Returns null when the invoice does not exist or belongs to
+ * a different tenant (prevents information disclosure).
  *
  * @param tenantId  - Tenant scope (server-side verified)
- * @param invoiceId - Invoice primary key
+ * @param invoiceId - Invoice ID to look up
  */
 export async function getInvoiceById(
   tenantId: string,
-  invoiceId: string
+  invoiceId: string,
 ): Promise<InvoiceDetailDTO | null> {
-  const record = await prisma.invoice.findFirst({
-    where: {
-      id: invoiceId,
-      tenantId, // defensive scope check
-      deletedAt: null,
-    },
+  const row = await prisma.invoice.findFirst({
+    where: { id: invoiceId, tenantId, deletedAt: null },
     select: {
       ...invoiceDTOFields,
       lineItems: {
-        select: lineItemDTOFields,
+        select: invoiceLineItemDTOFields,
+        orderBy: { id: "asc" },
       },
       payments: {
         where: { deletedAt: null },
         select: paymentDTOFields,
-        orderBy: { createdAt: "asc" },
+        orderBy: { createdAt: "desc" },
       },
     },
   });
 
-  if (!record) return null;
+  if (!row) return null;
 
   return {
-    id: record.id,
-    tenantId: record.tenantId,
-    bookingId: record.bookingId,
-    status: record.status as InvoiceStatus,
-    totalAmount: record.totalAmount,
-    createdAt: record.createdAt,
-    updatedAt: record.updatedAt,
-    lineItems: record.lineItems.map((li: {
-      id: string;
-      invoiceId: string;
-      description: string;
-      quantity: number;
-      unitPrice: number;
-      totalPrice: number;
-    }) => ({
-      id: li.id,
-      invoiceId: li.invoiceId,
-      description: li.description,
-      quantity: li.quantity,
-      unitPrice: li.unitPrice,
-      totalPrice: li.totalPrice,
-    })),
-    payments: record.payments.map((p: {
-      id: string;
-      invoiceId: string;
-      stripePaymentIntentId: string;
-      status: string;
-      amount: number;
-      createdAt: Date;
-    }) => ({
-      id: p.id,
-      invoiceId: p.invoiceId,
-      stripePaymentIntentId: p.stripePaymentIntentId,
-      status: p.status as PaymentStatus,
-      amount: p.amount,
-      createdAt: p.createdAt,
-    })),
+    id: row.id,
+    tenantId: row.tenantId,
+    bookingId: row.bookingId,
+    status: row.status as InvoiceDetailDTO["status"],
+    totalAmount: row.totalAmount,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    lineItems: (
+      row.lineItems as Array<{
+        id: string;
+        description: string;
+        quantity: number;
+        unitPrice: number;
+        totalPrice: number;
+      }>
+    ).map(
+      (li): InvoiceLineItemDTO => ({
+        id: li.id,
+        description: li.description,
+        quantity: li.quantity,
+        unitPrice: li.unitPrice,
+        totalPrice: li.totalPrice,
+      }),
+    ),
+    payments: (
+      row.payments as Array<{
+        id: string;
+        stripePaymentIntentId: string;
+        status: string;
+        amount: number;
+        createdAt: Date;
+      }>
+    ).map(
+      (p): PaymentDTO => ({
+        id: p.id,
+        stripePaymentIntentId: p.stripePaymentIntentId,
+        status: p.status as PaymentDTO["status"],
+        amount: p.amount,
+        createdAt: p.createdAt,
+      }),
+    ),
   };
 }

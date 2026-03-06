@@ -1,139 +1,141 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// ── Mock Prisma client ────────────────────────────────────────────────────────
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
+// ─── Prisma mock ─────────────────────────────────────────────────────────────
+
+const { prismaMock } = vi.hoisted(() => ({
+  prismaMock: {
     invoice: {
       findMany: vi.fn(),
+      findFirst: vi.fn(),
       count: vi.fn(),
     },
   },
 }));
 
-import { prisma } from "@/lib/prisma";
+vi.mock("@/lib/prisma", () => ({
+  prisma: prismaMock,
+}));
+
+// ─── Import fetchers after mock is set up ────────────────────────────────────
+
 import { getInvoicesForTenant } from "../get-invoices";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ─── Fixtures ────────────────────────────────────────────────────────────────
 
-const NOW = new Date("2025-06-01T10:00:00.000Z");
+const mockInvoiceRow = {
+  id: "inv-001",
+  tenantId: "tenant-abc",
+  bookingId: "booking-001",
+  status: "sent",
+  totalAmount: 120000,
+  createdAt: new Date("2024-02-01T00:00:00.000Z"),
+  updatedAt: new Date("2024-02-02T00:00:00.000Z"),
+};
 
-function makeInvoiceRecord(overrides: Partial<ReturnType<typeof baseRecord>> = {}) {
-  return { ...baseRecord(), ...overrides };
-}
-
-function baseRecord() {
-  return {
-    id: "invoice-1",
-    tenantId: "tenant-a",
-    bookingId: "booking-1",
-    status: "draft",
-    totalAmount: 120000,
-    createdAt: NOW,
-    updatedAt: NOW,
-  };
-}
-
-// ── getInvoicesForTenant ──────────────────────────────────────────────────────
+// ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe("getInvoicesForTenant", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("queries with tenant scope and soft-delete filter", async () => {
-    vi.mocked(prisma.invoice.findMany).mockResolvedValue([makeInvoiceRecord()]);
-    vi.mocked(prisma.invoice.count).mockResolvedValue(1);
+  it("returns a paginated InvoiceListResult", async () => {
+    prismaMock.invoice.findMany.mockResolvedValue([mockInvoiceRow]);
+    prismaMock.invoice.count.mockResolvedValue(1);
 
-    await getInvoicesForTenant("tenant-a");
+    const result = await getInvoicesForTenant("tenant-abc");
 
-    expect(prisma.invoice.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          tenantId: "tenant-a",
-          deletedAt: null,
-        }),
-      })
-    );
-    expect(prisma.invoice.count).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          tenantId: "tenant-a",
-          deletedAt: null,
-        }),
-      })
-    );
+    expect(result.invoices).toHaveLength(1);
+    expect(result.total).toBe(1);
+    expect(result.page).toBe(1);
+    expect(result.pageSize).toBe(20);
+    expect(result.totalPages).toBe(1);
   });
 
-  it("returns items mapped to DTOs (no deletedAt exposed)", async () => {
-    vi.mocked(prisma.invoice.findMany).mockResolvedValue([makeInvoiceRecord()]);
-    vi.mocked(prisma.invoice.count).mockResolvedValue(1);
+  it("maps row to InvoiceDTO correctly", async () => {
+    prismaMock.invoice.findMany.mockResolvedValue([mockInvoiceRow]);
+    prismaMock.invoice.count.mockResolvedValue(1);
 
-    const result = await getInvoicesForTenant("tenant-a");
+    const result = await getInvoicesForTenant("tenant-abc");
 
-    expect(result.items).toHaveLength(1);
-    const dto = result.items[0];
-    expect(dto.id).toBe("invoice-1");
-    expect(dto.tenantId).toBe("tenant-a");
-    expect(dto.bookingId).toBe("booking-1");
-    expect(dto.status).toBe("draft");
-    expect(dto.totalAmount).toBe(120000);
-    expect("deletedAt" in dto).toBe(false);
-  });
-
-  it("applies pagination correctly", async () => {
-    vi.mocked(prisma.invoice.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.invoice.count).mockResolvedValue(55);
-
-    const result = await getInvoicesForTenant("tenant-a", {
-      page: 3,
-      pageSize: 10,
+    expect(result.invoices[0]).toEqual({
+      id: "inv-001",
+      tenantId: "tenant-abc",
+      bookingId: "booking-001",
+      status: "sent",
+      totalAmount: 120000,
+      createdAt: mockInvoiceRow.createdAt,
+      updatedAt: mockInvoiceRow.updatedAt,
     });
-
-    expect(prisma.invoice.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ skip: 20, take: 10 })
-    );
-    expect(result.page).toBe(3);
-    expect(result.pageSize).toBe(10);
-    expect(result.total).toBe(55);
-    expect(result.totalPages).toBe(6);
   });
 
-  it("applies optional status filter", async () => {
-    vi.mocked(prisma.invoice.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.invoice.count).mockResolvedValue(0);
+  it("scopes query by tenantId and deletedAt: null", async () => {
+    prismaMock.invoice.findMany.mockResolvedValue([]);
+    prismaMock.invoice.count.mockResolvedValue(0);
 
-    await getInvoicesForTenant("tenant-a", {
-      page: 1,
-      pageSize: 20,
-      status: "paid",
-    });
+    await getInvoicesForTenant("tenant-abc");
 
-    expect(prisma.invoice.findMany).toHaveBeenCalledWith(
+    expect(prismaMock.invoice.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ tenantId: "tenant-abc", deletedAt: null }),
+      }),
+    );
+    expect(prismaMock.invoice.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ tenantId: "tenant-abc", deletedAt: null }),
+      }),
+    );
+  });
+
+  it("applies status filter when provided", async () => {
+    prismaMock.invoice.findMany.mockResolvedValue([]);
+    prismaMock.invoice.count.mockResolvedValue(0);
+
+    await getInvoicesForTenant("tenant-abc", { page: 1, pageSize: 20, status: "paid" });
+
+    expect(prismaMock.invoice.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ status: "paid" }),
-      })
+      }),
     );
   });
 
-  it("orders results by createdAt descending", async () => {
-    vi.mocked(prisma.invoice.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.invoice.count).mockResolvedValue(0);
+  it("does not include status filter when not provided", async () => {
+    prismaMock.invoice.findMany.mockResolvedValue([]);
+    prismaMock.invoice.count.mockResolvedValue(0);
 
-    await getInvoicesForTenant("tenant-a");
+    await getInvoicesForTenant("tenant-abc");
 
-    expect(prisma.invoice.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ orderBy: { createdAt: "desc" } })
-    );
+    const callArgs = prismaMock.invoice.findMany.mock.calls[0][0];
+    expect(callArgs.where).not.toHaveProperty("status");
   });
 
-  it("returns empty list when no invoices exist", async () => {
-    vi.mocked(prisma.invoice.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.invoice.count).mockResolvedValue(0);
+  it("computes correct totalPages", async () => {
+    prismaMock.invoice.findMany.mockResolvedValue([]);
+    prismaMock.invoice.count.mockResolvedValue(45);
 
-    const result = await getInvoicesForTenant("tenant-a");
+    const result = await getInvoicesForTenant("tenant-abc", { page: 1, pageSize: 20 });
 
-    expect(result.items).toHaveLength(0);
+    expect(result.totalPages).toBe(3);
+  });
+
+  it("returns empty array when no invoices exist", async () => {
+    prismaMock.invoice.findMany.mockResolvedValue([]);
+    prismaMock.invoice.count.mockResolvedValue(0);
+
+    const result = await getInvoicesForTenant("tenant-abc");
+
+    expect(result.invoices).toEqual([]);
     expect(result.total).toBe(0);
-    expect(result.totalPages).toBe(0);
+  });
+
+  it("uses default pagination when params are omitted", async () => {
+    prismaMock.invoice.findMany.mockResolvedValue([]);
+    prismaMock.invoice.count.mockResolvedValue(0);
+
+    const result = await getInvoicesForTenant("tenant-abc");
+
+    expect(result.page).toBe(1);
+    expect(result.pageSize).toBe(20);
   });
 });

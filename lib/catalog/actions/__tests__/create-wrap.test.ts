@@ -130,6 +130,30 @@ describe("createWrap", () => {
     await expect(createWrap(validInput)).rejects.toThrow("Forbidden");
   });
 
+  it("always uses tenantId from the session, never from user-supplied input", async () => {
+    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+    vi.mocked(prisma.wrap.create).mockResolvedValue(mockWrap as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
+
+    // Even if a caller tried to embed a tenantId in the input, the action must
+    // ignore it and only use the server-side session value.
+    const inputWithInjectedTenantId = { ...validInput, tenantId: "attacker-tenant" };
+    await createWrap(inputWithInjectedTenantId);
+
+    expect(prisma.wrap.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ tenantId: "tenant-1" }),
+      }),
+    );
+    // The injected tenantId must NOT appear in the DB write
+    expect(prisma.wrap.create).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ tenantId: "attacker-tenant" }),
+      }),
+    );
+  });
+
   it("throws a ZodError for invalid input (missing name)", async () => {
     vi.mocked(requireAuth).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
@@ -144,7 +168,7 @@ describe("createWrap", () => {
     vi.mocked(requireAuth).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
 
-    const badInput = { ...validInput, price: -100 };
+    const badInput = { ...validInput, price: -50 };
 
     await expect(createWrap(badInput)).rejects.toThrow();
     expect(prisma.wrap.create).not.toHaveBeenCalled();

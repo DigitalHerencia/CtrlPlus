@@ -1,22 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import {
+  invoiceDTOFields,
   type InvoiceDTO,
   type InvoiceListParams,
   type InvoiceListResult,
-  type InvoiceStatus,
-  invoiceDTOFields,
 } from "../types";
 
-const DEFAULT_INVOICE_LIST_PARAMS: InvoiceListParams = {
-  page: 1,
-  pageSize: 20,
-};
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/**
- * Maps a raw Prisma Invoice record to an InvoiceDTO.
- * Never exposes deletedAt or other internal fields.
- */
-function toInvoiceDTO(record: {
+function toInvoiceDTO(row: {
   id: string;
   tenantId: string;
   bookingId: string;
@@ -26,40 +18,42 @@ function toInvoiceDTO(record: {
   updatedAt: Date;
 }): InvoiceDTO {
   return {
-    id: record.id,
-    tenantId: record.tenantId,
-    bookingId: record.bookingId,
-    status: record.status as InvoiceStatus,
-    totalAmount: record.totalAmount,
-    createdAt: record.createdAt,
-    updatedAt: record.updatedAt,
+    id: row.id,
+    tenantId: row.tenantId,
+    bookingId: row.bookingId,
+    status: row.status as InvoiceDTO["status"],
+    totalAmount: row.totalAmount,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
   };
 }
 
+// ─── Fetchers ─────────────────────────────────────────────────────────────────
+
 /**
- * Returns a paginated list of non-deleted invoices for a tenant.
+ * Returns all non-deleted invoices for a tenant, ordered newest first.
  *
- * @param tenantId - Tenant scope (server-side verified)
- * @param params   - Optional filter / pagination options
+ * @param tenantId - Tenant scope (server-side verified; never accept from client)
+ * @param params   - Optional status filter and pagination
  */
 export async function getInvoicesForTenant(
   tenantId: string,
-  params: InvoiceListParams = DEFAULT_INVOICE_LIST_PARAMS
+  params: InvoiceListParams = { page: 1, pageSize: 20 },
 ): Promise<InvoiceListResult> {
   const { page, pageSize, status } = params;
   const skip = (page - 1) * pageSize;
 
   const where = {
     tenantId,
-    deletedAt: null, // soft-delete filter
-    ...(status !== undefined && { status }),
+    deletedAt: null,
+    ...(status ? { status } : {}),
   };
 
-  const [records, total] = await Promise.all([
+  const [rows, total] = await Promise.all([
     prisma.invoice.findMany({
       where,
-      select: invoiceDTOFields,
       orderBy: { createdAt: "desc" },
+      select: invoiceDTOFields,
       skip,
       take: pageSize,
     }),
@@ -67,7 +61,7 @@ export async function getInvoicesForTenant(
   ]);
 
   return {
-    items: records.map(toInvoiceDTO),
+    invoices: rows.map(toInvoiceDTO),
     total,
     page,
     pageSize,
