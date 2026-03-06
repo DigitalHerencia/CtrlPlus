@@ -1,10 +1,6 @@
 import { BookingStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import {
-  type BookingDTO,
-  type BookingListParams,
-  type BookingListResult,
-} from "../types";
+import { type BookingDTO, type BookingListParams, type BookingListResult } from "../types";
 
 const DEFAULT_BOOKING_LIST_PARAMS: BookingListParams = {
   page: 1,
@@ -65,7 +61,7 @@ const bookingSelectFields = {
  */
 export async function getBookingsForTenant(
   tenantId: string,
-  params: BookingListParams = DEFAULT_BOOKING_LIST_PARAMS
+  params: BookingListParams = DEFAULT_BOOKING_LIST_PARAMS,
 ): Promise<BookingListResult> {
   const { page, pageSize, status, fromDate, toDate } = params;
   const skip = (page - 1) * pageSize;
@@ -111,7 +107,7 @@ export async function getBookingsForTenant(
  */
 export async function getBookingById(
   tenantId: string,
-  bookingId: string
+  bookingId: string,
 ): Promise<BookingDTO | null> {
   const record = await prisma.booking.findFirst({
     where: {
@@ -134,7 +130,7 @@ export async function getBookingById(
  */
 export async function getUpcomingBookingCount(
   tenantId: string,
-  from: Date = new Date()
+  from: Date = new Date(),
 ): Promise<number> {
   return prisma.booking.count({
     where: {

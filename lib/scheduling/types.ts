@@ -67,6 +67,4 @@ export const availabilityListParamsSchema = z.object({
   activeOnly: z.boolean().default(true),
 });
 
-export type AvailabilityListParams = z.infer<
-  typeof availabilityListParamsSchema
->;
+export type AvailabilityListParams = z.infer<typeof availabilityListParamsSchema>;
