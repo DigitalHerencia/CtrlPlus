@@ -111,14 +111,6 @@ interface E2EFixtures {
 export const test = base.extend<E2EFixtures>({
   mockedPage: async ({ page }, use) => {
     // Intercept Next.js API routes with mock data
-    await page.route("**/api/wraps**", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(mockWrapListResponse),
-      });
-    });
-
     await page.route("**/api/wraps/*", async (route) => {
       const url = route.request().url();
       const id = url.split("/").pop();
@@ -127,6 +119,14 @@ export const test = base.extend<E2EFixtures>({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify(wrap),
+      });
+    });
+
+    await page.route(/\/api\/wraps(\?.*)?$/, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(mockWrapListResponse),
       });
     });
 
