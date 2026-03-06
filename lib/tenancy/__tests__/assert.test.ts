@@ -26,8 +26,10 @@ const mockFindFirst = vi.mocked(prisma.tenantUserMembership.findFirst);
  * Typed fixture that mirrors the full Prisma TenantUserMembership row shape.
  * `role` is typed as `string` (not the uppercase `TenantRole`) because the
  * database stores lowercase values ("owner" | "admin" | "member"), which is
- * exactly what Prisma returns.  `assertTenantMembership` normalizes the value
- * at runtime via `normalizeTenantRole()`.
+ * exactly what Prisma returns. `assertTenantMembership` passes this raw value
+ * to `hasRolePermission(membership.role, required)`, which uppercases and
+ * checks the role against the permission hierarchy (no `normalizeTenantRole`
+ * call is involved).
  */
 interface MembershipFixture {
   id: string;
