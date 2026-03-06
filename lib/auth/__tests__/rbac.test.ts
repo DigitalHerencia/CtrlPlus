@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// ── Mock the Prisma client so this test file doesn't require DATABASE_URL ──
+vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 
 import {
   PERMISSIONS,

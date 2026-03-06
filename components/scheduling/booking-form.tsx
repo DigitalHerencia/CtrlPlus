@@ -55,6 +55,14 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
   const [selectedWrapId, setSelectedWrapId] = useState<string>(wraps[0]?.id ?? "");
   const [error, setError] = useState<string | null>(null);
 
+  if (wraps.length === 0) {
+    return (
+      <div className="text-center py-12 text-neutral-500">
+        No wrap services are available for booking at this time.
+      </div>
+    );
+  }
+
   const availableWeekdays = getAvailableWeekdays(availabilityWindows);
   const windowsForDay = selectedDate ? getWindowsForDate(availabilityWindows, selectedDate) : [];
 

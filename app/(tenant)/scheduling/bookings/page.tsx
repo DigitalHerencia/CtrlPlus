@@ -115,10 +115,10 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
                   booking={{
                     id: b.id,
                     wrapId: b.wrapId,
-                    startTime: b.dropOffStart,
-                    endTime: b.dropOffEnd,
-                    status: String(b.status),
-                    totalPrice: 0,
+                    startTime: b.startTime,
+                    endTime: b.endTime,
+                    status: b.status,
+                    totalPrice: b.totalPrice,
                   }}
                 />
               ))}

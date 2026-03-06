@@ -7,11 +7,16 @@ import { prisma } from "@/lib/prisma";
 
 // ─── Input validation schema ──────────────────────────────────────────────────
 
-const createBookingSchema = z.object({
-  wrapId: z.string().min(1, "Wrap is required"),
-  startTime: z.coerce.date({ required_error: "Start time is required" }),
-  endTime: z.coerce.date({ required_error: "End time is required" }),
-});
+const createBookingSchema = z
+  .object({
+    wrapId: z.string().min(1, "Wrap is required"),
+    startTime: z.coerce.date({ required_error: "Start time is required" }),
+    endTime: z.coerce.date({ required_error: "End time is required" }),
+  })
+  .refine((data) => data.endTime > data.startTime, {
+    message: "End time must be after start time",
+    path: ["endTime"],
+  });
 
 export type CreateBookingInput = z.infer<typeof createBookingSchema>;
 
@@ -48,10 +53,6 @@ export async function createBooking(input: CreateBookingInput): Promise<CreatedB
 
   // Step 3: VALIDATE
   const parsed = createBookingSchema.parse(input);
-
-  if (parsed.endTime <= parsed.startTime) {
-    throw new Error("End time must be after start time");
-  }
 
   // Step 4: MUTATE
   // Look up wrap to get price (scoped to tenant)

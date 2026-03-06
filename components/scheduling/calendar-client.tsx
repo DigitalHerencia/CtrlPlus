@@ -25,9 +25,13 @@ interface CalendarClientProps {
   /** Day-of-week indices (0=Sun … 6=Sat) that have availability windows */
   availableWeekdays: number[];
   selectedDate?: Date | null;
-  onDateSelect: (date: Date) => void;
+  onDateSelect?: (date: Date) => void;
   /** Earliest selectable date; defaults to today */
   minDate?: Date;
+}
+
+function normalizeToMidnight(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }
 
 export function CalendarClient({
@@ -36,8 +40,7 @@ export function CalendarClient({
   onDateSelect,
   minDate,
 }: CalendarClientProps) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = normalizeToMidnight(new Date());
 
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -63,9 +66,7 @@ export function CalendarClient({
   const firstDayOfMonth = new Date(viewYear, viewMonth, 1).getDay();
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
 
-  const minDay = minDate
-    ? new Date(minDate.getFullYear(), minDate.getMonth(), minDate.getDate())
-    : today;
+  const minDay = minDate ? normalizeToMidnight(minDate) : today;
 
   function isDayAvailable(day: number): boolean {
     const date = new Date(viewYear, viewMonth, day);
@@ -132,7 +133,7 @@ export function CalendarClient({
             <button
               key={day}
               disabled={!available}
-              onClick={() => onDateSelect(new Date(viewYear, viewMonth, day))}
+              onClick={() => onDateSelect?.(new Date(viewYear, viewMonth, day))}
               className={cn(
                 "h-9 w-full rounded-md text-sm transition-colors",
                 available && !selected ? "hover:bg-primary/10 cursor-pointer" : "",

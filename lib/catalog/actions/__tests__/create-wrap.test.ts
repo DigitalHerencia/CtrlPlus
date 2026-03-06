@@ -39,10 +39,6 @@ const validInput = {
   name: "Carbon Fiber Full Wrap",
   description: "Premium carbon fiber wrap",
   price: 1500,
-  estimatedHours: 8,
-  imageUrls: ["https://example.com/cf.jpg"],
-  category: "FULL_WRAP" as const,
-  status: "ACTIVE" as const,
 };
 
 const mockWrap = {
@@ -50,11 +46,8 @@ const mockWrap = {
   tenantId: "tenant-1",
   name: "Carbon Fiber Full Wrap",
   description: "Premium carbon fiber wrap",
-  price: { toString: () => "1500" },
-  estimatedHours: 8,
-  status: "ACTIVE",
-  imageUrls: ["https://example.com/cf.jpg"],
-  category: "FULL_WRAP",
+  price: 1500,
+  installationMinutes: null,
   deletedAt: null,
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-01"),
@@ -79,9 +72,7 @@ describe("createWrap", () => {
       id: "wrap-1",
       tenantId: "tenant-1",
       name: "Carbon Fiber Full Wrap",
-      price: "1500",
-      category: "FULL_WRAP",
-      status: "ACTIVE",
+      price: 1500,
     });
   });
 

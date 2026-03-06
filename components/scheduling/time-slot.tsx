@@ -4,7 +4,7 @@ interface TimeSlotProps {
   startTime: string; // "HH:mm" 24-hour
   endTime: string; // "HH:mm" 24-hour
   capacity: number;
-  booked?: number;
+  bookedCount?: number;
   isSelected?: boolean;
   onClick?: () => void;
   disabled?: boolean;
@@ -23,12 +23,12 @@ export function TimeSlot({
   startTime,
   endTime,
   capacity,
-  booked = 0,
+  bookedCount = 0,
   isSelected = false,
   onClick,
   disabled = false,
 }: TimeSlotProps) {
-  const available = capacity - booked;
+  const available = capacity - bookedCount;
   const isFull = available <= 0;
   const effectivelyDisabled = disabled || isFull;
 

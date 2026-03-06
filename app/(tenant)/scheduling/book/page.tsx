@@ -29,7 +29,7 @@ export default async function BookPage() {
       dayOfWeek: w.dayOfWeek,
       startTime: w.startTime,
       endTime: w.endTime,
-      capacity: w.capacity,
+      capacity: w.capacitySlots,
     }));
   } catch {
     // Gracefully degrade
