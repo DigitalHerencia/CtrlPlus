@@ -13,19 +13,13 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 import { prisma } from "@/lib/prisma";
-import {
-  getBookingsForTenant,
-  getBookingById,
-  getUpcomingBookingCount,
-} from "../get-bookings";
+import { getBookingsForTenant, getBookingById, getUpcomingBookingCount } from "../get-bookings";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const NOW = new Date("2025-01-15T10:00:00.000Z");
 
-function makeBookingRecord(
-  overrides: Partial<ReturnType<typeof baseRecord>> = {}
-) {
+function makeBookingRecord(overrides: Partial<ReturnType<typeof baseRecord>> = {}) {
   return { ...baseRecord(), ...overrides };
 }
 
@@ -65,7 +59,7 @@ describe("getBookingsForTenant", () => {
           tenantId: "tenant-a",
           deletedAt: null,
         }),
-      })
+      }),
     );
     expect(prisma.booking.count).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -73,7 +67,7 @@ describe("getBookingsForTenant", () => {
           tenantId: "tenant-a",
           deletedAt: null,
         }),
-      })
+      }),
     );
   });
 
@@ -102,7 +96,7 @@ describe("getBookingsForTenant", () => {
     });
 
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ skip: 20, take: 10 })
+      expect.objectContaining({ skip: 20, take: 10 }),
     );
     expect(result.page).toBe(3);
     expect(result.pageSize).toBe(10);
@@ -123,7 +117,7 @@ describe("getBookingsForTenant", () => {
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ status: BookingStatus.CONFIRMED }),
-      })
+      }),
     );
   });
 
@@ -146,7 +140,7 @@ describe("getBookingsForTenant", () => {
         where: expect.objectContaining({
           dropOffStart: expect.objectContaining({ gte: from, lte: to }),
         }),
-      })
+      }),
     );
   });
 
@@ -157,7 +151,7 @@ describe("getBookingsForTenant", () => {
     await getBookingsForTenant("tenant-a");
 
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ orderBy: { dropOffStart: "asc" } })
+      expect.objectContaining({ orderBy: { dropOffStart: "asc" } }),
     );
   });
 
@@ -193,7 +187,7 @@ describe("getBookingById", () => {
           tenantId: "tenant-a",
           deletedAt: null,
         },
-      })
+      }),
     );
   });
 
@@ -238,7 +232,7 @@ describe("getUpcomingBookingCount", () => {
           },
           dropOffStart: { gte: from },
         }),
-      })
+      }),
     );
     expect(result).toBe(3);
   });

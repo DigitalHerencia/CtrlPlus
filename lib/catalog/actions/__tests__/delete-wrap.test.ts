@@ -89,7 +89,7 @@ describe("deleteWrap", () => {
       expect.objectContaining({
         where: { id: "wrap-1" },
         data: expect.objectContaining({ deletedAt: expect.any(Date) }),
-      })
+      }),
     );
   });
 
@@ -109,7 +109,7 @@ describe("deleteWrap", () => {
           tenantId: "tenant-1",
           deletedAt: null,
         }),
-      })
+      }),
     );
   });
 
@@ -130,7 +130,7 @@ describe("deleteWrap", () => {
           tenantId: "tenant-1",
           userId: "user-1",
         }),
-      })
+      }),
     );
   });
 
@@ -143,7 +143,7 @@ describe("deleteWrap", () => {
   it("throws Forbidden when assertTenantMembership rejects", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockRejectedValue(
-      new Error("Forbidden: no active membership for this tenant")
+      new Error("Forbidden: no active membership for this tenant"),
     );
 
     await expect(deleteWrap("wrap-1")).rejects.toThrow("Forbidden");

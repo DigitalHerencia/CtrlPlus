@@ -59,7 +59,7 @@ const availabilitySelectFields = {
  */
 export async function getAvailabilityWindowsForTenant(
   tenantId: string,
-  params: AvailabilityListParams = DEFAULT_AVAILABILITY_LIST_PARAMS
+  params: AvailabilityListParams = DEFAULT_AVAILABILITY_LIST_PARAMS,
 ): Promise<AvailabilityListResult> {
   const { page, pageSize, dayOfWeek, activeOnly } = params;
   const skip = (page - 1) * pageSize;
@@ -100,7 +100,7 @@ export async function getAvailabilityWindowsForTenant(
  */
 export async function getAvailabilityWindowById(
   tenantId: string,
-  windowId: string
+  windowId: string,
 ): Promise<AvailabilityWindowDTO | null> {
   const record = await prisma.availabilityWindow.findFirst({
     where: {
@@ -123,7 +123,7 @@ export async function getAvailabilityWindowById(
  */
 export async function getAvailabilityWindowsByDay(
   tenantId: string,
-  dayOfWeek: number
+  dayOfWeek: number,
 ): Promise<AvailabilityWindowDTO[]> {
   const records = await prisma.availabilityWindow.findMany({
     where: {
