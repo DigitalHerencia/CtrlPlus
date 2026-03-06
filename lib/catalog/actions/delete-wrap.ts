@@ -11,18 +11,18 @@ import type { WrapDTO } from "../types";
  *
  * Security pipeline:
  * 1. Authenticate  — verify user is signed in
- * 2. Authorize     — verify user is an owner of the tenant (elevated privilege)
+ * 2. Authorize     — verify user is an admin or owner of the tenant
  * 3. Tenant scope  — confirm the wrap belongs to the current tenant
  * 4. Mutate        — soft delete by setting deletedAt
- * 5. Audit         — write an immutable audit event
+ * 5. Audit         — write an immutable audit log entry
  */
 export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
   // 1. AUTHENTICATE
   const { user, tenantId } = await getSession();
   if (!user) throw new Error("Unauthorized: not authenticated");
 
-  // 2. AUTHORIZE — delete requires owner or admin role
-  await assertTenantMembership(tenantId, user.id, ["OWNER", "ADMIN"]);
+  // 2. AUTHORIZE — delete requires admin role or higher
+  await assertTenantMembership(tenantId, user.id, "admin");
 
   // 3. TENANT SCOPE — defensive ownership check before mutation
   const existing = await prisma.wrap.findFirst({
@@ -41,13 +41,15 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
   });
 
   // 5. AUDIT
-  await prisma.auditEvent.create({
+  await prisma.auditLog.create({
     data: {
       tenantId,
       userId: user.id,
-      action: "wrap.deleted",
-      resource: `wrap:${wrap.id}`,
-      metadata: { name: wrap.name },
+      action: "DELETE_WRAP",
+      resourceType: "Wrap",
+      resourceId: wrap.id,
+      details: JSON.stringify({ name: wrap.name }),
+      timestamp: new Date(),
     },
   });
 
@@ -56,11 +58,8 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
     tenantId: wrap.tenantId,
     name: wrap.name,
     description: wrap.description,
-    price: wrap.price.toString(),
-    estimatedHours: wrap.estimatedHours,
-    status: wrap.status as WrapDTO["status"],
-    imageUrls: wrap.imageUrls,
-    category: wrap.category as WrapDTO["category"],
+    price: wrap.price,
+    installationMinutes: wrap.installationMinutes,
     createdAt: wrap.createdAt,
     updatedAt: wrap.updatedAt,
   };

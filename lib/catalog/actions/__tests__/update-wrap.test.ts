@@ -16,7 +16,7 @@ vi.mock("@/lib/prisma", () => ({
     wrap: {
       update: vi.fn(),
     },
-    auditEvent: {
+    auditLog: {
       create: vi.fn(),
     },
   },
@@ -34,6 +34,8 @@ import { Prisma } from "@prisma/client";
 const mockSession = {
   user: { id: "user-1", clerkUserId: "clerk-1", email: "admin@example.com" },
   tenantId: "tenant-1",
+  isAuthenticated: true,
+  userId: "user-1",
 };
 
 const updatedWrap = {
@@ -41,11 +43,8 @@ const updatedWrap = {
   tenantId: "tenant-1",
   name: "Updated Wrap",
   description: null,
-  price: { toString: () => "2000" },
-  estimatedHours: 10,
-  status: "ACTIVE",
-  imageUrls: [],
-  category: "FULL_WRAP",
+  price: 2000,
+  installationMinutes: 600,
   deletedAt: null,
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-02"),
@@ -62,7 +61,7 @@ describe("updateWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.update).mockResolvedValue(updatedWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     const result = await updateWrap("wrap-1", { name: "Updated Wrap" });
 
@@ -73,7 +72,7 @@ describe("updateWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.update).mockResolvedValue(updatedWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await updateWrap("wrap-1", { name: "Updated Wrap" });
 
@@ -88,26 +87,31 @@ describe("updateWrap", () => {
     );
   });
 
-  it("writes an audit event after updating the wrap", async () => {
+  it("writes an audit log entry after updating the wrap", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.update).mockResolvedValue(updatedWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await updateWrap("wrap-1", { name: "Updated Wrap" });
 
-    expect(prisma.auditEvent.create).toHaveBeenCalledWith(
+    expect(prisma.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          action: "wrap.updated",
-          resource: "wrap:wrap-1",
+          action: "UPDATE_WRAP",
+          resourceId: "wrap-1",
         }),
       }),
     );
   });
 
   it("throws Unauthorized when the user is not authenticated", async () => {
-    vi.mocked(getSession).mockResolvedValue({ user: null, tenantId: "" });
+    vi.mocked(getSession).mockResolvedValue({
+      user: null,
+      tenantId: "",
+      isAuthenticated: false,
+      userId: "",
+    });
 
     await expect(updateWrap("wrap-1", { name: "x" })).rejects.toThrow("Unauthorized");
   });

@@ -9,6 +9,10 @@ export interface SessionUser {
 export interface Session {
   user: SessionUser | null;
   tenantId: string;
+  /** Convenience flag: true when user is authenticated */
+  isAuthenticated: boolean;
+  /** Convenience accessor: Clerk user ID or empty string when unauthenticated */
+  userId: string;
 }
 
 /**
@@ -21,12 +25,12 @@ export async function getSession(): Promise<Session> {
   const { userId } = await auth();
 
   if (!userId) {
-    return { user: null, tenantId: "" };
+    return { user: null, tenantId: "", isAuthenticated: false, userId: "" };
   }
 
   const clerkUser = await currentUser();
   if (!clerkUser) {
-    return { user: null, tenantId: "" };
+    return { user: null, tenantId: "", isAuthenticated: false, userId: "" };
   }
 
   // Resolve tenantId from request host (subdomain-based multi-tenancy).
@@ -45,6 +49,8 @@ export async function getSession(): Promise<Session> {
       email: primaryEmail?.emailAddress ?? "",
     },
     tenantId,
+    isAuthenticated: true,
+    userId,
   };
 }
 

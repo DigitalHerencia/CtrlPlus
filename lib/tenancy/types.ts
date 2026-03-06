@@ -20,6 +20,7 @@ export interface TenantUserMembership {
   role: TenantRole;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date | null;
 }
 
 export type TenantRole = "owner" | "admin" | "member";

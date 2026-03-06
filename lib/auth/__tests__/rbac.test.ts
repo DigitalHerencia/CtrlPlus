@@ -1,123 +1,119 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import {
-  PERMISSIONS,
-  ROLE_PERMISSIONS,
-  hasPermission,
-  hasRole,
-  requireRole,
-  type TenantRole,
-} from "../rbac";
+// Mock Prisma to prevent database initialization when rbac.ts imports tenancy/assert
+vi.mock("@/lib/prisma", () => ({ prisma: {} }));
+
+import { PERMISSIONS, ROLES, roleHasPermission, type TenantRole } from "../rbac";
 
 // ---------------------------------------------------------------------------
-// hasRole
+// ROLES constant
 // ---------------------------------------------------------------------------
 
-describe("hasRole", () => {
-  it("returns true when user role exactly matches required role", () => {
-    expect(hasRole("OWNER", "OWNER")).toBe(true);
-    expect(hasRole("ADMIN", "ADMIN")).toBe(true);
-    expect(hasRole("MEMBER", "MEMBER")).toBe(true);
+describe("ROLES", () => {
+  it("defines the three expected roles", () => {
+    expect(Object.keys(ROLES)).toEqual(expect.arrayContaining(["owner", "admin", "member"]));
   });
 
-  it("returns true for higher-privilege roles satisfying lower-privilege requirements", () => {
-    expect(hasRole("OWNER", "ADMIN")).toBe(true);
-    expect(hasRole("OWNER", "MEMBER")).toBe(true);
-    expect(hasRole("ADMIN", "MEMBER")).toBe(true);
-  });
-
-  it("returns false for lower-privilege roles against higher-privilege requirements", () => {
-    expect(hasRole("MEMBER", "ADMIN")).toBe(false);
-    expect(hasRole("MEMBER", "OWNER")).toBe(false);
-    expect(hasRole("ADMIN", "OWNER")).toBe(false);
-  });
-
-  it("returns true when user role satisfies any role in an array", () => {
-    expect(hasRole("ADMIN", ["OWNER", "ADMIN"])).toBe(true);
-    expect(hasRole("OWNER", ["ADMIN", "MEMBER"])).toBe(true);
-    expect(hasRole("MEMBER", ["MEMBER"])).toBe(true);
-  });
-
-  it("returns false when user role does not satisfy any role in an array", () => {
-    expect(hasRole("MEMBER", ["OWNER", "ADMIN"])).toBe(false);
-    expect(hasRole("ADMIN", ["OWNER"])).toBe(false);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// hasPermission
-// ---------------------------------------------------------------------------
-
-describe("hasPermission", () => {
-  it("grants OWNER all permissions", () => {
-    const ownerPermissions = ROLE_PERMISSIONS["OWNER"] as string[];
-    expect(ownerPermissions).toContain(PERMISSIONS.admin.write);
-    expect(ownerPermissions).toContain(PERMISSIONS.admin.users);
-    expect(ownerPermissions).toContain(PERMISSIONS.billing.write);
-    expect(ownerPermissions).toContain(PERMISSIONS.catalog.delete);
-  });
-
-  it("grants ADMIN elevated but not owner-level admin permissions", () => {
-    expect(hasPermission("ADMIN", PERMISSIONS.catalog.write)).toBe(true);
-    expect(hasPermission("ADMIN", PERMISSIONS.admin.read)).toBe(true);
-    expect(hasPermission("ADMIN", PERMISSIONS.admin.write)).toBe(false);
-    expect(hasPermission("ADMIN", PERMISSIONS.admin.users)).toBe(false);
-  });
-
-  it("grants MEMBER read-only catalog and scheduling access", () => {
-    expect(hasPermission("MEMBER", PERMISSIONS.catalog.read)).toBe(true);
-    expect(hasPermission("MEMBER", PERMISSIONS.scheduling.read)).toBe(true);
-    expect(hasPermission("MEMBER", PERMISSIONS.visualizer.write)).toBe(true);
-  });
-
-  it("denies MEMBER write access to catalog, scheduling, and billing", () => {
-    expect(hasPermission("MEMBER", PERMISSIONS.catalog.write)).toBe(false);
-    expect(hasPermission("MEMBER", PERMISSIONS.catalog.delete)).toBe(false);
-    expect(hasPermission("MEMBER", PERMISSIONS.scheduling.write)).toBe(false);
-    expect(hasPermission("MEMBER", PERMISSIONS.billing.read)).toBe(false);
-    expect(hasPermission("MEMBER", PERMISSIONS.billing.write)).toBe(false);
-  });
-
-  it("returns false for unknown permission strings", () => {
-    expect(hasPermission("OWNER", "unknown:permission")).toBe(false);
-    expect(hasPermission("MEMBER", "")).toBe(false);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// requireRole
-// ---------------------------------------------------------------------------
-
-describe("requireRole", () => {
-  it("does not throw when the user role satisfies the requirement", () => {
-    expect(() => requireRole("OWNER", "OWNER")).not.toThrow();
-    expect(() => requireRole("OWNER", "ADMIN")).not.toThrow();
-    expect(() => requireRole("OWNER", "MEMBER")).not.toThrow();
-    expect(() => requireRole("ADMIN", "ADMIN")).not.toThrow();
-    expect(() => requireRole("ADMIN", "MEMBER")).not.toThrow();
-    expect(() => requireRole("MEMBER", "MEMBER")).not.toThrow();
-  });
-
-  it("throws 'Forbidden: insufficient role' for insufficient roles", () => {
-    expect(() => requireRole("MEMBER", "ADMIN")).toThrow("Forbidden: insufficient role");
-    expect(() => requireRole("MEMBER", "OWNER")).toThrow("Forbidden: insufficient role");
-    expect(() => requireRole("ADMIN", "OWNER")).toThrow("Forbidden: insufficient role");
-  });
-
-  it("does not throw when the user role satisfies any role in an array", () => {
-    expect(() => requireRole("ADMIN", ["OWNER", "ADMIN"])).not.toThrow();
-    expect(() => requireRole("OWNER", ["ADMIN", "MEMBER"])).not.toThrow();
-  });
-
-  it("throws 'Forbidden: insufficient role' when no role in array is satisfied", () => {
-    expect(() => requireRole("MEMBER", ["OWNER", "ADMIN"])).toThrow("Forbidden: insufficient role");
-  });
-
-  // Type safety: verify the function accepts all valid TenantRole values
-  it("accepts all valid TenantRole values without type errors", () => {
-    const roles: TenantRole[] = ["OWNER", "ADMIN", "MEMBER"];
-    for (const role of roles) {
-      expect(() => requireRole(role, "MEMBER")).not.toThrow();
+  it("each role has a name and description", () => {
+    for (const role of Object.values(ROLES)) {
+      expect(role).toHaveProperty("name");
+      expect(role).toHaveProperty("description");
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PERMISSIONS constant
+// ---------------------------------------------------------------------------
+
+describe("PERMISSIONS", () => {
+  it("includes catalog permissions", () => {
+    expect(PERMISSIONS).toHaveProperty("catalog:view");
+    expect(PERMISSIONS).toHaveProperty("catalog:create");
+    expect(PERMISSIONS).toHaveProperty("catalog:update");
+    expect(PERMISSIONS).toHaveProperty("catalog:delete");
+  });
+
+  it("includes booking permissions", () => {
+    expect(PERMISSIONS).toHaveProperty("booking:view");
+    expect(PERMISSIONS).toHaveProperty("booking:create");
+    expect(PERMISSIONS).toHaveProperty("booking:update");
+    expect(PERMISSIONS).toHaveProperty("booking:cancel");
+  });
+
+  it("includes billing permissions", () => {
+    expect(PERMISSIONS).toHaveProperty("billing:view");
+    expect(PERMISSIONS).toHaveProperty("billing:manage");
+  });
+
+  it("each permission maps to an array of allowed roles", () => {
+    for (const allowedRoles of Object.values(PERMISSIONS)) {
+      expect(Array.isArray(allowedRoles)).toBe(true);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// roleHasPermission
+// ---------------------------------------------------------------------------
+
+describe("roleHasPermission", () => {
+  it("grants owner all catalog permissions", () => {
+    const owner: TenantRole = "owner";
+    expect(roleHasPermission(owner, "catalog:view")).toBe(true);
+    expect(roleHasPermission(owner, "catalog:create")).toBe(true);
+    expect(roleHasPermission(owner, "catalog:update")).toBe(true);
+    expect(roleHasPermission(owner, "catalog:delete")).toBe(true);
+  });
+
+  it("grants admin catalog view and write permissions", () => {
+    const admin: TenantRole = "admin";
+    expect(roleHasPermission(admin, "catalog:view")).toBe(true);
+    expect(roleHasPermission(admin, "catalog:create")).toBe(true);
+    expect(roleHasPermission(admin, "catalog:update")).toBe(true);
+    expect(roleHasPermission(admin, "catalog:delete")).toBe(true);
+  });
+
+  it("grants member only catalog:view", () => {
+    const member: TenantRole = "member";
+    expect(roleHasPermission(member, "catalog:view")).toBe(true);
+    expect(roleHasPermission(member, "catalog:create")).toBe(false);
+    expect(roleHasPermission(member, "catalog:update")).toBe(false);
+    expect(roleHasPermission(member, "catalog:delete")).toBe(false);
+  });
+
+  it("only owner can manage billing", () => {
+    expect(roleHasPermission("owner", "billing:manage")).toBe(true);
+    expect(roleHasPermission("admin", "billing:manage")).toBe(false);
+    expect(roleHasPermission("member", "billing:manage")).toBe(false);
+  });
+
+  it("owner and admin can view billing", () => {
+    expect(roleHasPermission("owner", "billing:view")).toBe(true);
+    expect(roleHasPermission("admin", "billing:view")).toBe(true);
+    expect(roleHasPermission("member", "billing:view")).toBe(false);
+  });
+
+  it("all roles can view and create bookings", () => {
+    const roles: TenantRole[] = ["owner", "admin", "member"];
+    for (const role of roles) {
+      expect(roleHasPermission(role, "booking:view")).toBe(true);
+      expect(roleHasPermission(role, "booking:create")).toBe(true);
+    }
+  });
+
+  it("only owner and admin can update or cancel bookings", () => {
+    expect(roleHasPermission("owner", "booking:update")).toBe(true);
+    expect(roleHasPermission("admin", "booking:update")).toBe(true);
+    expect(roleHasPermission("member", "booking:update")).toBe(false);
+    expect(roleHasPermission("owner", "booking:cancel")).toBe(true);
+    expect(roleHasPermission("admin", "booking:cancel")).toBe(true);
+    expect(roleHasPermission("member", "booking:cancel")).toBe(false);
+  });
+
+  it("only owner can update tenant settings", () => {
+    expect(roleHasPermission("owner", "settings:update")).toBe(true);
+    expect(roleHasPermission("admin", "settings:update")).toBe(false);
+    expect(roleHasPermission("member", "settings:update")).toBe(false);
   });
 });

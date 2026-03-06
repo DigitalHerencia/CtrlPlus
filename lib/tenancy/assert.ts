@@ -49,13 +49,11 @@ export async function assertTenantMembership(
   });
 
   if (!membership) {
-    throw new Error(`Forbidden - User is not a member of tenant ${tenantId}`);
+    throw new Error("Unauthorized: not a member of this tenant");
   }
 
   if (!hasRolePermission(membership.role as TenantRole, requiredRole)) {
-    throw new Error(
-      `Forbidden - User role '${membership.role}' insufficient, requires '${requiredRole}' or higher`,
-    );
+    throw new Error("Forbidden: insufficient role");
   }
 }
 
@@ -85,9 +83,7 @@ export async function assertTenantMembership(
  */
 export function assertTenantScope(recordTenantId: string, currentTenantId: string): void {
   if (recordTenantId !== currentTenantId) {
-    throw new Error(
-      "Forbidden - Record does not belong to current tenant (cross-tenant access attempt)",
-    );
+    throw new Error("Forbidden: cross-tenant access detected");
   }
 }
 
