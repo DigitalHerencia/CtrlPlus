@@ -1,6 +1,6 @@
 "use server";
 
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
 import { updateWrapSchema, type UpdateWrapInput, type WrapDTO } from "../types";
@@ -14,25 +14,21 @@ import { Prisma } from "@prisma/client";
  * 2. Authorize     — verify user is an admin or owner of the tenant
  * 3. Validate      — parse and validate input with Zod
  * 4. Mutate        — apply updates scoped by tenantId (throws if not found)
- * 5. Audit         — write an immutable audit event
+ * 5. Audit         — write an immutable audit log entry
  */
-export async function updateWrap(
-  wrapId: string,
-  input: UpdateWrapInput
-): Promise<WrapDTO> {
+export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promise<WrapDTO> {
   // 1. AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { userId, tenantId } = await requireAuth();
 
   // 2. AUTHORIZE
-  await assertTenantMembership(tenantId, user.id, ["OWNER", "ADMIN"]);
+  await assertTenantMembership(tenantId, userId, ["OWNER", "ADMIN"]);
 
   // 3. VALIDATE
   const parsed = updateWrapSchema.parse(input);
 
   // Build the update data, excluding undefined fields
   const data = Object.fromEntries(
-    Object.entries(parsed).filter(([, v]) => v !== undefined)
+    Object.entries(parsed).filter(([, v]) => v !== undefined),
   ) as Prisma.WrapUpdateInput;
 
   // 4. MUTATE — the compound where clause acts as the tenant-scope check:
@@ -44,24 +40,23 @@ export async function updateWrap(
       where: { id: wrapId, tenantId, deletedAt: null },
       data,
     });
-  } catch (err) {
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.code === "P2025"
-    ) {
+  } catch (err: unknown) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
       throw new Error("Forbidden: resource not found");
     }
     throw err;
   }
 
   // 5. AUDIT
-  await prisma.auditEvent.create({
+  await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: user.id,
+      userId,
       action: "wrap.updated",
-      resource: `wrap:${wrap.id}`,
-      metadata: { changes: parsed },
+      resourceType: "Wrap",
+      resourceId: wrap.id,
+      details: JSON.stringify({ changes: parsed }),
+      timestamp: new Date(),
     },
   });
 
@@ -70,11 +65,8 @@ export async function updateWrap(
     tenantId: wrap.tenantId,
     name: wrap.name,
     description: wrap.description,
-    price: wrap.price.toString(),
-    estimatedHours: wrap.estimatedHours,
-    status: wrap.status as WrapDTO["status"],
-    imageUrls: wrap.imageUrls,
-    category: wrap.category as WrapDTO["category"],
+    price: wrap.price,
+    installationMinutes: wrap.installationMinutes,
     createdAt: wrap.createdAt,
     updatedAt: wrap.updatedAt,
   };

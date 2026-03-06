@@ -20,23 +20,37 @@ export interface TenantUserMembership {
   role: TenantRole;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
-export type TenantRole = "owner" | "admin" | "member";
+export type TenantRole = "OWNER" | "ADMIN" | "MEMBER";
 
 /**
  * Map of role hierarchy for permission checking.
  * Higher value = more permissions.
  */
 export const ROLE_HIERARCHY: Record<TenantRole, number> = {
-  owner: 3,
-  admin: 2,
-  member: 1,
+  OWNER: 3,
+  ADMIN: 2,
+  MEMBER: 1,
 };
 
 /**
  * Check if a role has at least the required permission level.
+ * Accepts both upper and lowercase role strings for DB compatibility.
+ * Returns false if either role string is not a recognized TenantRole.
  */
-export function hasRolePermission(userRole: TenantRole, requiredRole: TenantRole): boolean {
-  return ROLE_HIERARCHY[userRole] >= ROLE_HIERARCHY[requiredRole];
+export function hasRolePermission(userRole: string, requiredRole: string): boolean {
+  const userNormalized = userRole.toUpperCase() as TenantRole;
+  const requiredNormalized = requiredRole.toUpperCase() as TenantRole;
+
+  const userLevel = ROLE_HIERARCHY[userNormalized];
+  const requiredLevel = ROLE_HIERARCHY[requiredNormalized];
+
+  // Return false for unrecognized roles to prevent unintended access grants
+  if (userLevel === undefined || requiredLevel === undefined) {
+    return false;
+  }
+
+  return userLevel >= requiredLevel;
 }
