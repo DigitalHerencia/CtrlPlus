@@ -1,114 +1,147 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// ─── Prisma mock ──────────────────────────────────────────────────────────────
+// ─── Mocks ────────────────────────────────────────────────────────────────────
 
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
-    tenantUserMembership: {
-      count: vi.fn(),
-    },
-    booking: {
-      count: vi.fn(),
-    },
-    invoice: {
-      aggregate: vi.fn(),
-    },
+    wrap: { count: vi.fn() },
+    tenantUserMembership: { count: vi.fn() },
+    booking: { count: vi.fn() },
+    invoice: { aggregate: vi.fn() },
   },
 }));
 
-vi.mock("@/lib/prisma", () => ({
-  prisma: prismaMock,
-}));
+vi.mock("@/lib/prisma", () => ({ prisma: prismaMock }));
+vi.mock("@/lib/admin/rbac", () => ({ assertAdminOrOwner: vi.fn().mockResolvedValue(undefined) }));
 
-// ─── Import after mock ────────────────────────────────────────────────────────
-
+import { assertAdminOrOwner } from "@/lib/admin/rbac";
 import { getTenantStats } from "../get-tenant-stats";
 
-// ─── Tests ────────────────────────────────────────────────────────────────────
+// ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe("getTenantStats", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(assertAdminOrOwner).mockResolvedValue(undefined);
   });
 
-  it("returns aggregated stats for the tenant", async () => {
-    prismaMock.tenantUserMembership.count.mockResolvedValue(5);
-    prismaMock.booking.count.mockResolvedValue(42);
-    prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: 150000 } });
-
-    const result = await getTenantStats("tenant-abc");
-
-    expect(result).toEqual({
-      totalMembers: 5,
-      totalBookings: 42,
-      totalRevenue: 150000,
-    });
-  });
-
-  it("scopes all queries by tenantId", async () => {
+  it("calls assertAdminOrOwner before querying", async () => {
+    prismaMock.wrap.count.mockResolvedValue(0);
     prismaMock.tenantUserMembership.count.mockResolvedValue(0);
     prismaMock.booking.count.mockResolvedValue(0);
     prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
 
-    await getTenantStats("tenant-abc");
+    await getTenantStats("tenant-abc", "user-001");
+
+    expect(assertAdminOrOwner).toHaveBeenCalledWith("tenant-abc", "user-001");
+  });
+
+  it("throws when assertAdminOrOwner rejects (member role)", async () => {
+    vi.mocked(assertAdminOrOwner).mockRejectedValue(new Error("Forbidden"));
+
+    await expect(getTenantStats("tenant-abc", "user-member")).rejects.toThrow("Forbidden");
+
+    expect(prismaMock.wrap.count).not.toHaveBeenCalled();
+  });
+
+  it("returns counts and revenue scoped to the tenant", async () => {
+    prismaMock.wrap.count.mockResolvedValue(5);
+    prismaMock.tenantUserMembership.count.mockResolvedValue(3);
+    prismaMock.booking.count.mockResolvedValue(12);
+    prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: 8000 } });
+
+    const result = await getTenantStats("tenant-abc", "user-001");
+
+    expect(result.wrapCount).toBe(5);
+    expect(result.memberCount).toBe(3);
+    expect(result.bookingCount).toBe(12);
+    expect(result.totalRevenue).toBe(8000);
+  });
+
+  it("scopes wrap count query by tenantId and deletedAt: null", async () => {
+    prismaMock.wrap.count.mockResolvedValue(0);
+    prismaMock.tenantUserMembership.count.mockResolvedValue(0);
+    prismaMock.booking.count.mockResolvedValue(0);
+    prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
+
+    await getTenantStats("tenant-abc", "user-001");
+
+    expect(prismaMock.wrap.count).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ tenantId: "tenant-abc", deletedAt: null }),
+      }),
+    );
+  });
+
+  it("scopes member count query by tenantId and deletedAt: null", async () => {
+    prismaMock.wrap.count.mockResolvedValue(0);
+    prismaMock.tenantUserMembership.count.mockResolvedValue(0);
+    prismaMock.booking.count.mockResolvedValue(0);
+    prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
+
+    await getTenantStats("tenant-abc", "user-001");
 
     expect(prismaMock.tenantUserMembership.count).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ tenantId: "tenant-abc" }),
-      }),
-    );
-    expect(prismaMock.booking.count).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ tenantId: "tenant-abc" }),
-      }),
-    );
-    expect(prismaMock.invoice.aggregate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ tenantId: "tenant-abc" }),
+        where: expect.objectContaining({ tenantId: "tenant-abc", deletedAt: null }),
       }),
     );
   });
 
-  it("filters soft-deleted members and bookings", async () => {
+  it("scopes booking count query by tenantId and deletedAt: null", async () => {
+    prismaMock.wrap.count.mockResolvedValue(0);
     prismaMock.tenantUserMembership.count.mockResolvedValue(0);
     prismaMock.booking.count.mockResolvedValue(0);
     prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
 
-    await getTenantStats("tenant-abc");
+    await getTenantStats("tenant-abc", "user-001");
 
-    expect(prismaMock.tenantUserMembership.count).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ deletedAt: null }),
-      }),
-    );
     expect(prismaMock.booking.count).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ deletedAt: null }),
+        where: expect.objectContaining({ tenantId: "tenant-abc", deletedAt: null }),
       }),
     );
   });
 
-  it("only counts paid invoices for revenue", async () => {
+  it("uses DB-side aggregation for revenue scoped to paid invoices", async () => {
+    prismaMock.wrap.count.mockResolvedValue(0);
     prismaMock.tenantUserMembership.count.mockResolvedValue(0);
     prismaMock.booking.count.mockResolvedValue(0);
     prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
 
-    await getTenantStats("tenant-abc");
+    await getTenantStats("tenant-abc", "user-001");
 
     expect(prismaMock.invoice.aggregate).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ status: "paid", deletedAt: null }),
+        where: expect.objectContaining({
+          tenantId: "tenant-abc",
+          status: "paid",
+          deletedAt: null,
+        }),
+        _sum: { totalAmount: true },
       }),
     );
   });
 
-  it("returns zero revenue when no paid invoices exist", async () => {
+  it("returns zero totalRevenue when aggregate sum is null (no paid invoices)", async () => {
+    prismaMock.wrap.count.mockResolvedValue(0);
     prismaMock.tenantUserMembership.count.mockResolvedValue(0);
     prismaMock.booking.count.mockResolvedValue(0);
     prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
 
-    const result = await getTenantStats("tenant-abc");
+    const result = await getTenantStats("tenant-abc", "user-001");
 
     expect(result.totalRevenue).toBe(0);
+  });
+
+  it("returns totalRevenue from aggregate sum when invoices exist", async () => {
+    prismaMock.wrap.count.mockResolvedValue(1);
+    prismaMock.tenantUserMembership.count.mockResolvedValue(1);
+    prismaMock.booking.count.mockResolvedValue(1);
+    prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: 4250 } });
+
+    const result = await getTenantStats("tenant-abc", "user-001");
+
+    expect(result.totalRevenue).toBe(4250);
   });
 });

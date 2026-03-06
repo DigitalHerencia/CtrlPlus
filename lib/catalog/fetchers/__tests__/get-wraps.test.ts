@@ -22,8 +22,7 @@ const mockWrap = {
   name: "Matte Black Full Wrap",
   description: "Premium matte black vinyl wrap",
   price: 1200,
-  installationMinutes: 480,
-  deletedAt: null,
+  installationMinutes: null,
   createdAt: new Date("2024-01-01T00:00:00.000Z"),
   updatedAt: new Date("2024-01-02T00:00:00.000Z"),
 };
@@ -82,7 +81,7 @@ describe("getWrapsForTenant", () => {
     expect(result).toEqual([]);
   });
 
-  it("transforms Prisma Float price to number", async () => {
+  it("returns price as a number", async () => {
     prismaMock.wrap.findMany.mockResolvedValue([mockWrap]);
 
     const result = await getWrapsForTenant("tenant-abc");
@@ -140,7 +139,7 @@ describe("getWrapById", () => {
     );
   });
 
-  it("filters out soft-deleted wraps (deletedAt: null)", async () => {
+  it("filters out soft-deleted wraps", async () => {
     prismaMock.wrap.findFirst.mockResolvedValue(null);
 
     await getWrapById("tenant-abc", "wrap-001");
@@ -196,7 +195,7 @@ describe("searchWraps", () => {
     );
   });
 
-  it("filters out soft-deleted wraps (deletedAt: null)", async () => {
+  it("filters out soft-deleted wraps", async () => {
     prismaMock.wrap.findMany.mockResolvedValue([]);
     prismaMock.wrap.count.mockResolvedValue(0);
 

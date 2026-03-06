@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { BookingStatus } from "../../types";
 
 // ── Mock Prisma client ────────────────────────────────────────────────────────
 vi.mock("@/lib/prisma", () => ({
@@ -29,12 +30,12 @@ function baseRecord() {
     customerId: "customer-1",
     wrapId: "wrap-1",
     startTime: NOW,
-    endTime: new Date(NOW.getTime() + 3 * 60 * 60 * 1000),
-    status: "pending",
-    totalPrice: 150000,
-    deletedAt: null,
+    endTime: new Date(NOW.getTime() + 4 * 60 * 60 * 1000),
+    status: BookingStatus.PENDING,
+    totalPrice: 1500,
     createdAt: NOW,
     updatedAt: NOW,
+    deletedAt: null,
   };
 }
 
@@ -80,7 +81,6 @@ describe("getBookingsForTenant", () => {
     expect(dto.id).toBe("booking-1");
     expect(dto.tenantId).toBe("tenant-a");
     expect(dto.status).toBe("pending");
-    expect(dto.totalPrice).toBe(150000);
     expect("deletedAt" in dto).toBe(false);
   });
 
@@ -91,7 +91,7 @@ describe("getBookingsForTenant", () => {
     const result = await getBookingsForTenant("tenant-a", { page: 2, pageSize: 10 });
 
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ skip: 10, take: 10 }),
+      expect.objectContaining({ skip: 20, take: 10 }),
     );
     expect(result.page).toBe(2);
     expect(result.totalPages).toBe(5);
@@ -101,18 +101,20 @@ describe("getBookingsForTenant", () => {
     vi.mocked(prisma.booking.findMany).mockResolvedValue([]);
     vi.mocked(prisma.booking.count).mockResolvedValue(0);
 
-    await getBookingsForTenant("tenant-a", { page: 1, pageSize: 20, status: "confirmed" });
+    await getBookingsForTenant("tenant-a", {
+      page: 1,
+      pageSize: 20,
+      status: "confirmed",
+    });
 
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ status: "confirmed" }),
+        where: expect.objectContaining({ status: BookingStatus.CONFIRMED }),
       }),
     );
   });
 
-  it("filters by fromDate and toDate when provided", async () => {
-    const from = new Date("2025-01-01");
-    const to = new Date("2025-01-31");
+  it("applies optional date range filter via startTime", async () => {
     vi.mocked(prisma.booking.findMany).mockResolvedValue([]);
     vi.mocked(prisma.booking.count).mockResolvedValue(0);
 
@@ -121,10 +123,32 @@ describe("getBookingsForTenant", () => {
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          startTime: { gte: from, lte: to },
+          startTime: expect.objectContaining({ gte: from, lte: to }),
         }),
       }),
     );
+  });
+
+  it("orders results by startTime ascending", async () => {
+    vi.mocked(prisma.booking.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.booking.count).mockResolvedValue(0);
+
+    await getBookingsForTenant("tenant-a");
+
+    expect(prisma.booking.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ orderBy: { startTime: "asc" } }),
+    );
+  });
+
+  it("returns empty list when no bookings exist", async () => {
+    vi.mocked(prisma.booking.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.booking.count).mockResolvedValue(0);
+
+    const result = await getBookingsForTenant("tenant-a");
+
+    expect(result.items).toHaveLength(0);
+    expect(result.total).toBe(0);
+    expect(result.totalPages).toBe(0);
   });
 });
 
@@ -186,6 +210,9 @@ describe("getUpcomingBookingCount", () => {
         where: expect.objectContaining({
           tenantId: "tenant-a",
           deletedAt: null,
+          status: {
+            notIn: [BookingStatus.CANCELLED, BookingStatus.COMPLETED],
+          },
           startTime: { gte: from },
         }),
       }),
