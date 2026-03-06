@@ -1,6 +1,6 @@
 "use server";
 
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
 import { createWrapSchema, type CreateWrapInput, type WrapDTO } from "../types";
@@ -13,15 +13,14 @@ import { createWrapSchema, type CreateWrapInput, type WrapDTO } from "../types";
  * 2. Authorize     — verify user is an admin or owner of the tenant
  * 3. Validate      — parse and validate input with Zod
  * 4. Mutate        — create the record scoped to tenantId
- * 5. Audit         — write an immutable audit event
+ * 5. Audit         — write an immutable audit log entry
  */
 export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
   // 1. AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { userId, tenantId } = await requireAuth();
 
   // 2. AUTHORIZE
-  await assertTenantMembership(tenantId, user.id, ["OWNER", "ADMIN"]);
+  await assertTenantMembership(tenantId, userId, ["OWNER", "ADMIN"]);
 
   // 3. VALIDATE
   const parsed = createWrapSchema.parse(input);
@@ -33,25 +32,20 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
       name: parsed.name,
       description: parsed.description ?? null,
       price: parsed.price,
-      estimatedHours: parsed.estimatedHours,
-      imageUrls: parsed.imageUrls,
-      category: parsed.category,
-      status: parsed.status,
+      installationMinutes: parsed.installationMinutes ?? null,
     },
   });
 
   // 5. AUDIT
-  await prisma.auditEvent.create({
+  await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: user.id,
+      userId,
       action: "wrap.created",
-      resource: `wrap:${wrap.id}`,
-      metadata: {
-        name: wrap.name,
-        category: wrap.category,
-        price: wrap.price.toString(),
-      },
+      resourceType: "Wrap",
+      resourceId: wrap.id,
+      details: JSON.stringify({ name: wrap.name, price: wrap.price }),
+      timestamp: new Date(),
     },
   });
 
@@ -60,11 +54,8 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
     tenantId: wrap.tenantId,
     name: wrap.name,
     description: wrap.description,
-    price: wrap.price.toString(),
-    estimatedHours: wrap.estimatedHours,
-    status: wrap.status as WrapDTO["status"],
-    imageUrls: wrap.imageUrls,
-    category: wrap.category as WrapDTO["category"],
+    price: wrap.price,
+    installationMinutes: wrap.installationMinutes,
     createdAt: wrap.createdAt,
     updatedAt: wrap.updatedAt,
   };
