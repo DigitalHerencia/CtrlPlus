@@ -11,6 +11,7 @@
  * IMPORTANT: This route must be public (not protected by middleware).
  */
 
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { WebhookEvent } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
@@ -39,8 +40,18 @@ export async function POST(req: NextRequest) {
   // Step 3: Process the event inside a transaction
   try {
     await prisma.$transaction(async (tx) => {
-      // Record the event first to claim idempotency
-      await tx.clerkWebhookEvent.create({ data: { id: svixId, type: evt.type } });
+      // Record the event first to claim idempotency.
+      // Use createOrSkip via upsert-style: attempt insert and let a unique-constraint
+      // violation (P2002) mean a concurrent delivery already claimed it – no-op.
+      try {
+        await tx.clerkWebhookEvent.create({ data: { id: svixId, type: evt.type } });
+      } catch (err) {
+        if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+          // Duplicate: another concurrent delivery already processed this event.
+          return;
+        }
+        throw err;
+      }
 
       switch (evt.type) {
         case "user.created":
@@ -70,7 +81,7 @@ export async function POST(req: NextRequest) {
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
-type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+type Tx = Prisma.TransactionClient;
 
 /**
  * Verify Clerk webhook signature using Svix.
@@ -163,7 +174,9 @@ async function handleUserCreated(evt: WebhookEvent, tx: Tx): Promise<void> {
     return;
   }
 
-  console.warn(`[clerk-webhook] user.created synced: ${id}`);
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(`[clerk-webhook] user.created synced: ${id}`);
+  }
 }
 
 /**
@@ -180,7 +193,9 @@ async function handleUserUpdated(evt: WebhookEvent, tx: Tx): Promise<void> {
     return;
   }
 
-  console.warn(`[clerk-webhook] user.updated synced: ${id}`);
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(`[clerk-webhook] user.updated synced: ${id}`);
+  }
 }
 
 /**
@@ -206,5 +221,7 @@ async function handleUserDeleted(evt: WebhookEvent, tx: Tx): Promise<void> {
     data: { deletedAt: now },
   });
 
-  console.warn(`[clerk-webhook] user.deleted soft-deleted: ${clerkUserId}`);
+  if (process.env.NODE_ENV !== "production") {
+    console.warn(`[clerk-webhook] user.deleted soft-deleted: ${clerkUserId}`);
+  }
 }

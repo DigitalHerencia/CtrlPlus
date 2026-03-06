@@ -29,12 +29,6 @@ CREATE UNIQUE INDEX "User_clerkUserId_key" ON "User"("clerkUserId");
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE INDEX "User_clerkUserId_idx" ON "User"("clerkUserId");
-
--- CreateIndex
-CREATE INDEX "User_email_idx" ON "User"("email");
-
--- CreateIndex
 CREATE INDEX "User_deletedAt_idx" ON "User"("deletedAt");
 
 -- CreateIndex

@@ -32,6 +32,7 @@ vi.mock("@/lib/prisma", () => {
 
 import { POST } from "../route";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 
 // Access the internal transaction mock
 const mockTx = (
@@ -108,7 +109,7 @@ describe("POST /api/clerk/webhook", () => {
 
   // ── Idempotency ───────────────────────────────────────────────────────────
 
-  it("returns 200 with skipped:true for a duplicate event", async () => {
+  it("returns 200 with skipped:true for a duplicate event (pre-check)", async () => {
     vi.mocked(prisma.clerkWebhookEvent.findUnique).mockResolvedValue({
       id: "evt_001",
       type: "user.created",
@@ -121,6 +122,33 @@ describe("POST /api/clerk/webhook", () => {
     const body = await res.json();
     expect(body.skipped).toBe(true);
     expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("returns 200 when a concurrent delivery triggers a P2002 on clerkWebhookEvent.create", async () => {
+    // Simulate race: findUnique returns null (both requests pass the pre-check),
+    // but the second request hits a unique-constraint violation on insert.
+    const p2002 = new Prisma.PrismaClientKnownRequestError(
+      "Unique constraint failed on the fields: (`id`)",
+      { code: "P2002", clientVersion: "7.0.0" },
+    );
+    mockTx.clerkWebhookEvent.create.mockRejectedValueOnce(p2002);
+
+    const evt = mockEvent("user.created", {
+      id: "clerk_user_race",
+      email_addresses: [{ id: "ema_1", email_address: "race@example.com" }],
+      primary_email_address_id: "ema_1",
+      first_name: null,
+      last_name: null,
+      image_url: null,
+    });
+    mockVerify.mockReturnValue(evt);
+
+    const req = makeRequest({});
+    const res = await POST(req);
+    // Should not blow up with 500; the duplicate is silently absorbed.
+    expect(res.status).toBe(200);
+    // User upsert was not executed after the early return inside the transaction.
+    expect(mockTx.user.upsert).not.toHaveBeenCalled();
   });
 
   // ── user.created ─────────────────────────────────────────────────────────

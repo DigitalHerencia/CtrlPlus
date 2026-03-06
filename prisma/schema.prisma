@@ -34,8 +34,6 @@ model User {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
-  @@index([clerkUserId])
-  @@index([email])
   @@index([deletedAt])
 }
 
