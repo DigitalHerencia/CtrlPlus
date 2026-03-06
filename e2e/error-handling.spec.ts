@@ -4,7 +4,7 @@
  * Covers:
  *  - 404 pages for unknown routes
  *  - API route failures surface user-friendly errors (no stack traces)
- *  - Form validation errors display helpful messages
+ *  - Sign-in page renders without client-side errors
  */
 
 import { expect, test } from "@playwright/test";
