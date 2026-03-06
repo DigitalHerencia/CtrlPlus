@@ -6,7 +6,7 @@
  */
 
 import { assertTenantMembership, hasMinimumRole } from "@/lib/tenancy/assert";
-import { type TenantRole } from "@/lib/tenancy/types";
+import { type TenantRole, hasRolePermission } from "@/lib/tenancy/types";
 
 export { assertTenantMembership, hasMinimumRole };
 export type { TenantRole };
