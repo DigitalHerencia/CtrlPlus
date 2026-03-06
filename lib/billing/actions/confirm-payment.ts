@@ -18,7 +18,7 @@
 
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
-import { stripe } from "@/lib/billing/stripe";
+import { getStripeClient } from "@/lib/billing/stripe";
 import { type ConfirmPaymentResult } from "../types";
 
 /**
@@ -26,6 +26,19 @@ import { type ConfirmPaymentResult } from "../types";
  * Stripe webhook (no human actor).
  */
 export const STRIPE_WEBHOOK_ACTOR = "system:stripe-webhook";
+
+/**
+ * Returns true when `err` is a Prisma unique-constraint violation (P2002).
+ * Used to detect a concurrent duplicate payment creation inside a transaction.
+ */
+function isPrismaUniqueConstraintError(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code: string }).code === "P2002"
+  );
+}
 
 /**
  * Processes a Stripe `checkout.session.completed` webhook event.
@@ -46,7 +59,7 @@ export async function confirmPayment(
   let event: Stripe.Event;
   try {
     // constructEvent is synchronous — any signature error throws immediately
-    event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+    event = getStripeClient().webhooks.constructEvent(payload, signature, webhookSecret);
   } catch {
     throw new Error("Invalid Stripe webhook signature");
   }
@@ -115,26 +128,53 @@ export async function confirmPayment(
   }
 
   // 4. MUTATE — transactional: create Payment, update Invoice, update Booking
+  //
+  // The $transaction is wrapped in a try/catch for P2002 (unique constraint
+  // violation) to handle a rare TOCTOU race: if two webhook deliveries for the
+  // same event pass the idempotency check above concurrently, the second
+  // transaction's payment.create will fail with P2002 instead of P2002.
+  // In that case we fetch the winner's Payment record and return
+  // "already_processed" rather than propagating a 500 to Stripe.
   const amountPaid = session.amount_total ?? invoice.totalAmount;
 
-  const [payment] = await prisma.$transaction([
-    prisma.payment.create({
-      data: {
-        invoiceId: invoice.id,
-        stripePaymentIntentId,
-        status: "succeeded",
-        amount: amountPaid,
-      },
-    }),
-    prisma.invoice.update({
-      where: { id: invoice.id },
-      data: { status: "paid" },
-    }),
-    prisma.booking.update({
-      where: { id: invoice.bookingId },
-      data: { status: "confirmed" },
-    }),
-  ]);
+  let payment: { id: string };
+  try {
+    const [createdPayment] = await prisma.$transaction([
+      prisma.payment.create({
+        data: {
+          invoiceId: invoice.id,
+          stripePaymentIntentId,
+          status: "succeeded",
+          amount: amountPaid,
+        },
+      }),
+      prisma.invoice.update({
+        where: { id: invoice.id },
+        data: { status: "paid" },
+      }),
+      prisma.booking.update({
+        where: { id: invoice.bookingId },
+        data: { status: "confirmed" },
+      }),
+    ]);
+    payment = createdPayment;
+  } catch (err: unknown) {
+    if (isPrismaUniqueConstraintError(err)) {
+      // A concurrent webhook delivery already created the Payment record.
+      const winner = await prisma.payment.findUnique({
+        where: { stripePaymentIntentId },
+        select: { id: true },
+      });
+      if (winner) {
+        return {
+          invoiceId: invoice.id,
+          paymentId: winner.id,
+          status: "already_processed",
+        };
+      }
+    }
+    throw err;
+  }
 
   // 5. AUDIT
   await prisma.auditLog.create({

@@ -27,11 +27,11 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 vi.mock("@/lib/billing/stripe", () => ({
-  stripe: {
+  getStripeClient: vi.fn(() => ({
     webhooks: {
       constructEvent: mockConstructEvent,
     },
-  },
+  })),
 }));
 
 // ── Imports after mocks ───────────────────────────────────────────────────────
@@ -204,6 +204,43 @@ describe("confirmPayment", () => {
     });
     expect(prisma.$transaction).not.toHaveBeenCalled();
     expect(prisma.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it("returns already_processed when a concurrent request causes a P2002 unique violation", async () => {
+    const event = makeCheckoutSessionEvent();
+    mockConstructEvent.mockReturnValue(event);
+    vi.mocked(prisma.invoice.findFirst).mockResolvedValue(mockInvoice as never);
+    vi.mocked(prisma.payment.findUnique)
+      // First call (idempotency check) returns null — both requests pass
+      .mockResolvedValueOnce(null)
+      // Second call (recovery after P2002) returns the winner's record
+      .mockResolvedValueOnce({ id: "payment-winner", status: "succeeded" } as never);
+    // $transaction throws P2002 (concurrent duplicate insert)
+    const p2002Error = Object.assign(new Error("Unique constraint failed"), {
+      code: "P2002",
+    });
+    vi.mocked(prisma.$transaction).mockRejectedValue(p2002Error);
+
+    const result = await confirmPayment(VALID_PAYLOAD, VALID_SIGNATURE);
+
+    expect(result).toEqual({
+      invoiceId: "invoice-1",
+      paymentId: "payment-winner",
+      status: "already_processed",
+    });
+    expect(prisma.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it("re-throws non-P2002 transaction errors", async () => {
+    const event = makeCheckoutSessionEvent();
+    mockConstructEvent.mockReturnValue(event);
+    vi.mocked(prisma.invoice.findFirst).mockResolvedValue(mockInvoice as never);
+    vi.mocked(prisma.payment.findUnique).mockResolvedValue(null);
+    vi.mocked(prisma.$transaction).mockRejectedValue(new Error("Database connection lost"));
+
+    await expect(confirmPayment(VALID_PAYLOAD, VALID_SIGNATURE)).rejects.toThrow(
+      "Database connection lost",
+    );
   });
 
   it("throws when STRIPE_WEBHOOK_SECRET is not configured", async () => {

@@ -22,8 +22,7 @@ vi.mock("@/lib/prisma", () => ({
       findFirst: vi.fn(),
     },
     invoice: {
-      findUnique: vi.fn(),
-      create: vi.fn(),
+      upsert: vi.fn(),
       update: vi.fn(),
     },
     auditLog: {
@@ -33,13 +32,13 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 vi.mock("@/lib/billing/stripe", () => ({
-  stripe: {
+  getStripeClient: vi.fn(() => ({
     checkout: {
       sessions: {
         create: mockCheckoutSessionsCreate,
       },
     },
-  },
+  })),
 }));
 
 // ── Imports after mocks ───────────────────────────────────────────────────────
@@ -73,12 +72,7 @@ const mockBooking = {
 
 const mockInvoice = {
   id: "invoice-1",
-  tenantId: "tenant-1",
-  bookingId: "booking-1",
   status: "draft",
-  totalAmount: 150000,
-  createdAt: new Date(),
-  updatedAt: new Date(),
 };
 
 const mockStripeSession = {
@@ -100,8 +94,7 @@ describe("createCheckoutSession", () => {
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(assertTenantScope).mockReturnValue(undefined);
     vi.mocked(prisma.booking.findFirst).mockResolvedValue(mockBooking as never);
-    vi.mocked(prisma.invoice.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.invoice.create).mockResolvedValue(mockInvoice as never);
+    vi.mocked(prisma.invoice.upsert).mockResolvedValue(mockInvoice as never);
     vi.mocked(prisma.invoice.update).mockResolvedValue({
       ...mockInvoice,
       status: "sent",
@@ -122,7 +115,7 @@ describe("createCheckoutSession", () => {
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(assertTenantScope).mockReturnValue(undefined);
     vi.mocked(prisma.booking.findFirst).mockResolvedValue(mockBooking as never);
-    vi.mocked(prisma.invoice.findUnique).mockResolvedValue(mockInvoice as never);
+    vi.mocked(prisma.invoice.upsert).mockResolvedValue(mockInvoice as never);
     vi.mocked(prisma.invoice.update).mockResolvedValue({
       ...mockInvoice,
       status: "sent",
@@ -143,12 +136,12 @@ describe("createCheckoutSession", () => {
     );
   });
 
-  it("reuses an existing invoice when one exists for the booking", async () => {
+  it("uses upsert to atomically find-or-create the invoice", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(assertTenantScope).mockReturnValue(undefined);
     vi.mocked(prisma.booking.findFirst).mockResolvedValue(mockBooking as never);
-    vi.mocked(prisma.invoice.findUnique).mockResolvedValue(mockInvoice as never);
+    vi.mocked(prisma.invoice.upsert).mockResolvedValue(mockInvoice as never);
     vi.mocked(prisma.invoice.update).mockResolvedValue({
       ...mockInvoice,
       status: "sent",
@@ -158,39 +151,39 @@ describe("createCheckoutSession", () => {
 
     await createCheckoutSession(validInput);
 
-    expect(prisma.invoice.create).not.toHaveBeenCalled();
-    expect(prisma.invoice.update).toHaveBeenCalledWith(
+    expect(prisma.invoice.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { id: "invoice-1" },
-        data: { status: "sent" },
-      }),
-    );
-  });
-
-  it("creates a new invoice when none exists for the booking", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
-    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(assertTenantScope).mockReturnValue(undefined);
-    vi.mocked(prisma.booking.findFirst).mockResolvedValue(mockBooking as never);
-    vi.mocked(prisma.invoice.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.invoice.create).mockResolvedValue(mockInvoice as never);
-    vi.mocked(prisma.invoice.update).mockResolvedValue({
-      ...mockInvoice,
-      status: "sent",
-    } as never);
-    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
-    mockCheckoutSessionsCreate.mockResolvedValue(mockStripeSession);
-
-    await createCheckoutSession(validInput);
-
-    expect(prisma.invoice.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
+        where: { bookingId: "booking-1" },
+        create: expect.objectContaining({
           tenantId: "tenant-1",
           bookingId: "booking-1",
           status: "draft",
           totalAmount: 150000,
         }),
+        update: {},
+      }),
+    );
+  });
+
+  it("marks the invoice as sent after creating the Stripe session", async () => {
+    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+    vi.mocked(assertTenantScope).mockReturnValue(undefined);
+    vi.mocked(prisma.booking.findFirst).mockResolvedValue(mockBooking as never);
+    vi.mocked(prisma.invoice.upsert).mockResolvedValue(mockInvoice as never);
+    vi.mocked(prisma.invoice.update).mockResolvedValue({
+      ...mockInvoice,
+      status: "sent",
+    } as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
+    mockCheckoutSessionsCreate.mockResolvedValue(mockStripeSession);
+
+    await createCheckoutSession(validInput);
+
+    expect(prisma.invoice.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "invoice-1" },
+        data: { status: "sent" },
       }),
     );
   });
@@ -200,7 +193,7 @@ describe("createCheckoutSession", () => {
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(assertTenantScope).mockReturnValue(undefined);
     vi.mocked(prisma.booking.findFirst).mockResolvedValue(mockBooking as never);
-    vi.mocked(prisma.invoice.findUnique).mockResolvedValue(mockInvoice as never);
+    vi.mocked(prisma.invoice.upsert).mockResolvedValue(mockInvoice as never);
     vi.mocked(prisma.invoice.update).mockResolvedValue({
       ...mockInvoice,
       status: "sent",
@@ -224,7 +217,7 @@ describe("createCheckoutSession", () => {
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(assertTenantScope).mockReturnValue(undefined);
     vi.mocked(prisma.booking.findFirst).mockResolvedValue(mockBooking as never);
-    vi.mocked(prisma.invoice.findUnique).mockResolvedValue(mockInvoice as never);
+    vi.mocked(prisma.invoice.upsert).mockResolvedValue(mockInvoice as never);
     vi.mocked(prisma.invoice.update).mockResolvedValue({
       ...mockInvoice,
       status: "sent",
@@ -266,6 +259,19 @@ describe("createCheckoutSession", () => {
     expect(prisma.booking.findFirst).not.toHaveBeenCalled();
   });
 
+  it("throws Forbidden when getUserTenantRole returns null (race condition)", async () => {
+    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+    vi.mocked(assertTenantScope).mockReturnValue(undefined);
+    vi.mocked(prisma.booking.findFirst).mockResolvedValue(mockBooking as never);
+    vi.mocked(getUserTenantRole).mockResolvedValue(null);
+
+    await expect(createCheckoutSession(validInput)).rejects.toThrow(
+      "Forbidden: tenant membership not found",
+    );
+    expect(prisma.invoice.upsert).not.toHaveBeenCalled();
+  });
+
   it("throws when the booking is not found", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
@@ -274,7 +280,7 @@ describe("createCheckoutSession", () => {
     await expect(createCheckoutSession(validInput)).rejects.toThrow(
       "Booking not found or access denied",
     );
-    expect(prisma.invoice.findUnique).not.toHaveBeenCalled();
+    expect(prisma.invoice.upsert).not.toHaveBeenCalled();
   });
 
   it("throws when the booking status is not 'pending'", async () => {
@@ -289,7 +295,23 @@ describe("createCheckoutSession", () => {
     await expect(createCheckoutSession(validInput)).rejects.toThrow(
       "Cannot create checkout for booking with status: confirmed",
     );
-    expect(prisma.invoice.findUnique).not.toHaveBeenCalled();
+    expect(prisma.invoice.upsert).not.toHaveBeenCalled();
+  });
+
+  it("throws when an existing invoice is already in a terminal status", async () => {
+    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+    vi.mocked(assertTenantScope).mockReturnValue(undefined);
+    vi.mocked(prisma.booking.findFirst).mockResolvedValue(mockBooking as never);
+    vi.mocked(prisma.invoice.upsert).mockResolvedValue({
+      id: "invoice-1",
+      status: "paid",
+    } as never);
+
+    await expect(createCheckoutSession(validInput)).rejects.toThrow(
+      "Cannot create checkout for invoice with status: paid",
+    );
+    expect(mockCheckoutSessionsCreate).not.toHaveBeenCalled();
   });
 
   it("throws when Stripe does not return a URL", async () => {
@@ -297,7 +319,7 @@ describe("createCheckoutSession", () => {
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(assertTenantScope).mockReturnValue(undefined);
     vi.mocked(prisma.booking.findFirst).mockResolvedValue(mockBooking as never);
-    vi.mocked(prisma.invoice.findUnique).mockResolvedValue(mockInvoice as never);
+    vi.mocked(prisma.invoice.upsert).mockResolvedValue(mockInvoice as never);
     mockCheckoutSessionsCreate.mockResolvedValue({ id: "cs_test_no_url", url: null });
 
     await expect(createCheckoutSession(validInput)).rejects.toThrow(
@@ -338,7 +360,7 @@ describe("createCheckoutSession", () => {
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(assertTenantScope).mockReturnValue(undefined);
     vi.mocked(prisma.booking.findFirst).mockResolvedValue(mockBooking as never);
-    vi.mocked(prisma.invoice.findUnique).mockResolvedValue(mockInvoice as never);
+    vi.mocked(prisma.invoice.upsert).mockResolvedValue(mockInvoice as never);
     vi.mocked(prisma.invoice.update).mockResolvedValue({
       ...mockInvoice,
       status: "sent",
@@ -375,7 +397,7 @@ describe("createCheckoutSession", () => {
     await expect(createCheckoutSession(validInput)).rejects.toThrow(
       "Forbidden: you can only checkout your own bookings",
     );
-    expect(prisma.invoice.findUnique).not.toHaveBeenCalled();
+    expect(prisma.invoice.upsert).not.toHaveBeenCalled();
   });
 
   it("allows an admin to checkout any booking in the tenant", async () => {
@@ -388,7 +410,7 @@ describe("createCheckoutSession", () => {
       customerId: "other-user",
     } as never);
     vi.mocked(getUserTenantRole).mockResolvedValue("admin");
-    vi.mocked(prisma.invoice.findUnique).mockResolvedValue(mockInvoice as never);
+    vi.mocked(prisma.invoice.upsert).mockResolvedValue(mockInvoice as never);
     vi.mocked(prisma.invoice.update).mockResolvedValue({
       ...mockInvoice,
       status: "sent",

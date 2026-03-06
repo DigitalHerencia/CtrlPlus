@@ -22,17 +22,6 @@ export const createCheckoutSessionSchema = z.object({
 
 export type CreateCheckoutSessionInput = z.infer<typeof createCheckoutSessionSchema>;
 
-/**
- * Schema for confirming a Stripe payment via webhook.
- * payload is the raw request body and signature is the Stripe-Signature header.
- */
-export const confirmPaymentSchema = z.object({
-  payload: z.string().min(1, "Stripe payload is required"),
-  signature: z.string().min(1, "Stripe-Signature header is required"),
-});
-
-export type ConfirmPaymentInput = z.infer<typeof confirmPaymentSchema>;
-
 // ─── DTOs ─────────────────────────────────────────────────────────────────────
 
 export interface InvoiceDTO {

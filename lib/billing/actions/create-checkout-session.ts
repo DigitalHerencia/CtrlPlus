@@ -11,14 +11,14 @@
  * 1. Authenticate  — verify user is signed in
  * 2. Authorize     — verify user is an active member of the tenant
  * 3. Validate      — parse and validate input with Zod
- * 4. Mutate        — look up booking, create/reuse invoice, call Stripe
+ * 4. Mutate        — look up booking, upsert invoice, call Stripe
  * 5. Audit         — write an immutable audit log entry
  */
 
 import { getSession } from "@/lib/auth/session";
 import { assertTenantMembership, assertTenantScope, getUserTenantRole } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
-import { stripe } from "@/lib/billing/stripe";
+import { getStripeClient } from "@/lib/billing/stripe";
 import {
   createCheckoutSessionSchema,
   type CreateCheckoutSessionInput,
@@ -64,8 +64,12 @@ export async function createCheckoutSession(
   // Defensive tenant scope check
   assertTenantScope(booking.tenantId, tenantId);
 
-  // Members may only checkout their own bookings; admins and owners may act on any
+  // Members may only checkout their own bookings; admins and owners may act on any.
+  // Guard against null role (e.g., race condition with membership deletion).
   const role = await getUserTenantRole(tenantId, user.id);
+  if (!role) {
+    throw new Error("Forbidden: tenant membership not found");
+  }
   if (role === "member" && booking.customerId !== user.id) {
     throw new Error("Forbidden: you can only checkout your own bookings");
   }
@@ -76,36 +80,49 @@ export async function createCheckoutSession(
     );
   }
 
-  // 4b. CREATE OR REUSE INVOICE
-  let invoice = await prisma.invoice.findUnique({
+  // 4b. FIND OR CREATE INVOICE (atomic upsert prevents duplicate-create race)
+  //
+  // `upsert` with `update: {}` reuses an existing invoice unchanged, and only
+  // runs the `create` branch when no invoice exists yet. This is safe because
+  // `Invoice.bookingId` has a `@unique` constraint.
+  const invoice = await prisma.invoice.upsert({
     where: { bookingId: parsed.bookingId },
+    create: {
+      tenantId,
+      bookingId: parsed.bookingId,
+      status: "draft",
+      totalAmount: booking.totalPrice,
+      lineItems: {
+        create: [
+          {
+            description: booking.wrap?.name ?? "Vehicle Wrap Installation",
+            quantity: 1,
+            unitPrice: booking.totalPrice,
+            totalPrice: booking.totalPrice,
+          },
+        ],
+      },
+    },
+    update: {}, // Reuse existing invoice without modifying it
+    select: { id: true, status: true },
   });
 
-  if (!invoice) {
-    invoice = await prisma.invoice.create({
-      data: {
-        tenantId,
-        bookingId: parsed.bookingId,
-        status: "draft",
-        totalAmount: booking.totalPrice,
-        lineItems: {
-          create: [
-            {
-              description: booking.wrap?.name ?? "Vehicle Wrap Installation",
-              quantity: 1,
-              unitPrice: booking.totalPrice,
-              totalPrice: booking.totalPrice,
-            },
-          ],
-        },
-      },
-    });
+  // Guard: do not allow a new checkout session on a terminal invoice
+  if (
+    invoice.status === "paid" ||
+    invoice.status === "refunded" ||
+    invoice.status === "failed"
+  ) {
+    throw new Error(
+      `Cannot create checkout for invoice with status: ${invoice.status}`,
+    );
   }
 
   // 4c. CREATE STRIPE CHECKOUT SESSION
   //
   // client_reference_id is set to the invoice ID so that the webhook can
   // locate the invoice without a separate lookup table.
+  const stripe = getStripeClient();
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "payment",
