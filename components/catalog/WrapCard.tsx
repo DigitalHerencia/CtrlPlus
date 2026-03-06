@@ -4,11 +4,19 @@ import Link from "next/link";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { type WrapDTO } from "@/lib/catalog/types";
 import { formatPrice, formatInstallationTime } from "@/lib/catalog/formatters";
 
+/** Minimal serializable subset of WrapDTO needed by this component. */
+export interface WrapCardData {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  installationMinutes: number | null;
+}
+
 interface WrapCardProps {
-  wrap: WrapDTO;
+  wrap: WrapCardData;
 }
 
 export function WrapCard({ wrap }: WrapCardProps) {

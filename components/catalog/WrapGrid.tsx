@@ -21,7 +21,18 @@ export function WrapGrid({ wraps }: WrapGridProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {wraps.map((wrap) => (
-        <WrapCard key={wrap.id} wrap={wrap} />
+        <WrapCard
+          key={wrap.id}
+          // Pass only the serializable fields WrapCard needs — Date objects
+          // (createdAt/updatedAt) must not cross the Server→Client boundary.
+          wrap={{
+            id: wrap.id,
+            name: wrap.name,
+            description: wrap.description,
+            price: wrap.price,
+            installationMinutes: wrap.installationMinutes,
+          }}
+        />
       ))}
     </div>
   );

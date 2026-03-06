@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 
 export function WrapFilter() {
@@ -9,6 +9,23 @@ export function WrapFilter() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+
+  // Local controlled state for the search input so we can debounce URL updates.
+  const urlQuery = searchParams.get("query") ?? "";
+  const [searchValue, setSearchValue] = useState(urlQuery);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Sync local state when URL changes externally (e.g., browser back/forward).
+  useEffect(() => {
+    setSearchValue(urlQuery);
+  }, [urlQuery]);
+
+  // Clear any pending debounce when the component unmounts.
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
 
   const createQueryString = useCallback(
     (updates: Record<string, string | undefined>) => {
@@ -29,27 +46,52 @@ export function WrapFilter() {
     [searchParams],
   );
 
-  const handleChange = useCallback(
-    (key: string, value: string) => {
+  /** Push a URL update, omitting the trailing `?` when the query string is empty. */
+  const pushUrl = useCallback(
+    (queryString: string) => {
       startTransition(() => {
-        router.push(`${pathname}?${createQueryString({ [key]: value || undefined })}`);
+        if (queryString) {
+          router.push(`${pathname}?${queryString}`);
+        } else {
+          router.push(pathname);
+        }
       });
     },
-    [router, pathname, createQueryString],
+    [router, pathname],
+  );
+
+  const handleChange = useCallback(
+    (key: string, value: string) => {
+      pushUrl(createQueryString({ [key]: value || undefined }));
+    },
+    [pushUrl, createQueryString],
+  );
+
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      setSearchValue(value);
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        pushUrl(createQueryString({ query: value || undefined }));
+      }, 300);
+    },
+    [pushUrl, createQueryString],
   );
 
   const handleReset = useCallback(() => {
+    setSearchValue("");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     startTransition(() => {
       router.push(pathname);
     });
   }, [router, pathname]);
 
-  const query = searchParams.get("query") ?? "";
   const maxPrice = searchParams.get("maxPrice") ?? "";
   const sortBy = searchParams.get("sortBy") ?? "createdAt";
   const sortOrder = searchParams.get("sortOrder") ?? "desc";
 
-  const hasActiveFilters = query || maxPrice || sortBy !== "createdAt" || sortOrder !== "desc";
+  const hasActiveFilters =
+    searchValue || maxPrice || sortBy !== "createdAt" || sortOrder !== "desc";
 
   return (
     <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end flex-wrap">
@@ -62,8 +104,8 @@ export function WrapFilter() {
           id="catalog-search"
           type="search"
           placeholder="Search wraps..."
-          value={query}
-          onChange={(e) => handleChange("query", e.target.value)}
+          value={searchValue}
+          onChange={(e) => handleSearchChange(e.target.value)}
           className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>

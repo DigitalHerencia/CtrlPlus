@@ -25,15 +25,24 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
 
   const params = await searchParams;
 
-  // Parse and validate search params with safe defaults
-  const filters = searchWrapsSchema.parse({
+  // Coerce URL string params to numbers with explicit validation.
+  // Use safeParse + fallback so invalid params (e.g. ?maxPrice=abc) degrade
+  // gracefully to defaults rather than throwing a 500.
+  const rawMaxPrice = params.maxPrice ? Number(params.maxPrice) : undefined;
+  const rawPage = params.page ? Number(params.page) : undefined;
+
+  const parseResult = searchWrapsSchema.safeParse({
     query: params.query ?? undefined,
-    maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
+    maxPrice: rawMaxPrice !== undefined && !Number.isNaN(rawMaxPrice) ? rawMaxPrice : undefined,
     sortBy: params.sortBy ?? "createdAt",
     sortOrder: params.sortOrder ?? "desc",
-    page: params.page ? Number(params.page) : 1,
+    page: rawPage !== undefined && !Number.isNaN(rawPage) ? rawPage : 1,
     pageSize: 20,
   });
+
+  const filters = parseResult.success
+    ? parseResult.data
+    : { page: 1, pageSize: 20 as const, sortBy: "createdAt" as const, sortOrder: "desc" as const };
 
   const { wraps, total, page, totalPages } = await searchWraps(tenantId, filters);
 

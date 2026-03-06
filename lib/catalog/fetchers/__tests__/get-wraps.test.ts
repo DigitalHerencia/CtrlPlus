@@ -291,4 +291,43 @@ describe("searchWraps", () => {
     expect(result.page).toBe(1);
     expect(result.pageSize).toBe(20);
   });
+
+  it("uses createdAt desc ordering by default", async () => {
+    prismaMock.wrap.findMany.mockResolvedValue([]);
+    prismaMock.wrap.count.mockResolvedValue(0);
+
+    await searchWraps("tenant-abc", { page: 1, pageSize: 20 });
+
+    expect(prismaMock.wrap.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { createdAt: "desc" },
+      }),
+    );
+  });
+
+  it("forwards sortBy and sortOrder to Prisma orderBy", async () => {
+    prismaMock.wrap.findMany.mockResolvedValue([]);
+    prismaMock.wrap.count.mockResolvedValue(0);
+
+    await searchWraps("tenant-abc", { page: 1, pageSize: 20, sortBy: "price", sortOrder: "asc" });
+
+    expect(prismaMock.wrap.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { price: "asc" },
+      }),
+    );
+  });
+
+  it("sorts by name descending when requested", async () => {
+    prismaMock.wrap.findMany.mockResolvedValue([]);
+    prismaMock.wrap.count.mockResolvedValue(0);
+
+    await searchWraps("tenant-abc", { page: 1, pageSize: 20, sortBy: "name", sortOrder: "desc" });
+
+    expect(prismaMock.wrap.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { name: "desc" },
+      }),
+    );
+  });
 });
