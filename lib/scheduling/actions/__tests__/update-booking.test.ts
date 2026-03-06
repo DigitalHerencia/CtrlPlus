@@ -13,6 +13,7 @@ vi.mock("@/lib/tenancy/assert", () => ({
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
+    $transaction: vi.fn(),
     availabilityRule: {
       findMany: vi.fn(),
     },
@@ -32,6 +33,7 @@ vi.mock("@/lib/prisma", () => ({
 import { getSession } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -68,13 +70,18 @@ const updatedBookingRecord = {
   updatedAt: NEW_START,
 };
 
-const mockRule = { capacitySlots: 3 };
+const mockRule = { capacitySlots: 3, startTime: "09:00", endTime: "18:00" };
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe("updateBooking", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Make $transaction execute the callback with the same mocked prisma client
+    vi.mocked(prisma.$transaction).mockImplementation(
+      (fn: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
+        fn(prisma as unknown as Prisma.TransactionClient),
+    );
   });
 
   it("reschedules a booking and returns an updated DTO when the user is authorized", async () => {
@@ -200,7 +207,9 @@ describe("updateBooking", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.booking.findFirst).mockResolvedValue(existingBooking as never);
-    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([{ capacitySlots: 2 }] as never);
+    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([
+      { capacitySlots: 2, startTime: "09:00", endTime: "18:00" },
+    ] as never);
     vi.mocked(prisma.booking.count).mockResolvedValue(2);
 
     await expect(updateBooking("booking-1", validInput)).rejects.toThrow("No available slots");

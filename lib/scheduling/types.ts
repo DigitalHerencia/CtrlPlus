@@ -66,11 +66,10 @@ export interface BookingDTO {
   tenantId: string;
   customerId: string;
   wrapId: string;
-  dropOffStart: Date;
-  dropOffEnd: Date;
-  pickUpStart: Date;
-  pickUpEnd: Date;
+  startTime: Date;
+  endTime: Date;
   status: BookingStatusValue;
+  totalPrice: number;
   createdAt: Date;
   updatedAt: Date;
 }

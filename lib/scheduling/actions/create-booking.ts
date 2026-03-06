@@ -3,12 +3,14 @@
 import { getSession } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import {
   createBookingSchema,
   type CreateBookingInput,
   type BookingActionDTO,
   BOOKING_STATUS,
 } from "../types";
+import { toHHmm } from "../utils";
 
 /**
  * Creates a new booking for the current tenant after validating time-slot
@@ -18,9 +20,9 @@ import {
  * 1. Authenticate  — verify user is signed in
  * 2. Authorize     — verify user is a member of the tenant
  * 3. Validate      — parse and validate input with Zod
- * 4. Availability  — check capacity rules before creating
- * 5. Mutate        — create the booking scoped to tenantId
- * 6. Audit         — write an immutable audit log entry
+ * 4. Availability  — check capacity rules atomically before creating
+ * 5. Mutate        — create the booking scoped to tenantId (inside transaction)
+ * 6. Audit         — write an immutable audit log entry (inside transaction)
  */
 export async function createBooking(input: CreateBookingInput): Promise<BookingActionDTO> {
   // 1. AUTHENTICATE
@@ -34,64 +36,83 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingA
   const parsed = createBookingSchema.parse(input);
   const { wrapId, startTime, endTime, totalPrice } = parsed;
 
-  // 4. AVAILABILITY CHECK
-  //    a) Find rules for the requested day-of-week
+  // 4 + 5 + 6. AVAILABILITY CHECK + MUTATE + AUDIT — performed atomically
   const dayOfWeek = startTime.getDay(); // 0 = Sunday … 6 = Saturday
-  const rules = await prisma.availabilityRule.findMany({
-    where: { tenantId, dayOfWeek, deletedAt: null },
-    select: { capacitySlots: true },
-  });
+  const slotStartHHmm = toHHmm(startTime);
+  const slotEndHHmm = toHHmm(endTime);
 
-  if (rules.length === 0) {
-    throw new Error("No availability configured for the requested day");
-  }
+  const booking = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    // 4a. Find rules for the requested day-of-week
+    const rules = await tx.availabilityRule.findMany({
+      where: { tenantId, dayOfWeek, deletedAt: null },
+      select: { startTime: true, endTime: true, capacitySlots: true },
+    });
 
-  const maxCapacity = Math.max(...rules.map((r) => r.capacitySlots));
+    if (rules.length === 0) {
+      throw new Error("No availability configured for the requested day");
+    }
 
-  //    b) Count non-cancelled, non-deleted bookings that overlap [startTime, endTime)
-  const overlappingCount = await prisma.booking.count({
-    where: {
-      tenantId,
-      deletedAt: null,
-      status: { not: BOOKING_STATUS.CANCELLED },
-      startTime: { lt: endTime },
-      endTime: { gt: startTime },
-    },
-  });
+    // 4b. Filter to rules whose window fully covers the requested slot
+    const matchingRules = rules.filter(
+      (rule: { startTime: string; endTime: string; capacitySlots: number }) =>
+        rule.startTime <= slotStartHHmm && rule.endTime >= slotEndHHmm,
+    );
 
-  if (overlappingCount >= maxCapacity) {
-    throw new Error("No available slots for the requested time");
-  }
+    if (matchingRules.length === 0) {
+      throw new Error("No availability configured for the requested time window");
+    }
 
-  // 5. MUTATE — scoped by tenantId; customerId comes from the session
-  const booking = await prisma.booking.create({
-    data: {
-      tenantId,
-      customerId: user.id,
-      wrapId,
-      startTime,
-      endTime,
-      totalPrice,
-      status: BOOKING_STATUS.PENDING,
-    },
-  });
+    const maxCapacity = Math.max(
+      ...matchingRules.map((r: { capacitySlots: number }) => r.capacitySlots),
+    );
 
-  // 6. AUDIT
-  await prisma.auditLog.create({
-    data: {
-      tenantId,
-      userId: user.id,
-      action: "CREATE_BOOKING",
-      resourceType: "Booking",
-      resourceId: booking.id,
-      details: JSON.stringify({
+    // 4c. Count non-cancelled, non-deleted bookings that overlap [startTime, endTime)
+    const overlappingCount = await tx.booking.count({
+      where: {
+        tenantId,
+        deletedAt: null,
+        status: { not: BOOKING_STATUS.CANCELLED },
+        startTime: { lt: endTime },
+        endTime: { gt: startTime },
+      },
+    });
+
+    if (overlappingCount >= maxCapacity) {
+      throw new Error("No available slots for the requested time");
+    }
+
+    // 5. MUTATE — scoped by tenantId; customerId comes from the session
+    const createdBooking = await tx.booking.create({
+      data: {
+        tenantId,
+        customerId: user.id,
         wrapId,
-        startTime: startTime.toISOString(),
-        endTime: endTime.toISOString(),
+        startTime,
+        endTime,
         totalPrice,
-      }),
-      timestamp: new Date(),
-    },
+        status: BOOKING_STATUS.PENDING,
+      },
+    });
+
+    // 6. AUDIT
+    await tx.auditLog.create({
+      data: {
+        tenantId,
+        userId: user.id,
+        action: "CREATE_BOOKING",
+        resourceType: "Booking",
+        resourceId: createdBooking.id,
+        details: JSON.stringify({
+          wrapId,
+          startTime: startTime.toISOString(),
+          endTime: endTime.toISOString(),
+          totalPrice,
+        }),
+        timestamp: new Date(),
+      },
+    });
+
+    return createdBooking;
   });
 
   return {
