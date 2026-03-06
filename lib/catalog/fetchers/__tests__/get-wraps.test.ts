@@ -22,7 +22,7 @@ const mockWrap = {
   name: "Matte Black Full Wrap",
   description: "Premium matte black vinyl wrap",
   price: 1200,
-  installationMinutes: 480,
+  installationMinutes: null,
   createdAt: new Date("2024-01-01T00:00:00.000Z"),
   updatedAt: new Date("2024-01-02T00:00:00.000Z"),
 };
@@ -61,7 +61,7 @@ describe("getWrapsForTenant", () => {
     );
   });
 
-  it("filters out soft-deleted wraps", async () => {
+  it("filters out soft-deleted wraps (deletedAt: null)", async () => {
     prismaMock.wrap.findMany.mockResolvedValue([]);
 
     await getWrapsForTenant("tenant-abc");

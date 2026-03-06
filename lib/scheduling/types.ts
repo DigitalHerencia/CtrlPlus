@@ -1,17 +1,21 @@
 import { z } from "zod";
 
-// ─── BookingStatus ────────────────────────────────────────────────────────────
+// ─── Booking status constants ─────────────────────────────────────────────────
+// Defined locally since the Prisma schema uses plain String (not an enum).
 
-export const BOOKING_STATUS = {
+export const BookingStatus = {
   PENDING: "pending",
   CONFIRMED: "confirmed",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
 } as const;
 
-export type BookingStatus = (typeof BOOKING_STATUS)[keyof typeof BOOKING_STATUS];
+export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus];
 
 // ─── Booking DTOs ─────────────────────────────────────────────────────────────
+
+/** Valid booking status values (plain strings, not enum) */
+export type BookingStatusValue = "pending" | "confirmed" | "completed" | "cancelled";
 
 export interface BookingDTO {
   id: string;
@@ -21,6 +25,7 @@ export interface BookingDTO {
   startTime: Date;
   endTime: Date;
   status: BookingStatus;
+  totalPrice: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,9 +48,9 @@ export const bookingListParamsSchema = z.object({
 
 export type BookingListParams = z.infer<typeof bookingListParamsSchema>;
 
-// ─── Availability Window DTOs ─────────────────────────────────────────────────
+// ─── Availability Rule DTOs ───────────────────────────────────────────────────
 
-export interface AvailabilityWindowDTO {
+export interface AvailabilityRuleDTO {
   id: string;
   tenantId: string;
   /** 0 = Sunday … 6 = Saturday */
@@ -54,14 +59,16 @@ export interface AvailabilityWindowDTO {
   startTime: string;
   /** "HH:mm" 24-hour format */
   endTime: string;
-  /** Number of concurrent booking slots */
   capacitySlots: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
+/** @deprecated Use AvailabilityRuleDTO */
+export type AvailabilityWindowDTO = AvailabilityRuleDTO;
+
 export interface AvailabilityListResult {
-  items: AvailabilityWindowDTO[];
+  items: AvailabilityRuleDTO[];
   total: number;
   page: number;
   pageSize: number;

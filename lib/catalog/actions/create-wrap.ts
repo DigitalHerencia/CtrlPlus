@@ -1,6 +1,6 @@
 "use server";
 
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
 import { createWrapSchema, type CreateWrapInput, type WrapDTO } from "../types";
@@ -17,11 +17,10 @@ import { createWrapSchema, type CreateWrapInput, type WrapDTO } from "../types";
  */
 export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
   // 1. AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { userId, tenantId } = await requireAuth();
 
   // 2. AUTHORIZE
-  await assertTenantMembership(tenantId, user.id, "admin");
+  await assertTenantMembership(tenantId, userId, ["OWNER", "ADMIN"]);
 
   // 3. VALIDATE
   const parsed = createWrapSchema.parse(input);
@@ -41,8 +40,8 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: user.id,
-      action: "CREATE_WRAP",
+      userId,
+      action: "wrap.created",
       resourceType: "Wrap",
       resourceId: wrap.id,
       details: JSON.stringify({ name: wrap.name, price: wrap.price }),
