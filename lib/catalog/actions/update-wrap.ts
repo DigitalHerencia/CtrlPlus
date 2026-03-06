@@ -16,10 +16,7 @@ import { Prisma } from "@prisma/client";
  * 4. Mutate        — apply updates scoped by tenantId (throws if not found)
  * 5. Audit         — write an immutable audit event
  */
-export async function updateWrap(
-  wrapId: string,
-  input: UpdateWrapInput
-): Promise<WrapDTO> {
+export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promise<WrapDTO> {
   // 1. AUTHENTICATE
   const { user, tenantId } = await getSession();
   if (!user) throw new Error("Unauthorized: not authenticated");
@@ -32,7 +29,7 @@ export async function updateWrap(
 
   // Build the update data, excluding undefined fields
   const data = Object.fromEntries(
-    Object.entries(parsed).filter(([, v]) => v !== undefined)
+    Object.entries(parsed).filter(([, v]) => v !== undefined),
   ) as Prisma.WrapUpdateInput;
 
   // 4. MUTATE — the compound where clause acts as the tenant-scope check:
@@ -45,10 +42,7 @@ export async function updateWrap(
       data,
     });
   } catch (err) {
-    if (
-      err instanceof Prisma.PrismaClientKnownRequestError &&
-      err.code === "P2025"
-    ) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
       throw new Error("Forbidden: resource not found");
     }
     throw err;

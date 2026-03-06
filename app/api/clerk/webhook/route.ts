@@ -1,8 +1,12 @@
 /**
  * Clerk Webhook Handler
  *
- * Syncs Clerk user events to the database.
+ * Syncs Clerk user lifecycle events to the database.
  * Handles: user.created, user.updated, user.deleted
+ *
+ * Security:
+ * - Signature verified with Svix (CLERK_WEBHOOK_SECRET)
+ * - Idempotency enforced via ClerkWebhookEvent table (event ID deduplication)
  *
  * IMPORTANT: This route must be public (not protected by middleware).
  */
@@ -12,128 +16,195 @@ import type { WebhookEvent } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
+  // Step 1: Verify Svix signature – returns 401 on failure
+  let evt: WebhookEvent;
+  let svixId: string;
+
   try {
-    // Verify webhook signature
-    const evt = await verifyClerkWebhook(req);
+    const result = await verifyClerkWebhook(req);
+    evt = result.event;
+    svixId = result.svixId;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Signature verification failed";
+    console.error("[clerk-webhook] Signature verification failed:", message);
+    return NextResponse.json({ error: message }, { status: 401 });
+  }
 
-    // Handle different event types
-    switch (evt.type) {
-      case "user.created":
-        await handleUserCreated(evt);
-        break;
+  // Step 2: Idempotency – skip already-processed events
+  const existing = await prisma.clerkWebhookEvent.findUnique({ where: { id: svixId } });
+  if (existing) {
+    return NextResponse.json({ success: true, skipped: true });
+  }
 
-      case "user.updated":
-        await handleUserUpdated(evt);
-        break;
+  // Step 3: Process the event inside a transaction
+  try {
+    await prisma.$transaction(async (tx) => {
+      // Record the event first to claim idempotency
+      await tx.clerkWebhookEvent.create({ data: { id: svixId, type: evt.type } });
 
-      case "user.deleted":
-        await handleUserDeleted(evt);
-        break;
+      switch (evt.type) {
+        case "user.created":
+          await handleUserCreated(evt, tx);
+          break;
 
-      default:
-        // Silently ignore unhandled events
-        break;
-    }
+        case "user.updated":
+          await handleUserUpdated(evt, tx);
+          break;
+
+        case "user.deleted":
+          await handleUserDeleted(evt, tx);
+          break;
+
+        default:
+          // Silently ignore unhandled events
+          break;
+      }
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Webhook error:", error);
+    console.error("[clerk-webhook] Processing error:", error);
     return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 }
 
+// ── Internal helpers ──────────────────────────────────────────────────────────
+
+type Tx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
 /**
- * Verify Clerk webhook signature.
- * Uses CLERK_WEBHOOK_SECRET from environment.
+ * Verify Clerk webhook signature using Svix.
+ * Throws with a descriptive message on any failure.
  */
-async function verifyClerkWebhook(req: NextRequest): Promise<WebhookEvent> {
+async function verifyClerkWebhook(
+  req: NextRequest,
+): Promise<{ event: WebhookEvent; svixId: string }> {
   const svixId = req.headers.get("svix-id");
   const svixTimestamp = req.headers.get("svix-timestamp");
   const svixSignature = req.headers.get("svix-signature");
 
   if (!svixId || !svixTimestamp || !svixSignature) {
-    throw new Error("Missing Svix headers");
+    throw new Error("Missing required Svix headers");
   }
 
   const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    throw new Error("CLERK_WEBHOOK_SECRET not configured");
+    throw new Error("CLERK_WEBHOOK_SECRET is not configured");
   }
 
-  // Get raw body
   const payload = await req.text();
 
-  // Verify signature using Svix
   const { Webhook } = await import("svix");
   const wh = new Webhook(webhookSecret);
 
-  return wh.verify(payload, {
+  const event = wh.verify(payload, {
     "svix-id": svixId,
     "svix-timestamp": svixTimestamp,
     "svix-signature": svixSignature,
   }) as WebhookEvent;
+
+  return { event, svixId };
 }
 
 /**
- * Handle user.created event.
- *
- * Note: We don't auto-create TenantUserMembership here.
- * Membership is created when:
- * - User creates a new tenant (becomes owner)
- * - User is invited to existing tenant (becomes member/admin)
+ * Upsert a User record from Clerk profile data.
+ * Returns false (and logs a warning) if no email address is present.
  */
-async function handleUserCreated(evt: WebhookEvent) {
-  if (evt.type !== "user.created") return;
+async function upsertUser(
+  clerkUserId: string,
+  data: {
+    email_addresses: Array<{ id: string; email_address: string }>;
+    primary_email_address_id: string | null;
+    first_name: string | null | undefined;
+    last_name: string | null | undefined;
+    image_url: string | null | undefined;
+  },
+  tx: Tx,
+): Promise<boolean> {
+  const primaryEmail = data.email_addresses.find((e) => e.id === data.primary_email_address_id);
+  const email = primaryEmail?.email_address ?? data.email_addresses[0]?.email_address ?? "";
 
-  const { id, email_addresses } = evt.data;
-
-  // Log user creation for debugging
-  if (process.env.NODE_ENV === "development") {
-    console.warn(`User created: ${id} (${email_addresses[0]?.email_address})`);
+  if (!email) {
+    return false;
   }
 
-  // For now, just log the event
-  // In the future, we could create a User table or track first-time users
+  await tx.user.upsert({
+    where: { clerkUserId },
+    create: {
+      clerkUserId,
+      email,
+      firstName: data.first_name ?? null,
+      lastName: data.last_name ?? null,
+      imageUrl: data.image_url ?? null,
+    },
+    update: {
+      email,
+      firstName: data.first_name ?? null,
+      lastName: data.last_name ?? null,
+      imageUrl: data.image_url ?? null,
+      deletedAt: null,
+    },
+  });
 
-  // Note: TenantUserMembership will be created separately when:
-  // 1. User creates their first tenant (onboarding flow)
-  // 2. User accepts an invitation to a tenant
+  return true;
 }
 
 /**
- * Handle user.updated event.
- * Sync user metadata changes if needed.
+ * Handle user.created – upsert a User record with data from Clerk.
  */
-async function handleUserUpdated(evt: WebhookEvent) {
+async function handleUserCreated(evt: WebhookEvent, tx: Tx): Promise<void> {
+  if (evt.type !== "user.created") return;
+
+  const { id } = evt.data;
+  const synced = await upsertUser(id, evt.data, tx);
+
+  if (!synced) {
+    console.warn(`[clerk-webhook] user.created (${id}): no email address, skipping upsert`);
+    return;
+  }
+
+  console.warn(`[clerk-webhook] user.created synced: ${id}`);
+}
+
+/**
+ * Handle user.updated – sync changed profile fields to the User record.
+ */
+async function handleUserUpdated(evt: WebhookEvent, tx: Tx): Promise<void> {
   if (evt.type !== "user.updated") return;
 
   const { id } = evt.data;
+  const synced = await upsertUser(id, evt.data, tx);
 
-  // Log user update for debugging
-  if (process.env.NODE_ENV === "development") {
-    console.warn(`User updated: ${id}`);
+  if (!synced) {
+    console.warn(`[clerk-webhook] user.updated (${id}): no email address, skipping upsert`);
+    return;
   }
 
-  // If we maintain a User table, update it here
-  // For now, Clerk is source of truth for user data
+  console.warn(`[clerk-webhook] user.updated synced: ${id}`);
 }
 
 /**
- * Handle user.deleted event.
- * Clean up user's tenant memberships.
+ * Handle user.deleted – soft-delete User record and all tenant memberships.
  */
-async function handleUserDeleted(evt: WebhookEvent) {
+async function handleUserDeleted(evt: WebhookEvent, tx: Tx): Promise<void> {
   if (evt.type !== "user.deleted") return;
 
-  const userId = evt.data.id;
+  const clerkUserId = evt.data.id;
+  if (!clerkUserId) return;
 
-  // Soft delete all tenant memberships for this user
-  await prisma.tenantUserMembership.updateMany({
-    where: { userId },
-    data: { deletedAt: new Date() },
+  const now = new Date();
+
+  // Soft-delete the local User record
+  await tx.user.updateMany({
+    where: { clerkUserId, deletedAt: null },
+    data: { deletedAt: now },
   });
 
-  if (process.env.NODE_ENV === "development") {
-    console.warn(`User deleted: ${userId} - Soft deleted all memberships`);
-  }
+  // Soft-delete all tenant memberships
+  await tx.tenantUserMembership.updateMany({
+    where: { userId: clerkUserId, deletedAt: null },
+    data: { deletedAt: now },
+  });
+
+  console.warn(`[clerk-webhook] user.deleted soft-deleted: ${clerkUserId}`);
 }

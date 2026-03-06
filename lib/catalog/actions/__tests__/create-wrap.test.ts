@@ -96,7 +96,7 @@ describe("createWrap", () => {
     expect(prisma.wrap.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ tenantId: "tenant-1" }),
-      })
+      }),
     );
   });
 
@@ -116,7 +116,7 @@ describe("createWrap", () => {
           userId: "user-1",
           resource: "wrap:wrap-1",
         }),
-      })
+      }),
     );
   });
 
@@ -129,7 +129,7 @@ describe("createWrap", () => {
   it("throws Forbidden when assertTenantMembership rejects", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockRejectedValue(
-      new Error("Forbidden: no active membership for this tenant")
+      new Error("Forbidden: no active membership for this tenant"),
     );
 
     await expect(createWrap(validInput)).rejects.toThrow("Forbidden");
@@ -172,7 +172,7 @@ describe("createWrap", () => {
     expect(prisma.wrap.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ tenantId: "tenant-1" }),
-      })
+      }),
     );
   });
 });
