@@ -1,0 +1,56 @@
+/**
+ * Admin Domain Type Definitions
+ *
+ * DTOs and Zod schemas for admin operations.
+ * Never expose raw Prisma models — always use these explicit types.
+ */
+
+import { z } from "zod";
+
+// ── Role management ───────────────────────────────────────────────────────────
+
+/**
+ * Roles that can be assigned to tenant members.
+ * "owner" is excluded to prevent privilege escalation via this action.
+ */
+export const assignableRoles = ["admin", "member"] as const;
+export type AssignableRole = (typeof assignableRoles)[number];
+
+export const updateUserRoleSchema = z.object({
+  targetClerkUserId: z.string().min(1, "Target user ID is required"),
+  role: z.enum(assignableRoles),
+});
+
+export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>;
+
+export interface UserRoleDTO {
+  tenantId: string;
+  userId: string;
+  role: string;
+  updatedAt: Date;
+}
+
+// ── Tenant settings ───────────────────────────────────────────────────────────
+
+export const updateTenantSettingsSchema = z
+  .object({
+    name: z.string().min(1, "Name cannot be empty").max(100).optional(),
+    slug: z
+      .string()
+      .min(1, "Slug cannot be empty")
+      .max(63)
+      .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens")
+      .optional(),
+  })
+  .refine((data) => data.name !== undefined || data.slug !== undefined, {
+    message: "At least one setting field must be provided",
+  });
+
+export type UpdateTenantSettingsInput = z.infer<typeof updateTenantSettingsSchema>;
+
+export interface TenantSettingsDTO {
+  id: string;
+  name: string;
+  slug: string;
+  updatedAt: Date;
+}
