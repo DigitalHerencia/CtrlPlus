@@ -25,7 +25,7 @@ export interface TeamMemberDTO {
   createdAt: Date;
 }
 
-/** Paginated list of team members. */
+/** Full list of team members for a tenant. */
 export interface TeamMemberListDTO {
   members: TeamMemberDTO[];
   total: number;
