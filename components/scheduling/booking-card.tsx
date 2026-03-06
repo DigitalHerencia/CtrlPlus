@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { BookingStatusBadge } from "./booking-status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -61,12 +60,6 @@ export function BookingCard({ booking }: BookingCardProps) {
           </div>
           <div className="text-right shrink-0">
             <p className="font-semibold text-sm">{formatPrice(booking.totalPrice)}</p>
-            <Link
-              href={`/scheduling/bookings/${booking.id}`}
-              className="text-xs text-primary hover:underline mt-1 block"
-            >
-              View details
-            </Link>
           </div>
         </div>
       </CardContent>

@@ -61,8 +61,9 @@ export const PERMISSIONS = {
   },
 } as const;
 
-export type Permission =
-  (typeof PERMISSIONS)[keyof typeof PERMISSIONS][keyof (typeof PERMISSIONS)[keyof typeof PERMISSIONS]];
+export type Permission = {
+  [K in keyof typeof PERMISSIONS]: (typeof PERMISSIONS)[K][keyof (typeof PERMISSIONS)[K]];
+}[keyof typeof PERMISSIONS];
 
 /**
  * Map of role → list of granted permissions.

@@ -8,6 +8,16 @@ import { BookingCard } from "@/components/scheduling/booking-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+const DAY_NAMES = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+] as const;
+
 export default async function SchedulingPage() {
   const { user, tenantId } = await getSession();
 
@@ -93,15 +103,6 @@ export default async function SchedulingPage() {
                   {[0, 1, 2, 3, 4, 5, 6]
                     .filter((d) => availableWeekdays.includes(d))
                     .map((dow) => {
-                      const DAY_NAMES = [
-                        "Sunday",
-                        "Monday",
-                        "Tuesday",
-                        "Wednesday",
-                        "Thursday",
-                        "Friday",
-                        "Saturday",
-                      ];
                       const slots = availabilityWindows.filter((w) => w.dayOfWeek === dow);
                       return (
                         <li key={dow} className="flex items-center justify-between text-sm">
