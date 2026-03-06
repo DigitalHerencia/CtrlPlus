@@ -21,7 +21,7 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
   if (!user) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE
-  await assertTenantMembership(tenantId, user.id, ["OWNER", "ADMIN"]);
+  await assertTenantMembership(tenantId, user.id, "admin");
 
   // 3. VALIDATE
   const parsed = createWrapSchema.parse(input);
@@ -33,25 +33,19 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
       name: parsed.name,
       description: parsed.description ?? null,
       price: parsed.price,
-      estimatedHours: parsed.estimatedHours,
-      imageUrls: parsed.imageUrls,
-      category: parsed.category,
-      status: parsed.status,
+      installationMinutes: parsed.installationMinutes ?? null,
     },
   });
 
   // 5. AUDIT
-  await prisma.auditEvent.create({
+  await prisma.auditLog.create({
     data: {
       tenantId,
       userId: user.id,
       action: "wrap.created",
-      resource: `wrap:${wrap.id}`,
-      metadata: {
-        name: wrap.name,
-        category: wrap.category,
-        price: wrap.price.toString(),
-      },
+      resourceType: "Wrap",
+      resourceId: wrap.id,
+      details: JSON.stringify({ name: wrap.name, price: wrap.price }),
     },
   });
 
@@ -60,11 +54,8 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
     tenantId: wrap.tenantId,
     name: wrap.name,
     description: wrap.description,
-    price: wrap.price.toString(),
-    estimatedHours: wrap.estimatedHours,
-    status: wrap.status as WrapDTO["status"],
-    imageUrls: wrap.imageUrls,
-    category: wrap.category as WrapDTO["category"],
+    price: wrap.price,
+    installationMinutes: wrap.installationMinutes,
     createdAt: wrap.createdAt,
     updatedAt: wrap.updatedAt,
   };

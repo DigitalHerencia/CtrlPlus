@@ -1,4 +1,3 @@
-import { BookingStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { type BookingDTO, type BookingListParams, type BookingListResult } from "../types";
 
@@ -16,11 +15,10 @@ function toBookingDTO(record: {
   tenantId: string;
   customerId: string;
   wrapId: string;
-  dropOffStart: Date;
-  dropOffEnd: Date;
-  pickUpStart: Date;
-  pickUpEnd: Date;
-  status: BookingStatus;
+  startTime: Date;
+  endTime: Date;
+  status: string;
+  totalPrice: number;
   createdAt: Date;
   updatedAt: Date;
 }): BookingDTO {
@@ -29,11 +27,10 @@ function toBookingDTO(record: {
     tenantId: record.tenantId,
     customerId: record.customerId,
     wrapId: record.wrapId,
-    dropOffStart: record.dropOffStart,
-    dropOffEnd: record.dropOffEnd,
-    pickUpStart: record.pickUpStart,
-    pickUpEnd: record.pickUpEnd,
+    startTime: record.startTime,
+    endTime: record.endTime,
     status: record.status,
+    totalPrice: record.totalPrice,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
   };
@@ -44,11 +41,10 @@ const bookingSelectFields = {
   tenantId: true,
   customerId: true,
   wrapId: true,
-  dropOffStart: true,
-  dropOffEnd: true,
-  pickUpStart: true,
-  pickUpEnd: true,
+  startTime: true,
+  endTime: true,
   status: true,
+  totalPrice: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -71,7 +67,7 @@ export async function getBookingsForTenant(
     deletedAt: null, // soft-delete filter
     ...(status !== undefined && { status }),
     ...((fromDate !== undefined || toDate !== undefined) && {
-      dropOffStart: {
+      startTime: {
         ...(fromDate !== undefined && { gte: fromDate }),
         ...(toDate !== undefined && { lte: toDate }),
       },
@@ -82,7 +78,7 @@ export async function getBookingsForTenant(
     prisma.booking.findMany({
       where,
       select: bookingSelectFields,
-      orderBy: { dropOffStart: "asc" },
+      orderBy: { startTime: "asc" },
       skip,
       take: pageSize,
     }),
@@ -136,8 +132,8 @@ export async function getUpcomingBookingCount(
     where: {
       tenantId,
       deletedAt: null,
-      status: { notIn: [BookingStatus.CANCELLED, BookingStatus.COMPLETED] },
-      dropOffStart: { gte: from },
+      status: { notIn: ["cancelled", "completed"] },
+      startTime: { gte: from },
     },
   });
 }

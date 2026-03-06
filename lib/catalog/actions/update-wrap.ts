@@ -22,7 +22,7 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
   if (!user) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE
-  await assertTenantMembership(tenantId, user.id, ["OWNER", "ADMIN"]);
+  await assertTenantMembership(tenantId, user.id, "admin");
 
   // 3. VALIDATE
   const parsed = updateWrapSchema.parse(input);
@@ -49,13 +49,14 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
   }
 
   // 5. AUDIT
-  await prisma.auditEvent.create({
+  await prisma.auditLog.create({
     data: {
       tenantId,
       userId: user.id,
       action: "wrap.updated",
-      resource: `wrap:${wrap.id}`,
-      metadata: { changes: parsed },
+      resourceType: "Wrap",
+      resourceId: wrap.id,
+      details: JSON.stringify({ changes: parsed }),
     },
   });
 
@@ -64,11 +65,8 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
     tenantId: wrap.tenantId,
     name: wrap.name,
     description: wrap.description,
-    price: wrap.price.toString(),
-    estimatedHours: wrap.estimatedHours,
-    status: wrap.status as WrapDTO["status"],
-    imageUrls: wrap.imageUrls,
-    category: wrap.category as WrapDTO["category"],
+    price: wrap.price,
+    installationMinutes: wrap.installationMinutes,
     createdAt: wrap.createdAt,
     updatedAt: wrap.updatedAt,
   };
