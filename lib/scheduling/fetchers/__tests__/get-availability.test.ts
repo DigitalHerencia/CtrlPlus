@@ -22,9 +22,7 @@ import {
 
 const NOW = new Date("2025-01-15T10:00:00.000Z");
 
-function makeWindowRecord(
-  overrides: Partial<ReturnType<typeof baseWindowRecord>> = {}
-) {
+function makeWindowRecord(overrides: Partial<ReturnType<typeof baseWindowRecord>> = {}) {
   return { ...baseWindowRecord(), ...overrides };
 }
 
@@ -61,7 +59,7 @@ describe("getAvailabilityWindowsForTenant", () => {
           tenantId: "tenant-a",
           deletedAt: null,
         }),
-      })
+      }),
     );
     expect(prisma.availabilityWindow.count).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -69,7 +67,7 @@ describe("getAvailabilityWindowsForTenant", () => {
           tenantId: "tenant-a",
           deletedAt: null,
         }),
-      })
+      }),
     );
   });
 
@@ -82,7 +80,7 @@ describe("getAvailabilityWindowsForTenant", () => {
     expect(prisma.availabilityWindow.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ isActive: true }),
-      })
+      }),
     );
   });
 
@@ -131,7 +129,7 @@ describe("getAvailabilityWindowsForTenant", () => {
     expect(prisma.availabilityWindow.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ dayOfWeek: 3 }),
-      })
+      }),
     );
   });
 
@@ -146,7 +144,7 @@ describe("getAvailabilityWindowsForTenant", () => {
     });
 
     expect(prisma.availabilityWindow.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ skip: 10, take: 10 })
+      expect.objectContaining({ skip: 10, take: 10 }),
     );
     expect(result.page).toBe(2);
     expect(result.totalPages).toBe(5);
@@ -161,7 +159,7 @@ describe("getAvailabilityWindowsForTenant", () => {
     expect(prisma.availabilityWindow.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
-      })
+      }),
     );
   });
 });
@@ -174,9 +172,7 @@ describe("getAvailabilityWindowById", () => {
   });
 
   it("queries with id, tenantId, and soft-delete filter", async () => {
-    vi.mocked(prisma.availabilityWindow.findFirst).mockResolvedValue(
-      makeWindowRecord()
-    );
+    vi.mocked(prisma.availabilityWindow.findFirst).mockResolvedValue(makeWindowRecord());
 
     await getAvailabilityWindowById("tenant-a", "window-1");
 
@@ -187,14 +183,12 @@ describe("getAvailabilityWindowById", () => {
           tenantId: "tenant-a",
           deletedAt: null,
         },
-      })
+      }),
     );
   });
 
   it("returns mapped DTO when record exists", async () => {
-    vi.mocked(prisma.availabilityWindow.findFirst).mockResolvedValue(
-      makeWindowRecord()
-    );
+    vi.mocked(prisma.availabilityWindow.findFirst).mockResolvedValue(makeWindowRecord());
 
     const result = await getAvailabilityWindowById("tenant-a", "window-1");
 
@@ -232,7 +226,7 @@ describe("getAvailabilityWindowsByDay", () => {
           isActive: true,
           deletedAt: null,
         },
-      })
+      }),
     );
   });
 
@@ -242,7 +236,7 @@ describe("getAvailabilityWindowsByDay", () => {
     await getAvailabilityWindowsByDay("tenant-a", 5);
 
     expect(prisma.availabilityWindow.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ orderBy: { startTime: "asc" } })
+      expect.objectContaining({ orderBy: { startTime: "asc" } }),
     );
   });
 
