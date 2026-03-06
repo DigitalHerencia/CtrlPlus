@@ -16,22 +16,14 @@ vi.mock("@/lib/prisma", () => ({
   prisma: prismaMock,
 }));
 
-/** Minimal Decimal-like object that mirrors Prisma's Decimal type */
-const mockPrismaDecimal = (value: string) => ({
-  toString: () => value,
-  toFixed: (dp?: number) => parseFloat(value).toFixed(dp),
-});
-
+/** Simple mock wrap matching the actual Prisma schema fields */
 const mockWrap = {
   id: "wrap-001",
   tenantId: "tenant-abc",
   name: "Matte Black Full Wrap",
   description: "Premium matte black vinyl wrap",
-  price: mockPrismaDecimal("1200"),
-  estimatedHours: 8,
-  status: "ACTIVE" as const,
-  imageUrls: ["https://example.com/matte-black.jpg"],
-  category: "FULL_WRAP" as const,
+  price: 1200,
+  installationMinutes: 480,
   createdAt: new Date("2024-01-01T00:00:00.000Z"),
   updatedAt: new Date("2024-01-02T00:00:00.000Z"),
 };
@@ -55,7 +47,7 @@ describe("getWrapsForTenant", () => {
     expect(result).toHaveLength(1);
     expect(result[0].id).toBe("wrap-001");
     expect(result[0].name).toBe("Matte Black Full Wrap");
-    expect(result[0].price).toBe("1200");
+    expect(result[0].price).toBe(1200);
   });
 
   it("scopes the query by tenantId", async () => {
@@ -66,18 +58,6 @@ describe("getWrapsForTenant", () => {
     expect(prismaMock.wrap.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ tenantId: "tenant-abc" }),
-      }),
-    );
-  });
-
-  it("filters out non-ACTIVE wraps", async () => {
-    prismaMock.wrap.findMany.mockResolvedValue([]);
-
-    await getWrapsForTenant("tenant-abc");
-
-    expect(prismaMock.wrap.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ status: "ACTIVE" }),
       }),
     );
   });
@@ -102,13 +82,13 @@ describe("getWrapsForTenant", () => {
     expect(result).toEqual([]);
   });
 
-  it("transforms Prisma Decimal price to string", async () => {
+  it("returns price as a number", async () => {
     prismaMock.wrap.findMany.mockResolvedValue([mockWrap]);
 
     const result = await getWrapsForTenant("tenant-abc");
 
-    expect(typeof result[0].price).toBe("string");
-    expect(result[0].price).toBe("1200");
+    expect(typeof result[0].price).toBe("number");
+    expect(result[0].price).toBe(1200);
   });
 });
 
@@ -160,7 +140,7 @@ describe("getWrapById", () => {
     );
   });
 
-  it("filters out non-ACTIVE and soft-deleted wraps", async () => {
+  it("filters out soft-deleted wraps", async () => {
     prismaMock.wrap.findFirst.mockResolvedValue(null);
 
     await getWrapById("tenant-abc", "wrap-001");
@@ -168,7 +148,6 @@ describe("getWrapById", () => {
     expect(prismaMock.wrap.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          status: "ACTIVE",
           deletedAt: null,
         }),
       }),
@@ -217,7 +196,7 @@ describe("searchWraps", () => {
     );
   });
 
-  it("filters out non-ACTIVE and soft-deleted wraps", async () => {
+  it("filters out soft-deleted wraps", async () => {
     prismaMock.wrap.findMany.mockResolvedValue([]);
     prismaMock.wrap.count.mockResolvedValue(0);
 
@@ -225,7 +204,7 @@ describe("searchWraps", () => {
 
     expect(prismaMock.wrap.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ status: "ACTIVE", deletedAt: null }),
+        where: expect.objectContaining({ deletedAt: null }),
       }),
     );
   });

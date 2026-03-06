@@ -16,7 +16,7 @@ vi.mock("@/lib/prisma", () => ({
     wrap: {
       update: vi.fn(),
     },
-    auditEvent: {
+    auditLog: {
       create: vi.fn(),
     },
   },
@@ -41,11 +41,8 @@ const updatedWrap = {
   tenantId: "tenant-1",
   name: "Updated Wrap",
   description: null,
-  price: { toString: () => "2000" },
-  estimatedHours: 10,
-  status: "ACTIVE",
-  imageUrls: [],
-  category: "FULL_WRAP",
+  price: 2000,
+  installationMinutes: null,
   deletedAt: null,
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-02"),
@@ -62,7 +59,7 @@ describe("updateWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.update).mockResolvedValue(updatedWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     const result = await updateWrap("wrap-1", { name: "Updated Wrap" });
 
@@ -73,7 +70,7 @@ describe("updateWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.update).mockResolvedValue(updatedWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await updateWrap("wrap-1", { name: "Updated Wrap" });
 
@@ -92,15 +89,16 @@ describe("updateWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.update).mockResolvedValue(updatedWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await updateWrap("wrap-1", { name: "Updated Wrap" });
 
-    expect(prisma.auditEvent.create).toHaveBeenCalledWith(
+    expect(prisma.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          action: "wrap.updated",
-          resource: "wrap:wrap-1",
+          action: "UPDATE_WRAP",
+          resourceType: "Wrap",
+          resourceId: "wrap-1",
         }),
       }),
     );

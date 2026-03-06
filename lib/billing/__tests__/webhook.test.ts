@@ -130,6 +130,7 @@ describe("POST /api/stripe/webhook", () => {
       if (typeof fn === "function") {
         return fn(prisma);
       }
+      return Promise.all(fn as never[]);
     });
   });
 
@@ -283,13 +284,6 @@ describe("POST /api/stripe/webhook", () => {
     vi.mocked(prisma.stripeWebhookEvent.findUnique).mockResolvedValue(null);
     vi.mocked(prisma.invoice.findUnique).mockResolvedValue(null);
     vi.mocked(prisma.stripeWebhookEvent.create).mockResolvedValue({} as never);
-
-    // Transaction calls callback and callback throws
-    vi.mocked(prisma.$transaction).mockImplementation(async (fn) => {
-      if (typeof fn === "function") {
-        return fn(prisma);
-      }
-    });
 
     const req = buildRequest("{}", "sig_test");
     const res = await POST(req);

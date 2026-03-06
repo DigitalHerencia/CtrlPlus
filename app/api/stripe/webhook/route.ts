@@ -100,6 +100,16 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Returns true if the invoice status is terminal and should not be overwritten.
+ * Prevents idempotency bugs (e.g., marking a refunded invoice as paid).
+ */
+function isInvoiceTerminal(status: string): boolean {
+  return status === InvoiceStatus.PAID || status === InvoiceStatus.REFUNDED;
+}
+
 // ─── Event Handlers ───────────────────────────────────────────────────────────
 
 /**
@@ -135,7 +145,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
     }
 
     // Idempotent: only update if awaiting payment (not already paid, failed, or refunded)
-    if (invoice.status === InvoiceStatus.DRAFT || invoice.status === InvoiceStatus.SENT) {
+    if (!isInvoiceTerminal(invoice.status)) {
       await tx.invoice.update({
         where: { id: invoiceId },
         data: { status: InvoiceStatus.PAID },
@@ -204,10 +214,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
       });
     }
 
-    if (
-      payment.invoice.status === InvoiceStatus.DRAFT ||
-      payment.invoice.status === InvoiceStatus.SENT
-    ) {
+    if (!isInvoiceTerminal(payment.invoice.status)) {
       await tx.invoice.update({
         where: { id: payment.invoiceId },
         data: { status: InvoiceStatus.PAID },
@@ -256,10 +263,7 @@ async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent): P
       });
     }
 
-    if (
-      payment.invoice.status === InvoiceStatus.DRAFT ||
-      payment.invoice.status === InvoiceStatus.SENT
-    ) {
+    if (!isInvoiceTerminal(payment.invoice.status)) {
       await tx.invoice.update({
         where: { id: payment.invoiceId },
         data: { status: InvoiceStatus.FAILED },
