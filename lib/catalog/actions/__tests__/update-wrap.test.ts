@@ -84,7 +84,7 @@ describe("updateWrap", () => {
           tenantId: "tenant-1",
           deletedAt: null,
         }),
-      })
+      }),
     );
   });
 
@@ -102,27 +102,23 @@ describe("updateWrap", () => {
           action: "wrap.updated",
           resource: "wrap:wrap-1",
         }),
-      })
+      }),
     );
   });
 
   it("throws Unauthorized when the user is not authenticated", async () => {
     vi.mocked(getSession).mockResolvedValue({ user: null, tenantId: "" });
 
-    await expect(updateWrap("wrap-1", { name: "x" })).rejects.toThrow(
-      "Unauthorized"
-    );
+    await expect(updateWrap("wrap-1", { name: "x" })).rejects.toThrow("Unauthorized");
   });
 
   it("throws Forbidden when assertTenantMembership rejects", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockRejectedValue(
-      new Error("Forbidden: no active membership for this tenant")
+      new Error("Forbidden: no active membership for this tenant"),
     );
 
-    await expect(updateWrap("wrap-1", { name: "x" })).rejects.toThrow(
-      "Forbidden"
-    );
+    await expect(updateWrap("wrap-1", { name: "x" })).rejects.toThrow("Forbidden");
   });
 
   it("throws Forbidden when the wrap belongs to a different tenant (P2025)", async () => {
@@ -130,15 +126,13 @@ describe("updateWrap", () => {
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
 
     // Prisma throws P2025 when the compound where clause finds no matching row
-    const p2025 = new Prisma.PrismaClientKnownRequestError(
-      "Record to update not found.",
-      { code: "P2025", clientVersion: "6.0.0" }
-    );
+    const p2025 = new Prisma.PrismaClientKnownRequestError("Record to update not found.", {
+      code: "P2025",
+      clientVersion: "6.0.0",
+    });
     vi.mocked(prisma.wrap.update).mockRejectedValue(p2025);
 
-    await expect(updateWrap("wrap-1", { name: "x" })).rejects.toThrow(
-      "Forbidden"
-    );
+    await expect(updateWrap("wrap-1", { name: "x" })).rejects.toThrow("Forbidden");
   });
 
   it("throws a ZodError for invalid input (negative price)", async () => {

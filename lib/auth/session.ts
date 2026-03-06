@@ -35,7 +35,7 @@ export async function getSession(): Promise<Session> {
   const tenantId = await resolveTenantId();
 
   const primaryEmail = clerkUser.emailAddresses.find(
-    (e) => e.id === clerkUser.primaryEmailAddressId
+    (e) => e.id === clerkUser.primaryEmailAddressId,
   );
 
   return {
@@ -64,9 +64,7 @@ async function resolveTenantId(): Promise<string> {
   if (!subdomain || subdomain === "localhost") {
     const devTenantId = process.env.DEV_TENANT_ID;
     if (!devTenantId) {
-      throw new Error(
-        "DEV_TENANT_ID environment variable is required for local development"
-      );
+      throw new Error("DEV_TENANT_ID environment variable is required for local development");
     }
     return devTenantId;
   }
