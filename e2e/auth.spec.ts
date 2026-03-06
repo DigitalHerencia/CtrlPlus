@@ -5,7 +5,6 @@
  *  - Public pages are accessible without authentication
  *  - Protected routes redirect unauthenticated users to sign-in
  *  - Sign-in and sign-up pages render correctly
- *  - Sign-out flow returns user to the homepage
  */
 
 import { expect, test } from "@playwright/test";
