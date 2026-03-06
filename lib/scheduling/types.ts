@@ -1,16 +1,16 @@
 import { z } from "zod";
 
-// ─── Booking Status Constants ─────────────────────────────────────────────────
+// ─── Booking status constants ─────────────────────────────────────────────────
+// Defined locally since the Prisma schema uses plain String (not an enum).
 
-/** Booking status constants matching the DB string values. */
-export const BOOKING_STATUS = {
+export const BookingStatus = {
   PENDING: "pending",
   CONFIRMED: "confirmed",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
 } as const;
 
-export type BookingStatus = (typeof BOOKING_STATUS)[keyof typeof BOOKING_STATUS];
+export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus];
 
 // ─── Booking DTOs ─────────────────────────────────────────────────────────────
 
@@ -21,7 +21,7 @@ export interface BookingDTO {
   wrapId: string;
   startTime: Date;
   endTime: Date;
-  status: string;
+  status: BookingStatus;
   totalPrice: number;
   createdAt: Date;
   updatedAt: Date;
@@ -38,16 +38,16 @@ export interface BookingListResult {
 export const bookingListParamsSchema = z.object({
   page: z.number().int().min(1).default(1),
   pageSize: z.number().int().min(1).max(100).default(20),
-  status: z.string().optional(),
+  status: z.enum(["pending", "confirmed", "completed", "cancelled"]).optional(),
   fromDate: z.date().optional(),
   toDate: z.date().optional(),
 });
 
 export type BookingListParams = z.infer<typeof bookingListParamsSchema>;
 
-// ─── Availability Window DTOs ─────────────────────────────────────────────────
+// ─── Availability Rule DTOs ───────────────────────────────────────────────────
 
-export interface AvailabilityWindowDTO {
+export interface AvailabilityRuleDTO {
   id: string;
   tenantId: string;
   /** 0 = Sunday … 6 = Saturday */
@@ -62,7 +62,7 @@ export interface AvailabilityWindowDTO {
 }
 
 export interface AvailabilityListResult {
-  items: AvailabilityWindowDTO[];
+  items: AvailabilityRuleDTO[];
   total: number;
   page: number;
   pageSize: number;

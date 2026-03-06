@@ -16,14 +16,13 @@ vi.mock("@/lib/prisma", () => ({
   prisma: prismaMock,
 }));
 
-/** Simple mock wrap matching the actual Prisma schema fields */
 const mockWrap = {
   id: "wrap-001",
   tenantId: "tenant-abc",
   name: "Matte Black Full Wrap",
   description: "Premium matte black vinyl wrap",
   price: 1200,
-  installationMinutes: 480,
+  installationMinutes: null,
   createdAt: new Date("2024-01-01T00:00:00.000Z"),
   updatedAt: new Date("2024-01-02T00:00:00.000Z"),
 };

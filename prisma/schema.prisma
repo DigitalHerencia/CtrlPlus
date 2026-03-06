@@ -19,6 +19,35 @@ datasource db {
 }
 
 // ============================================================================
+// USER MODEL
+// ============================================================================
+
+/// Synced from Clerk – source of truth is Clerk; this is a local cache
+model User {
+  id          String    @id @default(cuid())
+  clerkUserId String    @unique
+  email       String    @unique
+  firstName   String?
+  lastName    String?
+  imageUrl    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([deletedAt])
+}
+
+/// Idempotency table – prevents duplicate processing of Clerk webhook events
+model ClerkWebhookEvent {
+  id          String   @id // Svix event ID
+  type        String
+  processedAt DateTime @default(now()) // used for retention/cleanup
+
+  @@index([type])
+  @@index([processedAt])
+}
+
+// ============================================================================
 // TENANCY & AUTH MODELS
 // ============================================================================
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { BOOKING_STATUS } from "../../types";
+import { BookingStatus } from "../../types";
 
 // ── Mock Prisma client ────────────────────────────────────────────────────────
 vi.mock("@/lib/prisma", () => ({
@@ -30,9 +30,9 @@ function baseRecord() {
     customerId: "customer-1",
     wrapId: "wrap-1",
     startTime: NOW,
-    endTime: new Date(NOW.getTime() + 60 * 60 * 1000),
-    status: BOOKING_STATUS.PENDING,
-    totalPrice: 1200,
+    endTime: new Date(NOW.getTime() + 4 * 60 * 60 * 1000),
+    status: BookingStatus.PENDING,
+    totalPrice: 1500,
     createdAt: NOW,
     updatedAt: NOW,
     deletedAt: null,
@@ -82,7 +82,7 @@ describe("getBookingsForTenant", () => {
     const dto = result.items[0];
     expect(dto.id).toBe("booking-1");
     expect(dto.tenantId).toBe("tenant-a");
-    expect(dto.status).toBe(BOOKING_STATUS.PENDING);
+    expect(dto.status).toBe("pending");
     expect("deletedAt" in dto).toBe(false);
   });
 
@@ -111,17 +111,17 @@ describe("getBookingsForTenant", () => {
     await getBookingsForTenant("tenant-a", {
       page: 1,
       pageSize: 20,
-      status: BOOKING_STATUS.CONFIRMED,
+      status: "confirmed",
     });
 
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ status: BOOKING_STATUS.CONFIRMED }),
+        where: expect.objectContaining({ status: BookingStatus.CONFIRMED }),
       }),
     );
   });
 
-  it("applies optional date range filter", async () => {
+  it("applies optional date range filter via startTime", async () => {
     vi.mocked(prisma.booking.findMany).mockResolvedValue([]);
     vi.mocked(prisma.booking.count).mockResolvedValue(0);
 
