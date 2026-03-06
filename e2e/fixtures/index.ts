@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import { test as base, type Page } from "@playwright/test";
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
