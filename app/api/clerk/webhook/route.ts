@@ -136,6 +136,10 @@ async function upsertUser(
   const email = primaryEmail?.email_address ?? data.email_addresses[0]?.email_address ?? "";
 
   if (!email) {
+    console.warn(
+      "[Clerk Webhook] upsertUser: No email address found for Clerk user",
+      clerkUserId,
+    );
     return false;
   }
 
