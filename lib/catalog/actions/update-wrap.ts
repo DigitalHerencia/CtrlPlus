@@ -4,7 +4,6 @@ import { requireAuth } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
 import { updateWrapSchema, type UpdateWrapInput, type WrapDTO } from "../types";
-import { Prisma } from "@prisma/client";
 
 /**
  * Updates an existing wrap in the catalog.
@@ -29,23 +28,26 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
   // Build the update data, excluding undefined fields
   const data = Object.fromEntries(
     Object.entries(parsed).filter(([, v]) => v !== undefined),
-  ) as Prisma.WrapUpdateInput;
+  ) as Record<string, unknown>;
 
-  // 4. MUTATE — the compound where clause acts as the tenant-scope check:
-  //    if no matching row exists (wrong tenant, already deleted, or bad ID)
-  //    Prisma throws P2025 which we convert to a safe Forbidden error.
-  let wrap;
-  try {
-    wrap = await prisma.wrap.update({
-      where: { id: wrapId, tenantId, deletedAt: null },
-      data,
-    });
-  } catch (err: unknown) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
-      throw new Error("Forbidden: resource not found");
-    }
-    throw err;
+  // 4. MUTATE
+  //    Look up the wrap by its primary key (most efficient path), then verify
+  //    tenant ownership and soft-delete status in application logic.
+  //    We intentionally do not fold these checks into the `update` where clause
+  //    because Prisma's `update` only accepts unique selectors there.
+  const existing = await prisma.wrap.findUnique({
+    where: { id: wrapId },
+    select: { id: true, tenantId: true, deletedAt: true },
+  });
+
+  if (!existing || existing.tenantId !== tenantId || existing.deletedAt !== null) {
+    throw new Error("Forbidden: resource not found");
   }
+
+  const wrap = await prisma.wrap.update({
+    where: { id: wrapId },
+    data,
+  });
 
   // 5. AUDIT
   await prisma.auditLog.create({

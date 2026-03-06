@@ -22,7 +22,24 @@ const mockFindFirst = vi.mocked(prisma.tenantUserMembership.findFirst);
 // Helpers
 // ---------------------------------------------------------------------------
 
-function membership(overrides: Record<string, unknown> = {}) {
+/**
+ * Typed fixture that mirrors the full Prisma TenantUserMembership row shape.
+ * `role` is typed as `string` (not the uppercase `TenantRole`) because the
+ * database stores lowercase values ("owner" | "admin" | "member"), which is
+ * exactly what Prisma returns.  `assertTenantMembership` normalizes the value
+ * at runtime via `normalizeTenantRole()`.
+ */
+interface MembershipFixture {
+  id: string;
+  tenantId: string;
+  userId: string;
+  role: string; // raw DB value: "owner" | "admin" | "member"
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
+function membership(overrides: Partial<MembershipFixture> = {}): MembershipFixture {
   return {
     id: "mem-1",
     tenantId: "tenant-abc",

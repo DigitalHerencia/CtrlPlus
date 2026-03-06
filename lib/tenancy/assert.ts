@@ -6,7 +6,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import { type TenantRole, hasRolePermission } from "./types";
+import { type TenantRole, hasRolePermission, normalizeTenantRole } from "./types";
 
 /**
  * Assert that a user is a member of a tenant with required role.
@@ -108,7 +108,7 @@ export async function getUserTenantRole(
   });
 
   if (!membership) return null;
-  return membership.role.toUpperCase() as TenantRole;
+  return normalizeTenantRole(membership.role);
 }
 
 /**
