@@ -6,7 +6,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
-import { type TenantRole, hasRolePermission } from "./types";
+import { type TenantRole, hasRolePermission, normalizeTenantRole } from "./types";
 
 /**
  * Assert that a user is a member of a tenant with required role.
@@ -14,7 +14,7 @@ import { type TenantRole, hasRolePermission } from "./types";
  *
  * @param tenantId - Tenant ID to check
  * @param userId - Clerk user ID
- * @param requiredRole - Minimum role required (defaults to 'member')
+ * @param requiredRole - Minimum role required (defaults to 'MEMBER'). Accepts a single role or an array.
  * @throws Error if user is not a member or has insufficient permission
  *
  * @example
@@ -24,7 +24,7 @@ import { type TenantRole, hasRolePermission } from "./types";
  *   const { userId, tenantId } = await requireAuth();
  *
  *   // Only admins can delete wraps
- *   await assertTenantMembership(tenantId, userId, 'admin');
+ *   await assertTenantMembership(tenantId, userId, 'ADMIN');
  *
  *   // Proceed with deletion...
  * }
@@ -33,14 +33,12 @@ import { type TenantRole, hasRolePermission } from "./types";
 export async function assertTenantMembership(
   tenantId: string,
   userId: string,
-  requiredRole: TenantRole = "member",
+  requiredRole: TenantRole | TenantRole[] = "MEMBER",
 ): Promise<void> {
-  const membership = await prisma.tenantUserMembership.findUnique({
+  const membership = await prisma.tenantUserMembership.findFirst({
     where: {
-      tenantId_userId: {
-        tenantId,
-        userId,
-      },
+      tenantId,
+      userId,
       deletedAt: null,
     },
     select: {
@@ -49,13 +47,14 @@ export async function assertTenantMembership(
   });
 
   if (!membership) {
-    throw new Error(`Forbidden - User is not a member of tenant ${tenantId}`);
+    throw new Error("Unauthorized: not a member of this tenant");
   }
 
-  if (!hasRolePermission(membership.role as TenantRole, requiredRole)) {
-    throw new Error(
-      `Forbidden - User role '${membership.role}' insufficient, requires '${requiredRole}' or higher`,
-    );
+  const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+  const isAuthorized = roles.some((required) => hasRolePermission(membership.role, required));
+
+  if (!isAuthorized) {
+    throw new Error("Forbidden: insufficient role");
   }
 }
 
@@ -85,9 +84,7 @@ export async function assertTenantMembership(
  */
 export function assertTenantScope(recordTenantId: string, currentTenantId: string): void {
   if (recordTenantId !== currentTenantId) {
-    throw new Error(
-      "Forbidden - Record does not belong to current tenant (cross-tenant access attempt)",
-    );
+    throw new Error("Forbidden: cross-tenant access detected");
   }
 }
 
@@ -99,12 +96,10 @@ export async function getUserTenantRole(
   tenantId: string,
   userId: string,
 ): Promise<TenantRole | null> {
-  const membership = await prisma.tenantUserMembership.findUnique({
+  const membership = await prisma.tenantUserMembership.findFirst({
     where: {
-      tenantId_userId: {
-        tenantId,
-        userId,
-      },
+      tenantId,
+      userId,
       deletedAt: null,
     },
     select: {
@@ -112,7 +107,8 @@ export async function getUserTenantRole(
     },
   });
 
-  return membership ? (membership.role as TenantRole) : null;
+  if (!membership) return null;
+  return normalizeTenantRole(membership.role);
 }
 
 /**
