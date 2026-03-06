@@ -128,8 +128,13 @@ export function hasPermission(role: TenantRole, permission: string): boolean {
 }
 
 /**
- * @deprecated Use PERMISSIONS (nested) instead.
- * Legacy flat permission definitions kept for backward compatibility.
+ * @deprecated Legacy role display metadata kept for backward compatibility.
+ *
+ * This constant only provides human-readable labels and descriptions for roles.
+ * For authorization, prefer using `TenantRole` together with `ROLE_PERMISSIONS`
+ * and the `PERMISSIONS` map. New code should define role presentation (labels,
+ * descriptions, etc.) closer to the UI or domain that renders it instead of
+ * relying on this shared constant.
  */
 export const ROLES = {
   owner: {
