@@ -29,31 +29,36 @@ export async function setUserRole(input: SetUserRoleInput): Promise<TeamMemberDT
 
   // 4. MUTATE — the compound unique where clause acts as tenant+user scope check.
   //    If the membership doesn't exist or is soft-deleted, handle gracefully.
-  let membership;
-  try {
-    membership = await prisma.tenantUserMembership.update({
-      where: {
-        tenantId_userId: {
-          tenantId,
-          userId: parsed.targetUserId,
-        },
-        deletedAt: null,
-      },
-      data: { role: parsed.role },
-      select: {
-        id: true,
-        userId: true,
-        role: true,
-        createdAt: true,
-      },
-    });
-  } catch (err) {
-    if (err instanceof Error && "code" in err && (err as { code: string }).code === "P2025") {
-      throw new Error("Forbidden: target user is not an active member of this tenant");
-    }
-    throw err;
+  // Look up the active membership first, ensuring we don't touch soft-deleted records.
+  const existingMembership = await prisma.tenantUserMembership.findFirst({
+    where: {
+      tenantId,
+      userId: parsed.targetUserId,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      userId: true,
+      createdAt: true,
+    },
+  });
+
+  if (!existingMembership) {
+    throw new Error("Forbidden: target user is not an active member of this tenant");
   }
 
+  const membership = await prisma.tenantUserMembership.update({
+    where: {
+      id: existingMembership.id,
+    },
+    data: { role: parsed.role },
+    select: {
+      id: true,
+      userId: true,
+      role: true,
+      createdAt: true,
+    },
+  });
   // 5. AUDIT
   await prisma.auditLog.create({
     data: {
