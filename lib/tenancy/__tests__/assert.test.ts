@@ -164,7 +164,7 @@ describe("assertTenantMembership", () => {
   it("queries with tenantId, userId, and deletedAt filter", async () => {
     mockFindFirst.mockResolvedValue(membership({ role: "admin" }));
 
-    await assertTenantMembership("tenant-abc", "user-xyz", "ADMIN");
+    await assertTenantMembership("tenant-abc", "user-xyz", "admin");
 
     expect(mockFindFirst).toHaveBeenCalledWith({
       where: {
