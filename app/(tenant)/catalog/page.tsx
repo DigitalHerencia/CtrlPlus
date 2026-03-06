@@ -6,45 +6,8 @@ import { searchWrapsSchema } from "@/lib/catalog/types";
 import { WrapGrid } from "@/components/catalog/WrapGrid";
 import { WrapFilter } from "@/components/catalog/WrapFilter";
 
-interface CatalogPageProps {
-  searchParams: Promise<{
-    query?: string;
-    maxPrice?: string;
-    sortBy?: string;
-    sortOrder?: string;
-    page?: string;
-  }>;
-}
-
-export default async function CatalogPage({ searchParams }: CatalogPageProps) {
-  const { user, tenantId } = await getSession();
-
-  if (!user) {
-    redirect("/sign-in");
-  }
-
-  const params = await searchParams;
-
-  // Coerce URL string params to numbers with explicit validation.
-  // Use safeParse + fallback so invalid params (e.g. ?maxPrice=abc) degrade
-  // gracefully to defaults rather than throwing a 500.
-  const rawMaxPrice = params.maxPrice ? Number(params.maxPrice) : undefined;
-  const rawPage = params.page ? Number(params.page) : undefined;
-
-  const parseResult = searchWrapsSchema.safeParse({
-    query: params.query ?? undefined,
-    maxPrice: rawMaxPrice !== undefined && !Number.isNaN(rawMaxPrice) ? rawMaxPrice : undefined,
-    sortBy: params.sortBy ?? "createdAt",
-    sortOrder: params.sortOrder ?? "desc",
-    page: rawPage !== undefined && !Number.isNaN(rawPage) ? rawPage : 1,
-    pageSize: 20,
-  });
-
-  const filters = parseResult.success
-    ? parseResult.data
-    : { page: 1, pageSize: 20 as const, sortBy: "createdAt" as const, sortOrder: "desc" as const };
-
-  const { wraps, total, page, totalPages } = await searchWraps(tenantId, filters);
+export default async function CatalogPage() {
+  const session = await getSession();
 
   return (
     <div className="space-y-6">
@@ -56,11 +19,18 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         </p>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white dark:bg-neutral-900 rounded-lg border p-4">
-        <Suspense fallback={<div className="h-9 animate-pulse bg-neutral-100 rounded" />}>
-          <WrapFilter />
-        </Suspense>
+      <div className="bg-white dark:bg-neutral-900 rounded-lg border p-6">
+        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+          {session.isAuthenticated
+            ? `Authenticated as user ${session.userId}`
+            : "Not authenticated"}
+        </p>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-2">
+          {session.tenantId ? `Tenant ID: ${session.tenantId}` : "No tenant context"}
+        </p>
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-4">
+          Catalog content coming soon...
+        </p>
       </div>
 
       {/* Results summary */}
