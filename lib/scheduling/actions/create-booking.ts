@@ -1,130 +1,159 @@
 "use server";
 
+import { z } from "zod";
 import { getSession } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
-import {
-  createBookingSchema,
-  type CreateBookingInput,
-  type BookingActionDTO,
-  BOOKING_STATUS,
-} from "../types";
-import { toHHmm } from "../utils";
+
+// ─── Input validation schema ──────────────────────────────────────────────────
+
+const createBookingSchema = z
+  .object({
+    wrapId: z.string().min(1, "Wrap is required"),
+    startTime: z.coerce.date({ required_error: "Start time is required" }),
+    endTime: z.coerce.date({ required_error: "End time is required" }),
+  })
+  .refine((data) => data.endTime > data.startTime, {
+    message: "End time must be after start time",
+    path: ["endTime"],
+  });
+
+export type CreateBookingInput = z.infer<typeof createBookingSchema>;
+
+// ─── Result DTO ───────────────────────────────────────────────────────────────
+
+export interface CreatedBookingDTO {
+  id: string;
+  wrapId: string;
+  startTime: Date;
+  endTime: Date;
+  status: string;
+  totalPrice: number;
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/** Convert a Date to an "HH:MM" string in local time for comparison against AvailabilityRule times. */
+function toHHMM(date: Date): string {
+  return date.toTimeString().slice(0, 5);
+}
+
+// ─── Server action ────────────────────────────────────────────────────────────
 
 /**
- * Creates a new booking for the current tenant after validating time-slot
- * availability against the tenant's AvailabilityRule records.
+ * Creates a booking for the current authenticated user.
  *
  * Security pipeline:
- * 1. Authenticate  — verify user is signed in
- * 2. Authorize     — verify user is a member of the tenant
- * 3. Validate      — parse and validate input with Zod
- * 4. Availability  — check capacity rules atomically before creating
- * 5. Mutate        — create the booking scoped to tenantId (inside transaction)
- * 6. Audit         — write an immutable audit log entry (inside transaction)
+ *  1. Authenticate  – verify the user is logged in
+ *  2. Authorize     – verify the user is a tenant member
+ *  3. Validate      – parse and validate input with Zod
+ *  4. Availability  – verify the slot falls within an AvailabilityRule and has capacity
+ *  5. Mutate        – create the booking scoped to the tenant
+ *  6. Audit         – log the creation
  */
-export async function createBooking(input: CreateBookingInput): Promise<BookingActionDTO> {
-  // 1. AUTHENTICATE
+export async function createBooking(input: CreateBookingInput): Promise<CreatedBookingDTO> {
+  // Step 1: AUTHENTICATE
   const { user, tenantId } = await getSession();
   if (!user) throw new Error("Unauthorized: not authenticated");
 
-  // 2. AUTHORIZE — any tenant member may create a booking
+  // Step 2: AUTHORIZE
   await assertTenantMembership(tenantId, user.id, "member");
 
-  // 3. VALIDATE
+  // Step 3: VALIDATE
   const parsed = createBookingSchema.parse(input);
-  const { wrapId, startTime, endTime, totalPrice } = parsed;
 
-  // 4 + 5 + 6. AVAILABILITY CHECK + MUTATE + AUDIT — performed atomically
-  const dayOfWeek = startTime.getDay(); // 0 = Sunday … 6 = Saturday
-  const slotStartHHmm = toHHmm(startTime);
-  const slotEndHHmm = toHHmm(endTime);
+  // Step 4: AVAILABILITY CHECK (server-side, cannot be bypassed via direct action calls)
+  // 4a. Find a matching AvailabilityRule for the day and time range
+  const dayOfWeek = parsed.startTime.getDay(); // 0=Sun … 6=Sat
+  const startHHMM = toHHMM(parsed.startTime);
+  const endHHMM = toHHMM(parsed.endTime);
 
-  const booking = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    // 4a. Find rules for the requested day-of-week
-    const rules = await tx.availabilityRule.findMany({
-      where: { tenantId, dayOfWeek, deletedAt: null },
-      select: { startTime: true, endTime: true, capacitySlots: true },
-    });
+  const matchingRule = await prisma.availabilityRule.findFirst({
+    where: {
+      tenantId,
+      dayOfWeek,
+      startTime: startHHMM,
+      endTime: endHHMM,
+      deletedAt: null,
+    },
+    select: { id: true, capacitySlots: true },
+  });
 
-    if (rules.length === 0) {
-      throw new Error("No availability configured for the requested day");
-    }
-
-    // 4b. Filter to rules whose window fully covers the requested slot
-    const matchingRules = rules.filter(
-      (rule: { startTime: string; endTime: string; capacitySlots: number }) =>
-        rule.startTime <= slotStartHHmm && rule.endTime >= slotEndHHmm,
+  if (!matchingRule) {
+    throw new Error(
+      "The requested time slot is not within a configured availability window for this tenant",
     );
+  }
 
-    if (matchingRules.length === 0) {
-      throw new Error("No availability configured for the requested time window");
-    }
+  // 4b. Count existing non-cancelled bookings that overlap this time window
+  const overlappingCount = await prisma.booking.count({
+    where: {
+      tenantId,
+      deletedAt: null,
+      status: { notIn: ["cancelled"] },
+      startTime: { lt: parsed.endTime },
+      endTime: { gt: parsed.startTime },
+    },
+  });
 
-    const maxCapacity = Math.max(
-      ...matchingRules.map((r: { capacitySlots: number }) => r.capacitySlots),
-    );
+  if (overlappingCount >= matchingRule.capacitySlots) {
+    throw new Error("The requested time slot is fully booked — no remaining capacity");
+  }
 
-    // 4c. Count non-cancelled, non-deleted bookings that overlap [startTime, endTime)
-    const overlappingCount = await tx.booking.count({
-      where: {
-        tenantId,
-        deletedAt: null,
-        status: { not: BOOKING_STATUS.CANCELLED },
-        startTime: { lt: endTime },
-        endTime: { gt: startTime },
-      },
-    });
+  // Step 5: MUTATE
+  // Look up wrap to get price (scoped to tenant)
+  const wrap = await prisma.wrap.findFirst({
+    where: { id: parsed.wrapId, tenantId, deletedAt: null },
+    select: { id: true, price: true },
+  });
 
-    if (overlappingCount >= maxCapacity) {
-      throw new Error("No available slots for the requested time");
-    }
+  if (!wrap) {
+    throw new Error("Wrap not found or does not belong to this tenant");
+  }
 
-    // 5. MUTATE — scoped by tenantId; customerId comes from the session
-    const createdBooking = await tx.booking.create({
-      data: {
-        tenantId,
-        customerId: user.id,
-        wrapId,
-        startTime,
-        endTime,
-        totalPrice,
-        status: BOOKING_STATUS.PENDING,
-      },
-    });
+  const booking = await prisma.booking.create({
+    data: {
+      tenantId,
+      customerId: user.id,
+      wrapId: parsed.wrapId,
+      startTime: parsed.startTime,
+      endTime: parsed.endTime,
+      status: "pending",
+      totalPrice: wrap.price,
+    },
+    select: {
+      id: true,
+      wrapId: true,
+      startTime: true,
+      endTime: true,
+      status: true,
+      totalPrice: true,
+    },
+  });
 
-    // 6. AUDIT
-    await tx.auditLog.create({
-      data: {
-        tenantId,
-        userId: user.id,
-        action: "CREATE_BOOKING",
-        resourceType: "Booking",
-        resourceId: createdBooking.id,
-        details: JSON.stringify({
-          wrapId,
-          startTime: startTime.toISOString(),
-          endTime: endTime.toISOString(),
-          totalPrice,
-        }),
-        timestamp: new Date(),
-      },
-    });
-
-    return createdBooking;
+  // Step 6: AUDIT
+  await prisma.auditLog.create({
+    data: {
+      tenantId,
+      userId: user.id,
+      action: "CREATE_BOOKING",
+      resourceType: "Booking",
+      resourceId: booking.id,
+      details: JSON.stringify({
+        wrapId: booking.wrapId,
+        startTime: booking.startTime.toISOString(),
+        endTime: booking.endTime.toISOString(),
+      }),
+      timestamp: new Date(),
+    },
   });
 
   return {
     id: booking.id,
-    tenantId: booking.tenantId,
-    customerId: booking.customerId,
     wrapId: booking.wrapId,
     startTime: booking.startTime,
     endTime: booking.endTime,
-    status: booking.status as BookingActionDTO["status"],
+    status: booking.status,
     totalPrice: booking.totalPrice,
-    createdAt: booking.createdAt,
-    updatedAt: booking.updatedAt,
   };
 }

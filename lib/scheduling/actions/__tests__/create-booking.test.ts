@@ -13,13 +13,15 @@ vi.mock("@/lib/tenancy/assert", () => ({
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
-    $transaction: vi.fn(),
     availabilityRule: {
-      findMany: vi.fn(),
+      findFirst: vi.fn(),
     },
     booking: {
       count: vi.fn(),
       create: vi.fn(),
+    },
+    wrap: {
+      findFirst: vi.fn(),
     },
     auditLog: {
       create: vi.fn(),
@@ -32,38 +34,35 @@ vi.mock("@/lib/prisma", () => ({
 import { getSession } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const NOW = new Date("2025-06-15T10:00:00.000Z"); // Sunday
-const TWO_HOURS_LATER = new Date("2025-06-15T12:00:00.000Z");
-
 const mockSession = {
-  user: { id: "user-1", clerkUserId: "user-1", email: "customer@example.com" },
+  user: { id: "user-1", clerkUserId: "clerk-1", email: "customer@example.com" },
   tenantId: "tenant-1",
 };
+
+// Monday 2025-01-06 09:00 – 17:00 UTC
+const START = new Date("2025-01-06T09:00:00.000Z");
+const END = new Date("2025-01-06T17:00:00.000Z");
 
 const validInput = {
   wrapId: "wrap-1",
-  startTime: NOW,
-  endTime: TWO_HOURS_LATER,
-  totalPrice: 1500,
+  startTime: START,
+  endTime: END,
 };
 
-const mockRule = { capacitySlots: 3, startTime: "09:00", endTime: "18:00" };
+const mockRule = { id: "rule-1", capacitySlots: 2 };
 
-const mockBookingRecord = {
+const mockWrap = { id: "wrap-1", price: 150000 };
+
+const mockBooking = {
   id: "booking-1",
-  tenantId: "tenant-1",
-  customerId: "user-1",
   wrapId: "wrap-1",
-  startTime: NOW,
-  endTime: TWO_HOURS_LATER,
+  startTime: START,
+  endTime: END,
   status: "pending",
-  totalPrice: 1500,
-  createdAt: NOW,
-  updatedAt: NOW,
+  totalPrice: 150000,
 };
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -71,41 +70,32 @@ const mockBookingRecord = {
 describe("createBooking", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Make $transaction execute the callback with the same mocked prisma client
-    vi.mocked(prisma.$transaction).mockImplementation(
-      (fn: (tx: Prisma.TransactionClient) => Promise<unknown>) =>
-        fn(prisma as unknown as Prisma.TransactionClient),
-    );
-  });
-
-  it("creates a booking and returns a DTO when the user is authorized and a slot is available", async () => {
+    // Default happy-path setup
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([mockRule] as never);
+    vi.mocked(prisma.availabilityRule.findFirst).mockResolvedValue(mockRule as never);
     vi.mocked(prisma.booking.count).mockResolvedValue(0);
-    vi.mocked(prisma.booking.create).mockResolvedValue(mockBookingRecord as never);
+    vi.mocked(prisma.wrap.findFirst).mockResolvedValue(mockWrap as never);
+    vi.mocked(prisma.booking.create).mockResolvedValue(mockBooking as never);
     vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
+  });
 
+  // ── Happy path ────────────────────────────────────────────────────────────
+
+  it("creates a booking and returns the DTO", async () => {
     const result = await createBooking(validInput);
 
     expect(result).toMatchObject({
       id: "booking-1",
-      tenantId: "tenant-1",
-      customerId: "user-1",
       wrapId: "wrap-1",
       status: "pending",
-      totalPrice: 1500,
+      totalPrice: 150000,
     });
+    expect(result.startTime).toEqual(START);
+    expect(result.endTime).toEqual(END);
   });
 
-  it("scopes the mutation to the current tenantId", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
-    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([mockRule] as never);
-    vi.mocked(prisma.booking.count).mockResolvedValue(0);
-    vi.mocked(prisma.booking.create).mockResolvedValue(mockBookingRecord as never);
-    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
-
+  it("scopes the booking mutation to the current tenantId", async () => {
     await createBooking(validInput);
 
     expect(prisma.booking.create).toHaveBeenCalledWith(
@@ -115,14 +105,7 @@ describe("createBooking", () => {
     );
   });
 
-  it("sets customerId from the session user id (not from input)", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
-    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([mockRule] as never);
-    vi.mocked(prisma.booking.count).mockResolvedValue(0);
-    vi.mocked(prisma.booking.create).mockResolvedValue(mockBookingRecord as never);
-    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
-
+  it("sets customerId to the authenticated user id", async () => {
     await createBooking(validInput);
 
     expect(prisma.booking.create).toHaveBeenCalledWith(
@@ -132,120 +115,128 @@ describe("createBooking", () => {
     );
   });
 
-  it("sets initial status to 'pending'", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
-    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([mockRule] as never);
-    vi.mocked(prisma.booking.count).mockResolvedValue(0);
-    vi.mocked(prisma.booking.create).mockResolvedValue(mockBookingRecord as never);
-    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
-
-    await createBooking(validInput);
-
-    expect(prisma.booking.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ status: "pending" }),
-      }),
-    );
-  });
-
-  it("writes an audit log entry after creating the booking", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
-    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([mockRule] as never);
-    vi.mocked(prisma.booking.count).mockResolvedValue(0);
-    vi.mocked(prisma.booking.create).mockResolvedValue(mockBookingRecord as never);
-    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
-
+  it("writes an audit log after creating the booking", async () => {
     await createBooking(validInput);
 
     expect(prisma.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           action: "CREATE_BOOKING",
-          resourceType: "Booking",
-          resourceId: "booking-1",
           tenantId: "tenant-1",
           userId: "user-1",
+          resourceType: "Booking",
+          resourceId: "booking-1",
         }),
       }),
     );
   });
 
+  // ── Authentication ────────────────────────────────────────────────────────
+
   it("throws Unauthorized when the user is not authenticated", async () => {
     vi.mocked(getSession).mockResolvedValue({ user: null, tenantId: "" });
 
     await expect(createBooking(validInput)).rejects.toThrow("Unauthorized");
+    expect(prisma.booking.create).not.toHaveBeenCalled();
   });
+
+  // ── Authorization ─────────────────────────────────────────────────────────
 
   it("throws Forbidden when assertTenantMembership rejects", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
-    vi.mocked(assertTenantMembership).mockRejectedValue(
-      new Error("Forbidden: no active membership for this tenant"),
-    );
+    vi.mocked(assertTenantMembership).mockRejectedValue(new Error("Forbidden: insufficient role"));
 
     await expect(createBooking(validInput)).rejects.toThrow("Forbidden");
-  });
-
-  it("throws when no availability rules are configured for the day", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
-    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([] as never);
-
-    await expect(createBooking(validInput)).rejects.toThrow("No availability configured");
     expect(prisma.booking.create).not.toHaveBeenCalled();
   });
 
-  it("throws when all capacity slots are occupied", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
-    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([
-      { capacitySlots: 2, startTime: "09:00", endTime: "18:00" },
-    ] as never);
-    // 2 existing overlapping bookings == capacity of 2 → no slots left
-    vi.mocked(prisma.booking.count).mockResolvedValue(2);
+  // ── Validation ────────────────────────────────────────────────────────────
 
-    await expect(createBooking(validInput)).rejects.toThrow("No available slots");
+  it("throws a ZodError for missing wrapId", async () => {
+    const bad = { ...validInput, wrapId: "" };
+
+    await expect(createBooking(bad)).rejects.toThrow();
     expect(prisma.booking.create).not.toHaveBeenCalled();
   });
 
-  it("checks availability scoped by tenantId", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
-    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([mockRule] as never);
-    vi.mocked(prisma.booking.count).mockResolvedValue(0);
-    vi.mocked(prisma.booking.create).mockResolvedValue(mockBookingRecord as never);
-    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
+  it("throws a ZodError when endTime is not after startTime", async () => {
+    const bad = { ...validInput, endTime: START }; // equal, not after
 
+    await expect(createBooking(bad)).rejects.toThrow();
+    expect(prisma.booking.create).not.toHaveBeenCalled();
+  });
+
+  // ── Availability checks ───────────────────────────────────────────────────
+
+  it("throws when no matching availability rule is found", async () => {
+    vi.mocked(prisma.availabilityRule.findFirst).mockResolvedValue(null);
+
+    await expect(createBooking(validInput)).rejects.toThrow(
+      "not within a configured availability window",
+    );
+    expect(prisma.booking.create).not.toHaveBeenCalled();
+  });
+
+  it("throws when the slot is fully booked (overlapping count equals capacitySlots)", async () => {
+    vi.mocked(prisma.availabilityRule.findFirst).mockResolvedValue({
+      id: "rule-1",
+      capacitySlots: 1,
+    } as never);
+    vi.mocked(prisma.booking.count).mockResolvedValue(1); // 1 existing == capacitySlots
+
+    await expect(createBooking(validInput)).rejects.toThrow("fully booked");
+    expect(prisma.booking.create).not.toHaveBeenCalled();
+  });
+
+  it("allows booking when overlapping count is below capacitySlots", async () => {
+    vi.mocked(prisma.availabilityRule.findFirst).mockResolvedValue({
+      id: "rule-1",
+      capacitySlots: 3,
+    } as never);
+    vi.mocked(prisma.booking.count).mockResolvedValue(2); // 2 existing < 3 capacity
+
+    await expect(createBooking(validInput)).resolves.toBeDefined();
+    expect(prisma.booking.create).toHaveBeenCalled();
+  });
+
+  it("queries overlapping bookings with correct tenant scope and non-cancelled filter", async () => {
     await createBooking(validInput);
 
     expect(prisma.booking.count).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ tenantId: "tenant-1" }),
+        where: expect.objectContaining({
+          tenantId: "tenant-1",
+          deletedAt: null,
+          status: { notIn: ["cancelled"] },
+          startTime: { lt: END },
+          endTime: { gt: START },
+        }),
       }),
     );
   });
 
-  it("throws a ZodError when endTime is before startTime", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
-    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+  // ── Wrap scope check ──────────────────────────────────────────────────────
 
-    const badInput = {
-      ...validInput,
-      endTime: new Date(NOW.getTime() - 1000),
-    };
+  it("throws when the wrap is not found in the current tenant", async () => {
+    vi.mocked(prisma.wrap.findFirst).mockResolvedValue(null);
 
-    await expect(createBooking(badInput)).rejects.toThrow();
+    await expect(createBooking(validInput)).rejects.toThrow(
+      "Wrap not found or does not belong to this tenant",
+    );
     expect(prisma.booking.create).not.toHaveBeenCalled();
   });
 
-  it("throws a ZodError when totalPrice is not positive", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
-    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+  it("does not accept tenantId from the input payload", async () => {
+    const inputWithTenantId = {
+      ...validInput,
+      tenantId: "attacker-tenant",
+    } as unknown as typeof validInput;
 
-    const badInput = { ...validInput, totalPrice: -50 };
+    await createBooking(inputWithTenantId);
 
-    await expect(createBooking(badInput)).rejects.toThrow();
-    expect(prisma.booking.create).not.toHaveBeenCalled();
+    expect(prisma.booking.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ tenantId: "tenant-1" }),
+      }),
+    );
   });
 });
