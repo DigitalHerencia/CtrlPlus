@@ -1,9 +1,9 @@
 "use server";
 
-import { z } from "zod";
 import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
+import { z } from "zod";
 
 // ─── Input validation schema ──────────────────────────────────────────────────
 
@@ -53,11 +53,11 @@ function toHHMM(date: Date): string {
  */
 export async function createBooking(input: CreateBookingInput): Promise<CreatedBookingDTO> {
   // Step 1: AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { tenantId } = await getSession();
+  if (!tenantId) throw new Error("Unauthorized: not authenticated");
 
   // Step 2: AUTHORIZE
-  await assertTenantMembership(tenantId, user.id, "member");
+  await assertTenantMembership(tenantId, tenantId);
 
   // Step 3: VALIDATE
   const parsed = createBookingSchema.parse(input);
@@ -114,7 +114,7 @@ export async function createBooking(input: CreateBookingInput): Promise<CreatedB
   const booking = await prisma.booking.create({
     data: {
       tenantId,
-      customerId: user.id,
+      customerId: tenantId,
       wrapId: parsed.wrapId,
       startTime: parsed.startTime,
       endTime: parsed.endTime,
@@ -135,7 +135,7 @@ export async function createBooking(input: CreateBookingInput): Promise<CreatedB
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: user.id,
+      userId: tenantId,
       action: "CREATE_BOOKING",
       resourceType: "Booking",
       resourceId: booking.id,

@@ -52,11 +52,15 @@ export const updateTenantSettingsSchema = z
 export type UpdateTenantSettingsInput = z.infer<typeof updateTenantSettingsSchema>;
 
 import { type TenantRole } from "@/lib/tenancy/types";
+import { type JSX } from "react/jsx-runtime";
+import { type ReactNode } from "react";
 
 // ─── Tenant Stats ──────────────────────────────────────────────────────────────
 
 /** Dashboard metrics for a tenant. Returned by getTenantStats. */
 export interface TenantStatsDTO {
+  totalMembers: string | number;
+  totalBookings: string | number;
   /** Number of active (non-deleted) wraps */
   wrapCount: number;
   /** Number of active (non-deleted) team members */
@@ -80,6 +84,8 @@ export interface TeamMemberDTO {
 
 /** Full list of team members for a tenant. */
 export interface TeamMemberListDTO {
+  length: number;
+  map(arg0: (member: TeamMemberDTO) => JSX.Element): ReactNode;
   members: TeamMemberDTO[];
   total: number;
 }

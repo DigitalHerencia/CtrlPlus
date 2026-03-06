@@ -8,40 +8,40 @@ vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 // ── Mock prisma to prevent DATABASE_URL error (transitive import via tenancy/assert) ──
 vi.mock("@/lib/prisma", () => ({ prisma: {} }));
 
-import { PERMISSIONS, roleHasPermission, type TenantRole } from "../rbac";
+import { PERMISSIONS, hasPermission, type TenantRole } from "../rbac";
 
 // ---------------------------------------------------------------------------
 // roleHasPermission
 // ---------------------------------------------------------------------------
 
-describe("roleHasPermission", () => {
+describe("hasPermission", () => {
   it("grants owner all permissions", () => {
-    expect(roleHasPermission("owner", "catalog:view")).toBe(true);
-    expect(roleHasPermission("owner", "catalog:create")).toBe(true);
-    expect(roleHasPermission("owner", "catalog:delete")).toBe(true);
-    expect(roleHasPermission("owner", "billing:manage")).toBe(true);
-    expect(roleHasPermission("owner", "settings:update")).toBe(true);
+    expect(hasPermission("OWNER", "catalog:read")).toBe(true);
+    expect(hasPermission("OWNER", "catalog:write")).toBe(true);
+    expect(hasPermission("OWNER", "catalog:delete")).toBe(true);
+    expect(hasPermission("OWNER", "billing:write")).toBe(true);
+    expect(hasPermission("OWNER", "admin:write")).toBe(true);
   });
 
   it("grants admin elevated but not owner-level permissions", () => {
-    expect(roleHasPermission("admin", "catalog:create")).toBe(true);
-    expect(roleHasPermission("admin", "users:view")).toBe(true);
-    expect(roleHasPermission("admin", "billing:manage")).toBe(false);
-    expect(roleHasPermission("admin", "users:manage")).toBe(false);
-    expect(roleHasPermission("admin", "settings:update")).toBe(false);
+    expect(hasPermission("ADMIN", "catalog:write")).toBe(true);
+    expect(hasPermission("ADMIN", "admin:read")).toBe(true);
+    expect(hasPermission("ADMIN", "billing:write")).toBe(false);
+    expect(hasPermission("ADMIN", "admin:users")).toBe(false);
+    expect(hasPermission("ADMIN", "admin:write")).toBe(false);
   });
 
   it("grants member read-only catalog and booking access", () => {
-    expect(roleHasPermission("member", "catalog:view")).toBe(true);
-    expect(roleHasPermission("member", "booking:view")).toBe(true);
-    expect(roleHasPermission("member", "booking:create")).toBe(true);
+    expect(hasPermission("MEMBER", "catalog:read")).toBe(true);
+    expect(hasPermission("MEMBER", "scheduling:read")).toBe(true);
+    expect(hasPermission("MEMBER", "visualizer:write")).toBe(true);
   });
 
   it("denies member write access to catalog, billing, and admin", () => {
-    expect(roleHasPermission("member", "catalog:create")).toBe(false);
-    expect(roleHasPermission("member", "catalog:delete")).toBe(false);
-    expect(roleHasPermission("member", "billing:view")).toBe(false);
-    expect(roleHasPermission("member", "users:invite")).toBe(false);
+    expect(hasPermission("MEMBER", "catalog:write")).toBe(false);
+    expect(hasPermission("MEMBER", "catalog:delete")).toBe(false);
+    expect(hasPermission("MEMBER", "billing:read")).toBe(false);
+    expect(hasPermission("MEMBER", "admin:users")).toBe(false);
   });
 });
 
@@ -51,24 +51,23 @@ describe("roleHasPermission", () => {
 
 describe("PERMISSIONS", () => {
   it("has expected permission keys", () => {
-    expect(PERMISSIONS).toHaveProperty("catalog:view");
-    expect(PERMISSIONS).toHaveProperty("catalog:create");
-    expect(PERMISSIONS).toHaveProperty("billing:manage");
-    expect(PERMISSIONS).toHaveProperty("settings:update");
+    expect(PERMISSIONS.catalog).toBeDefined();
+    expect(PERMISSIONS.catalog.read).toBe("catalog:read");
+    expect(PERMISSIONS.catalog.write).toBe("catalog:write");
+    expect(PERMISSIONS.billing).toBeDefined();
+    expect(PERMISSIONS.admin).toBeDefined();
   });
 
-  it("catalog:view is accessible to all roles", () => {
-    const roles = PERMISSIONS["catalog:view"] as readonly string[];
-    expect(roles).toContain("owner");
-    expect(roles).toContain("admin");
-    expect(roles).toContain("member");
+  it("catalog:read is accessible to all roles", () => {
+    expect(hasPermission("OWNER", PERMISSIONS.catalog.read)).toBe(true);
+    expect(hasPermission("ADMIN", PERMISSIONS.catalog.read)).toBe(true);
+    expect(hasPermission("MEMBER", PERMISSIONS.catalog.read)).toBe(true);
   });
 
-  it("billing:manage is restricted to owner only", () => {
-    const roles = PERMISSIONS["billing:manage"] as readonly string[];
-    expect(roles).toContain("owner");
-    expect(roles).not.toContain("admin");
-    expect(roles).not.toContain("member");
+  it("billing:write is restricted to owner only", () => {
+    expect(hasPermission("OWNER", PERMISSIONS.billing.write)).toBe(true);
+    expect(hasPermission("ADMIN", PERMISSIONS.billing.write)).toBe(false);
+    expect(hasPermission("MEMBER", PERMISSIONS.billing.write)).toBe(false);
   });
 });
 
@@ -78,71 +77,38 @@ describe("PERMISSIONS", () => {
 
 describe("TenantRole", () => {
   it("accepts all valid TenantRole values", () => {
-    const roles: TenantRole[] = ["owner", "admin", "member"];
+    const roles: TenantRole[] = ["OWNER", "ADMIN", "MEMBER"];
     for (const role of roles) {
-      expect(roleHasPermission(role, "catalog:view")).toBe(true);
+      expect(hasPermission(role, "catalog:read")).toBe(true);
     }
   });
 });
 
-// ---------------------------------------------------------------------------
-// PERMISSIONS constant
-// ---------------------------------------------------------------------------
-
-describe("PERMISSIONS", () => {
+describe("PERMISSIONS definition and verification", () => {
   it("defines catalog permissions", () => {
-    expect(PERMISSIONS["catalog:view"]).toBeDefined();
-    expect(PERMISSIONS["catalog:create"]).toBeDefined();
-    expect(PERMISSIONS["catalog:update"]).toBeDefined();
-    expect(PERMISSIONS["catalog:delete"]).toBeDefined();
+    expect(PERMISSIONS.catalog.read).toBe("catalog:read");
+    expect(PERMISSIONS.catalog.write).toBe("catalog:write");
+    expect(PERMISSIONS.catalog.delete).toBe("catalog:delete");
   });
 
-  it("defines booking permissions", () => {
-    expect(PERMISSIONS["booking:view"]).toBeDefined();
-    expect(PERMISSIONS["booking:create"]).toBeDefined();
+  it("defines scheduling permissions", () => {
+    expect(PERMISSIONS.scheduling.read).toBe("scheduling:read");
+    expect(PERMISSIONS.scheduling.write).toBe("scheduling:write");
   });
 
-  it("defines settings permissions", () => {
-    expect(PERMISSIONS["settings:view"]).toBeDefined();
-    expect(PERMISSIONS["settings:update"]).toBeDefined();
-  });
-});
-
-// ---------------------------------------------------------------------------
-// roleHasPermission
-// ---------------------------------------------------------------------------
-
-describe("roleHasPermission", () => {
-  it("grants owner all permissions", () => {
-    const ownerRole: TenantRole = "owner";
-    expect(roleHasPermission(ownerRole, "catalog:view")).toBe(true);
-    expect(roleHasPermission(ownerRole, "catalog:create")).toBe(true);
-    expect(roleHasPermission(ownerRole, "catalog:delete")).toBe(true);
-    expect(roleHasPermission(ownerRole, "settings:update")).toBe(true);
-    expect(roleHasPermission(ownerRole, "users:manage")).toBe(true);
+  it("defines visualizer permissions", () => {
+    expect(PERMISSIONS.visualizer.write).toBe("visualizer:write");
   });
 
-  it("grants admin elevated but not owner-only permissions", () => {
-    const adminRole: TenantRole = "admin";
-    expect(roleHasPermission(adminRole, "catalog:create")).toBe(true);
-    expect(roleHasPermission(adminRole, "catalog:delete")).toBe(true);
-    expect(roleHasPermission(adminRole, "settings:view")).toBe(true);
-    expect(roleHasPermission(adminRole, "settings:update")).toBe(false);
-    expect(roleHasPermission(adminRole, "users:manage")).toBe(false);
+  it("catalog:read is accessible to all roles", () => {
+    expect(hasPermission("OWNER", PERMISSIONS.catalog.read)).toBe(true);
+    expect(hasPermission("ADMIN", PERMISSIONS.catalog.read)).toBe(true);
+    expect(hasPermission("MEMBER", PERMISSIONS.catalog.read)).toBe(true);
   });
 
-  it("grants member read-only catalog and booking access", () => {
-    const memberRole: TenantRole = "member";
-    expect(roleHasPermission(memberRole, "catalog:view")).toBe(true);
-    expect(roleHasPermission(memberRole, "booking:view")).toBe(true);
-    expect(roleHasPermission(memberRole, "booking:create")).toBe(true);
-  });
-
-  it("denies member write access to catalog, billing, and settings", () => {
-    const memberRole: TenantRole = "member";
-    expect(roleHasPermission(memberRole, "catalog:create")).toBe(false);
-    expect(roleHasPermission(memberRole, "catalog:delete")).toBe(false);
-    expect(roleHasPermission(memberRole, "billing:view")).toBe(false);
-    expect(roleHasPermission(memberRole, "settings:view")).toBe(false);
+  it("billing:write is restricted to owner only", () => {
+    expect(hasPermission("OWNER", PERMISSIONS.billing.write)).toBe(true);
+    expect(hasPermission("ADMIN", PERMISSIONS.billing.write)).toBe(false);
+    expect(hasPermission("MEMBER", PERMISSIONS.billing.write)).toBe(false);
   });
 });

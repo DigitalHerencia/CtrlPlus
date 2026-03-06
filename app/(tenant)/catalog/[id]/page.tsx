@@ -1,16 +1,16 @@
-import { notFound, redirect } from "next/navigation";
+import { WrapDetail } from "@/components/catalog/WrapDetail";
 import { getSession } from "@/lib/auth/session";
 import { getWrapById } from "@/lib/catalog/fetchers/get-wraps";
-import { WrapDetail } from "@/components/catalog/WrapDetail";
+import { notFound, redirect } from "next/navigation";
 
 interface WrapDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
 export default async function WrapDetailPage({ params }: WrapDetailPageProps) {
-  const { user, tenantId } = await getSession();
+  const { tenantId, userId } = await getSession();
 
-  if (!user) {
+  if (!userId) {
     redirect("/sign-in");
   }
 

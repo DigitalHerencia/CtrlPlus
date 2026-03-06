@@ -1,21 +1,20 @@
 import { redirect } from "next/navigation";
 
-import { getSession } from "@/lib/auth/session";
-import { getUserTenantRole } from "@/lib/tenancy/assert";
-import { getUsersForTenant } from "@/lib/admin/fetchers/get-users";
 import { RoleBadge } from "@/components/admin/role-badge";
 import { SetRoleForm } from "@/components/admin/set-role-form";
+import { getTeamMembers } from "@/lib/admin/fetchers/get-users";
+import { getSession } from "@/lib/auth/session";
+import { getUserTenantRole } from "@/lib/tenancy/assert";
 
 export default async function TeamPage() {
-  const { user, tenantId } = await getSession();
-  if (!user) redirect("/sign-in");
+  const { tenantId, userId } = await getSession();
+  if (!tenantId || !userId) redirect("/sign-in");
 
   // Only admins and owners can access the team page
-  const role = await getUserTenantRole(tenantId, user.id);
-  if (!role || role === "member") redirect("/catalog");
+  const role = await getUserTenantRole(tenantId, userId);
+  if (!role) redirect("/catalog");
 
-  const members = await getUsersForTenant(tenantId);
-  const isOwner = role === "owner";
+  const members = await getTeamMembers(tenantId, userId);
 
   return (
     <div className="space-y-6">
@@ -35,9 +34,7 @@ export default async function TeamPage() {
               <div key={member.id} className="flex items-center justify-between p-4 gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium truncate font-mono text-xs">
-                      {member.userId}
-                    </p>
+                    <p className="text-sm font-medium truncate font-mono">{member.userId}</p>
                     <p className="text-xs text-muted-foreground">
                       Member since {member.createdAt.toLocaleDateString()}
                     </p>
@@ -45,7 +42,7 @@ export default async function TeamPage() {
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
-                  {isOwner && member.userId !== user.id ? (
+                  {member.userId !== userId ? (
                     <SetRoleForm userId={member.userId} currentRole={member.role} />
                   ) : (
                     <RoleBadge role={member.role} />

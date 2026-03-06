@@ -1,19 +1,19 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
-import { getBookingsForTenant } from "@/lib/scheduling/fetchers/get-bookings";
 import { BookingCard } from "@/components/scheduling/booking-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSession } from "@/lib/auth/session";
+import { getBookingsForTenant } from "@/lib/scheduling/fetchers/get-bookings";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 interface BookingsPageProps {
   searchParams: Promise<{ tab?: string }>;
 }
 
 export default async function BookingsPage({ searchParams }: BookingsPageProps) {
-  const { user, tenantId } = await getSession();
+  const { tenantId } = await getSession();
 
-  if (!user) {
+  if (!tenantId) {
     redirect("/sign-in");
   }
 

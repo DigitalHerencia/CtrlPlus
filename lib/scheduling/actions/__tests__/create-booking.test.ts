@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createBooking } from "../create-booking";
 
 // ── Mock dependencies ─────────────────────────────────────────────────────────
@@ -32,14 +32,16 @@ vi.mock("@/lib/prisma", () => ({
 // ── Imports after mocks ───────────────────────────────────────────────────────
 
 import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const mockSession = {
-  user: { id: "user-1", clerkUserId: "clerk-1", email: "customer@example.com" },
+  userId: "user-1",
   tenantId: "tenant-1",
+  isAuthenticated: true,
+  orgId: null,
 };
 
 // Monday 2025-01-06 09:00 – 17:00 UTC
@@ -134,7 +136,12 @@ describe("createBooking", () => {
   // ── Authentication ────────────────────────────────────────────────────────
 
   it("throws Unauthorized when the user is not authenticated", async () => {
-    vi.mocked(getSession).mockResolvedValue({ user: null, tenantId: "" });
+    vi.mocked(getSession).mockResolvedValue({
+      userId: null,
+      tenantId: "",
+      isAuthenticated: false,
+      orgId: null,
+    });
 
     await expect(createBooking(validInput)).rejects.toThrow("Unauthorized");
     expect(prisma.booking.create).not.toHaveBeenCalled();

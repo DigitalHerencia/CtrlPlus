@@ -4,7 +4,6 @@ import {
   type BookingDTO,
   type BookingListParams,
   type BookingListResult,
-  type BookingStatus,
 } from "../types";
 
 const DEFAULT_BOOKING_LIST_PARAMS: BookingListParams = {

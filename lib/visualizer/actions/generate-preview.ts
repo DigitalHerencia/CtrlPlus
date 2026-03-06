@@ -1,13 +1,13 @@
 "use server";
 
 import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
 import {
   generatePreviewSchema,
   type GeneratePreviewInput,
-  type VisualizerPreviewDTO,
   type PreviewStatus,
+  type VisualizerPreviewDTO,
 } from "../types";
 
 /**
@@ -24,15 +24,13 @@ import {
  * 4. Mutate        — update the preview record scoped to tenantId
  * 5. Audit         — write an immutable audit event
  */
-export async function generatePreview(
-  input: GeneratePreviewInput,
-): Promise<VisualizerPreviewDTO> {
+export async function generatePreview(input: GeneratePreviewInput): Promise<VisualizerPreviewDTO> {
   // 1. AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { tenantId } = await getSession();
+  if (!tenantId) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — any tenant member can generate a preview
-  await assertTenantMembership(tenantId, user.id, "member");
+  await assertTenantMembership(tenantId, tenantId);
 
   // 3. VALIDATE
   const parsed = generatePreviewSchema.parse(input);
@@ -75,7 +73,7 @@ export async function generatePreview(
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: user.id,
+      userId: tenantId,
       action: "GENERATE_PREVIEW",
       resourceType: "VisualizerPreview",
       resourceId: processed.id,

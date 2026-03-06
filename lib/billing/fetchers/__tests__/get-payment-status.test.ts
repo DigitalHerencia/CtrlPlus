@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ── Mock Prisma client ────────────────────────────────────────────────────────
 vi.mock("@/lib/prisma", () => ({
@@ -31,6 +31,7 @@ function makePaymentRecord(overrides: Record<string, unknown> = {}) {
     status: "succeeded",
     amount: 120000,
     createdAt: NOW,
+    deletedAt: null,
     ...overrides,
   };
 }
@@ -55,7 +56,7 @@ describe("getPaymentStatusForInvoice", () => {
           tenantId: "tenant-a",
           deletedAt: null,
         },
-      })
+      }),
     );
   });
 
@@ -71,7 +72,7 @@ describe("getPaymentStatusForInvoice", () => {
           invoiceId: "invoice-1",
           deletedAt: null,
         },
-      })
+      }),
     );
   });
 
@@ -117,7 +118,7 @@ describe("getPaymentStatusForInvoice", () => {
     await getPaymentStatusForInvoice("tenant-a", "invoice-1");
 
     expect(prisma.payment.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ orderBy: { createdAt: "asc" } })
+      expect.objectContaining({ orderBy: { createdAt: "asc" } }),
     );
   });
 });

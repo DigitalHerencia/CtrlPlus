@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma";
 import {
-  type AvailabilityRuleDTO,
   type AvailabilityListParams,
   type AvailabilityListResult,
+  type AvailabilityRuleDTO,
+  type AvailabilityWindowDTO,
 } from "../types";
 
 const DEFAULT_AVAILABILITY_LIST_PARAMS: AvailabilityListParams = {
@@ -102,7 +103,7 @@ export async function getAvailabilityRuleById(
 ): Promise<AvailabilityWindowDTO | null> {
   const record = await prisma.availabilityRule.findFirst({
     where: {
-      id: ruleId,
+      id: windowId,
       tenantId, // defensive scope check
       deletedAt: null,
     },

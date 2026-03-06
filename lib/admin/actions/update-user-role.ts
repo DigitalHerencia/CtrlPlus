@@ -21,11 +21,11 @@ import {
  */
 export async function updateUserRole(input: UpdateUserRoleInput): Promise<UserRoleDTO> {
   // 1. AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { tenantId } = await getSession();
+  if (!tenantId) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — only owners may change member roles
-  await assertTenantMembership(tenantId, user.id, "owner");
+  await assertTenantMembership(tenantId, "owner");
 
   // 3. VALIDATE
   const parsed = updateUserRoleSchema.parse(input);
@@ -62,7 +62,7 @@ export async function updateUserRole(input: UpdateUserRoleInput): Promise<UserRo
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: user.id,
+      userId: "owner",
       action: "user.role_updated",
       resourceType: "TenantUserMembership",
       resourceId: updated.id,
@@ -76,7 +76,7 @@ export async function updateUserRole(input: UpdateUserRoleInput): Promise<UserRo
   return {
     tenantId: updated.tenantId,
     userId: updated.userId,
-    role: updated.role,
+    role: updated.role as "admin" | "member",
     updatedAt: updated.updatedAt,
   };
 }

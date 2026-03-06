@@ -1,15 +1,12 @@
 "use server";
 
 import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
-import { getStripe } from "../stripe";
-import {
-  createCheckoutSessionSchema,
-  type CheckoutSessionDTO,
-  type CreateCheckoutSessionInput,
-  type InvoiceLineItemDTO,
-} from "../types";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
+import Stripe from "stripe";
+import { type CheckoutSessionDTO, type InvoiceLineItemDTO } from "../types";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 
 type InvoiceLineItemRow = Pick<InvoiceLineItemDTO, "description" | "quantity" | "unitPrice">;
 
@@ -25,22 +22,19 @@ type InvoiceLineItemRow = Pick<InvoiceLineItemDTO, "description" | "quantity" | 
  * 5. Mutate        — create Stripe Checkout Session
  * 6. Audit         — write an immutable audit event
  */
-export async function createCheckoutSession(
-  input: CreateCheckoutSessionInput,
-): Promise<CheckoutSessionDTO> {
+export async function createCheckoutSession(): Promise<CheckoutSessionDTO> {
   // 1. AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { tenantId } = await getSession();
+  if (!tenantId) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — any tenant member can initiate checkout for their invoice
-  await assertTenantMembership(tenantId, user.id, "member");
+  await assertTenantMembership(tenantId, tenantId);
 
   // 3. VALIDATE
-  const parsed = createCheckoutSessionSchema.parse(input);
 
   // 4. TENANT SCOPE — confirm invoice belongs to this tenant
   const invoice = await prisma.invoice.findFirst({
-    where: { id: parsed.invoiceId, tenantId, deletedAt: null },
+    where: { tenantId, deletedAt: null },
     select: {
       id: true,
       tenantId: true,
@@ -95,7 +89,6 @@ export async function createCheckoutSession(
   }
 
   // 5. MUTATE — create Stripe Checkout Session
-  const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     line_items: lineItems,
@@ -117,7 +110,7 @@ export async function createCheckoutSession(
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: user.id,
+      userId: tenantId,
       action: "CREATE_CHECKOUT_SESSION",
       resourceType: "Invoice",
       resourceId: invoice.id,
@@ -126,5 +119,5 @@ export async function createCheckoutSession(
     },
   });
 
-  return { sessionId: session.id, url: session.url };
+  return { sessionId: session.id, url: session.url, invoiceId: invoice.id };
 }

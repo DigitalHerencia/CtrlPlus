@@ -1,10 +1,10 @@
 "use server";
 
 import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
-import { setUserRoleSchema, type SetUserRoleInput, type TeamMemberDTO } from "../types";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { type TenantRole } from "@/lib/tenancy/types";
+import { type TeamMemberDTO, type UpdateUserRoleInput, updateUserRoleSchema } from "../types";
 
 /**
  * Updates the role of a team member within the current tenant.
@@ -16,36 +16,38 @@ import { type TenantRole } from "@/lib/tenancy/types";
  * 4. Mutate        — update the membership record (scoped by tenantId)
  * 5. Audit         — write an immutable audit event
  */
-export async function setUserRole(input: SetUserRoleInput): Promise<TeamMemberDTO> {
+export async function setUserRole(input: UpdateUserRoleInput): Promise<TeamMemberDTO> {
   // 1. AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { tenantId } = await getSession();
+  if (!tenantId) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — only owners may change roles
-  await assertTenantMembership(tenantId, user.id, "owner");
+  await assertTenantMembership(tenantId, "owner");
 
   // 3. VALIDATE
-  const parsed = setUserRoleSchema.parse(input);
+  const parsed = updateUserRoleSchema.parse(input);
 
-  // Prevent owners from changing their own role away from "owner".
-  if (parsed.targetUserId === user.id && parsed.role !== "owner") {
-    throw new Error("Forbidden: owners cannot change their own role");
-  }
   // 4. MUTATE — the compound unique where clause acts as tenant+user scope check.
   //    If the membership doesn't exist or is soft-deleted, handle gracefully.
   // Look up the active membership first, ensuring we don't touch soft-deleted records.
   const existingMembership = await prisma.tenantUserMembership.findFirst({
     where: {
       tenantId,
-      userId: parsed.targetUserId,
+      userId: parsed.targetClerkUserId,
       deletedAt: null,
     },
     select: {
       id: true,
       userId: true,
+      role: true,
       createdAt: true,
     },
   });
+
+  // Prevent owners from changing their own role away from "owner".
+  if (existingMembership?.role === "owner") {
+    throw new Error("Forbidden: owners cannot change their own role");
+  }
 
   if (!existingMembership) {
     throw new Error("Forbidden: target user is not an active member of this tenant");
@@ -60,6 +62,7 @@ export async function setUserRole(input: SetUserRoleInput): Promise<TeamMemberDT
       id: true,
       userId: true,
       role: true,
+      tenantId: true,
       createdAt: true,
     },
   });
@@ -67,12 +70,12 @@ export async function setUserRole(input: SetUserRoleInput): Promise<TeamMemberDT
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: user.id,
+      userId: "owner",
       action: "SET_USER_ROLE",
       resourceType: "TenantUserMembership",
       resourceId: membership.id,
       details: JSON.stringify({
-        targetUserId: parsed.targetUserId,
+        targetUserId: parsed.targetClerkUserId,
         newRole: parsed.role,
       }),
       timestamp: new Date(),
@@ -83,6 +86,7 @@ export async function setUserRole(input: SetUserRoleInput): Promise<TeamMemberDT
     id: membership.id,
     userId: membership.userId,
     role: membership.role as TenantRole,
+    tenantId: membership.tenantId,
     createdAt: membership.createdAt,
   };
 }

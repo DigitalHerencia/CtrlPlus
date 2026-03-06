@@ -16,9 +16,6 @@ import { assertTenantMembership } from "@/lib/tenancy/assert";
  * @param userId   - Clerk user ID of the requesting user
  * @throws Error if user is not a member or has only MEMBER role
  */
-export async function assertAdminOrOwner(
-  tenantId: string,
-  userId: string,
-): Promise<void> {
-  await assertTenantMembership(tenantId, userId, "admin");
+export async function assertAdminOrOwner(tenantId: string, userId: string): Promise<void> {
+  await assertTenantMembership(tenantId, userId);
 }

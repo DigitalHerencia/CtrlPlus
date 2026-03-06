@@ -1,14 +1,14 @@
 "use server";
 
-import crypto from "crypto";
 import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
+import crypto from "crypto";
 import {
   uploadPhotoSchema,
+  type PreviewStatus,
   type UploadPhotoInput,
   type VisualizerPreviewDTO,
-  type PreviewStatus,
 } from "../types";
 
 /**
@@ -21,15 +21,13 @@ import {
  * 4. Mutate        — create the preview record scoped to tenantId
  * 5. Audit         — write an immutable audit event
  */
-export async function uploadVehiclePhoto(
-  input: UploadPhotoInput,
-): Promise<VisualizerPreviewDTO> {
+export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<VisualizerPreviewDTO> {
   // 1. AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { tenantId } = await getSession();
+  if (!tenantId) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — any tenant member can upload a preview
-  await assertTenantMembership(tenantId, user.id, "member");
+  await assertTenantMembership(tenantId, tenantId);
 
   // 3. VALIDATE
   const parsed = uploadPhotoSchema.parse(input);
@@ -94,7 +92,7 @@ export async function uploadVehiclePhoto(
     await prisma.auditLog.create({
       data: {
         tenantId,
-        userId: user.id,
+        userId: tenantId,
         action: "UPLOAD_VEHICLE_PHOTO",
         resourceType: "VisualizerPreview",
         resourceId: refreshed.id,
@@ -132,7 +130,7 @@ export async function uploadVehiclePhoto(
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: user.id,
+      userId: tenantId,
       action: "UPLOAD_VEHICLE_PHOTO",
       resourceType: "VisualizerPreview",
       resourceId: preview.id,

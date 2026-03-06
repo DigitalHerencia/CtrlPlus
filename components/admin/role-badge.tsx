@@ -2,15 +2,15 @@ import { Badge } from "@/components/ui/badge";
 import { type TenantRole } from "@/lib/tenancy/types";
 
 export const ROLE_LABELS: Record<TenantRole, string> = {
-  owner: "Owner",
-  admin: "Admin",
-  member: "Member",
+  OWNER: "Owner",
+  ADMIN: "Admin",
+  MEMBER: "Member",
 };
 
 const ROLE_VARIANTS: Record<TenantRole, "default" | "secondary" | "outline"> = {
-  owner: "default",
-  admin: "secondary",
-  member: "outline",
+  OWNER: "default",
+  ADMIN: "secondary",
+  MEMBER: "outline",
 };
 
 interface RoleBadgeProps {

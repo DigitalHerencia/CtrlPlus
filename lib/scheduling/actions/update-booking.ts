@@ -4,13 +4,28 @@ import { getSession } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
-import {
-  updateBookingSchema,
-  type UpdateBookingInput,
-  type BookingActionDTO,
-  BOOKING_STATUS,
-} from "../types";
 import { toHHmm } from "../utils";
+import { z } from "zod";
+
+const updateBookingSchema = z.object({
+  startTime: z.date(),
+  endTime: z.date(),
+});
+
+type UpdateBookingInput = z.infer<typeof updateBookingSchema>;
+
+type BookingActionDTO = {
+  id: string;
+  tenantId: string;
+  customerId: string;
+  wrapId: string;
+  startTime: Date;
+  endTime: Date;
+  status: "PENDING" | "CONFIRMED" | "CANCELLED";
+  totalPrice: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 /**
  * Reschedules an existing booking to a new time slot after re-validating
@@ -30,11 +45,11 @@ export async function updateBooking(
   input: UpdateBookingInput,
 ): Promise<BookingActionDTO> {
   // 1. AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { tenantId } = await getSession();
+  if (!tenantId) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — any tenant member may reschedule a booking
-  await assertTenantMembership(tenantId, user.id, "member");
+  await assertTenantMembership(tenantId, tenantId);
 
   // 3. VALIDATE
   const parsed = updateBookingSchema.parse(input);
@@ -91,7 +106,7 @@ export async function updateBooking(
       where: {
         tenantId,
         deletedAt: null,
-        status: { not: BOOKING_STATUS.CANCELLED },
+        status: { not: "CANCELLED" },
         id: { not: bookingId },
         startTime: { lt: endTime },
         endTime: { gt: startTime },
@@ -112,7 +127,7 @@ export async function updateBooking(
     await tx.auditLog.create({
       data: {
         tenantId,
-        userId: user.id,
+        userId: tenantId,
         action: "UPDATE_BOOKING",
         resourceType: "Booking",
         resourceId: updatedBooking.id,

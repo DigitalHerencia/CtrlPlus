@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createWrap } from "../create-wrap";
 
 // ── Mock dependencies ─────────────────────────────────────────────────────────
@@ -25,8 +25,8 @@ vi.mock("@/lib/prisma", () => ({
 // ── Imports after mocks ───────────────────────────────────────────────────────
 
 import { requireAuth } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -131,7 +131,7 @@ describe("createWrap", () => {
   });
 
   it("always uses tenantId from the session, never from user-supplied input", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(requireAuth).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.create).mockResolvedValue(mockWrap as never);
     vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);

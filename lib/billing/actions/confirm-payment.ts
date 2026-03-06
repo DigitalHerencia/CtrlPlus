@@ -16,10 +16,10 @@
  * It is a plain async function imported directly by the webhook route handler.
  */
 
-import type Stripe from "stripe";
-import { prisma } from "@/lib/prisma";
 import { getStripeClient } from "@/lib/billing/stripe";
-import { type ConfirmPaymentResult } from "../types";
+import { prisma } from "@/lib/prisma";
+import type Stripe from "stripe";
+import { type PaymentStatus } from "../types";
 
 /**
  * Sentinel userId written to AuditLog entries that originate from the
@@ -46,10 +46,7 @@ function isPrismaUniqueConstraintError(err: unknown): boolean {
  * @param payload   - Raw request body (string) from the webhook route
  * @param signature - Value of the `Stripe-Signature` HTTP header
  */
-export async function confirmPayment(
-  payload: string,
-  signature: string,
-): Promise<ConfirmPaymentResult> {
+export async function confirmPayment(payload: string, signature: string): Promise<PaymentStatus> {
   // 1. AUTHENTICATE — verify Stripe webhook signature
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
@@ -72,8 +69,7 @@ export async function confirmPayment(
   const session = event.data.object as Stripe.Checkout.Session;
 
   // Extract the invoice ID stored in client_reference_id or metadata
-  const invoiceId =
-    session.client_reference_id ?? session.metadata?.invoiceId ?? null;
+  const invoiceId = session.client_reference_id ?? session.metadata?.invoiceId ?? null;
   if (!invoiceId) {
     throw new Error(
       "Stripe session is missing invoiceId (client_reference_id or metadata.invoiceId)",
@@ -123,8 +119,8 @@ export async function confirmPayment(
     return {
       invoiceId: invoice.id,
       paymentId: existingPayment.id,
-      status: "already_processed",
-    };
+      status: existingPayment.status,
+    } as unknown as PaymentStatus;
   }
 
   // 4. MUTATE — transactional: create Payment, update Invoice, update Booking
@@ -163,14 +159,14 @@ export async function confirmPayment(
       // A concurrent webhook delivery already created the Payment record.
       const winner = await prisma.payment.findUnique({
         where: { stripePaymentIntentId },
-        select: { id: true },
+        select: { id: true, status: true },
       });
       if (winner) {
         return {
           invoiceId: invoice.id,
           paymentId: winner.id,
-          status: "already_processed",
-        };
+          status: winner.status,
+        } as unknown as PaymentStatus;
       }
     }
     throw err;
@@ -197,5 +193,6 @@ export async function confirmPayment(
     invoiceId: invoice.id,
     paymentId: payment.id,
     status: "succeeded",
-  };
+  } as unknown as PaymentStatus;
 }
+

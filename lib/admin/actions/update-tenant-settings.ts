@@ -1,12 +1,12 @@
 "use server";
 
 import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
 import {
   updateTenantSettingsSchema,
-  type UpdateTenantSettingsInput,
   type TenantSettingsDTO,
+  type UpdateTenantSettingsInput,
 } from "../types";
 
 /**
@@ -23,11 +23,11 @@ export async function updateTenantSettings(
   input: UpdateTenantSettingsInput,
 ): Promise<TenantSettingsDTO> {
   // 1. AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { tenantId } = await getSession();
+  if (!tenantId) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — only owners may change tenant settings
-  await assertTenantMembership(tenantId, user.id, "owner");
+  await assertTenantMembership(tenantId, "owner");
 
   // 3. VALIDATE
   const parsed = updateTenantSettingsSchema.parse(input);
@@ -59,7 +59,7 @@ export async function updateTenantSettings(
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: user.id,
+      userId: "owner",
       action: "tenant.settings_updated",
       resourceType: "Tenant",
       resourceId: tenantId,
@@ -71,6 +71,7 @@ export async function updateTenantSettings(
     id: tenant.id,
     name: tenant.name,
     slug: tenant.slug,
+    createdAt: tenant.createdAt,
     updatedAt: tenant.updatedAt,
   };
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { updateTenantSettings } from "../update-tenant-settings";
 
 // ── Mock dependencies ─────────────────────────────────────────────────────────
@@ -25,14 +25,16 @@ vi.mock("@/lib/prisma", () => ({
 // ── Imports after mocks ───────────────────────────────────────────────────────
 
 import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const mockSession = {
-  user: { id: "clerk-owner", clerkUserId: "clerk-owner", email: "owner@example.com" },
+  userId: "clerk-owner",
   tenantId: "tenant-1",
+  isAuthenticated: true,
+  orgId: null,
 };
 
 const updatedTenant = {
@@ -133,7 +135,12 @@ describe("updateTenantSettings", () => {
   });
 
   it("throws Unauthorized when the user is not authenticated", async () => {
-    vi.mocked(getSession).mockResolvedValue({ user: null, tenantId: "" });
+    vi.mocked(getSession).mockResolvedValue({
+      userId: null,
+      tenantId: "",
+      isAuthenticated: false,
+      orgId: null,
+    });
 
     await expect(updateTenantSettings({ name: "New Name" })).rejects.toThrow("Unauthorized");
   });

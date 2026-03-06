@@ -1,20 +1,19 @@
 import { redirect } from "next/navigation";
 
+import { SettingsForm } from "@/components/admin/settings-form";
+import { getTenantSettings } from "@/lib/admin/fetchers/get-tenant-settings";
 import { getSession } from "@/lib/auth/session";
 import { getUserTenantRole } from "@/lib/tenancy/assert";
-import { getTenantSettings } from "@/lib/admin/fetchers/get-tenant-settings";
-import { SettingsForm } from "@/components/admin/settings-form";
 
 export default async function SettingsPage() {
-  const { user, tenantId } = await getSession();
-  if (!user) redirect("/sign-in");
+  const { tenantId, userId } = await getSession();
+  if (!tenantId || !userId) redirect("/sign-in");
 
-  // Only owners can access the settings page
-  const role = await getUserTenantRole(tenantId, user.id);
-  if (role !== "owner") redirect("/admin");
+  const role = await getUserTenantRole(userId, tenantId);
+  if (!role) redirect("/");
 
-  const settings = await getTenantSettings(tenantId);
-  if (!settings) redirect("/admin");
+  const settings = await getTenantSettings(tenantId, userId);
+  if (!settings) redirect("/");
 
   return (
     <div className="space-y-6">

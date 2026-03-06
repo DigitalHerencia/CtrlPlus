@@ -1,11 +1,11 @@
-import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
-import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
-import { getInvoiceById } from "@/lib/billing/fetchers/get-invoice-by-id";
-import { InvoiceStatusBadge } from "@/components/billing/InvoiceStatusBadge";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { InvoiceStatusBadge } from "@/components/billing/InvoiceStatusBadge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSession } from "@/lib/auth/session";
+import { getInvoiceById } from "@/lib/billing/fetchers/get-invoice-by-id";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 
 interface InvoiceDetailPageProps {
   params: Promise<{ id: string }>;
@@ -16,12 +16,12 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
   const { id } = await params;
   const { payment } = await searchParams;
 
-  const { user, tenantId } = await getSession();
-  if (!user) {
+  const { tenantId, userId } = await getSession();
+  if (!userId) {
     redirect("/sign-in");
   }
 
-  await assertTenantMembership(tenantId, user.id, "admin");
+  await assertTenantMembership(tenantId, userId);
 
   const invoice = await getInvoiceById(tenantId, id);
 

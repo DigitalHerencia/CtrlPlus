@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { cancelBooking } from "../cancel-booking";
 
 // ── Mock dependencies ─────────────────────────────────────────────────────────
@@ -26,8 +26,8 @@ vi.mock("@/lib/prisma", () => ({
 // ── Imports after mocks ───────────────────────────────────────────────────────
 
 import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -35,8 +35,10 @@ const NOW = new Date("2025-06-15T10:00:00.000Z");
 const TWO_HOURS_LATER = new Date("2025-06-15T12:00:00.000Z");
 
 const mockSession = {
-  user: { id: "user-1", clerkUserId: "user-1", email: "customer@example.com" },
+  userId: "user-1",
   tenantId: "tenant-1",
+  isAuthenticated: true,
+  orgId: null,
 };
 
 const existingBooking = {
@@ -145,7 +147,12 @@ describe("cancelBooking", () => {
   });
 
   it("throws Unauthorized when the user is not authenticated", async () => {
-    vi.mocked(getSession).mockResolvedValue({ user: null, tenantId: "" });
+    vi.mocked(getSession).mockResolvedValue({
+      userId: null,
+      tenantId: "",
+      isAuthenticated: false,
+      orgId: null,
+    });
 
     await expect(cancelBooking("booking-1")).rejects.toThrow("Unauthorized");
   });

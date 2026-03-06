@@ -68,8 +68,10 @@ export async function getTeamMembers(
   });
 
   const members = records.map(toTeamMemberDTO);
-
-  return { members, total: members.length };
+  return {
+    members,
+    total: members.length,
+  } as TeamMemberListDTO;
 }
 
 /**

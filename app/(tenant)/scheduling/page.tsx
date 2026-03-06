@@ -1,12 +1,12 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import { BookingCard } from "@/components/scheduling/booking-card";
+import { CalendarClient } from "@/components/scheduling/calendar-client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
 import { getAvailabilityWindowsForTenant } from "@/lib/scheduling/fetchers/get-availability";
 import { getBookingsForTenant } from "@/lib/scheduling/fetchers/get-bookings";
-import { CalendarClient } from "@/components/scheduling/calendar-client";
-import { BookingCard } from "@/components/scheduling/booking-card";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 const DAY_NAMES = [
   "Sunday",
@@ -19,9 +19,9 @@ const DAY_NAMES = [
 ] as const;
 
 export default async function SchedulingPage() {
-  const { user, tenantId } = await getSession();
+  const { tenantId } = await getSession();
 
-  if (!user) {
+  if (!tenantId) {
     redirect("/sign-in");
   }
 

@@ -1,20 +1,20 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
+import { StatsCard } from "@/components/admin/stats-card";
+import { getTenantStats } from "@/lib/admin/fetchers/get-tenant-stats";
 import { getSession } from "@/lib/auth/session";
 import { getUserTenantRole } from "@/lib/tenancy/assert";
-import { getTenantStats } from "@/lib/admin/fetchers/get-tenant-stats";
-import { StatsCard } from "@/components/admin/stats-card";
 
 export default async function AdminDashboardPage() {
-  const { user, tenantId } = await getSession();
-  if (!user) redirect("/sign-in");
+  const { tenantId, userId } = await getSession();
+  if (!tenantId || !userId) redirect("/sign-in");
 
   // Only admins and owners can access the admin area
-  const role = await getUserTenantRole(tenantId, user.id);
-  if (!role || role === "member") redirect("/catalog");
+  const role = await getUserTenantRole(tenantId, userId);
+  if (!role || !["admin", "owner"].includes(role as string)) redirect("/catalog");
 
-  const stats = await getTenantStats(tenantId);
+  const stats = await getTenantStats(tenantId, userId);
 
   // Format revenue from cents to dollars
   const formattedRevenue = new Intl.NumberFormat("en-US", {
@@ -61,7 +61,7 @@ export default async function AdminDashboardPage() {
             <span className="font-medium">Team</span>
             <span className="text-sm text-muted-foreground">Manage team members and roles</span>
           </Link>
-          {role === "owner" && (
+          {(role as string) === "owner" && (
             <Link
               href="/admin/settings"
               className="flex flex-col gap-1 rounded-md border p-4 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"

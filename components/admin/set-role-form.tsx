@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { setUserRole } from "@/lib/admin/actions/set-user-role";
 import { type TenantRole } from "@/lib/tenancy/types";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { ROLE_LABELS } from "./role-badge";
 
 interface SetRoleFormProps {
@@ -12,7 +12,7 @@ interface SetRoleFormProps {
   currentRole: TenantRole;
 }
 
-const SELECTABLE_ROLES: TenantRole[] = ["owner", "admin", "member"];
+const SELECTABLE_ROLES: TenantRole[] = ["OWNER", "ADMIN", "MEMBER"];
 
 export function SetRoleForm({ userId, currentRole }: SetRoleFormProps) {
   const [isPending, startTransition] = useTransition();
@@ -27,8 +27,10 @@ export function SetRoleForm({ userId, currentRole }: SetRoleFormProps) {
 
     startTransition(async () => {
       try {
-        await setUserRole({ targetUserId: userId, role });
-        router.refresh();
+        if (role !== "OWNER") {
+          await setUserRole({ targetClerkUserId: userId, role: role.toLowerCase() as Lowercase<typeof role> });
+          router.refresh();
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to update role.");
       }

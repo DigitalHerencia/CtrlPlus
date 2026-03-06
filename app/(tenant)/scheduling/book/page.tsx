@@ -1,15 +1,15 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth/session";
-import { getAvailabilityWindowsForTenant } from "@/lib/scheduling/fetchers/get-availability";
-import { getWrapsForTenant } from "@/lib/catalog/fetchers/get-wraps";
 import { BookingForm } from "@/components/scheduling/booking-form";
 import { Button } from "@/components/ui/button";
+import { getSession } from "@/lib/auth/session";
+import { getWrapsForTenant } from "@/lib/catalog/fetchers/get-wraps";
+import { getAvailabilityWindowsForTenant } from "@/lib/scheduling/fetchers/get-availability";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default async function BookPage() {
-  const { user, tenantId } = await getSession();
+  const { tenantId } = await getSession();
 
-  if (!user) {
+  if (!tenantId) {
     redirect("/sign-in");
   }
 

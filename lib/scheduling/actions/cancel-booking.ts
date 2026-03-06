@@ -1,9 +1,9 @@
 "use server";
 
 import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
-import { type BookingActionDTO, BOOKING_STATUS } from "../types";
+import { BookingStatus, type BookingDTO } from "@/lib/scheduling/types";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
 
 /**
  * Cancels a booking by soft-deleting it (sets `deletedAt`) and marking its
@@ -17,13 +17,13 @@ import { type BookingActionDTO, BOOKING_STATUS } from "../types";
  * 4. Mutate        — soft-delete + set status to "cancelled"
  * 5. Audit         — write an immutable audit log entry
  */
-export async function cancelBooking(bookingId: string): Promise<BookingActionDTO> {
+export async function cancelBooking(bookingId: string): Promise<BookingDTO> {
   // 1. AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { tenantId } = await getSession();
+  if (!tenantId) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — any tenant member may cancel a booking
-  await assertTenantMembership(tenantId, user.id, "member");
+  await assertTenantMembership(tenantId, tenantId);
 
   // 3. TENANT SCOPE — defensive ownership check before mutation
   const existing = await prisma.booking.findFirst({
@@ -39,7 +39,7 @@ export async function cancelBooking(bookingId: string): Promise<BookingActionDTO
   const booking = await prisma.booking.update({
     where: { id: bookingId, tenantId },
     data: {
-      status: BOOKING_STATUS.CANCELLED,
+      status: BookingStatus.CANCELLED,
       deletedAt: new Date(),
     },
   });
@@ -48,7 +48,7 @@ export async function cancelBooking(bookingId: string): Promise<BookingActionDTO
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: user.id,
+      userId: tenantId,
       action: "CANCEL_BOOKING",
       resourceType: "Booking",
       resourceId: booking.id,
@@ -64,7 +64,7 @@ export async function cancelBooking(bookingId: string): Promise<BookingActionDTO
     wrapId: booking.wrapId,
     startTime: booking.startTime,
     endTime: booking.endTime,
-    status: booking.status as BookingActionDTO["status"],
+    status: booking.status as BookingDTO["status"],
     totalPrice: booking.totalPrice,
     createdAt: booking.createdAt,
     updatedAt: booking.updatedAt,

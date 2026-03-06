@@ -39,5 +39,12 @@ export async function getTenantStats(
 
   const totalRevenue = revenueAggregate._sum.totalAmount ?? 0;
 
-  return { wrapCount, memberCount, bookingCount, totalRevenue };
+  return {
+    wrapCount,
+    memberCount,
+    bookingCount,
+    totalRevenue,
+    totalMembers: memberCount,
+    totalBookings: bookingCount,
+  };
 }
