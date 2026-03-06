@@ -15,32 +15,32 @@ import {
 
 describe("hasRole", () => {
   it("returns true when user role exactly matches required role", () => {
-    expect(hasRole("OWNER", "OWNER")).toBe(true);
-    expect(hasRole("ADMIN", "ADMIN")).toBe(true);
-    expect(hasRole("MEMBER", "MEMBER")).toBe(true);
+    expect(hasRole("owner", "owner")).toBe(true);
+    expect(hasRole("admin", "admin")).toBe(true);
+    expect(hasRole("member", "member")).toBe(true);
   });
 
   it("returns true for higher-privilege roles satisfying lower-privilege requirements", () => {
-    expect(hasRole("OWNER", "ADMIN")).toBe(true);
-    expect(hasRole("OWNER", "MEMBER")).toBe(true);
-    expect(hasRole("ADMIN", "MEMBER")).toBe(true);
+    expect(hasRole("owner", "admin")).toBe(true);
+    expect(hasRole("owner", "member")).toBe(true);
+    expect(hasRole("admin", "member")).toBe(true);
   });
 
   it("returns false for lower-privilege roles against higher-privilege requirements", () => {
-    expect(hasRole("MEMBER", "ADMIN")).toBe(false);
-    expect(hasRole("MEMBER", "OWNER")).toBe(false);
-    expect(hasRole("ADMIN", "OWNER")).toBe(false);
+    expect(hasRole("member", "admin")).toBe(false);
+    expect(hasRole("member", "owner")).toBe(false);
+    expect(hasRole("admin", "owner")).toBe(false);
   });
 
   it("returns true when user role satisfies any role in an array", () => {
-    expect(hasRole("ADMIN", ["OWNER", "ADMIN"])).toBe(true);
-    expect(hasRole("OWNER", ["ADMIN", "MEMBER"])).toBe(true);
-    expect(hasRole("MEMBER", ["MEMBER"])).toBe(true);
+    expect(hasRole("admin", ["owner", "admin"])).toBe(true);
+    expect(hasRole("owner", ["admin", "member"])).toBe(true);
+    expect(hasRole("member", ["member"])).toBe(true);
   });
 
   it("returns false when user role does not satisfy any role in an array", () => {
-    expect(hasRole("MEMBER", ["OWNER", "ADMIN"])).toBe(false);
-    expect(hasRole("ADMIN", ["OWNER"])).toBe(false);
+    expect(hasRole("member", ["owner", "admin"])).toBe(false);
+    expect(hasRole("admin", ["owner"])).toBe(false);
   });
 });
 
@@ -50,7 +50,7 @@ describe("hasRole", () => {
 
 describe("hasPermission", () => {
   it("grants OWNER all permissions", () => {
-    const ownerPermissions = ROLE_PERMISSIONS["OWNER"] as string[];
+    const ownerPermissions = ROLE_PERMISSIONS["owner"] as string[];
     expect(ownerPermissions).toContain(PERMISSIONS.admin.write);
     expect(ownerPermissions).toContain(PERMISSIONS.admin.users);
     expect(ownerPermissions).toContain(PERMISSIONS.billing.write);
@@ -58,29 +58,29 @@ describe("hasPermission", () => {
   });
 
   it("grants ADMIN elevated but not owner-level admin permissions", () => {
-    expect(hasPermission("ADMIN", PERMISSIONS.catalog.write)).toBe(true);
-    expect(hasPermission("ADMIN", PERMISSIONS.admin.read)).toBe(true);
-    expect(hasPermission("ADMIN", PERMISSIONS.admin.write)).toBe(false);
-    expect(hasPermission("ADMIN", PERMISSIONS.admin.users)).toBe(false);
+    expect(hasPermission("admin", PERMISSIONS.catalog.write)).toBe(true);
+    expect(hasPermission("admin", PERMISSIONS.admin.read)).toBe(true);
+    expect(hasPermission("admin", PERMISSIONS.admin.write)).toBe(false);
+    expect(hasPermission("admin", PERMISSIONS.admin.users)).toBe(false);
   });
 
   it("grants MEMBER read-only catalog and scheduling access", () => {
-    expect(hasPermission("MEMBER", PERMISSIONS.catalog.read)).toBe(true);
-    expect(hasPermission("MEMBER", PERMISSIONS.scheduling.read)).toBe(true);
-    expect(hasPermission("MEMBER", PERMISSIONS.visualizer.write)).toBe(true);
+    expect(hasPermission("member", PERMISSIONS.catalog.read)).toBe(true);
+    expect(hasPermission("member", PERMISSIONS.scheduling.read)).toBe(true);
+    expect(hasPermission("member", PERMISSIONS.visualizer.write)).toBe(true);
   });
 
   it("denies MEMBER write access to catalog, scheduling, and billing", () => {
-    expect(hasPermission("MEMBER", PERMISSIONS.catalog.write)).toBe(false);
-    expect(hasPermission("MEMBER", PERMISSIONS.catalog.delete)).toBe(false);
-    expect(hasPermission("MEMBER", PERMISSIONS.scheduling.write)).toBe(false);
-    expect(hasPermission("MEMBER", PERMISSIONS.billing.read)).toBe(false);
-    expect(hasPermission("MEMBER", PERMISSIONS.billing.write)).toBe(false);
+    expect(hasPermission("member", PERMISSIONS.catalog.write)).toBe(false);
+    expect(hasPermission("member", PERMISSIONS.catalog.delete)).toBe(false);
+    expect(hasPermission("member", PERMISSIONS.scheduling.write)).toBe(false);
+    expect(hasPermission("member", PERMISSIONS.billing.read)).toBe(false);
+    expect(hasPermission("member", PERMISSIONS.billing.write)).toBe(false);
   });
 
   it("returns false for unknown permission strings", () => {
-    expect(hasPermission("OWNER", "unknown:permission")).toBe(false);
-    expect(hasPermission("MEMBER", "")).toBe(false);
+    expect(hasPermission("owner", "unknown:permission")).toBe(false);
+    expect(hasPermission("member", "")).toBe(false);
   });
 });
 
@@ -90,34 +90,34 @@ describe("hasPermission", () => {
 
 describe("requireRole", () => {
   it("does not throw when the user role satisfies the requirement", () => {
-    expect(() => requireRole("OWNER", "OWNER")).not.toThrow();
-    expect(() => requireRole("OWNER", "ADMIN")).not.toThrow();
-    expect(() => requireRole("OWNER", "MEMBER")).not.toThrow();
-    expect(() => requireRole("ADMIN", "ADMIN")).not.toThrow();
-    expect(() => requireRole("ADMIN", "MEMBER")).not.toThrow();
-    expect(() => requireRole("MEMBER", "MEMBER")).not.toThrow();
+    expect(() => requireRole("owner", "owner")).not.toThrow();
+    expect(() => requireRole("owner", "admin")).not.toThrow();
+    expect(() => requireRole("owner", "member")).not.toThrow();
+    expect(() => requireRole("admin", "admin")).not.toThrow();
+    expect(() => requireRole("admin", "member")).not.toThrow();
+    expect(() => requireRole("member", "member")).not.toThrow();
   });
 
   it("throws 'Forbidden: insufficient role' for insufficient roles", () => {
-    expect(() => requireRole("MEMBER", "ADMIN")).toThrow("Forbidden: insufficient role");
-    expect(() => requireRole("MEMBER", "OWNER")).toThrow("Forbidden: insufficient role");
-    expect(() => requireRole("ADMIN", "OWNER")).toThrow("Forbidden: insufficient role");
+    expect(() => requireRole("member", "admin")).toThrow("Forbidden: insufficient role");
+    expect(() => requireRole("member", "owner")).toThrow("Forbidden: insufficient role");
+    expect(() => requireRole("admin", "owner")).toThrow("Forbidden: insufficient role");
   });
 
   it("does not throw when the user role satisfies any role in an array", () => {
-    expect(() => requireRole("ADMIN", ["OWNER", "ADMIN"])).not.toThrow();
-    expect(() => requireRole("OWNER", ["ADMIN", "MEMBER"])).not.toThrow();
+    expect(() => requireRole("admin", ["owner", "admin"])).not.toThrow();
+    expect(() => requireRole("owner", ["admin", "member"])).not.toThrow();
   });
 
   it("throws 'Forbidden: insufficient role' when no role in array is satisfied", () => {
-    expect(() => requireRole("MEMBER", ["OWNER", "ADMIN"])).toThrow("Forbidden: insufficient role");
+    expect(() => requireRole("member", ["owner", "admin"])).toThrow("Forbidden: insufficient role");
   });
 
   // Type safety: verify the function accepts all valid TenantRole values
   it("accepts all valid TenantRole values without type errors", () => {
-    const roles: TenantRole[] = ["OWNER", "ADMIN", "MEMBER"];
+    const roles: TenantRole[] = ["owner", "admin", "member"];
     for (const role of roles) {
-      expect(() => requireRole(role, "MEMBER")).not.toThrow();
+      expect(() => requireRole(role, "member")).not.toThrow();
     }
   });
 });

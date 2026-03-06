@@ -17,7 +17,7 @@ vi.mock("@/lib/prisma", () => ({
       findFirst: vi.fn(),
       update: vi.fn(),
     },
-    auditEvent: {
+    auditLog: {
       create: vi.fn(),
     },
   },
@@ -69,7 +69,7 @@ describe("deleteWrap", () => {
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.findFirst).mockResolvedValue(existingWrap as never);
     vi.mocked(prisma.wrap.update).mockResolvedValue(softDeletedWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     const result = await deleteWrap("wrap-1");
 
@@ -81,7 +81,7 @@ describe("deleteWrap", () => {
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.findFirst).mockResolvedValue(existingWrap as never);
     vi.mocked(prisma.wrap.update).mockResolvedValue(softDeletedWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await deleteWrap("wrap-1");
 
@@ -98,7 +98,7 @@ describe("deleteWrap", () => {
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.findFirst).mockResolvedValue(existingWrap as never);
     vi.mocked(prisma.wrap.update).mockResolvedValue(softDeletedWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await deleteWrap("wrap-1");
 
@@ -118,15 +118,16 @@ describe("deleteWrap", () => {
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.findFirst).mockResolvedValue(existingWrap as never);
     vi.mocked(prisma.wrap.update).mockResolvedValue(softDeletedWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await deleteWrap("wrap-1");
 
-    expect(prisma.auditEvent.create).toHaveBeenCalledWith(
+    expect(prisma.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          action: "wrap.deleted",
-          resource: "wrap:wrap-1",
+          action: "DELETE_WRAP",
+          resourceType: "Wrap",
+          resourceId: "wrap-1",
           tenantId: "tenant-1",
           userId: "user-1",
         }),

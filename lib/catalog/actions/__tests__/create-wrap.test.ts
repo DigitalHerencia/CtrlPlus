@@ -16,7 +16,7 @@ vi.mock("@/lib/prisma", () => ({
     wrap: {
       create: vi.fn(),
     },
-    auditEvent: {
+    auditLog: {
       create: vi.fn(),
     },
   },
@@ -71,7 +71,7 @@ describe("createWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.create).mockResolvedValue(mockWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     const result = await createWrap(validInput);
 
@@ -89,7 +89,7 @@ describe("createWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.create).mockResolvedValue(mockWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await createWrap(validInput);
 
@@ -104,17 +104,18 @@ describe("createWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.create).mockResolvedValue(mockWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await createWrap(validInput);
 
-    expect(prisma.auditEvent.create).toHaveBeenCalledWith(
+    expect(prisma.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          action: "wrap.created",
+          action: "CREATE_WRAP",
           tenantId: "tenant-1",
           userId: "user-1",
-          resource: "wrap:wrap-1",
+          resourceType: "Wrap",
+          resourceId: "wrap-1",
         }),
       }),
     );
@@ -159,7 +160,7 @@ describe("createWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.create).mockResolvedValue(mockWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     // Even if someone passes tenantId in the input, it must be ignored
     const inputWithTenantId = {
