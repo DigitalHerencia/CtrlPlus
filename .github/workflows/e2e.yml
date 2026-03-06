@@ -1,0 +1,97 @@
+name: E2E Tests (Playwright)
+
+on:
+  # Run on pull requests and pushes to main
+  push:
+    branches:
+      - main
+    paths:
+      - "app/**"
+      - "lib/**"
+      - "components/**"
+      - "e2e/**"
+      - "playwright.config.ts"
+      - "package.json"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "app/**"
+      - "lib/**"
+      - "components/**"
+      - "e2e/**"
+      - "playwright.config.ts"
+      - "package.json"
+  # Allow manual triggering (e.g. against a Vercel preview URL)
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Base URL to run E2E tests against (e.g. a Vercel preview deployment)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      # When a manual BASE_URL is provided, tests run against that deployment.
+      # Otherwise tests skip the webServer boot (no live DB in CI) and only
+      # validate non-server tests using route interception.
+      BASE_URL: ${{ github.event.inputs.base_url || '' }}
+      # Clerk keys are required to start Next.js; provide stub values so the
+      # build doesn't crash. Real auth flows are skipped / mocked in tests.
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_placeholder' }}
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY || 'sk_test_placeholder' }}
+      # Provide a stub DATABASE_URL; tests mock all DB access via page.route()
+      DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://test:test@localhost:5432/test' }}
+      DEV_TENANT_ID: ${{ secrets.DEV_TENANT_ID || 'tenant-test-ci' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run E2E tests (against BASE_URL if set, or skip webServer)
+        run: |
+          if [ -n "$BASE_URL" ]; then
+            echo "Running E2E tests against $BASE_URL"
+            pnpm exec playwright test --project=chromium
+          else
+            echo "No BASE_URL set; running tests tagged @no-server (route-interception only)"
+            # Run only tests that use route interception and do not require a webServer.
+            # Tag tests that qualify with @no-server in the test name.
+            BASE_URL=http://localhost:3000 pnpm exec playwright test \
+              --project=chromium \
+              --grep "@no-server" \
+              --pass-with-no-tests
+          fi
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: playwright-report/
+          retention-days: 14
