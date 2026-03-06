@@ -86,6 +86,9 @@ export async function getAvailabilityRulesForTenant(
   };
 }
 
+/** @deprecated Use getAvailabilityRulesForTenant */
+export const getAvailabilityWindowsForTenant = getAvailabilityRulesForTenant;
+
 /**
  * Returns a single non-deleted availability rule by ID, scoped to a tenant.
  * Returns null when not found or when it belongs to a different tenant.
@@ -108,6 +111,9 @@ export async function getAvailabilityRuleById(
 
   return record ? toAvailabilityRuleDTO(record) : null;
 }
+
+/** @deprecated Use getAvailabilityRuleById */
+export const getAvailabilityWindowById = getAvailabilityRuleById;
 
 /**
  * Returns all availability rules for a specific day of the week.
@@ -132,3 +138,6 @@ export async function getAvailabilityRulesByDay(
 
   return records.map(toAvailabilityRuleDTO);
 }
+
+/** @deprecated Use getAvailabilityRulesByDay */
+export const getAvailabilityWindowsByDay = getAvailabilityRulesByDay;

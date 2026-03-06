@@ -14,6 +14,9 @@ export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus];
 
 // ─── Booking DTOs ─────────────────────────────────────────────────────────────
 
+/** Valid booking status values (plain strings, not enum) */
+export type BookingStatusValue = "pending" | "confirmed" | "completed" | "cancelled";
+
 export interface BookingDTO {
   id: string;
   tenantId: string;
@@ -60,6 +63,9 @@ export interface AvailabilityRuleDTO {
   createdAt: Date;
   updatedAt: Date;
 }
+
+/** @deprecated Use AvailabilityRuleDTO */
+export type AvailabilityWindowDTO = AvailabilityRuleDTO;
 
 export interface AvailabilityListResult {
   items: AvailabilityRuleDTO[];

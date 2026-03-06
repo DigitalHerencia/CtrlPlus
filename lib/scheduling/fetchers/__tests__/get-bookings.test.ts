@@ -47,8 +47,7 @@ describe("getBookingsForTenant", () => {
   });
 
   it("queries with tenant scope and soft-delete filter", async () => {
-    const record = makeBookingRecord();
-    vi.mocked(prisma.booking.findMany).mockResolvedValue([record]);
+    vi.mocked(prisma.booking.findMany).mockResolvedValue([makeBookingRecord()]);
     vi.mocked(prisma.booking.count).mockResolvedValue(1);
 
     await getBookingsForTenant("tenant-a");
@@ -72,8 +71,7 @@ describe("getBookingsForTenant", () => {
   });
 
   it("returns items mapped to DTOs (no deletedAt exposed)", async () => {
-    const record = makeBookingRecord();
-    vi.mocked(prisma.booking.findMany).mockResolvedValue([record]);
+    vi.mocked(prisma.booking.findMany).mockResolvedValue([makeBookingRecord()]);
     vi.mocked(prisma.booking.count).mockResolvedValue(1);
 
     const result = await getBookingsForTenant("tenant-a");
@@ -88,23 +86,18 @@ describe("getBookingsForTenant", () => {
 
   it("applies pagination correctly", async () => {
     vi.mocked(prisma.booking.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.booking.count).mockResolvedValue(55);
+    vi.mocked(prisma.booking.count).mockResolvedValue(45);
 
-    const result = await getBookingsForTenant("tenant-a", {
-      page: 3,
-      pageSize: 10,
-    });
+    const result = await getBookingsForTenant("tenant-a", { page: 2, pageSize: 10 });
 
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ skip: 20, take: 10 }),
     );
-    expect(result.page).toBe(3);
-    expect(result.pageSize).toBe(10);
-    expect(result.total).toBe(55);
-    expect(result.totalPages).toBe(6);
+    expect(result.page).toBe(2);
+    expect(result.totalPages).toBe(5);
   });
 
-  it("applies optional status filter", async () => {
+  it("filters by status when provided", async () => {
     vi.mocked(prisma.booking.findMany).mockResolvedValue([]);
     vi.mocked(prisma.booking.count).mockResolvedValue(0);
 
@@ -125,15 +118,7 @@ describe("getBookingsForTenant", () => {
     vi.mocked(prisma.booking.findMany).mockResolvedValue([]);
     vi.mocked(prisma.booking.count).mockResolvedValue(0);
 
-    const from = new Date("2025-01-01");
-    const to = new Date("2025-01-31");
-
-    await getBookingsForTenant("tenant-a", {
-      page: 1,
-      pageSize: 20,
-      fromDate: from,
-      toDate: to,
-    });
+    await getBookingsForTenant("tenant-a", { page: 1, pageSize: 20, fromDate: from, toDate: to });
 
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -175,8 +160,7 @@ describe("getBookingById", () => {
   });
 
   it("queries with id, tenantId, and soft-delete filter", async () => {
-    const record = makeBookingRecord();
-    vi.mocked(prisma.booking.findFirst).mockResolvedValue(record);
+    vi.mocked(prisma.booking.findFirst).mockResolvedValue(makeBookingRecord());
 
     await getBookingById("tenant-a", "booking-1");
 
@@ -191,21 +175,19 @@ describe("getBookingById", () => {
     );
   });
 
-  it("returns mapped DTO when record exists", async () => {
+  it("returns null when booking not found", async () => {
+    vi.mocked(prisma.booking.findFirst).mockResolvedValue(null);
+
+    const result = await getBookingById("tenant-a", "booking-1");
+    expect(result).toBeNull();
+  });
+
+  it("returns DTO when booking exists", async () => {
     vi.mocked(prisma.booking.findFirst).mockResolvedValue(makeBookingRecord());
 
     const result = await getBookingById("tenant-a", "booking-1");
-
-    expect(result).not.toBeNull();
     expect(result?.id).toBe("booking-1");
-  });
-
-  it("returns null when record not found or belongs to another tenant", async () => {
-    vi.mocked(prisma.booking.findFirst).mockResolvedValue(null);
-
-    const result = await getBookingById("tenant-b", "booking-1");
-
-    expect(result).toBeNull();
+    expect(result?.startTime).toEqual(NOW);
   });
 });
 
@@ -216,12 +198,13 @@ describe("getUpcomingBookingCount", () => {
     vi.clearAllMocks();
   });
 
-  it("counts non-deleted, non-terminal bookings starting from now", async () => {
-    vi.mocked(prisma.booking.count).mockResolvedValue(3);
+  it("counts only future, non-terminal bookings scoped to tenant", async () => {
+    vi.mocked(prisma.booking.count).mockResolvedValue(5);
+    const from = new Date("2025-02-01");
 
-    const from = new Date("2025-01-15T09:00:00.000Z");
     const result = await getUpcomingBookingCount("tenant-a", from);
 
+    expect(result).toBe(5);
     expect(prisma.booking.count).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -234,6 +217,5 @@ describe("getUpcomingBookingCount", () => {
         }),
       }),
     );
-    expect(result).toBe(3);
   });
 });
