@@ -1,40 +1,40 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import { setUserRole } from "@/lib/admin/actions/set-user-role";
-import { type TenantRole } from "@/lib/tenancy/types";
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { ROLE_LABELS } from "./role-badge";
+import { Button } from "@/components/ui/button"
+import { setUserRole } from "@/lib/admin/actions/set-user-role"
+import { type TenantRole } from "@/lib/tenancy/types"
+import { useRouter } from "next/navigation"
+import { useState, useTransition } from "react"
+import { ROLE_LABELS } from "./role-badge"
 
 interface SetRoleFormProps {
-  userId: string;
-  currentRole: TenantRole;
+  userId: string
+  currentRole: TenantRole
 }
 
-const SELECTABLE_ROLES: TenantRole[] = ["OWNER", "ADMIN", "MEMBER"];
+const SELECTABLE_ROLES: TenantRole[] = ["owner", "admin", "member"]
 
 export function SetRoleForm({ userId, currentRole }: SetRoleFormProps) {
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-    const formData = new FormData(event.currentTarget);
-    const role = formData.get("role") as TenantRole;
+    event.preventDefault()
+    setError(null)
+    const formData = new FormData(event.currentTarget)
+    const role = formData.get("role") as TenantRole
 
     startTransition(async () => {
       try {
-        if (role !== "OWNER") {
-          await setUserRole({ targetClerkUserId: userId, role: role.toLowerCase() as Lowercase<typeof role> });
-          router.refresh();
+        if (role !== "owner") {
+          await setUserRole({ targetClerkUserId: userId, role })
+          router.refresh()
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to update role.");
+        setError(err instanceof Error ? err.message : "Failed to update role.")
       }
-    });
+    })
   }
 
   return (
@@ -60,5 +60,5 @@ export function SetRoleForm({ userId, currentRole }: SetRoleFormProps) {
       </form>
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
-  );
+  )
 }

@@ -19,65 +19,65 @@ export default async function BillingPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Billing</h1>
-        <p className="text-neutral-600 dark:text-neutral-400 mt-2">
+        <h1 className="text-3xl font-bold tracking-tight text-neutral-100">Billing</h1>
+        <p className="text-neutral-400 mt-2">
           Manage your invoices and payments
         </p>
       </div>
 
       {invoices.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center text-neutral-500 dark:text-neutral-400">
+          <CardContent className="py-12 text-center text-neutral-400">
             No invoices found.
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-2">
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+          <p className="text-sm text-neutral-400">
             {total} invoice{total !== 1 ? "s" : ""}
           </p>
 
-          <div className="rounded-lg border bg-white dark:bg-neutral-900 overflow-hidden">
+          <div className="rounded-lg border border-neutral-800 bg-neutral-900 overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="border-b bg-neutral-50 dark:bg-neutral-800">
+              <thead className="border-b border-neutral-800 bg-neutral-800">
                 <tr>
-                  <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-300">
+                  <th className="px-4 py-3 text-left font-medium text-neutral-300">
                     Invoice
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-300">
+                  <th className="px-4 py-3 text-left font-medium text-neutral-300">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-right font-medium text-neutral-600 dark:text-neutral-300">
+                  <th className="px-4 py-3 text-right font-medium text-neutral-300">
                     Amount
                   </th>
-                  <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-300">
+                  <th className="px-4 py-3 text-left font-medium text-neutral-300">
                     Date
                   </th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y divide-neutral-800">
                 {invoices.map((invoice) => (
                   <tr
                     key={invoice.id}
-                    className="hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                    className="hover:bg-neutral-800 transition-colors"
                   >
-                    <td className="px-4 py-3 font-mono text-xs text-neutral-500 dark:text-neutral-400">
+                    <td className="px-4 py-3 font-mono text-xs text-neutral-400">
                       {invoice.id.slice(0, 12)}…
                     </td>
                     <td className="px-4 py-3">
                       <InvoiceStatusBadge status={invoice.status} />
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums">
+                    <td className="px-4 py-3 text-right tabular-nums text-neutral-100">
                       ${(invoice.totalAmount / 100).toFixed(2)}
                     </td>
-                    <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
+                    <td className="px-4 py-3 text-neutral-400">
                       {invoice.createdAt.toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/billing/${invoice.id}`}
-                        className="text-blue-600 dark:text-blue-400 hover:underline text-xs font-medium"
+                        className="text-blue-600 hover:text-blue-500 text-xs font-medium"
                       >
                         View
                       </Link>

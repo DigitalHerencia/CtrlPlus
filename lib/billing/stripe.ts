@@ -4,12 +4,12 @@
  * Lazy singleton Stripe instance.
  * Uses STRIPE_SECRET_KEY from environment.
  *
- * API Version: 2023-10-16
+ * API Version: 2026-02-25.clover
  */
 
-import Stripe from "stripe";
+import Stripe from "stripe"
 
-let _stripe: Stripe | null = null;
+let _stripe: Stripe | null = null
 
 /**
  * Returns the shared Stripe client instance.
@@ -17,15 +17,15 @@ let _stripe: Stripe | null = null;
  */
 export function getStripeClient(): Stripe {
   if (!_stripe) {
-    const secretKey = process.env.STRIPE_SECRET_KEY;
+    const secretKey = process.env.STRIPE_SECRET_KEY
     if (!secretKey) {
-      throw new Error("STRIPE_SECRET_KEY environment variable is not set");
+      throw new Error("STRIPE_SECRET_KEY environment variable is not set")
     }
     _stripe = new Stripe(secretKey, {
-      apiVersion: "2023-10-16",
-    });
+      apiVersion: "2026-02-25.clover"
+    })
   }
-  return _stripe;
+  return _stripe
 }
 
 /**
@@ -37,11 +37,11 @@ export function getStripeClient(): Stripe {
  * @throws If signature verification fails or STRIPE_WEBHOOK_SECRET is not set
  */
 export function constructWebhookEvent(payload: string, signature: string): Stripe.Event {
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
   if (!webhookSecret) {
-    throw new Error("STRIPE_WEBHOOK_SECRET environment variable is not set");
+    throw new Error("STRIPE_WEBHOOK_SECRET environment variable is not set")
   }
 
-  const stripe = getStripeClient();
-  return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+  const stripe = getStripeClient()
+  return stripe.webhooks.constructEvent(payload, signature, webhookSecret)
 }

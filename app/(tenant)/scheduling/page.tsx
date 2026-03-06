@@ -57,8 +57,8 @@ export default async function SchedulingPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Scheduling</h1>
-          <p className="text-neutral-600 dark:text-neutral-400 mt-2">
+          <h1 className="text-3xl font-bold tracking-tight text-neutral-100">Scheduling</h1>
+          <p className="text-neutral-400 mt-2">
             View availability and manage appointments
           </p>
         </div>

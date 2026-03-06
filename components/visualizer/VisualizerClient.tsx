@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { WrapSelector } from "./WrapSelector";
-import { UploadForm } from "./UploadForm";
-import { PreviewCanvas } from "./PreviewCanvas";
 import type { WrapDTO } from "@/lib/catalog/types";
 import type { VisualizerPreviewDTO } from "@/lib/visualizer/types";
+import { useState } from "react";
+import { PreviewCanvas } from "./PreviewCanvas";
+import { UploadForm } from "./UploadForm";
+import { WrapSelector } from "./WrapSelector";
 
 interface VisualizerClientProps {
   wraps: WrapDTO[];
@@ -31,9 +31,9 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
       {/* Left column: wrap selection + upload */}
       <div className="space-y-6">
         {/* Step 1: Choose a wrap */}
-        <section className="rounded-lg border bg-white p-6 dark:bg-neutral-900">
+        <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-6">
           <h2 className="mb-4 text-base font-semibold">
-            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 text-xs text-white dark:bg-neutral-100 dark:text-neutral-900">
+            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
               1
             </span>
             Choose a Wrap
@@ -46,9 +46,9 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
         </section>
 
         {/* Step 2: Upload photo */}
-        <section className="rounded-lg border bg-white p-6 dark:bg-neutral-900">
+        <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-6">
           <h2 className="mb-4 text-base font-semibold">
-            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 text-xs text-white dark:bg-neutral-100 dark:text-neutral-900">
+            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
               2
             </span>
             Upload Your Vehicle Photo
@@ -59,7 +59,7 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
               onPreviewReady={handlePreviewReady}
             />
           ) : (
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-sm text-neutral-400">
               Select a wrap above to unlock photo upload.
             </p>
           )}
@@ -68,9 +68,9 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
 
       {/* Right column: preview */}
       <div className="space-y-4">
-        <section className="rounded-lg border bg-white p-6 dark:bg-neutral-900">
+        <section className="rounded-lg border border-neutral-800 bg-neutral-900 p-6">
           <h2 className="mb-4 text-base font-semibold">
-            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-neutral-900 text-xs text-white dark:bg-neutral-100 dark:text-neutral-900">
+            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
               3
             </span>
             Preview

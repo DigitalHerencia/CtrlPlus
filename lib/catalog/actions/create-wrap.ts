@@ -1,9 +1,9 @@
-"use server";
+"use server"
 
-import { requireAuth } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
-import { prisma } from "@/lib/prisma";
-import { createWrapSchema, type CreateWrapInput, type WrapDTO } from "../types";
+import { requireAuth } from "@/lib/auth/session"
+import { prisma } from "@/lib/prisma"
+import { assertTenantMembership } from "@/lib/tenancy/assert"
+import { createWrapSchema, type CreateWrapInput, type WrapDTO } from "../types"
 
 /**
  * Creates a new wrap in the catalog for the current tenant.
@@ -17,13 +17,13 @@ import { createWrapSchema, type CreateWrapInput, type WrapDTO } from "../types";
  */
 export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
   // 1. AUTHENTICATE
-  const { userId, tenantId } = await requireAuth();
+  const { userId, tenantId } = await requireAuth()
 
   // 2. AUTHORIZE
-  await assertTenantMembership(tenantId, userId, ["OWNER", "ADMIN"]);
+  await assertTenantMembership(tenantId, userId, "admin")
 
   // 3. VALIDATE
-  const parsed = createWrapSchema.parse(input);
+  const parsed = createWrapSchema.parse(input)
 
   // 4. MUTATE (always scoped by tenantId)
   const wrap = await prisma.wrap.create({
@@ -32,9 +32,9 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
       name: parsed.name,
       description: parsed.description ?? null,
       price: parsed.price,
-      installationMinutes: parsed.installationMinutes ?? null,
-    },
-  });
+      installationMinutes: parsed.installationMinutes ?? null
+    }
+  })
 
   // 5. AUDIT
   await prisma.auditLog.create({
@@ -45,9 +45,9 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
       resourceType: "Wrap",
       resourceId: wrap.id,
       details: JSON.stringify({ name: wrap.name, price: wrap.price }),
-      timestamp: new Date(),
-    },
-  });
+      timestamp: new Date()
+    }
+  })
 
   return {
     id: wrap.id,
@@ -57,6 +57,6 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
     price: wrap.price,
     installationMinutes: wrap.installationMinutes,
     createdAt: wrap.createdAt,
-    updatedAt: wrap.updatedAt,
-  };
+    updatedAt: wrap.updatedAt
+  }
 }

@@ -5,19 +5,11 @@
  * Use in conjunction with lib/tenancy/assert.ts for full security pipeline.
  */
 
-import { assertTenantMembership, hasMinimumRole } from "@/lib/tenancy/assert";
-import { type TenantRole, hasRolePermission } from "@/lib/tenancy/types";
+import { assertTenantMembership } from "@/lib/tenancy/assert"
+import { type TenantRole, ROLE_HIERARCHY } from "@/lib/tenancy/types"
 
-export { assertTenantMembership, hasMinimumRole };
-export type { TenantRole };
-
-// ─── Role hierarchy ───────────────────────────────────────────────────────────
-
-const ROLE_HIERARCHY: Record<TenantRole, number> = {
-  OWNER: 3,
-  ADMIN: 2,
-  MEMBER: 1,
-};
+export { assertTenantMembership }
+export type { TenantRole }
 
 // ─── Permission definitions ───────────────────────────────────────────────────
 
@@ -29,35 +21,35 @@ export const PERMISSIONS = {
   catalog: {
     read: "catalog:read",
     write: "catalog:write",
-    delete: "catalog:delete",
+    delete: "catalog:delete"
   },
   scheduling: {
     read: "scheduling:read",
-    write: "scheduling:write",
+    write: "scheduling:write"
   },
   billing: {
     read: "billing:read",
-    write: "billing:write",
+    write: "billing:write"
   },
   admin: {
     read: "admin:read",
     write: "admin:write",
-    users: "admin:users",
+    users: "admin:users"
   },
   visualizer: {
-    write: "visualizer:write",
-  },
-} as const;
+    write: "visualizer:write"
+  }
+} as const
 
 export type Permission =
-  (typeof PERMISSIONS)[keyof typeof PERMISSIONS][keyof (typeof PERMISSIONS)[keyof typeof PERMISSIONS]];
+  (typeof PERMISSIONS)[keyof typeof PERMISSIONS][keyof (typeof PERMISSIONS)[keyof typeof PERMISSIONS]]
 
 /**
  * Role-to-permissions mapping.
  * Each role includes all permissions of lower roles.
  */
 export const ROLE_PERMISSIONS: Record<TenantRole, string[]> = {
-  OWNER: [
+  owner: [
     PERMISSIONS.catalog.read,
     PERMISSIONS.catalog.write,
     PERMISSIONS.catalog.delete,
@@ -68,37 +60,37 @@ export const ROLE_PERMISSIONS: Record<TenantRole, string[]> = {
     PERMISSIONS.admin.read,
     PERMISSIONS.admin.write,
     PERMISSIONS.admin.users,
-    PERMISSIONS.visualizer.write,
+    PERMISSIONS.visualizer.write
   ],
-  ADMIN: [
+  admin: [
     PERMISSIONS.catalog.read,
     PERMISSIONS.catalog.write,
     PERMISSIONS.scheduling.read,
     PERMISSIONS.scheduling.write,
     PERMISSIONS.billing.read,
     PERMISSIONS.admin.read,
-    PERMISSIONS.visualizer.write,
+    PERMISSIONS.visualizer.write
   ],
-  MEMBER: [PERMISSIONS.catalog.read, PERMISSIONS.scheduling.read, PERMISSIONS.visualizer.write],
-};
+  member: [PERMISSIONS.catalog.read, PERMISSIONS.scheduling.read, PERMISSIONS.visualizer.write]
+}
 
 // ─── Utility functions ────────────────────────────────────────────────────────
 
 /**
  * Check if a role satisfies the required role (considering hierarchy).
- * OWNER satisfies any requirement; ADMIN satisfies ADMIN and MEMBER; etc.
+ * owner satisfies any requirement; admin satisfies admin and member; etc.
  *
  * @param userRole - The user's current role
  * @param requiredRole - The required role or array of acceptable roles
  */
 export function hasRole(userRole: TenantRole, requiredRole: TenantRole | TenantRole[]): boolean {
-  const userLevel = ROLE_HIERARCHY[userRole] ?? 0;
+  const userLevel = ROLE_HIERARCHY[userRole] ?? 0
 
   if (Array.isArray(requiredRole)) {
-    return requiredRole.some((r) => userLevel >= (ROLE_HIERARCHY[r] ?? 0));
+    return requiredRole.some((r) => userLevel >= (ROLE_HIERARCHY[r] ?? 0))
   }
 
-  return userLevel >= (ROLE_HIERARCHY[requiredRole] ?? 0);
+  return userLevel >= (ROLE_HIERARCHY[requiredRole] ?? 0)
 }
 
 /**
@@ -111,7 +103,7 @@ export function hasRole(userRole: TenantRole, requiredRole: TenantRole | TenantR
  */
 export function requireRole(userRole: TenantRole, requiredRole: TenantRole | TenantRole[]): void {
   if (!hasRole(userRole, requiredRole)) {
-    throw new Error("Forbidden: insufficient role");
+    throw new Error("Forbidden: insufficient role")
   }
 }
 
@@ -122,9 +114,9 @@ export function requireRole(userRole: TenantRole, requiredRole: TenantRole | Ten
  * @param permission - The permission string to check for
  */
 export function hasPermission(role: TenantRole, permission: string): boolean {
-  const permissions = ROLE_PERMISSIONS[role];
-  if (!permissions) return false;
-  return permissions.includes(permission);
+  const permissions = ROLE_PERMISSIONS[role]
+  if (!permissions) return false
+  return permissions.includes(permission)
 }
 
 /**
@@ -139,14 +131,14 @@ export function hasPermission(role: TenantRole, permission: string): boolean {
 export const ROLES = {
   owner: {
     name: "Owner",
-    description: "Full control over tenant, can manage all resources and users",
+    description: "Full control over tenant, can manage all resources and users"
   },
   admin: {
     name: "Admin",
-    description: "Can manage catalog, bookings, and view billing",
+    description: "Can manage catalog, bookings, and view billing"
   },
   member: {
     name: "Member",
-    description: "Can view catalog and create bookings",
-  },
-} as const;
+    description: "Can view catalog and create bookings"
+  }
+} as const

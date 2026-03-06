@@ -34,6 +34,9 @@ model User {
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
 
+  // Relations
+  tenantUserMemberships TenantUserMembership[]
+
   @@index([deletedAt])
 }
 
@@ -69,8 +72,117 @@ model Tenant {
   previews                VisualizerPreview[]
   invoices                Invoice[]
   auditLogs               AuditLog[]
+  clerkSubscriptions      ClerkSubscription[]
 
   @@index([slug])
+  @@index([deletedAt])
+}
+
+// ============================================================================
+// CLERK BILLING & ENGAGEMENT EVENT CACHE MODELS
+// ============================================================================
+
+/// Clerk session lifecycle cache from webhooks
+model ClerkSession {
+  id            String    @id // Clerk session ID
+  clerkUserId   String
+  status        String // "created" | "pending" | "ended" | "removed" | "revoked"
+  lastEventType String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  endedAt       DateTime?
+  removedAt     DateTime?
+  revokedAt     DateTime?
+  deletedAt     DateTime?
+
+  @@index([clerkUserId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+/// Clerk email event cache from webhooks
+model ClerkEmail {
+  id            String    @id // Clerk email ID
+  clerkUserId   String?
+  status        String?
+  toEmail       String?
+  lastEventType String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  @@index([clerkUserId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+/// Clerk SMS event cache from webhooks
+model ClerkSms {
+  id            String    @id // Clerk SMS ID
+  clerkUserId   String?
+  status        String?
+  toPhone       String?
+  lastEventType String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  @@index([clerkUserId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+/// Clerk subscription cache from webhooks
+model ClerkSubscription {
+  id            String                  @id // Clerk subscription ID
+  tenantId      String?
+  clerkUserId   String?
+  status        String?
+  lastEventType String
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  deletedAt     DateTime?
+
+  tenant        Tenant?                 @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  items         ClerkSubscriptionItem[]
+
+  @@index([tenantId])
+  @@index([clerkUserId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+/// Clerk subscription item cache from webhooks
+model ClerkSubscriptionItem {
+  id               String            @id // Clerk subscription item ID
+  subscriptionId   String
+  status           String?
+  lastEventType    String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+
+  subscription     ClerkSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([deletedAt])
+}
+
+/// Clerk payment attempt cache from webhooks
+model ClerkPaymentAttempt {
+  id            String    @id // Clerk payment attempt ID
+  clerkUserId   String?
+  status        String?
+  amount        Float?
+  currency      String?
+  lastEventType String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  @@index([clerkUserId])
+  @@index([status])
   @@index([deletedAt])
 }
 
@@ -78,7 +190,7 @@ model Tenant {
 model TenantUserMembership {
   id        String   @id @default(cuid())
   tenantId  String
-  userId    String   // Clerk user ID
+  userId    String   // References User.id (database primary key)
   role      String   @default("member") // "owner" | "admin" | "member"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -86,6 +198,7 @@ model TenantUserMembership {
 
   // Relations
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, userId])
   @@index([tenantId])

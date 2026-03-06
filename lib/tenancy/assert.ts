@@ -5,8 +5,8 @@
  * Use these to prevent cross-tenant data leaks.
  */
 
-import { prisma } from "@/lib/prisma";
-import { type TenantRole, hasRolePermission, normalizeTenantRole } from "./types";
+import { prisma } from "@/lib/prisma"
+import { type TenantRole, hasRolePermission, normalizeTenantRole } from "./types"
 
 /**
  * Assert that a user is a member of a tenant with required role.
@@ -14,7 +14,7 @@ import { type TenantRole, hasRolePermission, normalizeTenantRole } from "./types
  *
  * @param tenantId - Tenant ID to check
  * @param userId - Clerk user ID
- * @param requiredRole - Minimum role required (defaults to 'MEMBER'). Accepts a single role or an array.
+ * @param requiredRole - Minimum role required (defaults to 'member'). Accepts a single role.
  * @throws Error if user is not a member or has insufficient permission
  *
  * @example
@@ -24,7 +24,7 @@ import { type TenantRole, hasRolePermission, normalizeTenantRole } from "./types
  *   const { userId, tenantId } = await requireAuth();
  *
  *   // Only admins can delete wraps
- *   await assertTenantMembership(tenantId, userId, 'ADMIN');
+ *   await assertTenantMembership(tenantId, userId, 'admin');
  *
  *   // Proceed with deletion...
  * }
@@ -33,28 +33,27 @@ import { type TenantRole, hasRolePermission, normalizeTenantRole } from "./types
 export async function assertTenantMembership(
   tenantId: string,
   userId: string,
-  requiredRole: TenantRole | TenantRole[] = "MEMBER",
+  requiredRole: TenantRole = "member"
 ): Promise<void> {
   const membership = await prisma.tenantUserMembership.findFirst({
     where: {
       tenantId,
       userId,
-      deletedAt: null,
+      deletedAt: null
     },
     select: {
-      role: true,
-    },
-  });
+      role: true
+    }
+  })
 
   if (!membership) {
-    throw new Error("Unauthorized: not a member of this tenant");
+    throw new Error("Unauthorized: not a member of this tenant")
   }
 
-  const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-  const isAuthorized = roles.some((required) => hasRolePermission(membership.role, required));
+  const isAuthorized = hasRolePermission(membership.role, requiredRole)
 
   if (!isAuthorized) {
-    throw new Error("Forbidden: insufficient role");
+    throw new Error("Forbidden: insufficient role")
   }
 }
 
@@ -84,7 +83,7 @@ export async function assertTenantMembership(
  */
 export function assertTenantScope(recordTenantId: string, currentTenantId: string): void {
   if (recordTenantId !== currentTenantId) {
-    throw new Error("Forbidden: cross-tenant access detected");
+    throw new Error("Forbidden: cross-tenant access detected")
   }
 }
 
@@ -94,21 +93,21 @@ export function assertTenantScope(recordTenantId: string, currentTenantId: strin
  */
 export async function getUserTenantRole(
   tenantId: string,
-  userId: string,
+  userId: string
 ): Promise<TenantRole | null> {
   const membership = await prisma.tenantUserMembership.findFirst({
     where: {
       tenantId,
       userId,
-      deletedAt: null,
+      deletedAt: null
     },
     select: {
-      role: true,
-    },
-  });
+      role: true
+    }
+  })
 
-  if (!membership) return null;
-  return normalizeTenantRole(membership.role);
+  if (!membership) return null
+  return normalizeTenantRole(membership.role)
 }
 
 /**
@@ -118,10 +117,10 @@ export async function getUserTenantRole(
 export async function hasMinimumRole(
   tenantId: string,
   userId: string,
-  requiredRole: TenantRole,
+  requiredRole: TenantRole
 ): Promise<boolean> {
-  const userRole = await getUserTenantRole(tenantId, userId);
-  if (!userRole) return false;
+  const userRole = await getUserTenantRole(tenantId, userId)
+  if (!userRole) return false
 
-  return hasRolePermission(userRole, requiredRole);
+  return hasRolePermission(userRole, requiredRole)
 }

@@ -25,8 +25,8 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-        <p className="text-neutral-600 dark:text-neutral-400 mt-2">
+        <h1 className="text-3xl font-bold tracking-tight text-neutral-100">Admin Dashboard</h1>
+        <p className="text-neutral-400 mt-2">
           Overview of your tenant metrics and management tools.
         </p>
       </div>
@@ -51,23 +51,23 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Quick links */}
-      <div className="bg-white dark:bg-neutral-900 rounded-lg border p-6 space-y-4">
-        <h2 className="text-lg font-semibold">Management</h2>
+      <div className="bg-neutral-900 rounded-lg border border-neutral-800 p-6 space-y-4">
+        <h2 className="text-lg font-semibold text-neutral-100">Management</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <Link
             href="/admin/team"
-            className="flex flex-col gap-1 rounded-md border p-4 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+            className="flex flex-col gap-1 rounded-md border border-neutral-800 p-4 hover:bg-neutral-800 transition-colors"
           >
-            <span className="font-medium">Team</span>
-            <span className="text-sm text-muted-foreground">Manage team members and roles</span>
+            <span className="font-medium text-neutral-100">Team</span>
+            <span className="text-sm text-neutral-400">Manage team members and roles</span>
           </Link>
           {(role as string) === "owner" && (
             <Link
               href="/admin/settings"
-              className="flex flex-col gap-1 rounded-md border p-4 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+              className="flex flex-col gap-1 rounded-md border border-neutral-800 p-4 hover:bg-neutral-800 transition-colors"
             >
-              <span className="font-medium">Settings</span>
-              <span className="text-sm text-muted-foreground">Configure tenant settings</span>
+              <span className="font-medium text-neutral-100">Settings</span>
+              <span className="text-sm text-neutral-400">Configure tenant settings</span>
             </Link>
           )}
         </div>

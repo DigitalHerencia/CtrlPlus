@@ -39,5 +39,8 @@
     "**/.next": true,
     "**/node_modules": true,
     "**/lib/generated/prisma": true
+  },
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
   }
 }

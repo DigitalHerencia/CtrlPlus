@@ -1,9 +1,9 @@
-"use server";
+"use server"
 
-import { requireAuth } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
-import { prisma } from "@/lib/prisma";
-import { updateWrapSchema, type UpdateWrapInput, type WrapDTO } from "../types";
+import { requireAuth } from "@/lib/auth/session"
+import { prisma } from "@/lib/prisma"
+import { assertTenantMembership } from "@/lib/tenancy/assert"
+import { updateWrapSchema, type UpdateWrapInput, type WrapDTO } from "../types"
 
 /**
  * Updates an existing wrap in the catalog.
@@ -17,18 +17,18 @@ import { updateWrapSchema, type UpdateWrapInput, type WrapDTO } from "../types";
  */
 export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promise<WrapDTO> {
   // 1. AUTHENTICATE
-  const { userId, tenantId } = await requireAuth();
+  const { userId, tenantId } = await requireAuth()
 
   // 2. AUTHORIZE
-  await assertTenantMembership(tenantId, userId, ["OWNER", "ADMIN"]);
+  await assertTenantMembership(tenantId, userId, "admin")
 
   // 3. VALIDATE
-  const parsed = updateWrapSchema.parse(input);
+  const parsed = updateWrapSchema.parse(input)
 
   // Build the update data, excluding undefined fields
   const data = Object.fromEntries(
-    Object.entries(parsed).filter(([, v]) => v !== undefined),
-  ) as Record<string, unknown>;
+    Object.entries(parsed).filter(([, v]) => v !== undefined)
+  ) as Record<string, unknown>
 
   // 4. MUTATE
   //    Perform an atomic conditional update scoped by tenantId and soft-delete
@@ -37,19 +37,19 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
     where: {
       id: wrapId,
       tenantId,
-      deletedAt: null,
+      deletedAt: null
     },
-    data,
-  });
+    data
+  })
 
   if (result.count === 0) {
-    throw new Error("Forbidden: resource not found");
+    throw new Error("Forbidden: resource not found")
   }
 
   const wrap = await prisma.wrap.findFirst({
     where: {
       id: wrapId,
-      tenantId,
+      tenantId
     },
     select: {
       id: true,
@@ -59,12 +59,12 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
       price: true,
       installationMinutes: true,
       createdAt: true,
-      updatedAt: true,
-    },
-  });
+      updatedAt: true
+    }
+  })
 
   if (!wrap) {
-    throw new Error("Forbidden: resource not found");
+    throw new Error("Forbidden: resource not found")
   }
   // 5. AUDIT
   await prisma.auditLog.create({
@@ -75,9 +75,9 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
       resourceType: "Wrap",
       resourceId: wrap.id,
       details: JSON.stringify({ changes: parsed }),
-      timestamp: new Date(),
-    },
-  });
+      timestamp: new Date()
+    }
+  })
 
   return {
     id: wrap.id,
@@ -87,6 +87,6 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
     price: wrap.price,
     installationMinutes: wrap.installationMinutes,
     createdAt: wrap.createdAt,
-    updatedAt: wrap.updatedAt,
-  };
+    updatedAt: wrap.updatedAt
+  }
 }

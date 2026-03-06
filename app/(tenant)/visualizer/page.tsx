@@ -1,6 +1,6 @@
+import { VisualizerClient } from "@/components/visualizer/VisualizerClient";
 import { getSession } from "@/lib/auth/session";
 import { getWrapsForTenant } from "@/lib/catalog/fetchers/get-wraps";
-import { VisualizerClient } from "@/components/visualizer/VisualizerClient";
 
 export default async function VisualizerPage() {
   const { tenantId } = await getSession();
@@ -11,8 +11,8 @@ export default async function VisualizerPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Wrap Visualizer</h1>
-        <p className="mt-2 text-neutral-600 dark:text-neutral-400">
+        <h1 className="text-3xl font-bold tracking-tight text-neutral-100">Wrap Visualizer</h1>
+        <p className="mt-2 text-neutral-400">
           Choose a wrap, upload a photo of your vehicle, and see how it looks before you commit.
         </p>
       </div>
