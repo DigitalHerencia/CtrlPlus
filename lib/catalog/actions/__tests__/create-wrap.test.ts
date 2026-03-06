@@ -106,8 +106,6 @@ describe("createWrap", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           action: "CREATE_WRAP",
-          resourceType: "Wrap",
-          resourceId: "wrap-1",
           tenantId: "tenant-1",
           userId: "user-1",
           resourceType: "Wrap",

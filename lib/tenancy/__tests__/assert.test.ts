@@ -6,8 +6,8 @@ import { assertTenantMembership, assertTenantScope } from "../assert";
 // Mock prisma so tests are fully isolated from the database
 // ---------------------------------------------------------------------------
 
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
+const { prismaMock } = vi.hoisted(() => ({
+  prismaMock: {
     tenantUserMembership: {
       findUnique: vi.fn(),
     },
@@ -63,7 +63,8 @@ describe("assertTenantMembership", () => {
     mockFindUnique.mockReset();
   });
 
-  // --- Unauthorized (no membership) ----------------------------------------
+  it("throws Forbidden when no membership record exists", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(null);
 
   it("throws 'Forbidden' when no membership record exists", async () => {
     mockFindUnique.mockResolvedValue(null as never);
@@ -81,7 +82,8 @@ describe("assertTenantMembership", () => {
     );
   });
 
-  // --- Forbidden (insufficient role) ---------------------------------------
+  it("throws Forbidden when admin tries to satisfy owner requirement", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(membership("admin"));
 
   it("throws 'Forbidden' when MEMBER tries to satisfy ADMIN requirement", async () => {
     mockFindFirst.mockResolvedValue(membership({ role: "member" }));
