@@ -1,63 +1,102 @@
-/**
- * Billing Domain - Type Definitions
- *
- * DTOs and Zod schemas for the billing domain.
- * Never expose raw Prisma models - always use these explicit types.
- */
-
 import { z } from "zod";
 
-// ─── Input Schemas ────────────────────────────────────────────────────────────
+// ─── Status Constants ─────────────────────────────────────────────────────────
 
-/**
- * Schema for creating a Stripe Checkout Session.
- * bookingId identifies the booking to invoice.
- * successUrl and cancelUrl are the redirect targets after payment.
- */
-export const createCheckoutSessionSchema = z.object({
-  bookingId: z.string().min(1, "bookingId is required"),
-  successUrl: z.string().url("successUrl must be a valid URL"),
-  cancelUrl: z.string().url("cancelUrl must be a valid URL"),
-});
+export const InvoiceStatus = {
+  DRAFT: "draft",
+  SENT: "sent",
+  PAID: "paid",
+  FAILED: "failed",
+  REFUNDED: "refunded",
+} as const;
 
-export type CreateCheckoutSessionInput = z.infer<typeof createCheckoutSessionSchema>;
+export type InvoiceStatus = (typeof InvoiceStatus)[keyof typeof InvoiceStatus];
+
+export const PaymentStatus = {
+  PENDING: "pending",
+  SUCCEEDED: "succeeded",
+  FAILED: "failed",
+} as const;
+
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
 
 // ─── DTOs ─────────────────────────────────────────────────────────────────────
+
+export interface InvoiceLineItemDTO {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
 
 export interface InvoiceDTO {
   id: string;
   tenantId: string;
   bookingId: string;
-  /** "draft" | "sent" | "paid" | "failed" | "refunded" */
-  status: string;
+  status: InvoiceStatus;
   totalAmount: number;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface InvoiceDetailDTO extends InvoiceDTO {
+  lineItems: InvoiceLineItemDTO[];
+  payments: PaymentDTO[];
 }
 
 export interface PaymentDTO {
   id: string;
   invoiceId: string;
   stripePaymentIntentId: string;
-  /** "pending" | "succeeded" | "failed" */
-  status: string;
+  status: PaymentStatus;
   amount: number;
   createdAt: Date;
 }
 
-/**
- * Returned by createCheckoutSession.
- * checkoutUrl is the Stripe-hosted payment page the client redirects to.
- */
-export interface CheckoutSessionDTO {
-  checkoutUrl: string;
-  invoiceId: string;
+// ─── Prisma Select Helpers ────────────────────────────────────────────────────
+
+export const invoiceDTOFields = {
+  id: true,
+  tenantId: true,
+  bookingId: true,
+  status: true,
+  totalAmount: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
+
+export const paymentDTOFields = {
+  id: true,
+  invoiceId: true,
+  stripePaymentIntentId: true,
+  status: true,
+  amount: true,
+  createdAt: true,
+} as const;
+
+// ─── Zod Schemas ──────────────────────────────────────────────────────────────
+
+export const invoiceListParamsSchema = z.object({
+  page: z.number().int().min(1).default(1),
+  pageSize: z.number().int().min(1).max(100).default(20),
+  status: z.enum(["draft", "sent", "paid", "failed", "refunded"]).optional(),
+});
+
+export type InvoiceListParams = z.infer<typeof invoiceListParamsSchema>;
+
+export interface InvoiceListResult {
+  invoices: InvoiceDTO[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
-/** Returned by confirmPayment after a webhook event is processed. */
-export interface ConfirmPaymentResult {
+// ─── Checkout ─────────────────────────────────────────────────────────────────
+
+export interface CheckoutSessionDTO {
+  sessionId: string;
+  url: string;
   invoiceId: string;
-  paymentId: string;
-  /** "succeeded" | "already_processed" */
-  status: string;
 }

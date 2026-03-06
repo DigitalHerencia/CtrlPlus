@@ -1,35 +1,47 @@
 /**
- * Stripe Client
+ * Stripe Client Utility
  *
- * Provides a lazy singleton Stripe instance configured for the CtrlPlus platform.
- * Call `getStripeClient()` wherever Stripe API calls are needed.
+ * Lazy singleton Stripe instance.
+ * Uses STRIPE_SECRET_KEY from environment.
  *
- * The client is created on first access to avoid throwing at module import
- * time in environments where STRIPE_SECRET_KEY is not set (e.g., tests, CI,
- * non-billing route handlers).
- *
- * Requires STRIPE_SECRET_KEY in the environment.
+ * API Version: 2023-10-16
  */
 
 import Stripe from "stripe";
 
-let stripeClient: Stripe | null = null;
+let _stripe: Stripe | null = null;
 
 /**
- * Returns the shared Stripe client instance, creating it on first call.
+ * Returns the shared Stripe client instance.
  * Throws if STRIPE_SECRET_KEY is not set.
  */
 export function getStripeClient(): Stripe {
-  if (!stripeClient) {
+  if (!_stripe) {
     const secretKey = process.env.STRIPE_SECRET_KEY;
     if (!secretKey) {
-      throw new Error(
-        "STRIPE_SECRET_KEY is not defined. Please set it in your .env.local file.",
-      );
+      throw new Error("STRIPE_SECRET_KEY environment variable is not set");
     }
-    stripeClient = new Stripe(secretKey, {
+    _stripe = new Stripe(secretKey, {
       apiVersion: "2023-10-16",
     });
   }
-  return stripeClient;
+  return _stripe;
+}
+
+/**
+ * Constructs and verifies a Stripe webhook event from the raw request body.
+ *
+ * @param payload - Raw request body as a string
+ * @param signature - Value of the `stripe-signature` header
+ * @returns Verified Stripe Event object
+ * @throws If signature verification fails or STRIPE_WEBHOOK_SECRET is not set
+ */
+export function constructWebhookEvent(payload: string, signature: string): Stripe.Event {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    throw new Error("STRIPE_WEBHOOK_SECRET environment variable is not set");
+  }
+
+  const stripe = getStripeClient();
+  return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
 }

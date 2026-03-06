@@ -211,7 +211,7 @@ describe("getUpcomingBookingCount", () => {
           tenantId: "tenant-a",
           deletedAt: null,
           status: {
-            notIn: [BookingStatus.CANCELLED, BookingStatus.COMPLETED],
+            notIn: [BOOKING_STATUS.CANCELLED, BOOKING_STATUS.COMPLETED],
           },
           startTime: { gte: from },
         }),

@@ -113,7 +113,7 @@ describe("assertTenantMembership", () => {
     mockFindFirst.mockResolvedValue(membership({ role: "member" }));
 
     await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", ["OWNER", "ADMIN"]),
+      assertTenantMembership("tenant-abc", "user-xyz", ["owner", "admin"]),
     ).rejects.toThrow("Forbidden: insufficient role");
   });
 
@@ -147,7 +147,7 @@ describe("assertTenantMembership", () => {
     mockFindFirst.mockResolvedValue(membership({ role: "owner" }));
 
     await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "MEMBER"),
+      assertTenantMembership("tenant-abc", "user-xyz", "member"),
     ).resolves.toBeUndefined();
   });
 
@@ -155,7 +155,7 @@ describe("assertTenantMembership", () => {
     mockFindFirst.mockResolvedValue(membership({ role: "admin" }));
 
     await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", ["OWNER", "ADMIN"]),
+      assertTenantMembership("tenant-abc", "user-xyz", ["owner", "admin"]),
     ).resolves.toBeUndefined();
   });
 
@@ -164,9 +164,9 @@ describe("assertTenantMembership", () => {
   it("queries with tenantId, userId, and deletedAt filter", async () => {
     mockFindFirst.mockResolvedValue(membership({ role: "admin" }));
 
-    await assertTenantMembership("tenant-abc", "user-xyz", "ADMIN");
+    await assertTenantMembership("tenant-abc", "user-xyz", "admin");
 
-    expect(mockFindFirst).toHaveBeenCalledWith({
+    expect(mockFindUnique).toHaveBeenCalledWith({
       where: {
         tenantId: "tenant-abc",
         userId: "user-xyz",

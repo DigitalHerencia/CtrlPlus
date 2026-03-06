@@ -1,30 +1,30 @@
 "use server";
 
+import { getSession } from "@/lib/auth/session";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
+import { prisma } from "@/lib/prisma";
+import { getStripe } from "../stripe";
+import {
+  createCheckoutSessionSchema,
+  type CheckoutSessionDTO,
+  type CreateCheckoutSessionInput,
+  type InvoiceLineItemDTO,
+} from "../types";
+
+type InvoiceLineItemRow = Pick<InvoiceLineItemDTO, "description" | "quantity" | "unitPrice">;
+
 /**
- * createCheckoutSession
- *
- * Creates a Stripe Checkout Session for a given booking and returns the
- * hosted payment URL. An Invoice record is created (or reused) as the
- * persistent representation of the charge.
+ * Creates a Stripe Checkout Session for the given invoice and returns the
+ * hosted-page URL.
  *
  * Security pipeline:
  * 1. Authenticate  — verify user is signed in
- * 2. Authorize     — verify user is an active member of the tenant
+ * 2. Authorize     — verify user is a member of the tenant
  * 3. Validate      — parse and validate input with Zod
- * 4. Mutate        — look up booking, upsert invoice, call Stripe
- * 5. Audit         — write an immutable audit log entry
+ * 4. Tenant scope  — confirm the invoice belongs to the current tenant
+ * 5. Mutate        — create Stripe Checkout Session
+ * 6. Audit         — write an immutable audit event
  */
-
-import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership, assertTenantScope, getUserTenantRole } from "@/lib/tenancy/assert";
-import { prisma } from "@/lib/prisma";
-import { getStripeClient } from "@/lib/billing/stripe";
-import {
-  createCheckoutSessionSchema,
-  type CreateCheckoutSessionInput,
-  type CheckoutSessionDTO,
-} from "../types";
-
 export async function createCheckoutSession(
   input: CreateCheckoutSessionInput,
 ): Promise<CheckoutSessionDTO> {
@@ -32,121 +32,80 @@ export async function createCheckoutSession(
   const { user, tenantId } = await getSession();
   if (!user) throw new Error("Unauthorized: not authenticated");
 
-  // 2. AUTHORIZE — any active member may initiate checkout for their booking
+  // 2. AUTHORIZE — any tenant member can initiate checkout for their invoice
   await assertTenantMembership(tenantId, user.id, "member");
 
   // 3. VALIDATE
   const parsed = createCheckoutSessionSchema.parse(input);
 
-  // 4a. LOOK UP BOOKING — always scoped by tenantId
-  const booking = await prisma.booking.findFirst({
-    where: {
-      id: parsed.bookingId,
-      tenantId,
-      deletedAt: null,
-    },
+  // 4. TENANT SCOPE — confirm invoice belongs to this tenant
+  const invoice = await prisma.invoice.findFirst({
+    where: { id: parsed.invoiceId, tenantId, deletedAt: null },
     select: {
       id: true,
       tenantId: true,
-      customerId: true,
+      totalAmount: true,
       status: true,
-      totalPrice: true,
-      wrap: {
-        select: { name: true },
-      },
-    },
-  });
-
-  if (!booking) {
-    throw new Error("Booking not found or access denied");
-  }
-
-  // Defensive tenant scope check
-  assertTenantScope(booking.tenantId, tenantId);
-
-  // Members may only checkout their own bookings; admins and owners may act on any.
-  // Guard against null role (e.g., race condition with membership deletion).
-  const role = await getUserTenantRole(tenantId, user.id);
-  if (!role) {
-    throw new Error("Forbidden: tenant membership not found");
-  }
-  if (role === "member" && booking.customerId !== user.id) {
-    throw new Error("Forbidden: you can only checkout your own bookings");
-  }
-
-  if (booking.status !== "pending") {
-    throw new Error(
-      `Cannot create checkout for booking with status: ${booking.status}`,
-    );
-  }
-
-  // 4b. FIND OR CREATE INVOICE (atomic upsert prevents duplicate-create race)
-  //
-  // `upsert` with `update: {}` reuses an existing invoice unchanged, and only
-  // runs the `create` branch when no invoice exists yet. This is safe because
-  // `Invoice.bookingId` has a `@unique` constraint.
-  const invoice = await prisma.invoice.upsert({
-    where: { bookingId: parsed.bookingId },
-    create: {
-      tenantId,
-      bookingId: parsed.bookingId,
-      status: "draft",
-      totalAmount: booking.totalPrice,
       lineItems: {
-        create: [
-          {
-            description: booking.wrap?.name ?? "Vehicle Wrap Installation",
-            quantity: 1,
-            unitPrice: booking.totalPrice,
-            totalPrice: booking.totalPrice,
-          },
-        ],
+        select: { description: true, quantity: true, unitPrice: true },
       },
     },
-    update: {}, // Reuse existing invoice without modifying it
-    select: { id: true, status: true },
   });
 
-  // Guard: do not allow a new checkout session on a terminal invoice
-  if (
-    invoice.status === "paid" ||
-    invoice.status === "refunded" ||
-    invoice.status === "failed"
-  ) {
-    throw new Error(
-      `Cannot create checkout for invoice with status: ${invoice.status}`,
-    );
+  if (!invoice) {
+    throw new Error("Forbidden: invoice not found");
   }
 
-  // 4c. CREATE STRIPE CHECKOUT SESSION
-  //
-  // client_reference_id is set to the invoice ID so that the webhook can
-  // locate the invoice without a separate lookup table.
-  const stripe = getStripeClient();
+  if (invoice.status === "paid") {
+    throw new Error("Forbidden: invoice is already paid");
+  }
+
+  // Build Stripe line_items from invoice line items (fall back to single total item)
+  const lineItems =
+    invoice.lineItems.length > 0
+      ? invoice.lineItems.map((li: InvoiceLineItemRow) => ({
+          price_data: {
+            currency: "usd",
+            product_data: { name: li.description },
+            unit_amount: Math.round(li.unitPrice),
+          },
+          quantity: li.quantity,
+        }))
+      : [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: { name: `Invoice ${invoice.id}` },
+              unit_amount: Math.round(invoice.totalAmount),
+            },
+            quantity: 1,
+          },
+        ];
+
+  // Derive base URL server-side to prevent open-redirect attacks.
+  // Prefer an explicit env variable so the URL cannot be influenced by a
+  // spoofed Host header in edge cases (e.g., misconfigured reverse proxies).
+  let baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  if (!baseUrl) {
+    const { headers } = await import("next/headers");
+    const headersList = await headers();
+    const host = headersList.get("host") ?? "localhost:3000";
+    const protocol = host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https";
+    baseUrl = `${protocol}://${host}`;
+  }
+
+  // 5. MUTATE — create Stripe Checkout Session
+  const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
+    line_items: lineItems,
     mode: "payment",
-    client_reference_id: invoice.id,
-    line_items: [
-      {
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: booking.wrap?.name ?? "Vehicle Wrap Installation",
-          },
-          // totalPrice is stored as a Float in cents; Math.round guards against
-          // any floating-point drift before passing to Stripe's integer API.
-          unit_amount: Math.round(booking.totalPrice),
-        },
-        quantity: 1,
-      },
-    ],
-    success_url: parsed.successUrl,
-    cancel_url: parsed.cancelUrl,
+    client_reference_id: invoice.id, // used by webhook to correlate payment
+    success_url: `${baseUrl}/billing/${invoice.id}?payment=success`,
+    cancel_url: `${baseUrl}/billing/${invoice.id}?payment=cancelled`,
     metadata: {
-      tenantId,
       invoiceId: invoice.id,
-      bookingId: parsed.bookingId,
+      tenantId,
     },
   });
 
@@ -154,13 +113,7 @@ export async function createCheckoutSession(
     throw new Error("Stripe did not return a checkout URL");
   }
 
-  // Mark invoice as sent now that the Stripe session exists
-  await prisma.invoice.update({
-    where: { id: invoice.id },
-    data: { status: "sent" },
-  });
-
-  // 5. AUDIT
+  // 6. AUDIT
   await prisma.auditLog.create({
     data: {
       tenantId,
@@ -168,17 +121,10 @@ export async function createCheckoutSession(
       action: "CREATE_CHECKOUT_SESSION",
       resourceType: "Invoice",
       resourceId: invoice.id,
-      details: JSON.stringify({
-        bookingId: parsed.bookingId,
-        invoiceId: invoice.id,
-        stripeSessionId: session.id,
-        totalAmount: booking.totalPrice,
-      }),
+      details: JSON.stringify({ sessionId: session.id }),
+      timestamp: new Date(),
     },
   });
 
-  return {
-    checkoutUrl: session.url,
-    invoiceId: invoice.id,
-  };
+  return { sessionId: session.id, url: session.url };
 }

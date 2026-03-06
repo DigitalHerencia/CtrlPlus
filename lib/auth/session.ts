@@ -33,6 +33,10 @@ export interface SessionUser {
 export interface Session {
   user: SessionUser | null;
   tenantId: string;
+  /** Convenience flag: true when user is authenticated */
+  isAuthenticated: boolean;
+  /** Convenience accessor: Clerk user ID or empty string when unauthenticated */
+  userId: string;
 }
 
 /**
