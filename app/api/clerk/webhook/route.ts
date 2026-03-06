@@ -174,7 +174,11 @@ async function handleUserCreated(evt: WebhookEvent, tx: Tx): Promise<void> {
   const synced = await upsertUser(id, evt.data, tx);
 
   if (!synced) {
-    console.warn(`[clerk-webhook] user.created (${id}): no email address, skipping upsert`);
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        `[clerk-webhook] user.created (${id}): no email address, skipping upsert`,
+      );
+    }
     return;
   }
 
