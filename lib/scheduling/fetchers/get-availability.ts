@@ -8,7 +8,6 @@ import {
 const DEFAULT_AVAILABILITY_LIST_PARAMS: AvailabilityListParams = {
   page: 1,
   pageSize: 20,
-  activeOnly: true,
 };
 
 /**

@@ -71,32 +71,17 @@ describe("getAvailabilityWindowsForTenant", () => {
     );
   });
 
-  it("filters active-only windows by default", async () => {
+  it("queries without activeOnly filter (field removed from schema)", async () => {
     vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([]);
     vi.mocked(prisma.availabilityRule.count).mockResolvedValue(0);
 
     await getAvailabilityWindowsForTenant("tenant-a");
 
-    // No isActive field in schema; activeOnly param is accepted but not applied
     expect(prisma.availabilityRule.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ tenantId: "tenant-a" }),
       }),
     );
-  });
-
-  it("includes inactive windows when activeOnly is false", async () => {
-    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([]);
-    vi.mocked(prisma.availabilityRule.count).mockResolvedValue(0);
-
-    await getAvailabilityWindowsForTenant("tenant-a", {
-      page: 1,
-      pageSize: 20,
-      activeOnly: false,
-    });
-
-    const call = vi.mocked(prisma.availabilityRule.findMany).mock.calls[0][0];
-    expect(call?.where).not.toHaveProperty("isActive");
   });
 
   it("returns items mapped to DTOs (no deletedAt exposed)", async () => {
@@ -124,7 +109,6 @@ describe("getAvailabilityWindowsForTenant", () => {
       page: 1,
       pageSize: 20,
       dayOfWeek: 3,
-      activeOnly: true,
     });
 
     expect(prisma.availabilityRule.findMany).toHaveBeenCalledWith(
@@ -141,7 +125,6 @@ describe("getAvailabilityWindowsForTenant", () => {
     const result = await getAvailabilityWindowsForTenant("tenant-a", {
       page: 2,
       pageSize: 10,
-      activeOnly: true,
     });
 
     expect(prisma.availabilityRule.findMany).toHaveBeenCalledWith(

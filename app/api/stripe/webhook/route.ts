@@ -6,7 +6,7 @@
  *
  * Security:
  * - Webhook signature verified with STRIPE_WEBHOOK_SECRET
- * - Idempotent: StripeWebhookEvent table prevents duplicate processing
+ * - Idempotent: StripeWebhookEvent table prevents duplicate processing via atomic create-then-catch
  *
  * IMPORTANT: This route must be public (not protected by middleware).
  * Raw body must be read before any JSON parsing (required for signature verification).
@@ -40,14 +40,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
-  // 2. IDEMPOTENCY — skip already-processed events
-  const existing = await prisma.stripeWebhookEvent.findUnique({
-    where: { id: event.id },
-  });
-
-  if (existing) {
-    // Already processed — return 200 to acknowledge receipt
-    return NextResponse.json({ received: true, duplicate: true });
+  // 2. IDEMPOTENCY — atomically claim the event by writing a "processing" record.
+  // If another request already claimed this event ID (unique PK), the DB returns P2002.
+  // This eliminates the TOCTOU race window of a separate read-then-write check.
+  try {
+    await prisma.stripeWebhookEvent.create({
+      data: { id: event.id, type: event.type, status: "processing" },
+    });
+  } catch (err) {
+    if (err instanceof Error && "code" in err && (err as { code: string }).code === "P2002") {
+      // Already claimed — return 200 to acknowledge receipt without re-processing
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+    throw err;
   }
 
   // 3. DISPATCH event to the appropriate handler
@@ -70,13 +75,10 @@ export async function POST(req: NextRequest) {
         break;
     }
 
-    // 4. RECORD the event as processed (idempotency guard)
-    await prisma.stripeWebhookEvent.create({
-      data: {
-        id: event.id,
-        type: event.type,
-        status: "processed",
-      },
+    // 4. MARK the event as successfully processed
+    await prisma.stripeWebhookEvent.update({
+      where: { id: event.id },
+      data: { status: "processed" },
     });
 
     return NextResponse.json({ received: true });
@@ -85,12 +87,9 @@ export async function POST(req: NextRequest) {
 
     // Record the failure for observability (best-effort — don't throw if this fails)
     try {
-      await prisma.stripeWebhookEvent.create({
-        data: {
-          id: event.id,
-          type: event.type,
-          status: "failed",
-        },
+      await prisma.stripeWebhookEvent.update({
+        where: { id: event.id },
+        data: { status: "failed" },
       });
     } catch {
       // Ignore — primary error takes precedence
@@ -191,21 +190,24 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
  * Handle payment_intent.succeeded
  *
  * Updates Payment → "succeeded" and Invoice → "paid" if not already.
+ * The payment record lookup is performed inside the transaction to avoid
+ * a stale-read race where a concurrent request updates the status between
+ * the outer read and the guard check inside the transaction.
  */
 async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent): Promise<void> {
-  const payment = await prisma.payment.findUnique({
-    where: { stripePaymentIntentId: paymentIntent.id },
-    include: { invoice: true },
-  });
-
-  if (!payment) {
-    // Payment record may not exist yet if checkout.session.completed hasn't fired.
-    // This is safe to skip — checkout.session.completed will handle it.
-    console.warn(`payment_intent.succeeded: no Payment record for intent ${paymentIntent.id}`);
-    return;
-  }
-
   await prisma.$transaction(async (tx) => {
+    const payment = await tx.payment.findUnique({
+      where: { stripePaymentIntentId: paymentIntent.id },
+      include: { invoice: true },
+    });
+
+    if (!payment) {
+      // Payment record may not exist yet if checkout.session.completed hasn't fired.
+      // This is safe to skip — checkout.session.completed will handle it.
+      console.warn(`payment_intent.succeeded: no Payment record for intent ${paymentIntent.id}`);
+      return;
+    }
+
     // Idempotent update
     if (payment.status !== PaymentStatus.SUCCEEDED) {
       await tx.payment.update({
@@ -242,19 +244,24 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
  * Handle payment_intent.payment_failed
  *
  * Updates Payment → "failed" and Invoice → "failed".
+ * The payment record lookup is performed inside the transaction to avoid
+ * a stale-read race where a concurrent request updates the status between
+ * the outer read and the guard check inside the transaction.
  */
 async function handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent): Promise<void> {
-  const payment = await prisma.payment.findUnique({
-    where: { stripePaymentIntentId: paymentIntent.id },
-    include: { invoice: true },
-  });
-
-  if (!payment) {
-    console.warn(`payment_intent.payment_failed: no Payment record for intent ${paymentIntent.id}`);
-    return;
-  }
-
   await prisma.$transaction(async (tx) => {
+    const payment = await tx.payment.findUnique({
+      where: { stripePaymentIntentId: paymentIntent.id },
+      include: { invoice: true },
+    });
+
+    if (!payment) {
+      console.warn(
+        `payment_intent.payment_failed: no Payment record for intent ${paymentIntent.id}`,
+      );
+      return;
+    }
+
     // Idempotent update
     if (payment.status !== PaymentStatus.FAILED) {
       await tx.payment.update({

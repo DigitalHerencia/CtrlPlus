@@ -73,7 +73,6 @@ export const availabilityListParamsSchema = z.object({
   page: z.number().int().min(1).default(1),
   pageSize: z.number().int().min(1).max(100).default(20),
   dayOfWeek: z.number().int().min(0).max(6).optional(),
-  activeOnly: z.boolean().default(true),
 });
 
 export type AvailabilityListParams = z.infer<typeof availabilityListParamsSchema>;

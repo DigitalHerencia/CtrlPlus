@@ -3,7 +3,7 @@
  *
  * Uses mocked Stripe payloads to verify:
  * - Signature verification (200, 400, 401)
- * - Idempotent event processing
+ * - Idempotent event processing (atomic create-then-catch-P2002)
  * - checkout.session.completed handling
  * - payment_intent.succeeded handling
  * - payment_intent.payment_failed handling
@@ -21,8 +21,8 @@ vi.mock("@/lib/billing/stripe", () => ({
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     stripeWebhookEvent: {
-      findUnique: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     },
     invoice: {
       findUnique: vi.fn(),
@@ -60,6 +60,13 @@ function buildRequest(body: string, signature: string | null = "sig_test"): Next
     method: "POST",
     body,
     headers,
+  });
+}
+
+/** Simulates a Prisma P2002 unique constraint violation error */
+function makeP2002Error(): Error {
+  return Object.assign(new Error("Unique constraint failed on the fields: (`id`)"), {
+    code: "P2002",
   });
 }
 
@@ -132,6 +139,10 @@ describe("POST /api/stripe/webhook", () => {
       }
       return Promise.all(fn as never[]);
     });
+
+    // Default: stripeWebhookEvent operations succeed so most tests don't need to set them
+    vi.mocked(prisma.stripeWebhookEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.stripeWebhookEvent.update).mockResolvedValue({} as never);
   });
 
   // ── Signature verification ──────────────────────────────────────────────────
@@ -160,14 +171,10 @@ describe("POST /api/stripe/webhook", () => {
 
   // ── Idempotency ─────────────────────────────────────────────────────────────
 
-  it("returns 200 with duplicate:true for already-processed events", async () => {
+  it("returns 200 with duplicate:true when the event was already claimed (P2002)", async () => {
     vi.mocked(constructWebhookEvent).mockReturnValue(mockCheckoutEvent as never);
-    vi.mocked(prisma.stripeWebhookEvent.findUnique).mockResolvedValue({
-      id: "evt_checkout_001",
-      type: "checkout.session.completed",
-      status: "processed",
-      processedAt: new Date(),
-    });
+    // Simulate the atomic claim failing because another request already wrote the record
+    vi.mocked(prisma.stripeWebhookEvent.create).mockRejectedValueOnce(makeP2002Error());
 
     const req = buildRequest("{}", "sig_test");
     const res = await POST(req);
@@ -175,6 +182,7 @@ describe("POST /api/stripe/webhook", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.duplicate).toBe(true);
+    // No handler dispatch should happen when the claim fails
     expect(prisma.$transaction).not.toHaveBeenCalled();
   });
 
@@ -182,8 +190,6 @@ describe("POST /api/stripe/webhook", () => {
 
   it("handles checkout.session.completed and marks invoice as paid", async () => {
     vi.mocked(constructWebhookEvent).mockReturnValue(mockCheckoutEvent as never);
-    vi.mocked(prisma.stripeWebhookEvent.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.stripeWebhookEvent.create).mockResolvedValue({} as never);
     vi.mocked(prisma.invoice.findUnique).mockResolvedValue(mockInvoice as never);
     vi.mocked(prisma.invoice.update).mockResolvedValue({ ...mockInvoice, status: "paid" } as never);
     vi.mocked(prisma.payment.upsert).mockResolvedValue({} as never);
@@ -233,14 +239,11 @@ describe("POST /api/stripe/webhook", () => {
       }),
     );
 
-    // Verify idempotency record was written
-    expect(prisma.stripeWebhookEvent.create).toHaveBeenCalledWith(
+    // Verify the event was marked as processed
+    expect(prisma.stripeWebhookEvent.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          id: "evt_checkout_001",
-          type: "checkout.session.completed",
-          status: "processed",
-        }),
+        where: { id: "evt_checkout_001" },
+        data: { status: "processed" },
       }),
     );
   });
@@ -249,8 +252,6 @@ describe("POST /api/stripe/webhook", () => {
     const paidInvoice = { ...mockInvoice, status: "paid" };
 
     vi.mocked(constructWebhookEvent).mockReturnValue(mockCheckoutEvent as never);
-    vi.mocked(prisma.stripeWebhookEvent.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.stripeWebhookEvent.create).mockResolvedValue({} as never);
     vi.mocked(prisma.invoice.findUnique).mockResolvedValue(paidInvoice as never);
     vi.mocked(prisma.payment.upsert).mockResolvedValue({} as never);
     vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
@@ -266,8 +267,6 @@ describe("POST /api/stripe/webhook", () => {
     const refundedInvoice = { ...mockInvoice, status: "refunded" };
 
     vi.mocked(constructWebhookEvent).mockReturnValue(mockCheckoutEvent as never);
-    vi.mocked(prisma.stripeWebhookEvent.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.stripeWebhookEvent.create).mockResolvedValue({} as never);
     vi.mocked(prisma.invoice.findUnique).mockResolvedValue(refundedInvoice as never);
     vi.mocked(prisma.payment.upsert).mockResolvedValue({} as never);
     vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
@@ -279,24 +278,52 @@ describe("POST /api/stripe/webhook", () => {
     expect(prisma.invoice.update).not.toHaveBeenCalled();
   });
 
+  it("treats checkout.session.completed with missing client_reference_id as processed without touching invoices", async () => {
+    const checkoutEventWithoutClientRef = {
+      ...mockCheckoutEvent,
+      data: {
+        ...mockCheckoutEvent.data,
+        object: {
+          ...mockCheckoutEvent.data.object,
+          client_reference_id: null,
+        },
+      },
+    };
+
+    vi.mocked(constructWebhookEvent).mockReturnValue(checkoutEventWithoutClientRef as never);
+
+    const req = buildRequest("{}", "sig_test");
+    const res = await POST(req);
+
+    // The handler should still return 200 and record the event as processed
+    expect(res.status).toBe(200);
+    expect(prisma.stripeWebhookEvent.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "processed" } }),
+    );
+
+    // No invoice operations should be attempted
+    expect(prisma.invoice.findUnique).not.toHaveBeenCalled();
+    expect(prisma.invoice.update).not.toHaveBeenCalled();
+  });
+
   it("returns 500 when checkout.session.completed has no matching invoice", async () => {
     vi.mocked(constructWebhookEvent).mockReturnValue(mockCheckoutEvent as never);
-    vi.mocked(prisma.stripeWebhookEvent.findUnique).mockResolvedValue(null);
     vi.mocked(prisma.invoice.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.stripeWebhookEvent.create).mockResolvedValue({} as never);
 
     const req = buildRequest("{}", "sig_test");
     const res = await POST(req);
 
     expect(res.status).toBe(500);
+    // Verify the event was recorded as failed
+    expect(prisma.stripeWebhookEvent.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "failed" } }),
+    );
   });
 
   // ── payment_intent.succeeded ────────────────────────────────────────────────
 
   it("handles payment_intent.succeeded and updates payment and invoice", async () => {
     vi.mocked(constructWebhookEvent).mockReturnValue(mockPaymentSucceededEvent as never);
-    vi.mocked(prisma.stripeWebhookEvent.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.stripeWebhookEvent.create).mockResolvedValue({} as never);
     vi.mocked(prisma.payment.findUnique).mockResolvedValue(mockPayment as never);
     vi.mocked(prisma.payment.update).mockResolvedValue({
       ...mockPayment,
@@ -325,8 +352,6 @@ describe("POST /api/stripe/webhook", () => {
 
   it("returns 200 for payment_intent.succeeded with no matching payment record", async () => {
     vi.mocked(constructWebhookEvent).mockReturnValue(mockPaymentSucceededEvent as never);
-    vi.mocked(prisma.stripeWebhookEvent.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.stripeWebhookEvent.create).mockResolvedValue({} as never);
     vi.mocked(prisma.payment.findUnique).mockResolvedValue(null);
 
     const req = buildRequest("{}", "sig_test");
@@ -340,8 +365,6 @@ describe("POST /api/stripe/webhook", () => {
 
   it("handles payment_intent.payment_failed and marks payment/invoice as failed", async () => {
     vi.mocked(constructWebhookEvent).mockReturnValue(mockPaymentFailedEvent as never);
-    vi.mocked(prisma.stripeWebhookEvent.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.stripeWebhookEvent.create).mockResolvedValue({} as never);
     vi.mocked(prisma.payment.findUnique).mockResolvedValue(mockPayment as never);
     vi.mocked(prisma.payment.update).mockResolvedValue({
       ...mockPayment,
@@ -383,8 +406,6 @@ describe("POST /api/stripe/webhook", () => {
     const paidInvoicePayment = { ...mockPayment, invoice: { ...mockInvoice, status: "paid" } };
 
     vi.mocked(constructWebhookEvent).mockReturnValue(mockPaymentFailedEvent as never);
-    vi.mocked(prisma.stripeWebhookEvent.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.stripeWebhookEvent.create).mockResolvedValue({} as never);
     vi.mocked(prisma.payment.findUnique).mockResolvedValue(paidInvoicePayment as never);
     vi.mocked(prisma.payment.update).mockResolvedValue({} as never);
     vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
@@ -403,8 +424,6 @@ describe("POST /api/stripe/webhook", () => {
     };
 
     vi.mocked(constructWebhookEvent).mockReturnValue(mockPaymentFailedEvent as never);
-    vi.mocked(prisma.stripeWebhookEvent.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.stripeWebhookEvent.create).mockResolvedValue({} as never);
     vi.mocked(prisma.payment.findUnique).mockResolvedValue(refundedInvoicePayment as never);
     vi.mocked(prisma.payment.update).mockResolvedValue({} as never);
     vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
@@ -426,21 +445,17 @@ describe("POST /api/stripe/webhook", () => {
     };
 
     vi.mocked(constructWebhookEvent).mockReturnValue(unknownEvent as never);
-    vi.mocked(prisma.stripeWebhookEvent.findUnique).mockResolvedValue(null);
-    vi.mocked(prisma.stripeWebhookEvent.create).mockResolvedValue({} as never);
 
     const req = buildRequest("{}", "sig_test");
     const res = await POST(req);
 
     expect(res.status).toBe(200);
     expect(prisma.$transaction).not.toHaveBeenCalled();
-    // Idempotency record still written
-    expect(prisma.stripeWebhookEvent.create).toHaveBeenCalledWith(
+    // Idempotency record still marked as processed
+    expect(prisma.stripeWebhookEvent.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          id: "evt_unknown_001",
-          status: "processed",
-        }),
+        where: { id: "evt_unknown_001" },
+        data: { status: "processed" },
       }),
     );
   });
