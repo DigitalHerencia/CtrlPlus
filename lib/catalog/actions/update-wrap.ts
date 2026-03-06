@@ -31,24 +31,41 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
   ) as Record<string, unknown>;
 
   // 4. MUTATE
-  //    Look up the wrap by its primary key (most efficient path), then verify
-  //    tenant ownership and soft-delete status in application logic.
-  //    We intentionally do not fold these checks into the `update` where clause
-  //    because Prisma's `update` only accepts unique selectors there.
-  const existing = await prisma.wrap.findUnique({
-    where: { id: wrapId },
-    select: { id: true, tenantId: true, deletedAt: true },
-  });
-
-  if (!existing || existing.tenantId !== tenantId || existing.deletedAt !== null) {
-    throw new Error("Forbidden: resource not found");
-  }
-
-  const wrap = await prisma.wrap.update({
-    where: { id: wrapId },
+  //    Perform an atomic conditional update scoped by tenantId and soft-delete
+  //    status to avoid TOCTOU between ownership/soft-delete checks and writes.
+  const result = await prisma.wrap.updateMany({
+    where: {
+      id: wrapId,
+      tenantId,
+      deletedAt: null,
+    },
     data,
   });
 
+  if (result.count === 0) {
+    throw new Error("Forbidden: resource not found");
+  }
+
+  const wrap = await prisma.wrap.findFirst({
+    where: {
+      id: wrapId,
+      tenantId,
+    },
+    select: {
+      id: true,
+      tenantId: true,
+      name: true,
+      description: true,
+      price: true,
+      installationMinutes: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  if (!wrap) {
+    throw new Error("Forbidden: resource not found");
+  }
   // 5. AUDIT
   await prisma.auditLog.create({
     data: {
