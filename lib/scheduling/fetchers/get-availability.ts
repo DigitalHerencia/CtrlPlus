@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import {
-  type AvailabilityWindowDTO,
+  type AvailabilityRuleDTO,
   type AvailabilityListParams,
   type AvailabilityListResult,
 } from "../types";
@@ -14,7 +14,7 @@ const DEFAULT_AVAILABILITY_LIST_PARAMS: AvailabilityListParams = {
  * Maps a raw Prisma AvailabilityRule record to an AvailabilityWindowDTO.
  * Never exposes deletedAt or other internal fields.
  */
-function toAvailabilityWindowDTO(record: {
+function toAvailabilityRuleDTO(record: {
   id: string;
   tenantId: string;
   dayOfWeek: number;
@@ -23,7 +23,7 @@ function toAvailabilityWindowDTO(record: {
   capacitySlots: number;
   createdAt: Date;
   updatedAt: Date;
-}): AvailabilityWindowDTO {
+}): AvailabilityRuleDTO {
   return {
     id: record.id,
     tenantId: record.tenantId,
@@ -53,7 +53,7 @@ const availabilitySelectFields = {
  * @param tenantId - Tenant scope (server-side verified)
  * @param params   - Optional filter / pagination options
  */
-export async function getAvailabilityWindowsForTenant(
+export async function getAvailabilityRulesForTenant(
   tenantId: string,
   params: AvailabilityListParams = DEFAULT_AVAILABILITY_LIST_PARAMS,
 ): Promise<AvailabilityListResult> {
@@ -78,7 +78,7 @@ export async function getAvailabilityWindowsForTenant(
   ]);
 
   return {
-    items: records.map(toAvailabilityWindowDTO),
+    items: records.map(toAvailabilityRuleDTO),
     total,
     page,
     pageSize,
@@ -93,20 +93,20 @@ export async function getAvailabilityWindowsForTenant(
  * @param tenantId  - Tenant scope (server-side verified)
  * @param windowId  - AvailabilityRule primary key
  */
-export async function getAvailabilityWindowById(
+export async function getAvailabilityRuleById(
   tenantId: string,
   windowId: string,
 ): Promise<AvailabilityWindowDTO | null> {
   const record = await prisma.availabilityRule.findFirst({
     where: {
-      id: windowId,
+      id: ruleId,
       tenantId, // defensive scope check
       deletedAt: null,
     },
     select: availabilitySelectFields,
   });
 
-  return record ? toAvailabilityWindowDTO(record) : null;
+  return record ? toAvailabilityRuleDTO(record) : null;
 }
 
 /**
@@ -114,9 +114,9 @@ export async function getAvailabilityWindowById(
  * Ordered by startTime ascending — suitable for computing available slots.
  *
  * @param tenantId  - Tenant scope (server-side verified)
- * @param dayOfWeek - 0 (Sunday) … 6 (Saturday)
+ * @param dayOfWeek - 0 (Sunday) ... 6 (Saturday)
  */
-export async function getAvailabilityWindowsByDay(
+export async function getAvailabilityRulesByDay(
   tenantId: string,
   dayOfWeek: number,
 ): Promise<AvailabilityWindowDTO[]> {
@@ -130,5 +130,5 @@ export async function getAvailabilityWindowsByDay(
     orderBy: { startTime: "asc" },
   });
 
-  return records.map(toAvailabilityWindowDTO);
+  return records.map(toAvailabilityRuleDTO);
 }

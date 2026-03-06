@@ -45,9 +45,9 @@ export const bookingListParamsSchema = z.object({
 
 export type BookingListParams = z.infer<typeof bookingListParamsSchema>;
 
-// ─── Availability Window DTOs ─────────────────────────────────────────────────
+// ─── Availability Rule DTOs ───────────────────────────────────────────────────
 
-export interface AvailabilityWindowDTO {
+export interface AvailabilityRuleDTO {
   id: string;
   tenantId: string;
   /** 0 = Sunday … 6 = Saturday */
@@ -62,7 +62,7 @@ export interface AvailabilityWindowDTO {
 }
 
 export interface AvailabilityListResult {
-  items: AvailabilityWindowDTO[];
+  items: AvailabilityRuleDTO[];
   total: number;
   page: number;
   pageSize: number;

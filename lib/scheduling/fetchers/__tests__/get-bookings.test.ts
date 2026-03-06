@@ -82,7 +82,7 @@ describe("getBookingsForTenant", () => {
     const dto = result.items[0];
     expect(dto.id).toBe("booking-1");
     expect(dto.tenantId).toBe("tenant-a");
-    expect(dto.status).toBe(BookingStatus.PENDING);
+    expect(dto.status).toBe("pending");
     expect("deletedAt" in dto).toBe(false);
   });
 
@@ -111,7 +111,7 @@ describe("getBookingsForTenant", () => {
     await getBookingsForTenant("tenant-a", {
       page: 1,
       pageSize: 20,
-      status: BookingStatus.CONFIRMED,
+      status: "confirmed",
     });
 
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
@@ -121,7 +121,7 @@ describe("getBookingsForTenant", () => {
     );
   });
 
-  it("applies optional date range filter", async () => {
+  it("applies optional date range filter via startTime", async () => {
     vi.mocked(prisma.booking.findMany).mockResolvedValue([]);
     vi.mocked(prisma.booking.count).mockResolvedValue(0);
 
