@@ -85,7 +85,7 @@ jobs:
             BASE_URL=http://localhost:3000 pnpm exec playwright test \
               --project=chromium \
               --grep "@no-server" \
-              --pass-with-no-tests || true
+              --pass-with-no-tests
           fi
 
       - name: Upload Playwright report
