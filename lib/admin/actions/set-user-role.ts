@@ -27,6 +27,10 @@ export async function setUserRole(input: SetUserRoleInput): Promise<TeamMemberDT
   // 3. VALIDATE
   const parsed = setUserRoleSchema.parse(input);
 
+  // Prevent owners from changing their own role away from "owner".
+  if (parsed.targetUserId === user.id && parsed.role !== "owner") {
+    throw new Error("Forbidden: owners cannot change their own role");
+  }
   // 4. MUTATE — the compound unique where clause acts as tenant+user scope check.
   //    If the membership doesn't exist or is soft-deleted, handle gracefully.
   // Look up the active membership first, ensuring we don't touch soft-deleted records.
