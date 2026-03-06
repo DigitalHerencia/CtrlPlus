@@ -142,6 +142,20 @@ describe("getPreviewsByWrap", () => {
     );
   });
 
+  it("filters out expired previews (expiresAt: { gt: now })", async () => {
+    prismaMock.visualizerPreview.findMany.mockResolvedValue([]);
+
+    await getPreviewsByWrap("tenant-abc", "wrap-001");
+
+    expect(prismaMock.visualizerPreview.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          expiresAt: expect.objectContaining({ gt: expect.any(Date) }),
+        }),
+      }),
+    );
+  });
+
   it("returns an empty array when no previews exist", async () => {
     prismaMock.visualizerPreview.findMany.mockResolvedValue([]);
 

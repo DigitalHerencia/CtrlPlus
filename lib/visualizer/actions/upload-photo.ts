@@ -49,11 +49,12 @@ export async function uploadVehiclePhoto(
 
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-  // Return cached preview if it exists, hasn't expired, and belongs to this tenant
+  // Check for any existing record with this cacheKey (unique constraint)
   const existing = await prisma.visualizerPreview.findUnique({
     where: { cacheKey },
   });
 
+  // If a valid cached preview exists for this tenant, return it
   if (
     existing &&
     existing.tenantId === tenantId &&
@@ -71,6 +72,48 @@ export async function uploadVehiclePhoto(
       expiresAt: existing.expiresAt,
       createdAt: existing.createdAt,
       updatedAt: existing.updatedAt,
+    };
+  }
+
+  // If a record exists but is expired or soft-deleted, update it in place to
+  // avoid a unique-constraint violation on `cacheKey` from a CREATE.
+  if (existing) {
+    const refreshed = await prisma.visualizerPreview.update({
+      where: { cacheKey },
+      data: {
+        tenantId,
+        wrapId: parsed.wrapId,
+        customerPhotoUrl: parsed.customerPhotoUrl,
+        processedImageUrl: null,
+        status: "pending",
+        expiresAt,
+        deletedAt: null,
+      },
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        tenantId,
+        userId: user.id,
+        action: "UPLOAD_VEHICLE_PHOTO",
+        resourceType: "VisualizerPreview",
+        resourceId: refreshed.id,
+        details: JSON.stringify({ wrapId: parsed.wrapId }),
+        timestamp: new Date(),
+      },
+    });
+
+    return {
+      id: refreshed.id,
+      tenantId: refreshed.tenantId,
+      wrapId: refreshed.wrapId,
+      customerPhotoUrl: refreshed.customerPhotoUrl,
+      processedImageUrl: refreshed.processedImageUrl,
+      status: refreshed.status as PreviewStatus,
+      cacheKey: refreshed.cacheKey,
+      expiresAt: refreshed.expiresAt,
+      createdAt: refreshed.createdAt,
+      updatedAt: refreshed.updatedAt,
     };
   }
 

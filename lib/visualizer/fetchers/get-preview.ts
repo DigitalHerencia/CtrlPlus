@@ -74,6 +74,9 @@ export async function getPreviewsByWrap(
       tenantId,
       wrapId,
       deletedAt: null,
+      expiresAt: {
+        gt: new Date(),
+      },
     },
     orderBy: { createdAt: "desc" },
     select: visualizerPreviewDTOFields,

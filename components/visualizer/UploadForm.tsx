@@ -74,9 +74,10 @@ export function UploadForm({ wrapId, onPreviewReady, className }: UploadFormProp
 
   return (
     <form onSubmit={handleSubmit} className={cn("space-y-4", className)}>
-      {/* Drop zone */}
-      <div
-        onClick={() => inputRef.current?.click()}
+      {/* Drop zone — use a <label> so it is keyboard-accessible and correctly
+          announced by screen readers as a file-upload control. */}
+      <label
+        htmlFor="vehicle-photo-input"
         className={cn(
           "relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 cursor-pointer transition-colors",
           "border-neutral-300 bg-neutral-50 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800",
@@ -116,14 +117,15 @@ export function UploadForm({ wrapId, onPreviewReady, className }: UploadFormProp
             </div>
           </>
         )}
-      </div>
+      </label>
 
       <input
+        id="vehicle-photo-input"
         ref={inputRef}
         type="file"
         accept="image/*"
         onChange={handleFileChange}
-        className="hidden"
+        className="sr-only"
         aria-label="Upload vehicle photo"
       />
 
