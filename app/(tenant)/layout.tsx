@@ -5,9 +5,9 @@ import { redirect } from "next/navigation";
 
 export default async function TenantLayout({ children }: { children: React.ReactNode }) {
   // Require authentication for tenant routes
-  const { user } = await getSession();
+  const session = await getSession();
 
-  if (!user) {
+  if (!session.isAuthenticated) {
     redirect("/sign-in");
   }
 

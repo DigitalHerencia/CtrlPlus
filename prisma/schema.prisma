@@ -19,6 +19,35 @@ datasource db {
 }
 
 // ============================================================================
+// USER MODEL
+// ============================================================================
+
+/// Synced from Clerk – source of truth is Clerk; this is a local cache
+model User {
+  id          String    @id @default(cuid())
+  clerkUserId String    @unique
+  email       String    @unique
+  firstName   String?
+  lastName    String?
+  imageUrl    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([deletedAt])
+}
+
+/// Idempotency table – prevents duplicate processing of Clerk webhook events
+model ClerkWebhookEvent {
+  id          String   @id // Svix event ID
+  type        String
+  processedAt DateTime @default(now()) // used for retention/cleanup
+
+  @@index([type])
+  @@index([processedAt])
+}
+
+// ============================================================================
 // TENANCY & AUTH MODELS
 // ============================================================================
 
@@ -281,6 +310,22 @@ model Payment {
   @@index([invoiceId])
   @@index([stripePaymentIntentId])
   @@index([deletedAt])
+}
+
+// ============================================================================
+// WEBHOOK EVENT TRACKING (Idempotency)
+// ============================================================================
+
+/// Tracks processed Stripe webhook events (idempotency guard)
+model StripeWebhookEvent {
+  id          String    @id // Stripe event ID (e.g. "evt_xxx")
+  type        String    // e.g. "checkout.session.completed"
+  status      String    @default("processed") // "processed" | "failed"
+  processedAt DateTime  @default(now())
+
+  @@index([type])
+  @@index([status])
+  @@index([processedAt])
 }
 
 // ============================================================================

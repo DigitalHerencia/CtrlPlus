@@ -2,7 +2,7 @@
  * Proxy for Route Protection
  *
  * Uses Clerk middleware to protect routes and handle authentication.
- * Public routes: /, /about, /features, /contact, /sign-in, /sign-up, /api/webhooks
+ * Public routes: /, /about, /features, /contact, /sign-in, /sign-up, /api/clerk/webhook, /api/stripe/webhook
  * Protected routes: /catalog, /visualizer, /scheduling, /billing, /admin
  */
 
@@ -17,7 +17,8 @@ const isPublicRoute = createRouteMatcher([
   "/contact(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
-  "/api/webhooks(.*)", // Webhooks must be public (Clerk/Stripe sign requests)
+  "/api/clerk/webhook(.*)", // Clerk webhook must be public
+  "/api/stripe/webhook(.*)", // Stripe webhook must be public
 ]);
 
 // Define auth routes (redirect if already signed in)

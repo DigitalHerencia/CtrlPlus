@@ -1,6 +1,6 @@
 "use server";
 
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
 import { updateWrapSchema, type UpdateWrapInput, type WrapDTO } from "../types";
@@ -13,15 +13,14 @@ import { updateWrapSchema, type UpdateWrapInput, type WrapDTO } from "../types";
  * 2. Authorize     — verify user is an admin or owner of the tenant
  * 3. Validate      — parse and validate input with Zod
  * 4. Mutate        — apply updates scoped by tenantId (throws if not found)
- * 5. Audit         — write an immutable audit event
+ * 5. Audit         — write an immutable audit log entry
  */
 export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promise<WrapDTO> {
   // 1. AUTHENTICATE
-  const { user, tenantId } = await getSession();
-  if (!user) throw new Error("Unauthorized: not authenticated");
+  const { userId, tenantId } = await requireAuth();
 
   // 2. AUTHORIZE
-  await assertTenantMembership(tenantId, user.id, "admin");
+  await assertTenantMembership(tenantId, userId, ["OWNER", "ADMIN"]);
 
   // 3. VALIDATE
   const parsed = updateWrapSchema.parse(input);
@@ -31,28 +30,48 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
     Object.entries(parsed).filter(([, v]) => v !== undefined),
   ) as Record<string, unknown>;
 
-  // 4. MUTATE — the compound where clause acts as the tenant-scope check:
-  //    if no matching row exists (wrong tenant, already deleted, or bad ID)
-  //    Prisma throws P2025 which we convert to a safe Forbidden error.
-  let wrap;
-  try {
-    wrap = await prisma.wrap.update({
-      where: { id: wrapId, tenantId, deletedAt: null },
-      data,
-    });
-  } catch (err) {
-    if (err instanceof Error && "code" in err && (err as { code: string }).code === "P2025") {
-      throw new Error("Forbidden: resource not found");
-    }
-    throw err;
+  // 4. MUTATE
+  //    Perform an atomic conditional update scoped by tenantId and soft-delete
+  //    status to avoid TOCTOU between ownership/soft-delete checks and writes.
+  const result = await prisma.wrap.updateMany({
+    where: {
+      id: wrapId,
+      tenantId,
+      deletedAt: null,
+    },
+    data,
+  });
+
+  if (result.count === 0) {
+    throw new Error("Forbidden: resource not found");
   }
 
+  const wrap = await prisma.wrap.findFirst({
+    where: {
+      id: wrapId,
+      tenantId,
+    },
+    select: {
+      id: true,
+      tenantId: true,
+      name: true,
+      description: true,
+      price: true,
+      installationMinutes: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  if (!wrap) {
+    throw new Error("Forbidden: resource not found");
+  }
   // 5. AUDIT
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: user.id,
-      action: "UPDATE_WRAP",
+      userId,
+      action: "wrap.updated",
       resourceType: "Wrap",
       resourceId: wrap.id,
       details: JSON.stringify({ changes: parsed }),

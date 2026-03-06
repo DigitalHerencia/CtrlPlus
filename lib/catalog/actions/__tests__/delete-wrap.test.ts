@@ -4,7 +4,7 @@ import { deleteWrap } from "../delete-wrap";
 // ── Mock dependencies ─────────────────────────────────────────────────────────
 
 vi.mock("@/lib/auth/session", () => ({
-  getSession: vi.fn(),
+  requireAuth: vi.fn(),
 }));
 
 vi.mock("@/lib/tenancy/assert", () => ({
@@ -25,15 +25,17 @@ vi.mock("@/lib/prisma", () => ({
 
 // ── Imports after mocks ───────────────────────────────────────────────────────
 
-import { getSession } from "@/lib/auth/session";
+import { requireAuth } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const mockSession = {
-  user: { id: "user-1", clerkUserId: "clerk-1", email: "admin@example.com" },
+  userId: "user-1",
   tenantId: "tenant-1",
+  isAuthenticated: true,
+  orgId: null,
 };
 
 const existingWrap = {
@@ -47,11 +49,8 @@ const softDeletedWrap = {
   tenantId: "tenant-1",
   name: "Carbon Fiber Full Wrap",
   description: null,
-  price: { toString: () => "1500" },
-  estimatedHours: 8,
-  status: "ACTIVE",
-  imageUrls: [],
-  category: "FULL_WRAP",
+  price: 1500,
+  installationMinutes: null,
   deletedAt: new Date(),
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-02"),
@@ -65,7 +64,7 @@ describe("deleteWrap", () => {
   });
 
   it("soft-deletes a wrap and returns a DTO when the user is authorized", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(requireAuth).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.findFirst).mockResolvedValue(existingWrap as never);
     vi.mocked(prisma.wrap.update).mockResolvedValue(softDeletedWrap as never);
@@ -77,7 +76,7 @@ describe("deleteWrap", () => {
   });
 
   it("performs a soft delete (sets deletedAt), not a hard delete", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(requireAuth).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.findFirst).mockResolvedValue(existingWrap as never);
     vi.mocked(prisma.wrap.update).mockResolvedValue(softDeletedWrap as never);
@@ -94,7 +93,7 @@ describe("deleteWrap", () => {
   });
 
   it("checks that the wrap belongs to the current tenant before deleting", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(requireAuth).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.findFirst).mockResolvedValue(existingWrap as never);
     vi.mocked(prisma.wrap.update).mockResolvedValue(softDeletedWrap as never);
@@ -113,8 +112,8 @@ describe("deleteWrap", () => {
     );
   });
 
-  it("writes an audit event after soft-deleting the wrap", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
+  it("writes an audit log after soft-deleting the wrap", async () => {
+    vi.mocked(requireAuth).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.findFirst).mockResolvedValue(existingWrap as never);
     vi.mocked(prisma.wrap.update).mockResolvedValue(softDeletedWrap as never);
@@ -125,7 +124,7 @@ describe("deleteWrap", () => {
     expect(prisma.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          action: "DELETE_WRAP",
+          action: "wrap.deleted",
           resourceType: "Wrap",
           resourceId: "wrap-1",
           tenantId: "tenant-1",
@@ -136,13 +135,13 @@ describe("deleteWrap", () => {
   });
 
   it("throws Unauthorized when the user is not authenticated", async () => {
-    vi.mocked(getSession).mockResolvedValue({ user: null, tenantId: "" });
+    vi.mocked(requireAuth).mockRejectedValue(new Error("Unauthorized: not authenticated"));
 
     await expect(deleteWrap("wrap-1")).rejects.toThrow("Unauthorized");
   });
 
   it("throws Forbidden when assertTenantMembership rejects", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(requireAuth).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockRejectedValue(
       new Error("Forbidden: no active membership for this tenant"),
     );
@@ -151,7 +150,7 @@ describe("deleteWrap", () => {
   });
 
   it("throws Forbidden when the wrap belongs to a different tenant", async () => {
-    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(requireAuth).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     // findFirst returns null — wrap not found in this tenant
     vi.mocked(prisma.wrap.findFirst).mockResolvedValue(null);

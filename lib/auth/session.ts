@@ -1,11 +1,35 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
+import { resolveTenantFromRequest } from "@/lib/tenancy/resolve";
 
+/**
+ * The session context returned by getSession().
+ * Provides all authentication and tenant information for the current request.
+ */
+export interface SessionContext {
+  /** Clerk user ID, or null if not authenticated */
+  userId: string | null;
+  /** Resolved tenant ID from the request host/subdomain */
+  tenantId: string;
+  /** Whether the current user is authenticated */
+  isAuthenticated: boolean;
+  /** Clerk organization ID, or null if not in an org context */
+  orgId: string | null;
+}
+
+/**
+ * @deprecated Use SessionContext instead.
+ * Kept for backward compatibility.
+ */
 export interface SessionUser {
   id: string;
   clerkUserId: string;
   email: string;
 }
 
+/**
+ * @deprecated Use SessionContext instead.
+ * Kept for backward compatibility.
+ */
 export interface Session {
   user: SessionUser | null;
   tenantId: string;
@@ -15,69 +39,49 @@ export interface Session {
  * Resolves the current authenticated user and tenant from the Clerk session.
  * The tenantId is derived server-side from the request host, never from client input.
  *
- * @returns Session object with user (or null) and tenantId
+ * @returns SessionContext with userId, tenantId, isAuthenticated, and orgId
  */
-export async function getSession(): Promise<Session> {
-  const { userId } = await auth();
-
-  if (!userId) {
-    return { user: null, tenantId: "" };
-  }
-
-  const clerkUser = await currentUser();
-  if (!clerkUser) {
-    return { user: null, tenantId: "" };
-  }
+export async function getSession(): Promise<SessionContext> {
+  const { userId, orgId } = await auth();
 
   // Resolve tenantId from request host (subdomain-based multi-tenancy).
-  // In production, headers().get("host") is used; the default tenant is
-  // derived from the subdomain segment before the first dot.
-  const tenantId = await resolveTenantId();
-
-  const primaryEmail = clerkUser.emailAddresses.find(
-    (e) => e.id === clerkUser.primaryEmailAddressId,
-  );
+  // Returns null if no subdomain is found (e.g., root domain or localhost without
+  // a subdomain). We default to "" so callers can check `if (!tenantId)` easily,
+  // and `assertTenantMembership` will reject any operation on an empty tenantId.
+  const tenantId = (await resolveTenantFromRequest()) ?? "";
 
   return {
-    user: {
-      id: userId,
-      clerkUserId: userId,
-      email: primaryEmail?.emailAddress ?? "",
-    },
+    userId: userId ?? null,
     tenantId,
+    isAuthenticated: !!userId,
+    orgId: orgId ?? null,
   };
 }
 
 /**
- * Extracts the tenantId from the current request host.
- * The subdomain is used as the tenant slug and resolved to a tenantId
- * via the database. Throws if the tenant cannot be resolved.
+ * Requires the current user to be authenticated.
+ * Throws an error if not authenticated.
+ *
+ * Use this in server actions and protected API routes to enforce authentication.
+ *
+ * @returns SessionContext guaranteed to have a non-null userId
+ * @throws Error if not authenticated
+ *
+ * @example
+ * ```typescript
+ * export async function createWrap(input: CreateWrapInput) {
+ *   const { userId, tenantId } = await requireAuth();
+ *   await assertTenantMembership(tenantId, userId, 'ADMIN');
+ *   // ...
+ * }
+ * ```
  */
-async function resolveTenantId(): Promise<string> {
-  const { headers } = await import("next/headers");
-  const headersList = await headers();
-  const host = headersList.get("host") ?? "";
+export async function requireAuth(): Promise<SessionContext & { userId: string }> {
+  const session = await getSession();
 
-  // Extract subdomain: "acme.ctrlplus.com" → "acme"
-  const subdomain = host.split(".")[0];
-
-  if (!subdomain || subdomain === "localhost") {
-    const devTenantId = process.env.DEV_TENANT_ID;
-    if (!devTenantId) {
-      throw new Error("DEV_TENANT_ID environment variable is required for local development");
-    }
-    return devTenantId;
+  if (!session.isAuthenticated || !session.userId) {
+    throw new Error("Unauthorized: not authenticated");
   }
 
-  const { prisma } = await import("@/lib/prisma");
-  const tenant = await prisma.tenant.findUnique({
-    where: { slug: subdomain },
-    select: { id: true },
-  });
-
-  if (!tenant) {
-    throw new Error(`Tenant not found for subdomain: ${subdomain}`);
-  }
-
-  return tenant.id;
+  return session as SessionContext & { userId: string };
 }
