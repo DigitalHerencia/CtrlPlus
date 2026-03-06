@@ -1,18 +1,21 @@
 import { z } from "zod";
 
-// ─── Booking Status ───────────────────────────────────────────────────────────
+// ─── Booking status constants ─────────────────────────────────────────────────
+// Defined locally since the Prisma schema uses plain String (not an enum).
 
-/** Booking status values as stored in the database (plain strings, no Prisma enum). */
-export const BOOKING_STATUS = {
+export const BookingStatus = {
   PENDING: "pending",
   CONFIRMED: "confirmed",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
 } as const;
 
-export type BookingStatus = (typeof BOOKING_STATUS)[keyof typeof BOOKING_STATUS];
+export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus];
 
 // ─── Booking DTOs ─────────────────────────────────────────────────────────────
+
+/** Valid booking status values (plain strings, not enum) */
+export type BookingStatusValue = "pending" | "confirmed" | "completed" | "cancelled";
 
 export interface BookingDTO {
   id: string;
@@ -38,7 +41,7 @@ export interface BookingListResult {
 export const bookingListParamsSchema = z.object({
   page: z.number().int().min(1).default(1),
   pageSize: z.number().int().min(1).max(100).default(20),
-  status: z.string().optional(),
+  status: z.enum(["pending", "confirmed", "completed", "cancelled"]).optional(),
   fromDate: z.date().optional(),
   toDate: z.date().optional(),
 });
@@ -47,7 +50,7 @@ export type BookingListParams = z.infer<typeof bookingListParamsSchema>;
 
 // ─── Availability Rule DTOs ───────────────────────────────────────────────────
 
-export interface AvailabilityWindowDTO {
+export interface AvailabilityRuleDTO {
   id: string;
   tenantId: string;
   /** 0 = Sunday … 6 = Saturday */
@@ -56,14 +59,16 @@ export interface AvailabilityWindowDTO {
   startTime: string;
   /** "HH:mm" 24-hour format */
   endTime: string;
-  /** Number of concurrent booking slots */
   capacitySlots: number;
   createdAt: Date;
   updatedAt: Date;
 }
 
+/** @deprecated Use AvailabilityRuleDTO */
+export type AvailabilityWindowDTO = AvailabilityRuleDTO;
+
 export interface AvailabilityListResult {
-  items: AvailabilityWindowDTO[];
+  items: AvailabilityRuleDTO[];
   total: number;
   page: number;
   pageSize: number;
