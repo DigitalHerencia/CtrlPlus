@@ -1,11 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { getInvoicesForTenant } from "@/lib/billing/fetchers/get-invoices";
 import { InvoiceStatusBadge } from "@/components/billing/InvoiceStatusBadge";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default async function BillingPage() {
-  const { tenantId } = await getSession();
+  const { user, tenantId } = await getSession();
+  if (!user) {
+    redirect("/sign-in");
+  }
+
+  await assertTenantMembership(tenantId, user.id, "admin");
 
   const { invoices, total } = await getInvoicesForTenant(tenantId);
 

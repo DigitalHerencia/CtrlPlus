@@ -106,8 +106,6 @@ export type InvoiceListParams = z.infer<typeof invoiceListParamsSchema>;
 
 export const createCheckoutSessionSchema = z.object({
   invoiceId: z.string().min(1),
-  successUrl: z.string().url("successUrl must be a valid URL"),
-  cancelUrl: z.string().url("cancelUrl must be a valid URL"),
 });
 
 export type CreateCheckoutSessionInput = z.infer<typeof createCheckoutSessionSchema>;

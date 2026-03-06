@@ -20,8 +20,8 @@ type InvoiceLineItemRow = Pick<InvoiceLineItemDTO, "description" | "quantity" | 
  * Security pipeline:
  * 1. Authenticate  — verify user is signed in
  * 2. Authorize     — verify user is a member of the tenant
- * 3. Tenant scope  — confirm the invoice belongs to the current tenant
- * 4. Validate      — parse and validate input with Zod
+ * 3. Validate      — parse and validate input with Zod
+ * 4. Tenant scope  — confirm the invoice belongs to the current tenant
  * 5. Mutate        — create Stripe Checkout Session
  * 6. Audit         — write an immutable audit event
  */
@@ -57,7 +57,7 @@ export async function createCheckoutSession(
   }
 
   if (invoice.status === "paid") {
-    throw new Error("Invoice is already paid");
+    throw new Error("Forbidden: invoice is already paid");
   }
 
   // Build Stripe line_items from invoice line items (fall back to single total item)
@@ -82,6 +82,18 @@ export async function createCheckoutSession(
           },
         ];
 
+  // Derive base URL server-side to prevent open-redirect attacks.
+  // Prefer an explicit env variable so the URL cannot be influenced by a
+  // spoofed Host header in edge cases (e.g., misconfigured reverse proxies).
+  let baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  if (!baseUrl) {
+    const { headers } = await import("next/headers");
+    const headersList = await headers();
+    const host = headersList.get("host") ?? "localhost:3000";
+    const protocol = host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https";
+    baseUrl = `${protocol}://${host}`;
+  }
+
   // 5. MUTATE — create Stripe Checkout Session
   const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
@@ -89,8 +101,8 @@ export async function createCheckoutSession(
     line_items: lineItems,
     mode: "payment",
     client_reference_id: invoice.id, // used by webhook to correlate payment
-    success_url: parsed.successUrl,
-    cancel_url: parsed.cancelUrl,
+    success_url: `${baseUrl}/billing/${invoice.id}?payment=success`,
+    cancel_url: `${baseUrl}/billing/${invoice.id}?payment=cancelled`,
     metadata: {
       invoiceId: invoice.id,
       tenantId,

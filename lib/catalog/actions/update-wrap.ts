@@ -3,7 +3,6 @@
 import { getSession } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
 import { updateWrapSchema, type UpdateWrapInput, type WrapDTO } from "../types";
 
 /**
@@ -27,8 +26,21 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
   // 3. VALIDATE
   const parsed = updateWrapSchema.parse(input);
 
-  // Build the update data, excluding undefined fields
-  const data = Object.fromEntries(Object.entries(parsed).filter(([, v]) => v !== undefined));
+  // Build the update data, explicitly mapping each field to preserve type safety
+  // and avoid passing unexpected keys to Prisma.
+  const data: {
+    name?: string;
+    description?: string;
+    price?: number;
+    installationMinutes?: number;
+  } = {
+    ...(parsed.name !== undefined && { name: parsed.name }),
+    ...(parsed.description !== undefined && { description: parsed.description }),
+    ...(parsed.price !== undefined && { price: parsed.price }),
+    ...(parsed.installationMinutes !== undefined && {
+      installationMinutes: parsed.installationMinutes,
+    }),
+  };
 
   // 4. MUTATE — the compound where clause acts as the tenant-scope check:
   //    if no matching row exists (wrong tenant, already deleted, or bad ID)
@@ -39,8 +51,8 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
       where: { id: wrapId, tenantId, deletedAt: null },
       data,
     });
-  } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
+  } catch (err: unknown) {
+    if (err instanceof Error && "code" in err && (err as { code?: string }).code === "P2025") {
       throw new Error("Forbidden: resource not found");
     }
     throw err;

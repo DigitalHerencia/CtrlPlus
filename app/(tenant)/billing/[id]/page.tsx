@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth/session";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { getInvoiceById } from "@/lib/billing/fetchers/get-invoice-by-id";
 import { InvoiceStatusBadge } from "@/components/billing/InvoiceStatusBadge";
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
@@ -8,11 +9,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 interface InvoiceDetailPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ payment?: string }>;
 }
 
-export default async function InvoiceDetailPage({ params }: InvoiceDetailPageProps) {
+export default async function InvoiceDetailPage({ params, searchParams }: InvoiceDetailPageProps) {
   const { id } = await params;
-  const { tenantId } = await getSession();
+  const { payment } = await searchParams;
+
+  const { user, tenantId } = await getSession();
+  if (!user) {
+    redirect("/sign-in");
+  }
+
+  await assertTenantMembership(tenantId, user.id, "admin");
 
   const invoice = await getInvoiceById(tenantId, id);
 
@@ -21,7 +30,6 @@ export default async function InvoiceDetailPage({ params }: InvoiceDetailPagePro
   }
 
   const canPay = invoice.status === "sent" || invoice.status === "draft";
-  const latestPayment = invoice.payments[0] ?? null;
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -171,10 +179,19 @@ export default async function InvoiceDetailPage({ params }: InvoiceDetailPagePro
         </Card>
       )}
 
-      {latestPayment?.status === "succeeded" && (
+      {/* Post-redirect payment banners */}
+      {payment === "success" && (
         <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950">
           <CardContent className="py-4 text-sm text-green-700 dark:text-green-300 text-center font-medium">
             ✓ Payment received — thank you!
+          </CardContent>
+        </Card>
+      )}
+
+      {payment === "cancelled" && (
+        <Card className="border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950">
+          <CardContent className="py-4 text-sm text-amber-700 dark:text-amber-300 text-center font-medium">
+            Payment was cancelled. You can try again whenever you&apos;re ready.
           </CardContent>
         </Card>
       )}

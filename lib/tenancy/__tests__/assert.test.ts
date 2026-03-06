@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { TenantUserMembership } from "@/lib/tenancy/types";
 import { assertTenantMembership, assertTenantScope } from "../assert";
 
 // ---------------------------------------------------------------------------
@@ -18,22 +17,6 @@ vi.mock("@/lib/prisma", () => ({
 // Lazily import the mocked module so we can control return values per test
 const { prisma } = await import("@/lib/prisma");
 const mockFindUnique = vi.mocked(prisma.tenantUserMembership.findUnique);
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function membership(overrides: Partial<TenantUserMembership> = {}): TenantUserMembership {
-  return {
-    id: "mem-1",
-    tenantId: "tenant-abc",
-    userId: "user-xyz",
-    role: "member",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  };
-}
 
 // ---------------------------------------------------------------------------
 // assertTenantMembership
@@ -65,7 +48,7 @@ describe("assertTenantMembership", () => {
   // --- Forbidden (insufficient role) ---------------------------------------
 
   it("throws 'Forbidden' when member tries to satisfy admin requirement", async () => {
-    mockFindUnique.mockResolvedValue(membership({ role: "member" }) as never);
+    mockFindUnique.mockResolvedValue({ role: "member" } as never);
 
     await expect(assertTenantMembership("tenant-abc", "user-xyz", "admin")).rejects.toThrow(
       "Forbidden: insufficient role",
@@ -73,7 +56,7 @@ describe("assertTenantMembership", () => {
   });
 
   it("throws 'Forbidden' when member tries to satisfy owner requirement", async () => {
-    mockFindUnique.mockResolvedValue(membership({ role: "member" }) as never);
+    mockFindUnique.mockResolvedValue({ role: "member" } as never);
 
     await expect(assertTenantMembership("tenant-abc", "user-xyz", "owner")).rejects.toThrow(
       "Forbidden: insufficient role",
@@ -81,7 +64,7 @@ describe("assertTenantMembership", () => {
   });
 
   it("throws 'Forbidden' when admin tries to satisfy owner requirement", async () => {
-    mockFindUnique.mockResolvedValue(membership({ role: "admin" }) as never);
+    mockFindUnique.mockResolvedValue({ role: "admin" } as never);
 
     await expect(assertTenantMembership("tenant-abc", "user-xyz", "owner")).rejects.toThrow(
       "Forbidden: insufficient role",
@@ -91,7 +74,7 @@ describe("assertTenantMembership", () => {
   // --- Authorized (happy path) -----------------------------------------------
 
   it("resolves when member satisfies member requirement", async () => {
-    mockFindUnique.mockResolvedValue(membership({ role: "member" }) as never);
+    mockFindUnique.mockResolvedValue({ role: "member" } as never);
 
     await expect(
       assertTenantMembership("tenant-abc", "user-xyz", "member"),
@@ -99,7 +82,7 @@ describe("assertTenantMembership", () => {
   });
 
   it("resolves when admin satisfies admin requirement", async () => {
-    mockFindUnique.mockResolvedValue(membership({ role: "admin" }) as never);
+    mockFindUnique.mockResolvedValue({ role: "admin" } as never);
 
     await expect(
       assertTenantMembership("tenant-abc", "user-xyz", "admin"),
@@ -107,7 +90,7 @@ describe("assertTenantMembership", () => {
   });
 
   it("resolves when owner satisfies admin requirement (hierarchy)", async () => {
-    mockFindUnique.mockResolvedValue(membership({ role: "owner" }) as never);
+    mockFindUnique.mockResolvedValue({ role: "owner" } as never);
 
     await expect(
       assertTenantMembership("tenant-abc", "user-xyz", "admin"),
@@ -115,7 +98,7 @@ describe("assertTenantMembership", () => {
   });
 
   it("resolves when owner satisfies member requirement (hierarchy)", async () => {
-    mockFindUnique.mockResolvedValue(membership({ role: "owner" }) as never);
+    mockFindUnique.mockResolvedValue({ role: "owner" } as never);
 
     await expect(
       assertTenantMembership("tenant-abc", "user-xyz", "member"),
@@ -125,7 +108,7 @@ describe("assertTenantMembership", () => {
   // --- Membership query scoping --------------------------------------------
 
   it("queries with compound tenantId+userId key and deletedAt filter", async () => {
-    mockFindUnique.mockResolvedValue(membership({ role: "admin" }) as never);
+    mockFindUnique.mockResolvedValue({ role: "admin" } as never);
 
     await assertTenantMembership("tenant-abc", "user-xyz", "admin");
 

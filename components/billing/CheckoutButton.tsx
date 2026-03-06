@@ -17,12 +17,7 @@ export function CheckoutButton({ invoiceId, disabled }: CheckoutButtonProps) {
     setError(null);
     startTransition(async () => {
       try {
-        const origin = window.location.origin;
-        const result = await createCheckoutSession({
-          invoiceId,
-          successUrl: `${origin}/billing/${invoiceId}?payment=success`,
-          cancelUrl: `${origin}/billing/${invoiceId}?payment=cancelled`,
-        });
+        const result = await createCheckoutSession({ invoiceId });
         // Use window.location.href to navigate to the external Stripe hosted checkout page
         window.location.href = result.url;
       } catch (err) {
