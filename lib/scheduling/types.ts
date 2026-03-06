@@ -21,7 +21,7 @@ export interface BookingDTO {
   wrapId: string;
   startTime: Date;
   endTime: Date;
-  status: string;
+  status: BookingStatus;
   totalPrice: number;
   createdAt: Date;
   updatedAt: Date;

@@ -21,8 +21,8 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
   const { user, tenantId } = await getSession();
   if (!user) throw new Error("Unauthorized: not authenticated");
 
-  // 2. AUTHORIZE — delete requires owner role
-  await assertTenantMembership(tenantId, user.id, "owner");
+  // 2. AUTHORIZE — delete requires admin or owner role (matches catalog:delete RBAC permission)
+  await assertTenantMembership(tenantId, user.id, "admin");
 
   // 3. TENANT SCOPE — defensive ownership check before mutation
   const existing = await prisma.wrap.findFirst({
