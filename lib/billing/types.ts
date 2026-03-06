@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// ─── Invoice Status ───────────────────────────────────────────────────────────
+// ─── Status Constants ─────────────────────────────────────────────────────────
 
 export const InvoiceStatus = {
   DRAFT: "draft",
@@ -12,8 +12,6 @@ export const InvoiceStatus = {
 
 export type InvoiceStatus = (typeof InvoiceStatus)[keyof typeof InvoiceStatus];
 
-// ─── Payment Status ───────────────────────────────────────────────────────────
-
 export const PaymentStatus = {
   PENDING: "pending",
   SUCCEEDED: "succeeded",
@@ -24,63 +22,39 @@ export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
 
 // ─── DTOs ─────────────────────────────────────────────────────────────────────
 
-/** A single line item on an invoice. */
-export interface BillingItemDTO {
+export interface InvoiceLineItemDTO {
   id: string;
-  invoiceId: string;
   description: string;
   quantity: number;
-  /** Unit price in cents */
   unitPrice: number;
-  /** Total price in cents (quantity × unitPrice) */
   totalPrice: number;
 }
 
-/** Read model returned by billing fetchers. Never exposes raw Prisma model. */
 export interface InvoiceDTO {
   id: string;
   tenantId: string;
   bookingId: string;
   status: InvoiceStatus;
-  /** Total invoice amount in cents */
   totalAmount: number;
-  lineItems: BillingItemDTO[];
   createdAt: Date;
   updatedAt: Date;
 }
 
-/** Payment record linked to a Stripe PaymentIntent. */
+export interface InvoiceDetailDTO extends InvoiceDTO {
+  lineItems: InvoiceLineItemDTO[];
+  payments: PaymentDTO[];
+}
+
 export interface PaymentDTO {
   id: string;
   invoiceId: string;
   stripePaymentIntentId: string;
   status: PaymentStatus;
-  /** Payment amount in cents */
   amount: number;
   createdAt: Date;
 }
 
-/** Result of creating a Stripe Checkout Session. */
-export interface CheckoutSessionDTO {
-  id: string;
-  url: string;
-  invoiceId: string;
-  /** Stripe's own payment intent (if available) */
-  stripePaymentIntentId: string | null;
-  /** Status as returned by Stripe */
-  status: string | null;
-}
-
 // ─── Prisma Select Helpers ────────────────────────────────────────────────────
-
-export const invoiceLineItemDTOFields = {
-  id: true,
-  invoiceId: true,
-  description: true,
-  quantity: true,
-  unitPrice: true,
-  totalPrice: true,
-} as const;
 
 export const invoiceDTOFields = {
   id: true,
@@ -90,9 +64,6 @@ export const invoiceDTOFields = {
   totalAmount: true,
   createdAt: true,
   updatedAt: true,
-  lineItems: {
-    select: invoiceLineItemDTOFields,
-  },
 } as const;
 
 export const paymentDTOFields = {
@@ -106,23 +77,26 @@ export const paymentDTOFields = {
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
-export const createCheckoutSessionSchema = z.object({
-  invoiceId: z.string().min(1, "Invoice ID is required"),
-  successUrl: z.string().url("Success URL must be a valid URL"),
-  cancelUrl: z.string().url("Cancel URL must be a valid URL"),
-  customerEmail: z.string().email("Customer email must be valid").optional(),
+export const invoiceListParamsSchema = z.object({
+  page: z.number().int().min(1).default(1),
+  pageSize: z.number().int().min(1).max(100).default(20),
+  status: z.enum(["draft", "sent", "paid", "failed", "refunded"]).optional(),
 });
 
-export type CreateCheckoutSessionInput = z.infer<typeof createCheckoutSessionSchema>;
+export type InvoiceListParams = z.infer<typeof invoiceListParamsSchema>;
 
-export const getInvoiceSchema = z.object({
-  stripeInvoiceId: z.string().min(1, "Stripe invoice ID is required"),
-});
+export interface InvoiceListResult {
+  invoices: InvoiceDTO[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
 
-export type GetInvoiceInput = z.infer<typeof getInvoiceSchema>;
+// ─── Checkout ─────────────────────────────────────────────────────────────────
 
-export const getPaymentStatusSchema = z.object({
-  stripePaymentIntentId: z.string().min(1, "Stripe payment intent ID is required"),
-});
-
-export type GetPaymentStatusInput = z.infer<typeof getPaymentStatusSchema>;
+export interface CheckoutSessionDTO {
+  sessionId: string;
+  url: string;
+  invoiceId: string;
+}

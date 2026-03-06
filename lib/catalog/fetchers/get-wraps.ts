@@ -77,7 +77,14 @@ export async function searchWraps(
   tenantId: string,
   filters: SearchWrapsInput = { page: 1, pageSize: 20 },
 ): Promise<WrapListDTO> {
-  const { query, maxPrice, page, pageSize } = filters;
+  const {
+    query,
+    maxPrice,
+    sortBy = "createdAt",
+    sortOrder = "desc",
+    page,
+    pageSize,
+  } = filters;
   const skip = (page - 1) * pageSize;
 
   const where = {
@@ -95,7 +102,7 @@ export async function searchWraps(
   const [wraps, total] = await Promise.all([
     prisma.wrap.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy: { [sortBy]: sortOrder },
       select: wrapDTOFields,
       skip,
       take: pageSize,
