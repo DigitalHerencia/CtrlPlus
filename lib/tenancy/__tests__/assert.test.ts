@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { TenantUserMembership } from "@/lib/prisma";
 import { assertTenantMembership, assertTenantScope } from "../assert";
 
 // ---------------------------------------------------------------------------
@@ -23,15 +22,34 @@ const mockFindFirst = vi.mocked(prisma.tenantUserMembership.findFirst);
 // Helpers
 // ---------------------------------------------------------------------------
 
-function membership(overrides: Partial<TenantUserMembership> = {}): TenantUserMembership {
+/**
+ * Typed fixture that mirrors the full Prisma TenantUserMembership row shape.
+ * `role` is typed as `string` (not the uppercase `TenantRole`) because the
+ * database stores lowercase values ("owner" | "admin" | "member"), which is
+ * exactly what Prisma returns. `assertTenantMembership` passes this raw value
+ * to `hasRolePermission(membership.role, required)`, which uppercases and
+ * checks the role against the permission hierarchy (no `normalizeTenantRole`
+ * call is involved).
+ */
+interface MembershipFixture {
+  id: string;
+  tenantId: string;
+  userId: string;
+  role: string; // raw DB value: "owner" | "admin" | "member"
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
+function membership(overrides: Partial<MembershipFixture> = {}): MembershipFixture {
   return {
     id: "mem-1",
     tenantId: "tenant-abc",
     userId: "user-xyz",
-    role: "MEMBER",
-    status: "ACTIVE",
+    role: "member",
     createdAt: new Date(),
     updatedAt: new Date(),
+    deletedAt: null,
     ...overrides,
   };
 }
@@ -66,7 +84,7 @@ describe("assertTenantMembership", () => {
   // --- Forbidden (insufficient role) ---------------------------------------
 
   it("throws 'Forbidden' when MEMBER tries to satisfy ADMIN requirement", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "MEMBER" }));
+    mockFindFirst.mockResolvedValue(membership({ role: "member" }));
 
     await expect(assertTenantMembership("tenant-abc", "user-xyz", "ADMIN")).rejects.toThrow(
       "Forbidden: insufficient role",
@@ -74,7 +92,7 @@ describe("assertTenantMembership", () => {
   });
 
   it("throws 'Forbidden' when MEMBER tries to satisfy OWNER requirement", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "MEMBER" }));
+    mockFindFirst.mockResolvedValue(membership({ role: "member" }));
 
     await expect(assertTenantMembership("tenant-abc", "user-xyz", "OWNER")).rejects.toThrow(
       "Forbidden: insufficient role",
@@ -82,7 +100,7 @@ describe("assertTenantMembership", () => {
   });
 
   it("throws 'Forbidden' when ADMIN tries to satisfy OWNER requirement", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "ADMIN" }));
+    mockFindFirst.mockResolvedValue(membership({ role: "admin" }));
 
     await expect(assertTenantMembership("tenant-abc", "user-xyz", "OWNER")).rejects.toThrow(
       "Forbidden: insufficient role",
@@ -90,7 +108,7 @@ describe("assertTenantMembership", () => {
   });
 
   it("throws 'Forbidden' when role does not satisfy any role in an array", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "MEMBER" }));
+    mockFindFirst.mockResolvedValue(membership({ role: "member" }));
 
     await expect(
       assertTenantMembership("tenant-abc", "user-xyz", ["OWNER", "ADMIN"]),
@@ -100,7 +118,7 @@ describe("assertTenantMembership", () => {
   // --- Authorized (happy path) -----------------------------------------------
 
   it("resolves when MEMBER satisfies MEMBER requirement", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "MEMBER" }));
+    mockFindFirst.mockResolvedValue(membership({ role: "member" }));
 
     await expect(
       assertTenantMembership("tenant-abc", "user-xyz", "MEMBER"),
@@ -108,7 +126,7 @@ describe("assertTenantMembership", () => {
   });
 
   it("resolves when ADMIN satisfies ADMIN requirement", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "ADMIN" }));
+    mockFindFirst.mockResolvedValue(membership({ role: "admin" }));
 
     await expect(
       assertTenantMembership("tenant-abc", "user-xyz", "ADMIN"),
@@ -116,7 +134,7 @@ describe("assertTenantMembership", () => {
   });
 
   it("resolves when OWNER satisfies ADMIN requirement (hierarchy)", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "OWNER" }));
+    mockFindFirst.mockResolvedValue(membership({ role: "owner" }));
 
     await expect(
       assertTenantMembership("tenant-abc", "user-xyz", "ADMIN"),
@@ -124,7 +142,7 @@ describe("assertTenantMembership", () => {
   });
 
   it("resolves when OWNER satisfies MEMBER requirement (hierarchy)", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "OWNER" }));
+    mockFindFirst.mockResolvedValue(membership({ role: "owner" }));
 
     await expect(
       assertTenantMembership("tenant-abc", "user-xyz", "MEMBER"),
@@ -132,7 +150,7 @@ describe("assertTenantMembership", () => {
   });
 
   it("resolves when ADMIN satisfies an array containing ADMIN", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "ADMIN" }));
+    mockFindFirst.mockResolvedValue(membership({ role: "admin" }));
 
     await expect(
       assertTenantMembership("tenant-abc", "user-xyz", ["OWNER", "ADMIN"]),
@@ -141,8 +159,8 @@ describe("assertTenantMembership", () => {
 
   // --- Membership query scoping --------------------------------------------
 
-  it("queries with tenantId, userId, and ACTIVE status", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "ADMIN" }));
+  it("queries with tenantId, userId, and deletedAt filter", async () => {
+    mockFindFirst.mockResolvedValue(membership({ role: "admin" }));
 
     await assertTenantMembership("tenant-abc", "user-xyz", "ADMIN");
 
@@ -150,8 +168,9 @@ describe("assertTenantMembership", () => {
       where: {
         tenantId: "tenant-abc",
         userId: "user-xyz",
-        status: "ACTIVE",
+        deletedAt: null,
       },
+      select: { role: true },
     });
   });
 });
