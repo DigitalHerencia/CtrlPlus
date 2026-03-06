@@ -75,9 +75,19 @@ export const updateWrapSchema = createWrapSchema.partial();
 
 export type UpdateWrapInput = z.infer<typeof updateWrapSchema>;
 
+export const WRAP_SORT_BY_VALUES = {
+  name: "name",
+  price: "price",
+  createdAt: "createdAt",
+} as const;
+
+export type WrapSortBy = (typeof WRAP_SORT_BY_VALUES)[keyof typeof WRAP_SORT_BY_VALUES];
+
 export const searchWrapsSchema = z.object({
   query: z.string().max(200).optional(),
   maxPrice: z.number().positive().optional(),
+  sortBy: z.enum(["name", "price", "createdAt"]).optional(),
+  sortOrder: z.enum(["asc", "desc"]).optional(),
   page: z.number().int().min(1).default(1),
   pageSize: z.number().int().min(1).max(100).default(20),
 });
