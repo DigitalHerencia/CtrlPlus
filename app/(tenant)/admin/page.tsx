@@ -59,9 +59,7 @@ export default async function AdminDashboardPage() {
             className="flex flex-col gap-1 rounded-md border p-4 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
           >
             <span className="font-medium">Team</span>
-            <span className="text-sm text-muted-foreground">
-              Manage team members and roles
-            </span>
+            <span className="text-sm text-muted-foreground">Manage team members and roles</span>
           </Link>
           {role === "owner" && (
             <Link
@@ -69,9 +67,7 @@ export default async function AdminDashboardPage() {
               className="flex flex-col gap-1 rounded-md border p-4 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
             >
               <span className="font-medium">Settings</span>
-              <span className="text-sm text-muted-foreground">
-                Configure tenant settings
-              </span>
+              <span className="text-sm text-muted-foreground">Configure tenant settings</span>
             </Link>
           )}
         </div>

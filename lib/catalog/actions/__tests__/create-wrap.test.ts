@@ -16,7 +16,7 @@ vi.mock("@/lib/prisma", () => ({
     wrap: {
       create: vi.fn(),
     },
-    auditEvent: {
+    auditLog: {
       create: vi.fn(),
     },
   },
@@ -39,10 +39,7 @@ const validInput = {
   name: "Carbon Fiber Full Wrap",
   description: "Premium carbon fiber wrap",
   price: 1500,
-  estimatedHours: 8,
-  imageUrls: ["https://example.com/cf.jpg"],
-  category: "FULL_WRAP" as const,
-  status: "ACTIVE" as const,
+  installationMinutes: 480,
 };
 
 const mockWrap = {
@@ -50,11 +47,8 @@ const mockWrap = {
   tenantId: "tenant-1",
   name: "Carbon Fiber Full Wrap",
   description: "Premium carbon fiber wrap",
-  price: { toString: () => "1500" },
-  estimatedHours: 8,
-  status: "ACTIVE",
-  imageUrls: ["https://example.com/cf.jpg"],
-  category: "FULL_WRAP",
+  price: 1500,
+  installationMinutes: 480,
   deletedAt: null,
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-01"),
@@ -71,7 +65,7 @@ describe("createWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.create).mockResolvedValue(mockWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     const result = await createWrap(validInput);
 
@@ -79,9 +73,7 @@ describe("createWrap", () => {
       id: "wrap-1",
       tenantId: "tenant-1",
       name: "Carbon Fiber Full Wrap",
-      price: "1500",
-      category: "FULL_WRAP",
-      status: "ACTIVE",
+      price: 1500,
     });
   });
 
@@ -89,14 +81,14 @@ describe("createWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.create).mockResolvedValue(mockWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await createWrap(validInput);
 
     expect(prisma.wrap.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ tenantId: "tenant-1" }),
-      })
+      }),
     );
   });
 
@@ -104,19 +96,19 @@ describe("createWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.create).mockResolvedValue(mockWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await createWrap(validInput);
 
-    expect(prisma.auditEvent.create).toHaveBeenCalledWith(
+    expect(prisma.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          action: "wrap.created",
+          action: "CREATE_WRAP",
           tenantId: "tenant-1",
           userId: "user-1",
-          resource: "wrap:wrap-1",
+          resourceId: "wrap-1",
         }),
-      })
+      }),
     );
   });
 
@@ -129,7 +121,7 @@ describe("createWrap", () => {
   it("throws Forbidden when assertTenantMembership rejects", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockRejectedValue(
-      new Error("Forbidden: no active membership for this tenant")
+      new Error("Forbidden: no active membership for this tenant"),
     );
 
     await expect(createWrap(validInput)).rejects.toThrow("Forbidden");
@@ -159,7 +151,7 @@ describe("createWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.create).mockResolvedValue(mockWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     // Even if someone passes tenantId in the input, it must be ignored
     const inputWithTenantId = {
@@ -172,7 +164,7 @@ describe("createWrap", () => {
     expect(prisma.wrap.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ tenantId: "tenant-1" }),
-      })
+      }),
     );
   });
 });

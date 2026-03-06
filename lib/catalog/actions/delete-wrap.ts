@@ -22,7 +22,7 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
   if (!user) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — delete requires owner or admin role
-  await assertTenantMembership(tenantId, user.id, ["OWNER", "ADMIN"]);
+  await assertTenantMembership(tenantId, user.id, "admin");
 
   // 3. TENANT SCOPE — defensive ownership check before mutation
   const existing = await prisma.wrap.findFirst({
@@ -41,13 +41,15 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
   });
 
   // 5. AUDIT
-  await prisma.auditEvent.create({
+  await prisma.auditLog.create({
     data: {
       tenantId,
       userId: user.id,
-      action: "wrap.deleted",
-      resource: `wrap:${wrap.id}`,
-      metadata: { name: wrap.name },
+      action: "DELETE_WRAP",
+      resourceType: "Wrap",
+      resourceId: wrap.id,
+      details: JSON.stringify({ name: wrap.name }),
+      timestamp: new Date(),
     },
   });
 
@@ -56,11 +58,8 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
     tenantId: wrap.tenantId,
     name: wrap.name,
     description: wrap.description,
-    price: wrap.price.toString(),
-    estimatedHours: wrap.estimatedHours,
-    status: wrap.status as WrapDTO["status"],
-    imageUrls: wrap.imageUrls,
-    category: wrap.category as WrapDTO["category"],
+    price: wrap.price,
+    installationMinutes: wrap.installationMinutes,
     createdAt: wrap.createdAt,
     updatedAt: wrap.updatedAt,
   };

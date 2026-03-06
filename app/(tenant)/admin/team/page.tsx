@@ -32,15 +32,14 @@ export default async function TeamPage() {
         ) : (
           <div className="divide-y">
             {members.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center justify-between p-4 gap-4"
-              >
+              <div key={member.id} className="flex items-center justify-between p-4 gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{member.userId}</p>
+                    <p className="text-sm font-medium truncate font-mono text-xs">
+                      {member.userId}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      Joined {member.createdAt.toLocaleDateString()}
+                      Member since {member.createdAt.toLocaleDateString()}
                     </p>
                   </div>
                 </div>

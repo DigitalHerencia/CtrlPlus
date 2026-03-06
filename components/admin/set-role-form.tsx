@@ -42,6 +42,7 @@ export function SetRoleForm({ userId, currentRole }: SetRoleFormProps) {
           name="role"
           defaultValue={currentRole}
           disabled={isPending}
+          aria-label="Select role"
           className="flex h-8 rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
         >
           {SELECTABLE_ROLES.map((r) => (

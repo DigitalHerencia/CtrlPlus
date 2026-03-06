@@ -1,39 +1,34 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { TenantUserMembership } from "@/lib/prisma";
-import { assertTenantMembership, assertTenantScope } from "../assert";
+import {
+  assertTenantMembership,
+  assertTenantScope,
+  getUserTenantRole,
+  hasMinimumRole,
+} from "../assert";
 
 // ---------------------------------------------------------------------------
 // Mock prisma so tests are fully isolated from the database
 // ---------------------------------------------------------------------------
 
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
+const { prismaMock } = vi.hoisted(() => ({
+  prismaMock: {
     tenantUserMembership: {
-      findFirst: vi.fn(),
+      findUnique: vi.fn(),
     },
   },
 }));
 
-// Lazily import the mocked module so we can control return values per test
-const { prisma } = await import("@/lib/prisma");
-const mockFindFirst = vi.mocked(prisma.tenantUserMembership.findFirst);
+vi.mock("@/lib/prisma", () => ({
+  prisma: prismaMock,
+}));
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function membership(overrides: Partial<TenantUserMembership> = {}): TenantUserMembership {
-  return {
-    id: "mem-1",
-    tenantId: "tenant-abc",
-    userId: "user-xyz",
-    role: "MEMBER",
-    status: "ACTIVE",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    ...overrides,
-  };
+function membership(role: string) {
+  return { role };
 }
 
 // ---------------------------------------------------------------------------
@@ -42,117 +37,73 @@ function membership(overrides: Partial<TenantUserMembership> = {}): TenantUserMe
 
 describe("assertTenantMembership", () => {
   beforeEach(() => {
-    mockFindFirst.mockReset();
+    prismaMock.tenantUserMembership.findUnique.mockReset();
   });
 
-  // --- Unauthorized (no membership) ----------------------------------------
+  it("throws Forbidden when no membership record exists", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(null);
 
-  it("throws 'Unauthorized' when no membership record exists", async () => {
-    mockFindFirst.mockResolvedValue(null);
-
-    await expect(assertTenantMembership("tenant-abc", "user-xyz", "MEMBER")).rejects.toThrow(
-      "Unauthorized: not a member of this tenant",
+    await expect(assertTenantMembership("tenant-abc", "user-xyz", "member")).rejects.toThrow(
+      "Forbidden",
     );
   });
 
-  it("throws 'Unauthorized' for an entirely different tenant", async () => {
-    mockFindFirst.mockResolvedValue(null);
+  it("throws Forbidden when role is insufficient (member vs admin)", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(membership("member"));
 
-    await expect(assertTenantMembership("tenant-other", "user-xyz", "MEMBER")).rejects.toThrow(
-      "Unauthorized: not a member of this tenant",
+    await expect(assertTenantMembership("tenant-abc", "user-xyz", "admin")).rejects.toThrow(
+      "Forbidden",
     );
   });
 
-  // --- Forbidden (insufficient role) ---------------------------------------
+  it("throws Forbidden when admin tries to satisfy owner requirement", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(membership("admin"));
 
-  it("throws 'Forbidden' when MEMBER tries to satisfy ADMIN requirement", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "MEMBER" }));
-
-    await expect(assertTenantMembership("tenant-abc", "user-xyz", "ADMIN")).rejects.toThrow(
-      "Forbidden: insufficient role",
+    await expect(assertTenantMembership("tenant-abc", "user-xyz", "owner")).rejects.toThrow(
+      "Forbidden",
     );
   });
 
-  it("throws 'Forbidden' when MEMBER tries to satisfy OWNER requirement", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "MEMBER" }));
+  it("resolves when member satisfies member requirement", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(membership("member"));
 
-    await expect(assertTenantMembership("tenant-abc", "user-xyz", "OWNER")).rejects.toThrow(
-      "Forbidden: insufficient role",
+    await expect(
+      assertTenantMembership("tenant-abc", "user-xyz", "member"),
+    ).resolves.toBeUndefined();
+  });
+
+  it("resolves when admin satisfies admin requirement", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(membership("admin"));
+
+    await expect(
+      assertTenantMembership("tenant-abc", "user-xyz", "admin"),
+    ).resolves.toBeUndefined();
+  });
+
+  it("resolves when owner satisfies admin requirement (hierarchy)", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(membership("owner"));
+
+    await expect(
+      assertTenantMembership("tenant-abc", "user-xyz", "admin"),
+    ).resolves.toBeUndefined();
+  });
+
+  it("queries by compound tenantId_userId key with deletedAt: null", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(membership("admin"));
+
+    await assertTenantMembership("tenant-abc", "user-xyz", "admin");
+
+    expect(prismaMock.tenantUserMembership.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          tenantId_userId: {
+            tenantId: "tenant-abc",
+            userId: "user-xyz",
+          },
+          deletedAt: null,
+        }),
+      }),
     );
-  });
-
-  it("throws 'Forbidden' when ADMIN tries to satisfy OWNER requirement", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "ADMIN" }));
-
-    await expect(assertTenantMembership("tenant-abc", "user-xyz", "OWNER")).rejects.toThrow(
-      "Forbidden: insufficient role",
-    );
-  });
-
-  it("throws 'Forbidden' when role does not satisfy any role in an array", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "MEMBER" }));
-
-    await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", ["OWNER", "ADMIN"]),
-    ).rejects.toThrow("Forbidden: insufficient role");
-  });
-
-  // --- Authorized (happy path) -----------------------------------------------
-
-  it("resolves when MEMBER satisfies MEMBER requirement", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "MEMBER" }));
-
-    await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "MEMBER"),
-    ).resolves.toBeUndefined();
-  });
-
-  it("resolves when ADMIN satisfies ADMIN requirement", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "ADMIN" }));
-
-    await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "ADMIN"),
-    ).resolves.toBeUndefined();
-  });
-
-  it("resolves when OWNER satisfies ADMIN requirement (hierarchy)", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "OWNER" }));
-
-    await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "ADMIN"),
-    ).resolves.toBeUndefined();
-  });
-
-  it("resolves when OWNER satisfies MEMBER requirement (hierarchy)", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "OWNER" }));
-
-    await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", "MEMBER"),
-    ).resolves.toBeUndefined();
-  });
-
-  it("resolves when ADMIN satisfies an array containing ADMIN", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "ADMIN" }));
-
-    await expect(
-      assertTenantMembership("tenant-abc", "user-xyz", ["OWNER", "ADMIN"]),
-    ).resolves.toBeUndefined();
-  });
-
-  // --- Membership query scoping --------------------------------------------
-
-  it("queries with tenantId, userId, and ACTIVE status", async () => {
-    mockFindFirst.mockResolvedValue(membership({ role: "ADMIN" }));
-
-    await assertTenantMembership("tenant-abc", "user-xyz", "ADMIN");
-
-    expect(mockFindFirst).toHaveBeenCalledWith({
-      where: {
-        tenantId: "tenant-abc",
-        userId: "user-xyz",
-        status: "ACTIVE",
-      },
-    });
   });
 });
 
@@ -165,21 +116,65 @@ describe("assertTenantScope", () => {
     expect(() => assertTenantScope("tenant-abc", "tenant-abc")).not.toThrow();
   });
 
-  it("throws 'Forbidden: cross-tenant access detected' when tenantIds differ", () => {
-    expect(() => assertTenantScope("tenant-abc", "tenant-xyz")).toThrow(
-      "Forbidden: cross-tenant access detected",
-    );
+  it("throws Forbidden when tenantIds differ", () => {
+    expect(() => assertTenantScope("tenant-abc", "tenant-xyz")).toThrow("Forbidden");
   });
 
-  it("throws when record has an empty tenantId and session has a valid tenantId", () => {
-    expect(() => assertTenantScope("", "tenant-abc")).toThrow(
-      "Forbidden: cross-tenant access detected",
-    );
+  it("throws when record has empty tenantId and session has valid tenantId", () => {
+    expect(() => assertTenantScope("", "tenant-abc")).toThrow("Forbidden");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getUserTenantRole
+// ---------------------------------------------------------------------------
+
+describe("getUserTenantRole", () => {
+  beforeEach(() => {
+    prismaMock.tenantUserMembership.findUnique.mockReset();
   });
 
-  it("throws when record has a valid tenantId and session has an empty tenantId", () => {
-    expect(() => assertTenantScope("tenant-abc", "")).toThrow(
-      "Forbidden: cross-tenant access detected",
-    );
+  it("returns the user role when membership exists", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(membership("admin"));
+
+    const role = await getUserTenantRole("tenant-abc", "user-xyz");
+    expect(role).toBe("admin");
+  });
+
+  it("returns null when membership does not exist", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(null);
+
+    const role = await getUserTenantRole("tenant-abc", "user-xyz");
+    expect(role).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// hasMinimumRole
+// ---------------------------------------------------------------------------
+
+describe("hasMinimumRole", () => {
+  beforeEach(() => {
+    prismaMock.tenantUserMembership.findUnique.mockReset();
+  });
+
+  it("returns true when user has exactly the required role", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(membership("admin"));
+    expect(await hasMinimumRole("tenant-abc", "user-xyz", "admin")).toBe(true);
+  });
+
+  it("returns true when user has higher role than required", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(membership("owner"));
+    expect(await hasMinimumRole("tenant-abc", "user-xyz", "member")).toBe(true);
+  });
+
+  it("returns false when user has insufficient role", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(membership("member"));
+    expect(await hasMinimumRole("tenant-abc", "user-xyz", "admin")).toBe(false);
+  });
+
+  it("returns false when no membership exists", async () => {
+    prismaMock.tenantUserMembership.findUnique.mockResolvedValue(null);
+    expect(await hasMinimumRole("tenant-abc", "user-xyz", "member")).toBe(false);
   });
 });

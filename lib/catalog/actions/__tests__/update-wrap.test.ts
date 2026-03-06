@@ -16,7 +16,7 @@ vi.mock("@/lib/prisma", () => ({
     wrap: {
       update: vi.fn(),
     },
-    auditEvent: {
+    auditLog: {
       create: vi.fn(),
     },
   },
@@ -41,11 +41,8 @@ const updatedWrap = {
   tenantId: "tenant-1",
   name: "Updated Wrap",
   description: null,
-  price: { toString: () => "2000" },
-  estimatedHours: 10,
-  status: "ACTIVE",
-  imageUrls: [],
-  category: "FULL_WRAP",
+  price: 2000,
+  installationMinutes: null,
   deletedAt: null,
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-02"),
@@ -62,7 +59,7 @@ describe("updateWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.update).mockResolvedValue(updatedWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     const result = await updateWrap("wrap-1", { name: "Updated Wrap" });
 
@@ -73,7 +70,7 @@ describe("updateWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.update).mockResolvedValue(updatedWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await updateWrap("wrap-1", { name: "Updated Wrap" });
 
@@ -84,7 +81,7 @@ describe("updateWrap", () => {
           tenantId: "tenant-1",
           deletedAt: null,
         }),
-      })
+      }),
     );
   });
 
@@ -92,37 +89,33 @@ describe("updateWrap", () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
     vi.mocked(prisma.wrap.update).mockResolvedValue(updatedWrap as never);
-    vi.mocked(prisma.auditEvent.create).mockResolvedValue({} as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await updateWrap("wrap-1", { name: "Updated Wrap" });
 
-    expect(prisma.auditEvent.create).toHaveBeenCalledWith(
+    expect(prisma.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          action: "wrap.updated",
-          resource: "wrap:wrap-1",
+          action: "UPDATE_WRAP",
+          resourceId: "wrap-1",
         }),
-      })
+      }),
     );
   });
 
   it("throws Unauthorized when the user is not authenticated", async () => {
     vi.mocked(getSession).mockResolvedValue({ user: null, tenantId: "" });
 
-    await expect(updateWrap("wrap-1", { name: "x" })).rejects.toThrow(
-      "Unauthorized"
-    );
+    await expect(updateWrap("wrap-1", { name: "x" })).rejects.toThrow("Unauthorized");
   });
 
   it("throws Forbidden when assertTenantMembership rejects", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockRejectedValue(
-      new Error("Forbidden: no active membership for this tenant")
+      new Error("Forbidden: no active membership for this tenant"),
     );
 
-    await expect(updateWrap("wrap-1", { name: "x" })).rejects.toThrow(
-      "Forbidden"
-    );
+    await expect(updateWrap("wrap-1", { name: "x" })).rejects.toThrow("Forbidden");
   });
 
   it("throws Forbidden when the wrap belongs to a different tenant (P2025)", async () => {
@@ -130,15 +123,13 @@ describe("updateWrap", () => {
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
 
     // Prisma throws P2025 when the compound where clause finds no matching row
-    const p2025 = new Prisma.PrismaClientKnownRequestError(
-      "Record to update not found.",
-      { code: "P2025", clientVersion: "6.0.0" }
-    );
+    const p2025 = new Prisma.PrismaClientKnownRequestError("Record to update not found.", {
+      code: "P2025",
+      clientVersion: "6.0.0",
+    });
     vi.mocked(prisma.wrap.update).mockRejectedValue(p2025);
 
-    await expect(updateWrap("wrap-1", { name: "x" })).rejects.toThrow(
-      "Forbidden"
-    );
+    await expect(updateWrap("wrap-1", { name: "x" })).rejects.toThrow("Forbidden");
   });
 
   it("throws a ZodError for invalid input (negative price)", async () => {
