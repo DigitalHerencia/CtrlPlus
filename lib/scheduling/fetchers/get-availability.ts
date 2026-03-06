@@ -8,11 +8,10 @@ import {
 const DEFAULT_AVAILABILITY_LIST_PARAMS: AvailabilityListParams = {
   page: 1,
   pageSize: 20,
-  activeOnly: true,
 };
 
 /**
- * Maps a raw Prisma AvailabilityWindow record to an AvailabilityWindowDTO.
+ * Maps a raw Prisma AvailabilityRule record to an AvailabilityWindowDTO.
  * Never exposes deletedAt or other internal fields.
  */
 function toAvailabilityWindowDTO(record: {
@@ -21,8 +20,7 @@ function toAvailabilityWindowDTO(record: {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
-  capacity: number;
-  isActive: boolean;
+  capacitySlots: number;
   createdAt: Date;
   updatedAt: Date;
 }): AvailabilityWindowDTO {
@@ -32,8 +30,7 @@ function toAvailabilityWindowDTO(record: {
     dayOfWeek: record.dayOfWeek,
     startTime: record.startTime,
     endTime: record.endTime,
-    capacity: record.capacity,
-    isActive: record.isActive,
+    capacitySlots: record.capacitySlots,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
   };
@@ -45,8 +42,7 @@ const availabilitySelectFields = {
   dayOfWeek: true,
   startTime: true,
   endTime: true,
-  capacity: true,
-  isActive: true,
+  capacitySlots: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -61,25 +57,24 @@ export async function getAvailabilityWindowsForTenant(
   tenantId: string,
   params: AvailabilityListParams = DEFAULT_AVAILABILITY_LIST_PARAMS,
 ): Promise<AvailabilityListResult> {
-  const { page, pageSize, dayOfWeek, activeOnly } = params;
+  const { page, pageSize, dayOfWeek } = params;
   const skip = (page - 1) * pageSize;
 
   const where = {
     tenantId,
     deletedAt: null, // soft-delete filter
-    ...(activeOnly && { isActive: true }),
     ...(dayOfWeek !== undefined && { dayOfWeek }),
   };
 
   const [records, total] = await Promise.all([
-    prisma.availabilityWindow.findMany({
+    prisma.availabilityRule.findMany({
       where,
       select: availabilitySelectFields,
       orderBy: [{ dayOfWeek: "asc" }, { startTime: "asc" }],
       skip,
       take: pageSize,
     }),
-    prisma.availabilityWindow.count({ where }),
+    prisma.availabilityRule.count({ where }),
   ]);
 
   return {
@@ -102,7 +97,7 @@ export async function getAvailabilityWindowById(
   tenantId: string,
   windowId: string,
 ): Promise<AvailabilityWindowDTO | null> {
-  const record = await prisma.availabilityWindow.findFirst({
+  const record = await prisma.availabilityRule.findFirst({
     where: {
       id: windowId,
       tenantId, // defensive scope check
@@ -115,7 +110,7 @@ export async function getAvailabilityWindowById(
 }
 
 /**
- * Returns all active availability windows for a specific day of the week.
+ * Returns all availability rules for a specific day of the week.
  * Ordered by startTime ascending — suitable for computing available slots.
  *
  * @param tenantId  - Tenant scope (server-side verified)
@@ -125,11 +120,10 @@ export async function getAvailabilityWindowsByDay(
   tenantId: string,
   dayOfWeek: number,
 ): Promise<AvailabilityWindowDTO[]> {
-  const records = await prisma.availabilityWindow.findMany({
+  const records = await prisma.availabilityRule.findMany({
     where: {
       tenantId,
       dayOfWeek,
-      isActive: true,
       deletedAt: null,
     },
     select: availabilitySelectFields,

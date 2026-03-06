@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { BookingStatus } from "@prisma/client";
 
 // ── Mock Prisma client ────────────────────────────────────────────────────────
 vi.mock("@/lib/prisma", () => ({
@@ -29,13 +28,13 @@ function baseRecord() {
     tenantId: "tenant-a",
     customerId: "customer-1",
     wrapId: "wrap-1",
-    dropOffStart: NOW,
-    dropOffEnd: new Date(NOW.getTime() + 60 * 60 * 1000),
-    pickUpStart: new Date(NOW.getTime() + 24 * 60 * 60 * 1000),
-    pickUpEnd: new Date(NOW.getTime() + 25 * 60 * 60 * 1000),
-    status: BookingStatus.PENDING,
+    startTime: NOW,
+    endTime: new Date(NOW.getTime() + 60 * 60 * 1000),
+    status: "pending",
+    totalPrice: 150000,
     createdAt: NOW,
     updatedAt: NOW,
+    deletedAt: null as Date | null,
   };
 }
 
@@ -82,7 +81,7 @@ describe("getBookingsForTenant", () => {
     const dto = result.items[0];
     expect(dto.id).toBe("booking-1");
     expect(dto.tenantId).toBe("tenant-a");
-    expect(dto.status).toBe(BookingStatus.PENDING);
+    expect(dto.status).toBe("pending");
     expect("deletedAt" in dto).toBe(false);
   });
 
@@ -111,12 +110,12 @@ describe("getBookingsForTenant", () => {
     await getBookingsForTenant("tenant-a", {
       page: 1,
       pageSize: 20,
-      status: BookingStatus.CONFIRMED,
+      status: "confirmed",
     });
 
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ status: BookingStatus.CONFIRMED }),
+        where: expect.objectContaining({ status: "confirmed" }),
       }),
     );
   });
@@ -138,20 +137,20 @@ describe("getBookingsForTenant", () => {
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          dropOffStart: expect.objectContaining({ gte: from, lte: to }),
+          startTime: expect.objectContaining({ gte: from, lte: to }),
         }),
       }),
     );
   });
 
-  it("orders results by dropOffStart ascending", async () => {
+  it("orders results by startTime ascending", async () => {
     vi.mocked(prisma.booking.findMany).mockResolvedValue([]);
     vi.mocked(prisma.booking.count).mockResolvedValue(0);
 
     await getBookingsForTenant("tenant-a");
 
     expect(prisma.booking.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ orderBy: { dropOffStart: "asc" } }),
+      expect.objectContaining({ orderBy: { startTime: "asc" } }),
     );
   });
 
@@ -228,9 +227,9 @@ describe("getUpcomingBookingCount", () => {
           tenantId: "tenant-a",
           deletedAt: null,
           status: {
-            notIn: [BookingStatus.CANCELLED, BookingStatus.COMPLETED],
+            notIn: ["cancelled", "completed"],
           },
-          dropOffStart: { gte: from },
+          startTime: { gte: from },
         }),
       }),
     );
