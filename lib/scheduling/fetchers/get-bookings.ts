@@ -23,7 +23,7 @@ function toBookingDTO(record: {
   wrapId: string;
   startTime: Date;
   endTime: Date;
-  status: BookingStatus;
+  status: string;
   totalPrice: number;
   createdAt: Date;
   updatedAt: Date;
@@ -35,7 +35,7 @@ function toBookingDTO(record: {
     wrapId: record.wrapId,
     startTime: record.startTime,
     endTime: record.endTime,
-    status: record.status,
+    status: record.status as BookingStatus,
     totalPrice: record.totalPrice,
     createdAt: record.createdAt,
     updatedAt: record.updatedAt,
