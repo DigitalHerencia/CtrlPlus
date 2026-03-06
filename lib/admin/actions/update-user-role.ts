@@ -31,16 +31,21 @@ export async function updateUserRole(input: UpdateUserRoleInput): Promise<UserRo
   const parsed = updateUserRoleSchema.parse(input);
 
   // 4. MUTATE — look up the target membership, scoped by tenantId
-  const membership = await prisma.tenantUserMembership.findFirst({
+  const membership = await prisma.tenantUserMembership.findUnique({
     where: {
-      tenantId,
-      userId: parsed.targetClerkUserId,
-      deletedAt: null,
+      tenantId_userId: {
+        tenantId,
+        userId: parsed.targetClerkUserId,
+      },
     },
   });
 
-  if (!membership) {
+  if (!membership || membership.deletedAt) {
     throw new Error("Forbidden: target user is not a member of this tenant");
+  }
+
+  if (membership.role === "owner") {
+    throw new Error("Forbidden: cannot change the role of an owner");
   }
 
   const updated = await prisma.tenantUserMembership.update({

@@ -38,10 +38,22 @@ export async function updateTenantSettings(
   if (parsed.slug !== undefined) updateData.slug = parsed.slug;
 
   // 4. MUTATE (always scoped by tenantId via where: { id: tenantId })
-  const tenant = await prisma.tenant.update({
-    where: { id: tenantId },
-    data: updateData,
-  });
+  let tenant;
+  try {
+    tenant = await prisma.tenant.update({
+      where: { id: tenantId },
+      data: updateData,
+    });
+  } catch (err: unknown) {
+    const code = (err as { code?: string }).code;
+    if (code === "P2002") {
+      throw new Error("Conflict: slug is already in use by another tenant");
+    }
+    if (code === "P2025") {
+      throw new Error("Forbidden: tenant not found");
+    }
+    throw err;
+  }
 
   // 5. AUDIT
   await prisma.auditLog.create({

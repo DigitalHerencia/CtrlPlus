@@ -14,7 +14,7 @@ vi.mock("@/lib/tenancy/assert", () => ({
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     tenantUserMembership: {
-      findFirst: vi.fn(),
+      findUnique: vi.fn(),
       update: vi.fn(),
     },
     auditLog: {
@@ -62,7 +62,7 @@ describe("updateUserRole", () => {
   it("updates the role and returns a DTO when the owner is authorized", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.tenantUserMembership.findFirst).mockResolvedValue(existingMembership as never);
+    vi.mocked(prisma.tenantUserMembership.findUnique).mockResolvedValue(existingMembership as never);
     vi.mocked(prisma.tenantUserMembership.update).mockResolvedValue(updatedMembership as never);
     vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
@@ -75,22 +75,23 @@ describe("updateUserRole", () => {
     });
   });
 
-  it("scopes the membership lookup to the current tenant", async () => {
+  it("scopes the membership lookup to the current tenant using the composite key", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.tenantUserMembership.findFirst).mockResolvedValue(existingMembership as never);
+    vi.mocked(prisma.tenantUserMembership.findUnique).mockResolvedValue(existingMembership as never);
     vi.mocked(prisma.tenantUserMembership.update).mockResolvedValue(updatedMembership as never);
     vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
     await updateUserRole({ targetClerkUserId: "clerk-target", role: "admin" });
 
-    expect(prisma.tenantUserMembership.findFirst).toHaveBeenCalledWith(
+    expect(prisma.tenantUserMembership.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({
-          tenantId: "tenant-1",
-          userId: "clerk-target",
-          deletedAt: null,
-        }),
+        where: {
+          tenantId_userId: {
+            tenantId: "tenant-1",
+            userId: "clerk-target",
+          },
+        },
       }),
     );
   });
@@ -98,7 +99,7 @@ describe("updateUserRole", () => {
   it("scopes the update to the current tenant and target user", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.tenantUserMembership.findFirst).mockResolvedValue(existingMembership as never);
+    vi.mocked(prisma.tenantUserMembership.findUnique).mockResolvedValue(existingMembership as never);
     vi.mocked(prisma.tenantUserMembership.update).mockResolvedValue(updatedMembership as never);
     vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
@@ -120,7 +121,7 @@ describe("updateUserRole", () => {
   it("writes an audit log entry after updating the role", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.tenantUserMembership.findFirst).mockResolvedValue(existingMembership as never);
+    vi.mocked(prisma.tenantUserMembership.findUnique).mockResolvedValue(existingMembership as never);
     vi.mocked(prisma.tenantUserMembership.update).mockResolvedValue(updatedMembership as never);
     vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 
@@ -161,11 +162,39 @@ describe("updateUserRole", () => {
   it("throws Forbidden when the target user is not a member of the tenant", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.tenantUserMembership.findFirst).mockResolvedValue(null);
+    vi.mocked(prisma.tenantUserMembership.findUnique).mockResolvedValue(null);
 
     await expect(
       updateUserRole({ targetClerkUserId: "unknown-user", role: "admin" }),
     ).rejects.toThrow("Forbidden");
+    expect(prisma.tenantUserMembership.update).not.toHaveBeenCalled();
+  });
+
+  it("throws Forbidden when the target user is soft-deleted", async () => {
+    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+    vi.mocked(prisma.tenantUserMembership.findUnique).mockResolvedValue({
+      ...existingMembership,
+      deletedAt: new Date(),
+    } as never);
+
+    await expect(
+      updateUserRole({ targetClerkUserId: "clerk-target", role: "admin" }),
+    ).rejects.toThrow("Forbidden");
+    expect(prisma.tenantUserMembership.update).not.toHaveBeenCalled();
+  });
+
+  it("throws Forbidden when the target user is an owner", async () => {
+    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+    vi.mocked(prisma.tenantUserMembership.findUnique).mockResolvedValue({
+      ...existingMembership,
+      role: "owner",
+    } as never);
+
+    await expect(
+      updateUserRole({ targetClerkUserId: "clerk-target", role: "admin" }),
+    ).rejects.toThrow("Forbidden: cannot change the role of an owner");
     expect(prisma.tenantUserMembership.update).not.toHaveBeenCalled();
   });
 
@@ -176,7 +205,7 @@ describe("updateUserRole", () => {
     const badInput = { targetClerkUserId: "clerk-target", role: "owner" } as never;
 
     await expect(updateUserRole(badInput)).rejects.toThrow();
-    expect(prisma.tenantUserMembership.findFirst).not.toHaveBeenCalled();
+    expect(prisma.tenantUserMembership.findUnique).not.toHaveBeenCalled();
   });
 
   it("throws a ZodError when targetClerkUserId is empty", async () => {
@@ -186,13 +215,13 @@ describe("updateUserRole", () => {
     const badInput = { targetClerkUserId: "", role: "admin" } as never;
 
     await expect(updateUserRole(badInput)).rejects.toThrow();
-    expect(prisma.tenantUserMembership.findFirst).not.toHaveBeenCalled();
+    expect(prisma.tenantUserMembership.findUnique).not.toHaveBeenCalled();
   });
 
   it("requires OWNER authorization — assertTenantMembership is called with 'owner'", async () => {
     vi.mocked(getSession).mockResolvedValue(mockSession);
     vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
-    vi.mocked(prisma.tenantUserMembership.findFirst).mockResolvedValue(existingMembership as never);
+    vi.mocked(prisma.tenantUserMembership.findUnique).mockResolvedValue(existingMembership as never);
     vi.mocked(prisma.tenantUserMembership.update).mockResolvedValue(updatedMembership as never);
     vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
 

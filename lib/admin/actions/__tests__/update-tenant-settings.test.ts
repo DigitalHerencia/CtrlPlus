@@ -198,4 +198,33 @@ describe("updateTenantSettings", () => {
       }),
     );
   });
+
+  it("throws a Conflict error when the slug is already in use (P2002)", async () => {
+    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+    vi.mocked(prisma.tenant.update).mockRejectedValue({ code: "P2002" });
+
+    await expect(updateTenantSettings({ slug: "taken-slug" })).rejects.toThrow("Conflict");
+    expect(prisma.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it("throws a Forbidden error when the tenant record is not found (P2025)", async () => {
+    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+    vi.mocked(prisma.tenant.update).mockRejectedValue({ code: "P2025" });
+
+    await expect(updateTenantSettings({ name: "Ghost" })).rejects.toThrow("Forbidden");
+    expect(prisma.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it("re-throws unknown Prisma errors unchanged", async () => {
+    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+    const unknownError = new Error("database connection lost");
+    vi.mocked(prisma.tenant.update).mockRejectedValue(unknownError);
+
+    await expect(updateTenantSettings({ name: "New Name" })).rejects.toThrow(
+      "database connection lost",
+    );
+  });
 });

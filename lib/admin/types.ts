@@ -26,7 +26,7 @@ export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>;
 export interface UserRoleDTO {
   tenantId: string;
   userId: string;
-  role: string;
+  role: AssignableRole;
   updatedAt: Date;
 }
 
@@ -39,7 +39,10 @@ export const updateTenantSettingsSchema = z
       .string()
       .min(1, "Slug cannot be empty")
       .max(63)
-      .regex(/^[a-z0-9-]+$/, "Slug must be lowercase alphanumeric with hyphens")
+      .regex(
+        /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/,
+        "Slug must be lowercase alphanumeric, may contain hyphens, and cannot start or end with a hyphen",
+      )
       .optional(),
   })
   .refine((data) => data.name !== undefined || data.slug !== undefined, {
