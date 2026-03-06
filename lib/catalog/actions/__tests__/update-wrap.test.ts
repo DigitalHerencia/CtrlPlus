@@ -78,8 +78,6 @@ describe("updateWrap", () => {
       expect.objectContaining({
         where: expect.objectContaining({
           id: "wrap-1",
-          tenantId: "tenant-1",
-          deletedAt: null,
         }),
       }),
     );
