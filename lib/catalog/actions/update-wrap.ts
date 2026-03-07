@@ -5,34 +5,16 @@ import { prisma } from "@/lib/prisma";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { updateWrapSchema, type UpdateWrapInput, type WrapDTO } from "../types";
 
-/**
- * Updates an existing wrap in the catalog.
- *
- * Security pipeline:
- * 1. Authenticate  — verify user is signed in
- * 2. Authorize     — verify user is an admin or owner of the tenant
- * 3. Validate      — parse and validate input with Zod
- * 4. Mutate        — apply updates scoped by tenantId (throws if not found)
- * 5. Audit         — write an immutable audit log entry
- */
 export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promise<WrapDTO> {
-  // 1. AUTHENTICATE
   const { userId, tenantId } = await requireAuth();
-
-  // 2. AUTHORIZE
   await assertTenantMembership(tenantId, userId, "admin");
 
-  // 3. VALIDATE
   const parsed = updateWrapSchema.parse(input);
 
-  // Build the update data, excluding undefined fields
   const data = Object.fromEntries(
-    Object.entries(parsed).filter(([, v]) => v !== undefined),
+    Object.entries(parsed).filter(([, value]) => value !== undefined),
   ) as Record<string, unknown>;
 
-  // 4. MUTATE
-  //    Perform an atomic conditional update scoped by tenantId and soft-delete
-  //    status to avoid TOCTOU between ownership/soft-delete checks and writes.
   const result = await prisma.wrap.updateMany({
     where: {
       id: wrapId,
@@ -52,22 +34,26 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
       tenantId,
       deletedAt: null,
     },
-    select: {
-      id: true,
-      tenantId: true,
-      name: true,
-      description: true,
-      price: true,
-      installationMinutes: true,
-      createdAt: true,
-      updatedAt: true,
+    include: {
+      images: {
+        where: { deletedAt: null },
+        select: { id: true, url: true, displayOrder: true },
+        orderBy: { displayOrder: "asc" },
+      },
+      categoryMappings: {
+        select: {
+          category: {
+            select: { id: true, name: true, slug: true, deletedAt: true },
+          },
+        },
+      },
     },
   });
 
   if (!wrap) {
     throw new Error("Forbidden: resource not found");
   }
-  // 5. AUDIT
+
   await prisma.auditLog.create({
     data: {
       tenantId,
@@ -85,8 +71,30 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
     tenantId: wrap.tenantId,
     name: wrap.name,
     description: wrap.description,
-    price: wrap.price,
+    price: Number.isInteger(wrap.price) ? wrap.price : Math.round(wrap.price),
     installationMinutes: wrap.installationMinutes,
+    images: wrap.images,
+    categories: wrap.categoryMappings
+      .map(
+        (mapping: {
+          category: { id: string; name: string; slug: string; deletedAt: Date | null };
+        }) => mapping.category,
+      )
+      .filter(
+        (category: { id: string; name: string; slug: string; deletedAt: Date | null }) =>
+          category.deletedAt === null,
+      )
+      .map(
+        ({
+          deletedAt: _deletedAt,
+          ...category
+        }: {
+          deletedAt: Date | null;
+          id: string;
+          name: string;
+          slug: string;
+        }) => category,
+      ),
     createdAt: wrap.createdAt,
     updatedAt: wrap.updatedAt,
   };

@@ -11,6 +11,7 @@ describe("parseCatalogSearchParams", () => {
       sortOrder: "asc",
       page: "2",
       pageSize: "12",
+      categoryId: "cat-1",
     });
 
     expect(result.filters).toMatchObject({
@@ -20,6 +21,7 @@ describe("parseCatalogSearchParams", () => {
       sortOrder: "asc",
       page: 2,
       pageSize: 12,
+      categoryId: "cat-1",
     });
     expect(result.hasActiveFilters).toBe(true);
   });
@@ -51,5 +53,10 @@ describe("parseCatalogSearchParams", () => {
     expect(result.filters.query).toBe("chrome");
     expect(result.filters.page).toBe(3);
     expect(result.filters.pageSize).toBe(24);
+  });
+
+  it("drops non-integer maxPrice values", () => {
+    const result = parseCatalogSearchParams({ maxPrice: "100.5" });
+    expect(result.filters.maxPrice).toBeUndefined();
   });
 });

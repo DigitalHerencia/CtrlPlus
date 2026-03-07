@@ -165,7 +165,12 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
               <span className="font-semibold text-neutral-200">{selectedWrap.name}</span>
             </p>
           )}
-          <PreviewCanvas preview={preview} isLoading={isLoading} className="min-h-72" />
+          <PreviewCanvas
+            preview={preview}
+            isLoading={isLoading}
+            className="min-h-72"
+            wrapOverlayUrl={selectedWrap?.images[0]?.url ?? null}
+          />
 
           <div className="mt-4 flex items-center justify-between gap-3 border-t border-neutral-800 pt-4">
             <p className="text-xs text-neutral-400">

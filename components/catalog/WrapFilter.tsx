@@ -4,23 +4,24 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 
-export function WrapFilter() {
+interface WrapFilterProps {
+  categories?: Array<{ id: string; name: string }>;
+}
+
+export function WrapFilter({ categories = [] }: WrapFilterProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
-  // Local controlled state for the search input so we can debounce URL updates.
   const urlQuery = searchParams.get("query") ?? "";
   const [searchValue, setSearchValue] = useState(urlQuery);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Sync local state when URL changes externally (e.g., browser back/forward).
   useEffect(() => {
     setSearchValue(urlQuery);
   }, [urlQuery]);
 
-  // Clear any pending debounce when the component unmounts.
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -37,7 +38,6 @@ export function WrapFilter() {
           params.set(key, value);
         }
       }
-      // Reset to page 1 on filter changes (unless explicitly setting page)
       if (!("page" in updates)) {
         params.delete("page");
       }
@@ -46,7 +46,6 @@ export function WrapFilter() {
     [searchParams],
   );
 
-  /** Push a URL update, omitting the trailing `?` when the query string is empty. */
   const pushUrl = useCallback(
     (queryString: string) => {
       startTransition(() => {
@@ -90,13 +89,18 @@ export function WrapFilter() {
   const sortBy = searchParams.get("sortBy") ?? "createdAt";
   const sortOrder = searchParams.get("sortOrder") ?? "desc";
   const pageSize = searchParams.get("pageSize") ?? "20";
+  const categoryId = searchParams.get("categoryId") ?? "";
 
   const hasActiveFilters =
-    searchValue || maxPrice || sortBy !== "createdAt" || sortOrder !== "desc" || pageSize !== "20";
+    searchValue ||
+    maxPrice ||
+    categoryId ||
+    sortBy !== "createdAt" ||
+    sortOrder !== "desc" ||
+    pageSize !== "20";
 
   return (
     <div className="flex flex-col flex-wrap items-start gap-3 sm:flex-row sm:items-end">
-      {/* Search input */}
       <div className="flex min-w-[180px] flex-1 flex-col gap-1">
         <label htmlFor="catalog-search" className="text-xs font-medium text-muted-foreground">
           Search
@@ -111,23 +115,41 @@ export function WrapFilter() {
         />
       </div>
 
-      {/* Max price input */}
+      <div className="flex w-full flex-col gap-1 sm:w-44">
+        <label htmlFor="catalog-category" className="text-xs font-medium text-muted-foreground">
+          Category
+        </label>
+        <select
+          id="catalog-category"
+          value={categoryId}
+          onChange={(e) => handleChange("categoryId", e.target.value)}
+          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+        >
+          <option value="">All categories</option>
+          {categories.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="flex w-full flex-col gap-1 sm:w-36">
         <label htmlFor="catalog-max-price" className="text-xs font-medium text-muted-foreground">
-          Max Price
+          Max Price (cents)
         </label>
         <input
           id="catalog-max-price"
           type="number"
           placeholder="No limit"
           min={1}
+          step={1}
           value={maxPrice}
           onChange={(e) => handleChange("maxPrice", e.target.value)}
           className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
 
-      {/* Sort by */}
       <div className="flex w-full flex-col gap-1 sm:w-40">
         <label htmlFor="catalog-sort-by" className="text-xs font-medium text-muted-foreground">
           Sort By
@@ -144,7 +166,6 @@ export function WrapFilter() {
         </select>
       </div>
 
-      {/* Sort order */}
       <div className="flex w-full flex-col gap-1 sm:w-32">
         <label htmlFor="catalog-sort-order" className="text-xs font-medium text-muted-foreground">
           Order
@@ -160,7 +181,6 @@ export function WrapFilter() {
         </select>
       </div>
 
-      {/* Page size */}
       <div className="flex w-full flex-col gap-1 sm:w-32">
         <label htmlFor="catalog-page-size" className="text-xs font-medium text-muted-foreground">
           Per Page
@@ -177,7 +197,6 @@ export function WrapFilter() {
         </select>
       </div>
 
-      {/* Reset button */}
       {hasActiveFilters && (
         <Button
           variant="ghost"
