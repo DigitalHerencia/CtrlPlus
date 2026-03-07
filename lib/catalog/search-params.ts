@@ -14,10 +14,6 @@ function toNumber(value: string | null): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-/**
- * Parses untrusted query params into validated catalog filter input.
- * Invalid values are safely ignored in favor of schema defaults.
- */
 export function parseCatalogSearchParams(
   searchParams: Record<string, string | string[] | undefined>,
 ): CatalogSearchParamsResult {
@@ -30,6 +26,7 @@ export function parseCatalogSearchParams(
     sortOrder: first(searchParams.sortOrder),
     page: toNumber(first(searchParams.page) ?? null),
     pageSize: toNumber(first(searchParams.pageSize) ?? null),
+    categoryId: first(searchParams.categoryId),
   };
 
   const parsed = searchWrapsSchema.safeParse(candidate);
@@ -50,6 +47,6 @@ export function parseCatalogSearchParams(
 
   return {
     filters,
-    hasActiveFilters: Boolean(filters.query || filters.maxPrice),
+    hasActiveFilters: Boolean(filters.query || filters.maxPrice || filters.categoryId),
   };
 }

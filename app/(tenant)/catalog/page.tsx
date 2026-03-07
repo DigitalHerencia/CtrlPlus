@@ -3,6 +3,7 @@ import { WrapFilter } from "@/components/catalog/WrapFilter";
 import { WrapGrid } from "@/components/catalog/WrapGrid";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
+import { getWrapCategoriesForTenant } from "@/lib/catalog/fetchers/get-wrap-categories";
 import { searchWraps } from "@/lib/catalog/fetchers/get-wraps";
 import { parseCatalogSearchParams } from "@/lib/catalog/search-params";
 
@@ -14,7 +15,13 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const { tenantId, userId } = await getSession();
   const parsedSearch = parseCatalogSearchParams(await searchParams);
 
-  const data = userId && tenantId ? await searchWraps(tenantId, parsedSearch.filters) : null;
+  const [data, categories] =
+    userId && tenantId
+      ? await Promise.all([
+          searchWraps(tenantId, parsedSearch.filters),
+          getWrapCategoriesForTenant(tenantId),
+        ])
+      : [null, []];
 
   const createPageHref = (page: number) => {
     const params = new URLSearchParams();
@@ -26,6 +33,10 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
 
     if (filters.maxPrice !== undefined) {
       params.set("maxPrice", String(filters.maxPrice));
+    }
+
+    if (filters.categoryId) {
+      params.set("categoryId", filters.categoryId);
     }
 
     if (filters.sortBy !== "createdAt") {
@@ -69,7 +80,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
 
       <Card className="border-border/70 bg-card/80">
         <CardContent className="pt-6">
-          <WrapFilter />
+          <WrapFilter categories={categories} />
         </CardContent>
       </Card>
 

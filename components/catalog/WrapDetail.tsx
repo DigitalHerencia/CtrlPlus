@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { type WrapDTO } from "@/lib/catalog/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { type WrapDTO } from "@/lib/catalog/types";
 import { formatPrice, formatInstallationTime } from "@/lib/catalog/formatters";
+import { WrapImageManager } from "./WrapImageManager";
 
 interface WrapDetailProps {
   wrap: WrapDTO;
@@ -18,7 +19,11 @@ export function WrapDetail({ wrap }: WrapDetailProps) {
         <Link href="/catalog">← Back to Catalog</Link>
       </Button>
 
-      <Card className="border-border/70 bg-gradient-to-br from-card to-card/70">
+      <Card className="overflow-hidden border-border/70 bg-gradient-to-br from-card to-card/70">
+        {wrap.images[0] && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={wrap.images[0].url} alt={wrap.name} className="h-64 w-full object-cover" />
+        )}
         <CardHeader className="gap-3">
           <CardTitle className="text-3xl tracking-tight">{wrap.name}</CardTitle>
           <div className="flex flex-wrap items-center gap-3">
@@ -28,6 +33,11 @@ export function WrapDetail({ wrap }: WrapDetailProps) {
             {installationTime && (
               <Badge variant="secondary">⏱ {installationTime} installation</Badge>
             )}
+            {wrap.categories.map((category) => (
+              <Badge key={category.id} variant="outline">
+                {category.name}
+              </Badge>
+            ))}
           </div>
         </CardHeader>
       </Card>
@@ -48,32 +58,11 @@ export function WrapDetail({ wrap }: WrapDetailProps) {
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-            Details
+            Wrap Images
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-            <dt className="text-muted-foreground">Price</dt>
-            <dd className="font-medium">{formatPrice(wrap.price)}</dd>
-            {installationTime && (
-              <>
-                <dt className="text-muted-foreground">Installation Time</dt>
-                <dd className="font-medium">{installationTime}</dd>
-              </>
-            )}
-            <dt className="text-muted-foreground">Added</dt>
-            <dd className="font-medium">
-              {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(
-                new Date(wrap.createdAt),
-              )}
-            </dd>
-            <dt className="text-muted-foreground">Last Updated</dt>
-            <dd className="font-medium">
-              {new Intl.DateTimeFormat("en-US", { dateStyle: "medium" }).format(
-                new Date(wrap.updatedAt),
-              )}
-            </dd>
-          </dl>
+          <WrapImageManager wrapId={wrap.id} images={wrap.images} />
         </CardContent>
       </Card>
 
