@@ -35,10 +35,20 @@ export async function assertTenantMembership(
   userId: string,
   requiredRole: TenantRole = "member"
 ): Promise<void> {
+  // Convert Clerk userId to internal database user.id
+  const user = await prisma.user.findUnique({
+    where: { clerkUserId: userId },
+    select: { id: true }
+  })
+
+  if (!user) {
+    throw new Error("Unauthorized: user not found")
+  }
+
   const membership = await prisma.tenantUserMembership.findFirst({
     where: {
       tenantId,
-      userId,
+      userId: user.id,
       deletedAt: null
     },
     select: {
@@ -95,10 +105,18 @@ export async function getUserTenantRole(
   tenantId: string,
   userId: string
 ): Promise<TenantRole | null> {
+  // Convert Clerk userId to internal database user.id
+  const user = await prisma.user.findUnique({
+    where: { clerkUserId: userId },
+    select: { id: true }
+  })
+
+  if (!user) return null
+
   const membership = await prisma.tenantUserMembership.findFirst({
     where: {
       tenantId,
-      userId,
+      userId: user.id,
       deletedAt: null
     },
     select: {

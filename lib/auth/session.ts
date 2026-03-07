@@ -1,5 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
-import { resolveTenantFromRequest } from "@/lib/tenancy/resolve";
+import { prisma } from "@/lib/prisma"
+import { resolveTenantFromRequest } from "@/lib/tenancy/resolve"
+import { auth } from "@clerk/nextjs/server"
 
 /**
  * The session context returned by getSession().
@@ -7,13 +8,13 @@ import { resolveTenantFromRequest } from "@/lib/tenancy/resolve";
  */
 export interface SessionContext {
   /** Clerk user ID, or null if not authenticated */
-  userId: string | null;
+  userId: string | null
   /** Resolved tenant ID from the request host/subdomain */
-  tenantId: string;
+  tenantId: string
   /** Whether the current user is authenticated */
-  isAuthenticated: boolean;
+  isAuthenticated: boolean
   /** Clerk organization ID, or null if not in an org context */
-  orgId: string | null;
+  orgId: string | null
 }
 
 /**
@@ -21,9 +22,9 @@ export interface SessionContext {
  * Kept for backward compatibility.
  */
 export interface SessionUser {
-  id: string;
-  clerkUserId: string;
-  email: string;
+  id: string
+  clerkUserId: string
+  email: string
 }
 
 /**
@@ -31,35 +32,60 @@ export interface SessionUser {
  * Kept for backward compatibility.
  */
 export interface Session {
-  user: SessionUser | null;
-  tenantId: string;
+  user: SessionUser | null
+  tenantId: string
   /** Convenience flag: true when user is authenticated */
-  isAuthenticated: boolean;
+  isAuthenticated: boolean
   /** Convenience accessor: Clerk user ID or empty string when unauthenticated */
-  userId: string;
+  userId: string
 }
 
 /**
  * Resolves the current authenticated user and tenant from the Clerk session.
  * The tenantId is derived server-side from the request host, never from client input.
  *
+ * Tenant resolution strategy:
+ * 1. First, try to resolve from subdomain (multi-tenant scenario)
+ * 2. If no subdomain, fall back to user's first tenant (single-user account)
+ * 3. Otherwise return empty string
+ *
  * @returns SessionContext with userId, tenantId, isAuthenticated, and orgId
  */
 export async function getSession(): Promise<SessionContext> {
-  const { userId, orgId } = await auth();
+  const { userId, orgId } = await auth()
 
   // Resolve tenantId from request host (subdomain-based multi-tenancy).
-  // Returns null if no subdomain is found (e.g., root domain or localhost without
-  // a subdomain). We default to "" so callers can check `if (!tenantId)` easily,
-  // and `assertTenantMembership` will reject any operation on an empty tenantId.
-  const tenantId = (await resolveTenantFromRequest()) ?? "";
+  let tenantId = (await resolveTenantFromRequest()) ?? ""
+
+  // Fallback: if no subdomain and user is authenticated, use their first tenant
+  if (!tenantId && userId) {
+    const user = await prisma.user.findUnique({
+      where: { clerkUserId: userId },
+      select: { id: true }
+    })
+
+    if (user) {
+      const membership = await prisma.tenantUserMembership.findFirst({
+        where: {
+          userId: user.id,
+          deletedAt: null
+        },
+        select: { tenantId: true },
+        orderBy: { createdAt: "asc" }
+      })
+
+      if (membership) {
+        tenantId = membership.tenantId
+      }
+    }
+  }
 
   return {
     userId: userId ?? null,
     tenantId,
     isAuthenticated: !!userId,
-    orgId: orgId ?? null,
-  };
+    orgId: orgId ?? null
+  }
 }
 
 /**
@@ -81,11 +107,11 @@ export async function getSession(): Promise<SessionContext> {
  * ```
  */
 export async function requireAuth(): Promise<SessionContext & { userId: string }> {
-  const session = await getSession();
+  const session = await getSession()
 
   if (!session.isAuthenticated || !session.userId) {
-    throw new Error("Unauthorized: not authenticated");
+    throw new Error("Unauthorized: not authenticated")
   }
 
-  return session as SessionContext & { userId: string };
+  return session as SessionContext & { userId: string }
 }
