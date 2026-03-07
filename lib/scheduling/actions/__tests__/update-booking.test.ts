@@ -33,7 +33,7 @@ vi.mock("@/lib/prisma", () => ({
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -219,8 +219,27 @@ describe("updateBooking", () => {
     ] as never);
     vi.mocked(prisma.booking.count).mockResolvedValue(2);
 
-    await expect(updateBooking("booking-1", validInput)).rejects.toThrow("No available slots");
+    await expect(updateBooking("booking-1", validInput)).rejects.toThrow("fully booked");
     expect(prisma.booking.update).not.toHaveBeenCalled();
+  });
+
+  it("uses SERIALIZABLE isolation to reduce overbooking races", async () => {
+    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+    vi.mocked(prisma.booking.findFirst).mockResolvedValue(existingBooking as never);
+    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([mockRule] as never);
+    vi.mocked(prisma.booking.count).mockResolvedValue(0);
+    vi.mocked(prisma.booking.update).mockResolvedValue(updatedBookingRecord as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
+
+    await updateBooking("booking-1", validInput);
+
+    expect(prisma.$transaction).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.objectContaining({
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      }),
+    );
   });
 
   it("throws a ZodError when endTime is before startTime", async () => {
