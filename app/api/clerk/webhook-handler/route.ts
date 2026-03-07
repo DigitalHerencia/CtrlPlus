@@ -3,15 +3,17 @@
  *
  * Syncs user data from Clerk to Neon PostgreSQL.
  * Handles user.created, user.updated, and user.deleted events.
- * Uses Svix library for webhook verification and idempotency to prevent duplicate processing.
+ * Uses Clerk's verified webhook helper and a replay-safe event ledger to
+ * prevent duplicate processing while allowing safe retries after failures.
  *
  * This route must be public (not protected by clerkMiddleware).
- * Webhook verification signature is validated using CLERK_WEBHOOK_SECRET environment variable.
+ * Webhook verification signature is validated using
+ * CLERK_WEBHOOK_SIGNING_SECRET (or the legacy CLERK_WEBHOOK_SECRET fallback).
  */
 
+import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { prisma } from "@/lib/prisma";
 import { type NextRequest, NextResponse } from "next/server";
-import { Webhook } from "svix";
 
 interface ClerkWebhookEvent {
   data: unknown;
@@ -20,6 +22,7 @@ interface ClerkWebhookEvent {
 }
 
 type JsonObject = Record<string, unknown>;
+type WebhookEventState = "process" | "processed" | "processing";
 
 const SUPPORTED_EVENTS = new Set([
   "email.created",
@@ -121,6 +124,97 @@ function deriveSubscriptionItemStatus(eventType: string, fallback?: string): str
   if (eventType === "subscriptionItem.upcoming") return "upcoming";
   if (eventType === "subscriptionItem.updated") return fallback ?? "updated";
   return fallback ?? "unknown";
+}
+
+function isPrismaUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code: string }).code === "P2002"
+  );
+}
+
+function ensureClerkWebhookSigningSecret(): string | null {
+  const signingSecret =
+    process.env.CLERK_WEBHOOK_SIGNING_SECRET ?? process.env.CLERK_WEBHOOK_SECRET ?? null;
+
+  if (signingSecret && !process.env.CLERK_WEBHOOK_SIGNING_SECRET) {
+    process.env.CLERK_WEBHOOK_SIGNING_SECRET = signingSecret;
+  }
+
+  return signingSecret;
+}
+
+async function claimClerkWebhookEvent(
+  eventId: string,
+  eventType: string,
+): Promise<WebhookEventState> {
+  try {
+    await prisma.clerkWebhookEvent.create({
+      data: {
+        id: eventId,
+        type: eventType,
+        status: "processing",
+      },
+    });
+
+    return "process";
+  } catch (error: unknown) {
+    if (!isPrismaUniqueConstraintError(error)) {
+      throw error;
+    }
+  }
+
+  const existingEvent = await prisma.clerkWebhookEvent.findUnique({
+    where: { id: eventId },
+    select: { status: true },
+  });
+
+  if (!existingEvent) {
+    throw new Error(`Clerk webhook event state missing for ${eventId}`);
+  }
+
+  if (existingEvent.status === "failed") {
+    const retryClaim = await prisma.clerkWebhookEvent.updateMany({
+      where: {
+        id: eventId,
+        status: "failed",
+      },
+      data: {
+        type: eventType,
+        status: "processing",
+        processedAt: new Date(),
+      },
+    });
+
+    if (retryClaim.count === 1) {
+      return "process";
+    }
+
+    const refreshedEvent = await prisma.clerkWebhookEvent.findUnique({
+      where: { id: eventId },
+      select: { status: true },
+    });
+
+    if (!refreshedEvent) {
+      throw new Error(`Clerk webhook event state missing for ${eventId}`);
+    }
+
+    return refreshedEvent.status === "processed" ? "processed" : "processing";
+  }
+
+  return existingEvent.status === "processed" ? "processed" : "processing";
+}
+
+async function finalizeClerkWebhookEvent(eventId: string, status: "processed" | "failed") {
+  await prisma.clerkWebhookEvent.update({
+    where: { id: eventId },
+    data: {
+      status,
+      processedAt: new Date(),
+    },
+  });
 }
 
 async function handleUserEvent(eventType: string, data: unknown): Promise<void> {
@@ -376,26 +470,19 @@ async function handlePaymentAttemptEvent(eventType: string, data: unknown): Prom
  */
 export async function POST(req: NextRequest) {
   try {
-    const secret = process.env.CLERK_WEBHOOK_SECRET;
+    const signingSecret = ensureClerkWebhookSigningSecret();
 
-    if (!secret) {
-      console.error("[Clerk Webhook] CLERK_WEBHOOK_SECRET environment variable not set");
+    if (!signingSecret) {
+      console.error("[Clerk Webhook] CLERK_WEBHOOK_SIGNING_SECRET environment variable not set");
       return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
     }
 
-    // Get the request body and Svix headers for verification
-    const body = await req.text();
-    const headers = {
-      "svix-id": req.headers.get("svix-id") || "",
-      "svix-timestamp": req.headers.get("svix-timestamp") || "",
-      "svix-signature": req.headers.get("svix-signature") || "",
-    };
+    const eventId = req.headers.get("svix-id");
+    if (!eventId) {
+      return NextResponse.json({ error: "Missing svix-id header" }, { status: 400 });
+    }
 
-    // Verify webhook signature using Svix
-    const wh = new Webhook(secret);
-    const evt = wh.verify(body, headers) as ClerkWebhookEvent;
-
-    const eventId = headers["svix-id"];
+    const evt = (await verifyWebhook(req)) as ClerkWebhookEvent;
 
     // Guard: Only process supported events
     if (!SUPPORTED_EVENTS.has(evt.type)) {
@@ -403,45 +490,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Ignored unsupported event type" }, { status: 200 });
     }
 
-    // Idempotency: Check if we've already processed this Svix event
-    const existingEvent = await prisma.clerkWebhookEvent.findUnique({
-      where: { id: eventId },
-    });
+    const webhookState = await claimClerkWebhookEvent(eventId, evt.type);
 
-    if (existingEvent) {
-      // Already processed, return success
-      console.warn(`[Clerk Webhook] Event ${eventId} already processed`);
-      return NextResponse.json({ message: "Event already processed" }, { status: 200 });
+    if (webhookState !== "process") {
+      console.warn(`[Clerk Webhook] Event ${eventId} already ${webhookState}`);
+      return NextResponse.json({ message: `Event already ${webhookState}` }, { status: 200 });
     }
 
-    // Record event for idempotency before processing
-    await prisma.clerkWebhookEvent.create({
-      data: {
-        id: eventId,
-        type: evt.type,
-      },
-    });
+    try {
+      if (!evt.data) {
+        throw new Error("Missing webhook data");
+      }
 
-    // Type guard: Ensure data is present
-    if (!evt.data) {
-      return NextResponse.json({ error: "Missing webhook data" }, { status: 400 });
-    }
+      // Handle different event types
+      if (evt.type.startsWith("user.")) {
+        await handleUserEvent(evt.type, evt.data);
+      } else if (evt.type.startsWith("session.")) {
+        await handleSessionEvent(evt.type, evt.data);
+      } else if (evt.type === "email.created") {
+        await handleEmailEvent(evt.type, evt.data, eventId);
+      } else if (evt.type === "sms.created") {
+        await handleSmsEvent(evt.type, evt.data, eventId);
+      } else if (evt.type.startsWith("subscriptionItem.")) {
+        await handleSubscriptionItemEvent(evt.type, evt.data);
+      } else if (evt.type.startsWith("subscription.")) {
+        await handleSubscriptionEvent(evt.type, evt.data);
+      } else if (evt.type.startsWith("paymentAttempt.")) {
+        await handlePaymentAttemptEvent(evt.type, evt.data);
+      }
 
-    // Handle different event types
-    if (evt.type.startsWith("user.")) {
-      await handleUserEvent(evt.type, evt.data);
-    } else if (evt.type.startsWith("session.")) {
-      await handleSessionEvent(evt.type, evt.data);
-    } else if (evt.type === "email.created") {
-      await handleEmailEvent(evt.type, evt.data, eventId);
-    } else if (evt.type === "sms.created") {
-      await handleSmsEvent(evt.type, evt.data, eventId);
-    } else if (evt.type.startsWith("subscriptionItem.")) {
-      await handleSubscriptionItemEvent(evt.type, evt.data);
-    } else if (evt.type.startsWith("subscription.")) {
-      await handleSubscriptionEvent(evt.type, evt.data);
-    } else if (evt.type.startsWith("paymentAttempt.")) {
-      await handlePaymentAttemptEvent(evt.type, evt.data);
+      await finalizeClerkWebhookEvent(eventId, "processed");
+    } catch (error) {
+      await finalizeClerkWebhookEvent(eventId, "failed");
+      throw error;
     }
 
     return NextResponse.json({ received: true }, { status: 200 });

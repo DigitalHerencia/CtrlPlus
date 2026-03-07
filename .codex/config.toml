@@ -1,0 +1,55 @@
+# CtrlPlus project-scoped Codex configuration.
+# Keep repo-specific agent roles and model defaults here rather than in ~/.codex/config.toml.
+
+model = "gpt-5.3-codex"
+review_model = "gpt-5.3-codex"
+model_provider = "openai"
+model_reasoning_effort = "high"
+personality = "pragmatic"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+web_search = "cached"
+
+project_doc_fallback_filenames = [
+    "AGENTS.md",
+    "PLANS.md",
+]
+project_root_markers = [
+    ".git",
+    "pnpm-lock.yaml",
+]
+
+[sandbox_workspace_write]
+    network_access = false
+
+[agents]
+    max_threads = 4
+
+    [agents.implement]
+        config_file = "agents/implement.toml"
+        description = "Implements feature-first changes through schemas, fetchers/actions, and use-cases."
+
+    [agents.qa]
+        config_file = "agents/qa.toml"
+        description = "Runs quality gates and reports regressions with file-level findings."
+
+    [agents.review]
+        config_file = "agents/review.toml"
+        description = "Performs final code review for bugs, regressions, and test coverage gaps."
+
+    [agents.scout]
+        config_file = "agents/scout.toml"
+        description = "Maps impacted files and proposes a tenant-safe implementation plan before edits."
+
+    [agents.security]
+        config_file = "agents/security.toml"
+        description = "Audits tenant isolation, authz checks, and webhook safety requirements."
+
+[mcp_servers]
+
+    [mcp_servers.openaiDeveloperDocs]
+        enabled             = true
+        required            = false
+        startup_timeout_sec = 20.0
+        tool_timeout_sec    = 120.0
+        url                 = "https://developers.openai.com/mcp"

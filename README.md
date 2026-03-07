@@ -11,7 +11,7 @@ A subdomain-based multi-tenant SaaS platform for vehicle wrap businesses to show
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-[Features](#features) • [Tech Stack](#tech-stack) • [Getting Started](#getting-started) • [Architecture](#architecture) • [Contributing](#contributing)
+[Features](#features) • [Tech Stack](#tech-stack) • [Getting Started](#getting-started) • [Architecture](#architecture) • [Operations](./OPERATIONS.md) • [Contributing](#contributing)
 
 </div>
 
@@ -116,12 +116,12 @@ Built with strict tenant isolation, RSC-first patterns, and domain-driven design
    ```env
    # Database
    DATABASE_URL="postgresql://..."
-   DIRECT_URL="postgresql://..."
+   DATABASE_URL_UNPOOLED="postgresql://..."
 
    # Clerk Auth
    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_..."
    CLERK_SECRET_KEY="sk_..."
-   CLERK_WEBHOOK_SECRET="whsec_..."
+   CLERK_WEBHOOK_SIGNING_SECRET="whsec_..."
 
    # Stripe
    STRIPE_SECRET_KEY="sk_..."
@@ -210,6 +210,14 @@ pnpm test:e2e     # Run Playwright tests
 - Commit messages are validated with Commitlint and must use `type(scope): subject`
 - Before opening a PR, run `pnpm check`
 
+### Operational Workflow
+
+CtrlPlus now uses `spec -> implement -> verify -> document` as the default release loop.
+
+- Notion workstreams and task schema: [docs/operations/notion-workstreams.md](./docs/operations/notion-workstreams.md)
+- Ship gate and webhook checklist: [docs/operations/ship-readiness.md](./docs/operations/ship-readiness.md)
+- Visualizer model lock for v1: [docs/visualizer/huggingface-v1.md](./docs/visualizer/huggingface-v1.md)
+
 ### Database Commands
 
 ```bash
@@ -262,8 +270,8 @@ We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for gu
 
 Security is critical for multi-tenant platforms. Please review:
 
-- [Security Best Practices](./TECH-REQUIREMENTS.md#architecture-principles)
-- Tenant isolation requirements in [Architecture docs](./TECH-REQUIREMENTS.md)
+- [Security Best Practices](./.github/instructions/TECH-REQUIREMENTS.md)
+- Tenant isolation requirements in [Architecture docs](./.github/instructions/TECH-REQUIREMENTS.md)
 
 Found a security issue? Please email security@example.com instead of using the issue tracker.
 
@@ -290,7 +298,7 @@ Built with:
 
 <div align="center">
 
-**[Documentation](./TECH-REQUIREMENTS.md)** • **[Product Requirements](./PRD.md)** • **[Issues](https://github.com/DigitalHerencia/CtrlPlus/issues)**
+**[Documentation](./.github/instructions/TECH-REQUIREMENTS.md)** • **[Product Requirements](./.github/instructions/PRD.md)** • **[Operations](./docs/operations/ship-readiness.md)** • **[Issues](https://github.com/DigitalHerencia/CtrlPlus/issues)**
 
 Made with ❤️ by Digital Herencia
 
