@@ -9,6 +9,7 @@
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 
+const LOCALHOST_SUFFIX = ".localhost";
 const NGROK_FREE_APP_SUFFIX = ".ngrok-free.app";
 
 function shouldIgnoreNgrokHostForTenantResolution(hostname: string): boolean {
@@ -39,9 +40,10 @@ export async function resolveTenantFromRequest(): Promise<string | null> {
     return null;
   }
 
-  // Extract subdomain
   const subdomain = extractTenantSlugFromHost(host);
 
+  // Security guard: do not query tenant table unless host was explicitly
+  // matched to an allowed tenant subdomain pattern.
   if (!subdomain) {
     return null;
   }
@@ -87,15 +89,20 @@ export function extractTenantSlugFromHost(
     return null;
   }
 
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
+  // Tunnel domains are for webhook delivery only and must never be interpreted
+  // as tenant subdomains.
+  if (hostname === "ngrok-free.app" || hostname.endsWith(NGROK_FREE_APP_SUFFIX)) {
     return null;
   }
 
-  if (hostname.endsWith(".localhost")) {
-    const subdomain = hostname.slice(0, -".localhost".length);
+  // Development behavior: only accept a single subdomain label for *.localhost.
+  if (hostname.endsWith(LOCALHOST_SUFFIX)) {
+    const subdomain = hostname.slice(0, -LOCALHOST_SUFFIX.length);
     return isSingleTenantLabel(subdomain) ? subdomain : null;
   }
 
+  // Production/custom-domain behavior: resolve only against the explicit
+  // configured allowlisted suffix.
   const normalizedSuffix = normalizeTenantDomainSuffix(tenantDomainSuffix);
   if (!normalizedSuffix) {
     return null;
