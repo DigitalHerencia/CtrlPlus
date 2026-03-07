@@ -10,13 +10,13 @@ import { type TenantRole } from "@/lib/tenancy/types";
 import { ROLE_LABELS } from "./role-badge";
 
 interface SetRoleFormProps {
-  userId: string;
+  clerkUserId: string;
   currentRole: TenantRole;
 }
 
 const SELECTABLE_ROLES: AssignableRole[] = ["admin", "member"];
 
-export function SetRoleForm({ userId, currentRole }: SetRoleFormProps) {
+export function SetRoleForm({ clerkUserId, currentRole }: SetRoleFormProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -30,7 +30,7 @@ export function SetRoleForm({ userId, currentRole }: SetRoleFormProps) {
 
     startTransition(async () => {
       try {
-        await updateUserRole({ targetClerkUserId: userId, role });
+        await updateUserRole({ targetClerkUserId: clerkUserId, role });
         router.refresh();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to update role.");
