@@ -1,69 +1,146 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { generateTenantSlug } from "@/lib/tenancy/slug";
 import { resolveTenantFromRequest } from "@/lib/tenancy/resolve";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
+
+const TENANT_FALLBACK_PREFIX = "tenant";
+
+function getPrimaryEmailFromClerkUser(user: Awaited<ReturnType<typeof currentUser>>, clerkUserId: string): string {
+  if (!user) {
+    return `no-email+${clerkUserId.toLowerCase()}@local.invalid`;
+  }
+
+  const primaryEmail =
+    user.emailAddresses.find((entry) => entry.id === user.primaryEmailAddressId)?.emailAddress ??
+    user.emailAddresses[0]?.emailAddress ??
+    null;
+
+  return primaryEmail ? primaryEmail.trim().toLowerCase() : `no-email+${clerkUserId.toLowerCase()}@local.invalid`;
+}
+
+function getWorkspaceNameFromClerkUser(
+  user: Awaited<ReturnType<typeof currentUser>>,
+  fallbackEmail: string,
+): string {
+  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim();
+
+  if (fullName.length > 0) {
+    return `${fullName}'s Workspace`;
+  }
+
+  if (user?.username && user.username.trim().length > 0) {
+    return `${user.username.trim()}'s Workspace`;
+  }
+
+  if (fallbackEmail) {
+    const localPart = fallbackEmail.split("@")[0]?.trim();
+    if (localPart) {
+      return `${localPart}'s Workspace`;
+    }
+  }
+
+  return "My Workspace";
+}
+
+async function reserveUniqueTenantSlug(baseSlug: string): Promise<string> {
+  const collisionCandidates = await prisma.tenant.findMany({
+    where: {
+      slug: {
+        startsWith: baseSlug,
+      },
+    },
+    select: { slug: true },
+  });
+
+  const existingSlugs = new Set(collisionCandidates.map((candidate: { slug: string }) => candidate.slug));
+
+  if (!existingSlugs.has(baseSlug)) {
+    return baseSlug;
+  }
+
+  for (let suffix = 2; suffix < 5000; suffix += 1) {
+    const suffixString = `-${suffix}`;
+    const prefixLength = 63 - suffixString.length;
+    const prefix = baseSlug.slice(0, prefixLength).replace(/-+$/g, "");
+    const candidate = `${prefix}${suffixString}`;
+
+    if (!existingSlugs.has(candidate)) {
+      return candidate;
+    }
+  }
+
+  throw new Error("Unable to reserve a unique tenant slug");
+}
 
 /**
- * Setup initial tenant for newly authenticated user
- *
- * When a user signs in/up for the first time:
- * 1. Verify Clerk user exists and is authenticated
- * 2. Check if user already has a database record
- * 3. If not, create User and Tenant records with OWNER membership
- * 4. Return the tenant ID for routing
- *
- * For single-user accounts, each user gets their own tenant.
- *
- * @returns Tenant ID (may be new or existing)
- * @throws Error if not authenticated or setup fails
+ * Setup initial tenant for newly authenticated user.
  */
 export async function setupUserTenant(): Promise<string> {
-  // 1. Verify authentication
   const { userId: clerkUserId } = await auth();
 
   if (!clerkUserId) {
     throw new Error("Unauthorized: not authenticated");
   }
 
-  // 2. Check if user already exists in database
+  const clerkUser = await currentUser();
+  const email = getPrimaryEmailFromClerkUser(clerkUser, clerkUserId);
+
   let user = await prisma.user.findUnique({
     where: { clerkUserId },
     select: { id: true },
   });
 
-  // 3. If first time, create User record
   if (!user) {
     user = await prisma.user.create({
       data: {
         clerkUserId,
-        email: "", // Will be synced by webhook
-        firstName: null,
-        lastName: null,
+        email,
+        firstName: clerkUser?.firstName ?? null,
+        lastName: clerkUser?.lastName ?? null,
       },
       select: { id: true },
     });
   }
 
-  // 4. Get or create tenant for single-user model
-  // Use subdomain-based resolution if available, otherwise create default tenant
-  let tenantId: string | null = await resolveTenantFromRequest();
+  let tenantId = await resolveTenantFromRequest();
 
   if (!tenantId) {
-    // No subdomain provided - create a new tenant for this user
-    // In production, tenant slug should be derived from tenantId or user email domain
+    const workspaceName = getWorkspaceNameFromClerkUser(clerkUser, email);
+    const baseSlug = generateTenantSlug({
+      workspaceName,
+      email,
+      fallbackPrefix: TENANT_FALLBACK_PREFIX,
+    });
+    const uniqueSlug = await reserveUniqueTenantSlug(baseSlug);
+
     const tenant = await prisma.tenant.create({
       data: {
-        name: `${clerkUserId}'s Workspace`,
-        slug: clerkUserId.toLowerCase(), // Use Clerk ID as slug
+        name: workspaceName,
+        slug: uniqueSlug,
       },
       select: { id: true },
     });
+
     tenantId = tenant.id;
+
+    await prisma.auditLog.create({
+      data: {
+        tenantId,
+        userId: clerkUserId,
+        action: "TENANT_CREATED",
+        resourceType: "Tenant",
+        resourceId: tenantId,
+        details: JSON.stringify({ slug: uniqueSlug }),
+      },
+    });
   }
 
-  // 5. Ensure user is a member of their tenant (OWNER role)
-  // Use upsert to handle if membership already exists
+  if (!tenantId) {
+    throw new Error("Unable to resolve or create tenant");
+  }
+
   await prisma.tenantUserMembership.upsert({
     where: {
       tenantId_userId: {
@@ -74,24 +151,28 @@ export async function setupUserTenant(): Promise<string> {
     create: {
       tenantId,
       userId: user.id,
-      role: "owner", // New users are owners of their tenant
+      role: "owner",
     },
     update: {
-      deletedAt: null, // Restore if was soft-deleted
+      deletedAt: null,
+      role: "owner",
+    },
+  });
+
+  await prisma.auditLog.create({
+    data: {
+      tenantId,
+      userId: clerkUserId,
+      action: "TENANT_MEMBERSHIP_UPSERTED",
+      resourceType: "TenantUserMembership",
+      resourceId: user.id,
+      details: JSON.stringify({ role: "owner" }),
     },
   });
 
   return tenantId;
 }
 
-/**
- * Get user's first tenant for redirection after sign-in
- *
- * Returns the tenant ID that the user should be redirected to.
- * For single-user accounts, this is their only tenant.
- *
- * @returns Tenant ID or null if user has no tenants
- */
 export async function getUserFirstTenant(): Promise<string | null> {
   const { userId: clerkUserId } = await auth();
 
@@ -99,7 +180,6 @@ export async function getUserFirstTenant(): Promise<string | null> {
     return null;
   }
 
-  // Get user by Clerk ID first
   const user = await prisma.user.findUnique({
     where: { clerkUserId },
     select: { id: true },
@@ -109,7 +189,6 @@ export async function getUserFirstTenant(): Promise<string | null> {
     return null;
   }
 
-  // Then query their memberships
   const membership = await prisma.tenantUserMembership.findFirst({
     where: {
       userId: user.id,

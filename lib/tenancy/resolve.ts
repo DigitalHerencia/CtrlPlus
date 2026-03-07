@@ -11,6 +11,14 @@ import { headers } from "next/headers";
 
 const NGROK_FREE_APP_SUFFIX = ".ngrok-free.app";
 
+function shouldIgnoreNgrokHostForTenantResolution(hostname: string): boolean {
+  if (process.env.ALLOW_NGROK_TENANT_HOST_RESOLUTION === "true") {
+    return false;
+  }
+
+  return hostname === "ngrok-free.app" || hostname.endsWith(NGROK_FREE_APP_SUFFIX);
+}
+
 /**
  * Resolve tenant from current request context (subdomain).
  *
@@ -75,7 +83,7 @@ export function extractTenantSlugFromHost(
 
   // Tunnel domains are allowed for webhook delivery only. Never derive tenant
   // context from them because the suffix is public and not controlled by us.
-  if (hostname === "ngrok-free.app" || hostname.endsWith(NGROK_FREE_APP_SUFFIX)) {
+  if (shouldIgnoreNgrokHostForTenantResolution(hostname)) {
     return null;
   }
 
