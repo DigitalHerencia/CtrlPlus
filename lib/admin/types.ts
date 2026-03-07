@@ -5,7 +5,10 @@
  * Never expose raw Prisma models — always use these explicit types.
  */
 
+import { TENANT_SLUG_REGEX } from "@/lib/tenancy/slug";
 import { z } from "zod";
+
+import { type TenantRole } from "@/lib/tenancy/types";
 
 // ── Role management ───────────────────────────────────────────────────────────
 
@@ -27,7 +30,7 @@ export interface UserRoleDTO {
   tenantId: string;
   userId: string;
   role: AssignableRole;
-  updatedAt: Date;
+  updatedAt: string;
 }
 
 // ── Tenant settings ───────────────────────────────────────────────────────────
@@ -40,7 +43,7 @@ export const updateTenantSettingsSchema = z
       .min(1, "Slug cannot be empty")
       .max(63)
       .regex(
-        /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/,
+        TENANT_SLUG_REGEX,
         "Slug must be lowercase alphanumeric, may contain hyphens, and cannot start or end with a hyphen",
       )
       .optional(),
@@ -51,16 +54,10 @@ export const updateTenantSettingsSchema = z
 
 export type UpdateTenantSettingsInput = z.infer<typeof updateTenantSettingsSchema>;
 
-import { type TenantRole } from "@/lib/tenancy/types";
-import { type JSX } from "react/jsx-runtime";
-import { type ReactNode } from "react";
-
 // ─── Tenant Stats ──────────────────────────────────────────────────────────────
 
 /** Dashboard metrics for a tenant. Returned by getTenantStats. */
 export interface TenantStatsDTO {
-  totalMembers: string | number;
-  totalBookings: string | number;
   /** Number of active (non-deleted) wraps */
   wrapCount: number;
   /** Number of active (non-deleted) team members */
@@ -77,17 +74,19 @@ export interface TenantStatsDTO {
 export interface TeamMemberDTO {
   id: string;
   userId: string;
+  clerkUserId: string;
   tenantId: string;
   role: TenantRole;
-  createdAt: Date;
+  createdAt: string;
 }
 
-/** Full list of team members for a tenant. */
+/** Paginated list of team members for a tenant. */
 export interface TeamMemberListDTO {
-  length: number;
-  map(arg0: (member: TeamMemberDTO) => JSX.Element): ReactNode;
   members: TeamMemberDTO[];
   total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
 }
 
 // ─── Tenant Settings ──────────────────────────────────────────────────────────
@@ -97,6 +96,6 @@ export interface TenantSettingsDTO {
   id: string;
   name: string;
   slug: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
 }

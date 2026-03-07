@@ -44,7 +44,5 @@ export async function getTenantStats(
     memberCount,
     bookingCount,
     totalRevenue,
-    totalMembers: memberCount,
-    totalBookings: bookingCount,
   };
 }
