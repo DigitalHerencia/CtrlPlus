@@ -42,6 +42,9 @@ describe("extractTenantSlugFromHost", () => {
 
   it("returns null for ngrok-free hosts", () => {
     process.env.NEXT_PUBLIC_TENANT_DOMAIN_SUFFIX = ".ctrlplus.local";
+    process.env.ALLOW_NGROK_TENANT_HOST_RESOLUTION = "true";
+
+    expect(extractTenantSlugFromHost("demo.ngrok-free.app", ".ngrok-free.app")).toBe("demo");
 
     expect(extractTenantSlugFromHost("random.ngrok-free.app")).toBeNull();
   });

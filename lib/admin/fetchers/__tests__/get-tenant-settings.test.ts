@@ -65,8 +65,8 @@ describe("getTenantSettings", () => {
     expect(result?.id).toBe("tenant-abc");
     expect(result?.name).toBe("Acme Wraps");
     expect(result?.slug).toBe("acme");
-    expect(result?.createdAt).toEqual(NOW);
-    expect(result?.updatedAt).toEqual(NOW);
+    expect(result?.createdAt).toEqual(NOW.toISOString());
+    expect(result?.updatedAt).toEqual(NOW.toISOString());
   });
 
   it("scopes query by tenantId and deletedAt: null", async () => {

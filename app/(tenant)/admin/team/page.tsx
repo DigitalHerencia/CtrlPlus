@@ -43,15 +43,17 @@ export default async function TeamPage() {
                   className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0 space-y-1">
-                    <p className="truncate text-sm font-medium text-foreground">{member.userId}</p>
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {member.clerkUserId}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      Member since {member.createdAt.toLocaleDateString()}
+                      Member since {new Date(member.createdAt).toLocaleDateString()}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {member.userId !== userId ? (
-                      <SetRoleForm userId={member.userId} currentRole={member.role} />
+                    {member.clerkUserId !== userId ? (
+                      <SetRoleForm userId={member.clerkUserId} currentRole={member.role} />
                     ) : (
                       <RoleBadge role={member.role} />
                     )}
