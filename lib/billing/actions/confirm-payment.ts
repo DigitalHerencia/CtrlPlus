@@ -136,12 +136,27 @@ export async function confirmPayment(
   try {
     // constructEvent is synchronous — any signature error throws immediately
     event = constructWebhookEvent(payload, signature);
-  } catch {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "";
+
+    if (
+      message.includes("STRIPE_SECRET_KEY environment variable is not set") ||
+      message.includes("STRIPE_WEBHOOK_SECRET environment variable is not set")
+    ) {
+      throw new Error(message);
+    }
+
     throw new Error("Invalid Stripe webhook signature");
   }
 
+  const webhookState = await claimStripeWebhookEvent(event.id, event.type);
+
   // 2. VALIDATE — only handle the event type we care about
   if (event.type !== "checkout.session.completed") {
+    if (webhookState === "process") {
+      await finalizeStripeWebhookEvent(event.id, "processed");
+    }
+
     throw new Error(`Unhandled Stripe event type: ${event.type}`);
   }
 
@@ -168,8 +183,6 @@ export async function confirmPayment(
   if (!tenantId) {
     throw new Error("Stripe session metadata is missing tenantId");
   }
-
-  const webhookState = await claimStripeWebhookEvent(event.id, event.type);
 
   if (webhookState !== "process") {
     const duplicatePayment = await prisma.payment.findUnique({
