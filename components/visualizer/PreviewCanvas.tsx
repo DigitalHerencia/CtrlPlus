@@ -1,16 +1,22 @@
 "use client";
 
 import { ImageOff, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { PreviewStatus, type VisualizerPreviewDTO } from "@/lib/visualizer/types";
+import { cn } from "@/lib/utils";
 
 interface PreviewCanvasProps {
   preview: VisualizerPreviewDTO | null;
   isLoading?: boolean;
   className?: string;
+  wrapOverlayUrl?: string | null;
 }
 
-export function PreviewCanvas({ preview, isLoading = false, className }: PreviewCanvasProps) {
+export function PreviewCanvas({
+  preview,
+  isLoading = false,
+  className,
+  wrapOverlayUrl,
+}: PreviewCanvasProps) {
   if (isLoading) {
     return (
       <div
@@ -80,12 +86,22 @@ export function PreviewCanvas({ preview, isLoading = false, className }: Preview
         className,
       )}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={imageUrl}
-        alt="Wrap preview on your vehicle"
-        className="h-full w-full object-contain"
-      />
+      <div className="relative h-full min-h-72">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imageUrl}
+          alt="Wrap preview on your vehicle"
+          className="h-full w-full object-contain"
+        />
+        {wrapOverlayUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={wrapOverlayUrl}
+            alt="Selected wrap overlay"
+            className="pointer-events-none absolute inset-[12%] h-[76%] w-[76%] object-contain opacity-35 mix-blend-screen"
+          />
+        )}
+      </div>
       <div className="border-t border-neutral-700 bg-neutral-900 px-4 py-2">
         <p className="text-xs text-neutral-400">
           Preview result · expires{" "}

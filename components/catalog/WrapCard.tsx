@@ -6,13 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatPrice, formatInstallationTime } from "@/lib/catalog/formatters";
 
-/** Minimal serializable subset of WrapDTO needed by this component. */
 export interface WrapCardData {
   id: string;
   name: string;
   description: string | null;
   price: number;
   installationMinutes: number | null;
+  images: Array<{ id: string; url: string; displayOrder: number }>;
 }
 
 interface WrapCardProps {
@@ -21,9 +21,15 @@ interface WrapCardProps {
 
 export function WrapCard({ wrap }: WrapCardProps) {
   const installationTime = formatInstallationTime(wrap.installationMinutes);
+  const image = wrap.images[0];
 
   return (
-    <Card className="group flex h-full flex-col border-border/70 bg-card/85 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+    <Card className="group flex h-full flex-col overflow-hidden border-border/70 bg-card/85 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg">
+      {image && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={image.url} alt={wrap.name} className="h-40 w-full object-cover" />
+      )}
+
       <CardHeader className="pb-3">
         <CardTitle className="line-clamp-2 text-base leading-tight">{wrap.name}</CardTitle>
       </CardHeader>

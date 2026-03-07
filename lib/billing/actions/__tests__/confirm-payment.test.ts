@@ -7,10 +7,7 @@ const mocks = vi.hoisted(() => ({
   updateManyStripeWebhookEvent: vi.fn(),
   updateStripeWebhookEvent: vi.fn(),
   findInvoice: vi.fn(),
-  updateInvoice: vi.fn(),
   findPayment: vi.fn(),
-  createPayment: vi.fn(),
-  updateBooking: vi.fn(),
   createAuditLog: vi.fn(),
   transaction: vi.fn(),
 }));
@@ -29,14 +26,14 @@ vi.mock("@/lib/prisma", () => ({
     },
     invoice: {
       findFirst: mocks.findInvoice,
-      update: mocks.updateInvoice,
+      update: vi.fn(),
     },
     payment: {
       findUnique: mocks.findPayment,
-      create: mocks.createPayment,
+      create: vi.fn(),
     },
     booking: {
-      update: mocks.updateBooking,
+      update: vi.fn(),
     },
     auditLog: {
       create: mocks.createAuditLog,
@@ -45,6 +42,7 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+import { prisma } from "@/lib/prisma";
 import { confirmPayment } from "../confirm-payment";
 
 describe("confirmPayment", () => {
@@ -78,15 +76,14 @@ describe("confirmPayment", () => {
       totalAmount: 25000,
     });
     mocks.findPayment.mockResolvedValue(null);
-    mocks.createPayment.mockResolvedValue({ id: "pay_123" });
-    mocks.updateInvoice.mockResolvedValue({ id: "inv_123" });
-    mocks.updateBooking.mockResolvedValue({ id: "booking_123" });
     mocks.createAuditLog.mockResolvedValue(undefined);
     mocks.updateStripeWebhookEvent.mockResolvedValue(undefined);
     mocks.updateManyStripeWebhookEvent.mockResolvedValue({ count: 0 });
-    mocks.transaction.mockImplementation(async (operations: Promise<unknown>[]) =>
-      Promise.all(operations),
-    );
+    mocks.transaction.mockResolvedValue([
+      { id: "pay_123" },
+      { id: "inv_123" },
+      { id: "booking_123" },
+    ]);
   });
 
   it("records the webhook event lifecycle around a successful payment confirmation", async () => {
@@ -99,6 +96,17 @@ describe("confirmPayment", () => {
         status: "processing",
       },
     });
+    expect(prisma.payment.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ invoiceId: "inv_123", stripePaymentIntentId: "pi_123" }),
+      }),
+    );
+    expect(prisma.invoice.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "inv_123" }, data: { status: "paid" } }),
+    );
+    expect(prisma.booking.update).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "booking_123" }, data: { status: "confirmed" } }),
+    );
     expect(mocks.updateStripeWebhookEvent).toHaveBeenCalledWith({
       where: { id: "evt_123" },
       data: expect.objectContaining({ status: "processed" }),
@@ -110,7 +118,7 @@ describe("confirmPayment", () => {
     });
   });
 
-  it("returns the existing payment when the Stripe event was already processed", async () => {
+  it("returns existing payment when event id already processed", async () => {
     mocks.createStripeWebhookEvent.mockRejectedValue({ code: "P2002" });
     mocks.findStripeWebhookEvent.mockResolvedValue({ status: "processed" });
     mocks.findPayment.mockResolvedValue({
@@ -129,16 +137,38 @@ describe("confirmPayment", () => {
     });
   });
 
-  it("marks the event as failed when downstream processing throws", async () => {
-    mocks.findInvoice.mockResolvedValue(null);
+  it("throws on invalid stripe signature", async () => {
+    mocks.constructWebhookEvent.mockImplementation(() => {
+      throw new Error("No signatures found matching the expected signature for payload");
+    });
+
+    await expect(confirmPayment("payload", "bad-signature")).rejects.toThrow(
+      "Invalid Stripe webhook signature",
+    );
+    expect(mocks.createStripeWebhookEvent).not.toHaveBeenCalled();
+  });
+
+  it("marks ignored events as processed for idempotency tracking", async () => {
+    mocks.constructWebhookEvent.mockReturnValue({
+      id: "evt_ignored",
+      type: "payment_intent.created",
+      data: { object: {} },
+    });
 
     await expect(confirmPayment("payload", "signature")).rejects.toThrow(
-      "Invoice not found: inv_123",
+      "Unhandled Stripe event type: payment_intent.created",
     );
 
+    expect(mocks.createStripeWebhookEvent).toHaveBeenCalledWith({
+      data: {
+        id: "evt_ignored",
+        type: "payment_intent.created",
+        status: "processing",
+      },
+    });
     expect(mocks.updateStripeWebhookEvent).toHaveBeenCalledWith({
-      where: { id: "evt_123" },
-      data: expect.objectContaining({ status: "failed" }),
+      where: { id: "evt_ignored" },
+      data: expect.objectContaining({ status: "processed" }),
     });
   });
 });

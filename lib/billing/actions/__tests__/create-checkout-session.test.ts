@@ -1,34 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const construct = vi.hoisted(() => {
-  const create = vi.fn();
-
-  class StripeMock {
-    checkout = {
-      sessions: {
-        create,
-      },
-    };
-  }
-
-  return {
-    create,
-    StripeMock,
-  };
-});
-
-const { mocks } = vi.hoisted(() => ({
-  mocks: {
-    getSession: vi.fn(),
-    assertTenantMembership: vi.fn(),
-    findInvoice: vi.fn(),
-    createAuditLog: vi.fn(),
-    getHeaders: vi.fn(),
-  },
-}));
-
-vi.mock("stripe", () => ({
-  default: construct.StripeMock,
+const mocks = vi.hoisted(() => ({
+  getSession: vi.fn(),
+  assertTenantMembership: vi.fn(),
+  findInvoice: vi.fn(),
+  createAuditLog: vi.fn(),
+  createStripeSession: vi.fn(),
+  getStripeClient: vi.fn(),
+  getAppBaseUrl: vi.fn(),
 }));
 
 vi.mock("@/lib/auth/session", () => ({
@@ -50,8 +29,9 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
-vi.mock("next/headers", () => ({
-  headers: mocks.getHeaders,
+vi.mock("@/lib/billing/stripe", () => ({
+  getStripeClient: mocks.getStripeClient,
+  getAppBaseUrl: mocks.getAppBaseUrl,
 }));
 
 import { createCheckoutSession } from "../create-checkout-session";
@@ -59,11 +39,18 @@ import { createCheckoutSession } from "../create-checkout-session";
 describe("createCheckoutSession", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.NEXT_PUBLIC_APP_URL = "https://ctrlplus.test";
     mocks.getSession.mockResolvedValue({ tenantId: "tenant-1", userId: "user-1" });
     mocks.assertTenantMembership.mockResolvedValue(undefined);
     mocks.createAuditLog.mockResolvedValue(undefined);
-    construct.create.mockResolvedValue({
+    mocks.getStripeClient.mockReturnValue({
+      checkout: {
+        sessions: {
+          create: mocks.createStripeSession,
+        },
+      },
+    });
+    mocks.getAppBaseUrl.mockReturnValue("https://ctrlplus.test");
+    mocks.createStripeSession.mockResolvedValue({
       id: "cs_123",
       url: "https://checkout.stripe.com/c/pay_123",
     });
@@ -75,6 +62,9 @@ describe("createCheckoutSession", () => {
       tenantId: "tenant-1",
       totalAmount: 15000,
       status: "sent",
+      booking: {
+        customerId: "user-1",
+      },
       lineItems: [{ description: "Wrap", quantity: 1, unitPrice: 15000 }],
     });
 
@@ -85,7 +75,7 @@ describe("createCheckoutSession", () => {
         where: expect.objectContaining({ id: "inv-1", tenantId: "tenant-1", deletedAt: null }),
       }),
     );
-    expect(construct.create).toHaveBeenCalledWith(
+    expect(mocks.createStripeSession).toHaveBeenCalledWith(
       expect.objectContaining({
         metadata: expect.objectContaining({ invoiceId: "inv-1", tenantId: "tenant-1" }),
         client_reference_id: "inv-1",
@@ -113,6 +103,9 @@ describe("createCheckoutSession", () => {
       tenantId: "tenant-1",
       totalAmount: 15000,
       status: "paid",
+      booking: {
+        customerId: "user-1",
+      },
       lineItems: [],
     });
 
@@ -121,24 +114,20 @@ describe("createCheckoutSession", () => {
     );
   });
 
-  it("uses host fallback when NEXT_PUBLIC_APP_URL is absent", async () => {
-    delete process.env.NEXT_PUBLIC_APP_URL;
-    mocks.getHeaders.mockResolvedValue({ get: vi.fn().mockReturnValue("localhost:3000") });
+  it("throws when user attempts to pay another user's invoice", async () => {
     mocks.findInvoice.mockResolvedValue({
       id: "inv-1",
       tenantId: "tenant-1",
       totalAmount: 15000,
       status: "sent",
+      booking: {
+        customerId: "different-user",
+      },
       lineItems: [],
     });
 
-    await createCheckoutSession({ invoiceId: "inv-1" });
-
-    expect(construct.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        success_url: "http://localhost:3000/billing/inv-1?payment=success",
-        cancel_url: "http://localhost:3000/billing/inv-1?payment=cancelled",
-      }),
+    await expect(createCheckoutSession({ invoiceId: "inv-1" })).rejects.toThrow(
+      "Forbidden: user cannot pay this invoice",
     );
   });
 });

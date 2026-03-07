@@ -6,15 +6,15 @@ import { BookingStatus, type BookingDTO } from "@/lib/scheduling/types";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 
 /**
- * Cancels a booking by soft-deleting it (sets `deletedAt`) and marking its
- * status as "cancelled".  Only bookings that belong to the current tenant
- * and have not already been deleted may be cancelled.
+ * Cancels a booking by marking its status as "cancelled".
+ * Only bookings that belong to the current tenant and have not already been
+ * deleted may be cancelled.
  *
  * Security pipeline:
  * 1. Authenticate  — verify user is signed in
  * 2. Authorize     — verify user is a member of the tenant
  * 3. Tenant scope  — confirm the booking belongs to the current tenant
- * 4. Mutate        — soft-delete + set status to "cancelled"
+ * 4. Mutate        — set status to "cancelled" and clear active reservation
  * 5. Audit         — write an immutable audit log entry
  */
 export async function cancelBooking(bookingId: string): Promise<BookingDTO> {
@@ -35,26 +35,30 @@ export async function cancelBooking(bookingId: string): Promise<BookingDTO> {
     throw new Error("Forbidden: resource not found");
   }
 
-  // 4. MUTATE — soft-delete and set status to cancelled
-  const booking = await prisma.booking.update({
-    where: { id: bookingId, tenantId },
-    data: {
-      status: BookingStatus.CANCELLED,
-      deletedAt: new Date(),
-    },
-  });
+  // 4 + 5. MUTATE + AUDIT
+  const booking = await prisma.$transaction(async (tx) => {
+    await tx.bookingReservation.deleteMany({ where: { bookingId } });
 
-  // 5. AUDIT
-  await prisma.auditLog.create({
-    data: {
-      tenantId,
-      userId,
-      action: "CANCEL_BOOKING",
-      resourceType: "Booking",
-      resourceId: booking.id,
-      details: JSON.stringify({ previousStatus: existing.status }),
-      timestamp: new Date(),
-    },
+    const updated = await tx.booking.update({
+      where: { id: bookingId, tenantId },
+      data: {
+        status: BookingStatus.CANCELLED,
+      },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        tenantId,
+        userId,
+        action: "CANCEL_BOOKING",
+        resourceType: "Booking",
+        resourceId: updated.id,
+        details: JSON.stringify({ previousStatus: existing.status }),
+        timestamp: new Date(),
+      },
+    });
+
+    return updated;
   });
 
   return {

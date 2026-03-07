@@ -54,6 +54,8 @@ const mockWrap = {
   deletedAt: null,
   createdAt: new Date("2024-01-01"),
   updatedAt: new Date("2024-01-01"),
+  images: [],
+  categoryMappings: [],
 };
 
 // ── Tests ─────────────────────────────────────────────────────────────────────

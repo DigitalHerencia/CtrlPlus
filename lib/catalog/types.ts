@@ -21,15 +21,29 @@ export type WrapCategory = (typeof WrapCategory)[keyof typeof WrapCategory];
 
 // ─── DTOs ─────────────────────────────────────────────────────────────────────
 
+export interface WrapImageDTO {
+  id: string;
+  url: string;
+  displayOrder: number;
+}
+
+export interface WrapCategoryDTO {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 /** Read model returned by catalog fetchers. Never exposes raw Prisma model. */
 export interface WrapDTO {
   id: string;
   tenantId: string;
   name: string;
   description: string | null;
-  /** Price in cents as a number */
+  /** Price in cents as an integer number */
   price: number;
   installationMinutes: number | null;
+  images: WrapImageDTO[];
+  categories: WrapCategoryDTO[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,15 +68,42 @@ export const wrapDTOFields = {
   installationMinutes: true,
   createdAt: true,
   updatedAt: true,
+  images: {
+    where: { deletedAt: null },
+    select: {
+      id: true,
+      url: true,
+      displayOrder: true,
+    },
+    orderBy: { displayOrder: "asc" },
+  },
+  categoryMappings: {
+    select: {
+      category: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          deletedAt: true,
+        },
+      },
+    },
+  },
 } as const;
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
+const priceInCentsSchema = z.coerce
+  .number()
+  .int("Price must be an integer number of cents")
+  .positive("Price must be positive")
+  .max(10_000_000_00, "Price exceeds supported maximum");
+
 export const createWrapSchema = z.object({
   name: z.string().min(1, "Name is required").max(120),
   description: z.string().max(500).optional(),
-  price: z.number().positive("Price must be positive"),
-  installationMinutes: z
+  price: priceInCentsSchema,
+  installationMinutes: z.coerce
     .number()
     .int()
     .positive("Installation minutes must be a positive integer")
@@ -75,6 +116,35 @@ export const updateWrapSchema = createWrapSchema.partial();
 
 export type UpdateWrapInput = z.infer<typeof updateWrapSchema>;
 
+export const createWrapCategorySchema = z.object({
+  name: z.string().min(1).max(80),
+  slug: z
+    .string()
+    .min(1)
+    .max(80)
+    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase letters, numbers, or dashes"),
+});
+
+export type CreateWrapCategoryInput = z.infer<typeof createWrapCategorySchema>;
+
+export const updateWrapCategorySchema = createWrapCategorySchema.partial();
+
+export type UpdateWrapCategoryInput = z.infer<typeof updateWrapCategorySchema>;
+
+export const setWrapCategoryMappingsSchema = z.object({
+  wrapId: z.string().min(1),
+  categoryIds: z.array(z.string().min(1)).max(50),
+});
+
+export type SetWrapCategoryMappingsInput = z.infer<typeof setWrapCategoryMappingsSchema>;
+
+export const wrapImageUploadSchema = z.object({
+  wrapId: z.string().min(1),
+  file: z.instanceof(File),
+});
+
+export type WrapImageUploadInput = z.infer<typeof wrapImageUploadSchema>;
+
 export const WRAP_SORT_BY_VALUES = {
   name: "name",
   price: "price",
@@ -85,11 +155,12 @@ export type WrapSortBy = (typeof WRAP_SORT_BY_VALUES)[keyof typeof WRAP_SORT_BY_
 
 export const searchWrapsSchema = z.object({
   query: z.string().max(200).optional(),
-  maxPrice: z.number().positive().optional(),
+  maxPrice: priceInCentsSchema.optional(),
   sortBy: z.enum(["name", "price", "createdAt"]).optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
-  page: z.number().int().min(1).default(1),
-  pageSize: z.number().int().min(1).max(100).default(20),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+  categoryId: z.string().min(1).optional(),
 });
 
 export type SearchWrapsInput = z.infer<typeof searchWrapsSchema>;
