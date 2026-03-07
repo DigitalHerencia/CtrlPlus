@@ -53,6 +53,32 @@ const SUPPORTED_EVENTS = new Set([
   "user.updated",
 ]);
 
+const DEV_ONLY_EVENT_PREFIXES = ["subscription.", "subscriptionItem.", "paymentAttempt."];
+
+export function isClerkSubscriptionSyncEnabled(): boolean {
+  if (process.env.NODE_ENV === "production") {
+    return false;
+  }
+
+  return process.env.ENABLE_CLERK_SUBSCRIPTION_SYNC !== "false";
+}
+
+export function resolveClerkDevWebhookBaseUrl(): string | null {
+  if (process.env.NODE_ENV === "production") {
+    return null;
+  }
+
+  const configuredUrl =
+    process.env.DEV_WEBHOOK_BASE_URL ?? process.env.CLERK_WEBHOOK_DEV_URL ?? null;
+
+  return configuredUrl?.trim() || null;
+}
+
+export function shouldSkipWebhookEventInCurrentEnv(eventType: string): boolean {
+  const isDevOnlyEvent = DEV_ONLY_EVENT_PREFIXES.some((prefix) => eventType.startsWith(prefix));
+  return isDevOnlyEvent && !isClerkSubscriptionSyncEnabled();
+}
+
 function asObject(value: unknown): JsonObject | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as JsonObject) : null;
 }
@@ -146,7 +172,7 @@ function ensureClerkWebhookSigningSecret(): string | null {
   return signingSecret;
 }
 
-async function claimClerkWebhookEvent(
+export async function claimClerkWebhookEvent(
   eventId: string,
   eventType: string,
 ): Promise<WebhookEventState> {
@@ -225,13 +251,13 @@ async function handleUserEvent(eventType: string, data: unknown): Promise<void> 
   }
 
   const emailAddresses = getPathValue(data, ["email_addresses"]);
-  let email = "";
+  let email = `no-email+${clerkUserId}@local.invalid`;
 
   if (Array.isArray(emailAddresses)) {
     for (const item of emailAddresses) {
       const emailAddress = getFirstStringPath(item, [["email_address"]]);
       if (emailAddress) {
-        email = emailAddress;
+        email = emailAddress.toLowerCase();
         break;
       }
     }
@@ -488,6 +514,20 @@ export async function POST(req: NextRequest) {
     if (!SUPPORTED_EVENTS.has(evt.type)) {
       console.warn(`[Clerk Webhook] Ignoring unsupported event type: ${evt.type}`);
       return NextResponse.json({ message: "Ignored unsupported event type" }, { status: 200 });
+    }
+
+    if (shouldSkipWebhookEventInCurrentEnv(evt.type)) {
+      return NextResponse.json({ message: "Ignored in current environment" }, { status: 200 });
+    }
+
+    const devWebhookBaseUrl = resolveClerkDevWebhookBaseUrl();
+    if (devWebhookBaseUrl && process.env.NODE_ENV !== "production") {
+      const isNgrokBaseUrl = devWebhookBaseUrl.includes("ngrok-free.app");
+      if (!isNgrokBaseUrl) {
+        console.warn(
+          "[Clerk Webhook] DEV_WEBHOOK_BASE_URL/CLERK_WEBHOOK_DEV_URL is set but does not use ngrok-free.app",
+        );
+      }
     }
 
     const webhookState = await claimClerkWebhookEvent(eventId, evt.type);

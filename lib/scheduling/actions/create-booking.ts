@@ -8,7 +8,7 @@ import { ensureInvoiceForBooking } from "@/lib/billing/actions/ensure-invoice-fo
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 
-// ─── Input validation schema ──────────────────────────────────────────────────
+export type CreateBookingInput = ReserveSlotInput;
 
 const createBookingSchema = z
   .object({
@@ -38,15 +38,9 @@ export interface CreatedBookingDTO {
 // ─── Server action ────────────────────────────────────────────────────────────
 
 /**
- * Creates a booking for the current authenticated user.
+ * Backward-compatible alias for slot reservation.
  *
- * Security pipeline:
- *  1. Authenticate  – verify the user is logged in
- *  2. Authorize     – verify the user is a tenant member
- *  3. Validate      – parse and validate input with Zod
- *  4. Availability  – verify the slot falls within an AvailabilityRule and has capacity
- *  5. Mutate        – create the booking scoped to the tenant
- *  6. Audit         – log the creation
+ * The booking is created in `pending` status with a 15-minute reservation hold.
  */
 export async function createBooking(input: CreateBookingInput): Promise<CreatedBookingDTO> {
   // Step 1: AUTHENTICATE

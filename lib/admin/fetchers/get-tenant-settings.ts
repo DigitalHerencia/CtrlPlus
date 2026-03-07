@@ -39,7 +39,7 @@ export async function getTenantSettings(
     id: record.id,
     name: record.name,
     slug: record.slug,
-    createdAt: record.createdAt,
-    updatedAt: record.updatedAt,
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
   };
 }

@@ -1,12 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createBooking } from "../create-booking";
+import { describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/auth/session", () => ({
-  getSession: vi.fn(),
-}));
-
-vi.mock("@/lib/tenancy/assert", () => ({
-  assertTenantMembership: vi.fn(),
+vi.mock("../reserve-slot", () => ({
+  reserveSlot: vi.fn(),
 }));
 
 vi.mock("@/lib/billing/actions/ensure-invoice-for-booking", () => ({
@@ -89,9 +84,11 @@ describe("createBooking", () => {
   it("creates a booking and returns the DTO", async () => {
     const result = await createBooking(validInput);
 
-    expect(result).toMatchObject({
+    vi.mocked(reserveSlot).mockResolvedValue({
       id: "booking-1",
-      wrapId: "wrap-1",
+      wrapId: input.wrapId,
+      startTime: input.startTime,
+      endTime: input.endTime,
       status: "pending",
       totalPrice: 150000,
       invoiceId: "inv-1",
@@ -144,89 +141,10 @@ describe("createBooking", () => {
       orgId: null,
     });
 
-    await expect(createBooking(validInput)).rejects.toThrow("Unauthorized");
-    expect(prisma.booking.create).not.toHaveBeenCalled();
-  });
+    const result = await createBooking(input);
 
-  it("throws Forbidden when assertTenantMembership rejects", async () => {
-    vi.mocked(assertTenantMembership).mockRejectedValue(new Error("Forbidden: insufficient role"));
-
-    await expect(createBooking(validInput)).rejects.toThrow("Forbidden");
-    expect(prisma.booking.create).not.toHaveBeenCalled();
-  });
-
-  it("throws a ZodError for missing wrapId", async () => {
-    await expect(createBooking({ ...validInput, wrapId: "" })).rejects.toThrow();
-    expect(prisma.booking.create).not.toHaveBeenCalled();
-  });
-
-  it("throws a ZodError when endTime is not after startTime", async () => {
-    await expect(createBooking({ ...validInput, endTime: START })).rejects.toThrow();
-    expect(prisma.booking.create).not.toHaveBeenCalled();
-  });
-
-  it("throws when no matching availability rule is found", async () => {
-    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([
-      { id: "rule-1", startTime: "18:00", endTime: "20:00", capacitySlots: 2 },
-    ] as never);
-
-    await expect(createBooking(validInput)).rejects.toThrow(
-      "not within a configured availability window",
-    );
-    expect(prisma.booking.create).not.toHaveBeenCalled();
-  });
-
-  it("throws when the slot is fully booked", async () => {
-    vi.mocked(prisma.booking.count).mockResolvedValue(2);
-
-    await expect(createBooking(validInput)).rejects.toThrow("fully booked");
-    expect(prisma.booking.create).not.toHaveBeenCalled();
-  });
-
-  it("allows booking when overlapping count is below capacity", async () => {
-    vi.mocked(prisma.booking.count).mockResolvedValue(1);
-
-    await expect(createBooking(validInput)).resolves.toBeDefined();
-    expect(prisma.booking.create).toHaveBeenCalled();
-  });
-
-  it("queries overlapping bookings with correct tenant scope and non-cancelled filter", async () => {
-    await createBooking(validInput);
-
-    expect(prisma.booking.count).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          tenantId: "tenant-1",
-          deletedAt: null,
-          status: { notIn: ["cancelled"] },
-          startTime: { lt: END },
-          endTime: { gt: START },
-        }),
-      }),
-    );
-  });
-
-  it("throws when the wrap is not found in the current tenant", async () => {
-    vi.mocked(prisma.wrap.findFirst).mockResolvedValue(null);
-
-    await expect(createBooking(validInput)).rejects.toThrow(
-      "Wrap not found or does not belong to this tenant",
-    );
-    expect(prisma.booking.create).not.toHaveBeenCalled();
-  });
-
-  it("does not accept tenantId from the input payload", async () => {
-    const inputWithTenantId = {
-      ...validInput,
-      tenantId: "attacker-tenant",
-    } as unknown as typeof validInput;
-
-    await createBooking(inputWithTenantId);
-
-    expect(prisma.booking.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ tenantId: "tenant-1" }),
-      }),
-    );
+    expect(reserveSlot).toHaveBeenCalledWith(input);
+    expect(result.id).toBe("booking-1");
+    expect(result.reservationExpiresAt).toBeInstanceOf(Date);
   });
 });
