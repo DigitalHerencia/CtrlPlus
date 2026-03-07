@@ -9,7 +9,18 @@
 
 import Stripe from "stripe";
 
+const STRIPE_API_VERSION: Stripe.LatestApiVersion = "2026-02-25.clover";
+
 let _stripe: Stripe | null = null;
+
+function getRequiredEnv(name: "STRIPE_SECRET_KEY" | "STRIPE_WEBHOOK_SECRET"): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`${name} environment variable is not set`);
+  }
+
+  return value;
+}
 
 /**
  * Returns the shared Stripe client instance.
@@ -17,15 +28,30 @@ let _stripe: Stripe | null = null;
  */
 export function getStripeClient(): Stripe {
   if (!_stripe) {
-    const secretKey = process.env.STRIPE_SECRET_KEY;
-    if (!secretKey) {
-      throw new Error("STRIPE_SECRET_KEY environment variable is not set");
-    }
-    _stripe = new Stripe(secretKey, {
-      apiVersion: "2026-02-25.clover",
+    _stripe = new Stripe(getRequiredEnv("STRIPE_SECRET_KEY"), {
+      apiVersion: STRIPE_API_VERSION,
     });
   }
+
   return _stripe;
+}
+
+/**
+ * Returns the canonical server base URL used for checkout redirects.
+ * Throws if NEXT_PUBLIC_APP_URL is not configured or is not a valid URL.
+ */
+export function getAppBaseUrl(): string {
+  const rawBaseUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+  if (!rawBaseUrl) {
+    throw new Error("NEXT_PUBLIC_APP_URL environment variable is not set");
+  }
+
+  try {
+    return new URL(rawBaseUrl).origin;
+  } catch {
+    throw new Error("NEXT_PUBLIC_APP_URL must be a valid absolute URL");
+  }
 }
 
 /**
@@ -37,11 +63,10 @@ export function getStripeClient(): Stripe {
  * @throws If signature verification fails or STRIPE_WEBHOOK_SECRET is not set
  */
 export function constructWebhookEvent(payload: string, signature: string): Stripe.Event {
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!webhookSecret) {
-    throw new Error("STRIPE_WEBHOOK_SECRET environment variable is not set");
-  }
-
   const stripe = getStripeClient();
-  return stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+  return stripe.webhooks.constructEvent(
+    payload,
+    signature,
+    getRequiredEnv("STRIPE_WEBHOOK_SECRET"),
+  );
 }

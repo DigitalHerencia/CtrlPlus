@@ -49,12 +49,12 @@ export default async function AdminDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <StatsCard
           title="Team Members"
-          value={stats.totalMembers}
+          value={stats.memberCount}
           description="Active members in your tenant"
         />
         <StatsCard
           title="Total Bookings"
-          value={stats.totalBookings}
+          value={stats.bookingCount}
           description="Booked jobs across your team"
         />
         <StatsCard
