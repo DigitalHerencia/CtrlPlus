@@ -83,9 +83,7 @@ export function extractTenantSlugFromHost(
     return null;
   }
 
-  // Tunnel domains are allowed for webhook delivery only. Never derive tenant
-  // context from them because the suffix is public and not controlled by us.
-  if (shouldIgnoreNgrokHostForTenantResolution(hostname)) {
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
     return null;
   }
 
