@@ -83,8 +83,8 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
     setError(null);
     startTransition(async () => {
       try {
-        await createBooking({ wrapId: selectedWrapId, startTime, endTime });
-        router.push("/scheduling/bookings");
+        const booking = await createBooking({ wrapId: selectedWrapId, startTime, endTime });
+        router.push(`/billing/${booking.invoiceId}`);
         router.refresh();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to create booking.");

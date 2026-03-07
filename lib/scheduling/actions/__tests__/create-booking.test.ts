@@ -9,6 +9,10 @@ vi.mock("@/lib/tenancy/assert", () => ({
   assertTenantMembership: vi.fn(),
 }));
 
+vi.mock("@/lib/billing/actions/ensure-invoice-for-booking", () => ({
+  ensureInvoiceForBooking: vi.fn(),
+}));
+
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     $transaction: vi.fn(),
@@ -31,6 +35,7 @@ vi.mock("@/lib/prisma", () => ({
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
+import { ensureInvoiceForBooking } from "@/lib/billing/actions/ensure-invoice-for-booking";
 import type { Prisma } from "@prisma/client";
 
 const mockSession = {
@@ -78,6 +83,7 @@ describe("createBooking", () => {
     vi.mocked(prisma.wrap.findFirst).mockResolvedValue(mockWrap as never);
     vi.mocked(prisma.booking.create).mockResolvedValue(mockBooking as never);
     vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
+    vi.mocked(ensureInvoiceForBooking).mockResolvedValue({ invoiceId: "inv-1", created: true });
   });
 
   it("creates a booking and returns the DTO", async () => {
@@ -88,6 +94,7 @@ describe("createBooking", () => {
       wrapId: "wrap-1",
       status: "pending",
       totalPrice: 150000,
+      invoiceId: "inv-1",
     });
     expect(result.startTime).toEqual(START);
     expect(result.endTime).toEqual(END);

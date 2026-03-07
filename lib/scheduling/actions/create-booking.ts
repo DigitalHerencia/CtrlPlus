@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { toHHmm } from "@/lib/scheduling/utils";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
+import { ensureInvoiceForBooking } from "@/lib/billing/actions/ensure-invoice-for-booking";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -31,6 +32,7 @@ export interface CreatedBookingDTO {
   endTime: Date;
   status: string;
   totalPrice: number;
+  invoiceId: string;
 }
 
 // ─── Server action ────────────────────────────────────────────────────────────
@@ -149,6 +151,8 @@ export async function createBooking(input: CreateBookingInput): Promise<CreatedB
     return createdBooking;
   });
 
+  const invoice = await ensureInvoiceForBooking({ bookingId: booking.id });
+
   return {
     id: booking.id,
     wrapId: booking.wrapId,
@@ -156,5 +160,6 @@ export async function createBooking(input: CreateBookingInput): Promise<CreatedB
     endTime: booking.endTime,
     status: booking.status,
     totalPrice: booking.totalPrice,
+    invoiceId: invoice.invoiceId,
   };
 }
