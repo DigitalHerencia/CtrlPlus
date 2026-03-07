@@ -3,8 +3,8 @@
 import { getSession } from "@/lib/auth/session";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
-import type { Prisma } from "@prisma/client";
-import { toHHmm } from "../utils";
+import { assertSlotHasCapacity } from "@/lib/scheduling/capacity";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 const updateBookingSchema = z
@@ -77,77 +77,43 @@ export async function updateBooking(
   }
 
   // 5 + 6 + 7. AVAILABILITY CHECK + MUTATE + AUDIT — performed atomically
-  const dayOfWeek = startTime.getDay(); // 0 = Sunday … 6 = Saturday
-  const slotStartHHmm = toHHmm(startTime);
-  const slotEndHHmm = toHHmm(endTime);
-
-  const booking = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    // 5a. Find rules for the requested day-of-week and time window
-    const rules = await tx.availabilityRule.findMany({
-      where: { tenantId, dayOfWeek, deletedAt: null },
-      select: { startTime: true, endTime: true, capacitySlots: true },
-    });
-
-    if (rules.length === 0) {
-      throw new Error("No availability configured for the requested day");
-    }
-
-    // 5b. Filter to rules whose window fully covers the requested slot
-    const matchingRules = rules.filter(
-      (rule: { startTime: string; endTime: string; capacitySlots: number }) =>
-        rule.startTime <= slotStartHHmm && rule.endTime >= slotEndHHmm,
-    );
-
-    if (matchingRules.length === 0) {
-      throw new Error("No availability configured for the requested time window");
-    }
-
-    const maxCapacity = Math.max(
-      ...matchingRules.map((r: { capacitySlots: number }) => r.capacitySlots),
-    );
-
-    // 5c. Count overlapping bookings, excluding the booking being rescheduled
-    const overlappingCount = await tx.booking.count({
-      where: {
+  const booking = await prisma.$transaction(
+    async (tx: Prisma.TransactionClient) => {
+      await assertSlotHasCapacity(tx, {
         tenantId,
-        deletedAt: null,
-        status: { not: "cancelled" },
-        id: { not: bookingId },
-        startTime: { lt: endTime },
-        endTime: { gt: startTime },
-      },
-    });
+        startTime,
+        endTime,
+        excludeBookingId: bookingId,
+      });
 
-    if (overlappingCount >= maxCapacity) {
-      throw new Error("No available slots for the requested time");
-    }
+      // 6. MUTATE — update time slot scoped by tenantId
+      const updatedBooking = await tx.booking.update({
+        where: { id: bookingId, tenantId },
+        data: { startTime, endTime },
+      });
 
-    // 6. MUTATE — update time slot scoped by tenantId
-    const updatedBooking = await tx.booking.update({
-      where: { id: bookingId, tenantId },
-      data: { startTime, endTime },
-    });
+      // 7. AUDIT
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          userId,
+          action: "UPDATE_BOOKING",
+          resourceType: "Booking",
+          resourceId: updatedBooking.id,
+          details: JSON.stringify({
+            previousStartTime: existing.startTime.toISOString(),
+            previousEndTime: existing.endTime.toISOString(),
+            newStartTime: startTime.toISOString(),
+            newEndTime: endTime.toISOString(),
+          }),
+          timestamp: new Date(),
+        },
+      });
 
-    // 7. AUDIT
-    await tx.auditLog.create({
-      data: {
-        tenantId,
-        userId,
-        action: "UPDATE_BOOKING",
-        resourceType: "Booking",
-        resourceId: updatedBooking.id,
-        details: JSON.stringify({
-          previousStartTime: existing.startTime.toISOString(),
-          previousEndTime: existing.endTime.toISOString(),
-          newStartTime: startTime.toISOString(),
-          newEndTime: endTime.toISOString(),
-        }),
-        timestamp: new Date(),
-      },
-    });
-
-    return updatedBooking;
-  });
+      return updatedBooking;
+    },
+    { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+  );
 
   return {
     id: booking.id,
