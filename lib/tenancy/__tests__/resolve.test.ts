@@ -37,6 +37,16 @@ describe("extractTenantSlugFromHost", () => {
     expect(extractTenantSlugFromHost("demo.ngrok-free.app")).toBeNull();
   });
 
+
+  it("can explicitly allow ngrok tenant parsing when enabled", () => {
+    process.env.NEXT_PUBLIC_TENANT_DOMAIN_SUFFIX = ".ctrlplus.local";
+    process.env.ALLOW_NGROK_TENANT_HOST_RESOLUTION = "true";
+
+    expect(extractTenantSlugFromHost("demo.ngrok-free.app", ".ngrok-free.app")).toBe("demo");
+
+    delete process.env.ALLOW_NGROK_TENANT_HOST_RESOLUTION;
+  });
+
   it("rejects arbitrary public hosts outside the configured tenant suffix", () => {
     process.env.NEXT_PUBLIC_TENANT_DOMAIN_SUFFIX = ".ctrlplus.local";
 
