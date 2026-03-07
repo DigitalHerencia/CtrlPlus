@@ -56,6 +56,7 @@ jobs:
       # build doesn't crash. Real auth flows are skipped / mocked in tests.
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_placeholder' }}
       CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY || 'sk_test_placeholder' }}
+      CLERK_WEBHOOK_SIGNING_SECRET: ${{ secrets.CLERK_WEBHOOK_SIGNING_SECRET || 'whsec_placeholder' }}
       # Provide a stub DATABASE_URL; tests mock all DB access via page.route()
       DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgresql://test:test@localhost:5432/test' }}
       DEV_TENANT_ID: ${{ secrets.DEV_TENANT_ID || 'tenant-test-ci' }}

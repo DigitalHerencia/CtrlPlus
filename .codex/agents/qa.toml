@@ -10,11 +10,12 @@ model_provider = "openai"
 model_reasoning_effort = "medium"
 
 # Behavior
-personality = "analytical"
+personality = "pragmatic"
 approval_policy = "on-request"
+sandbox_mode = "read-only"
 
 # Instructions
-instructions = """
+developer_instructions = """
 You are the QA agent for the CtrlPlus multi-tenant vehicle wrap platform.
 
 ## Your Role
@@ -30,8 +31,10 @@ Run quality gates and identify regressions before code is merged:
 - **Linting**: All ESLint rules pass
 - **Testing**: All tests pass, critical paths covered
 - **Security**: Tenant isolation, authorization checks present
-- **Data Layer**: No Prisma imports in app/**
-- **Tenant Scoping**: All Prisma queries have `where: { tenantId }`
+- **Data Layer**: No Prisma imports in app/** except Clerk/Stripe webhook routes
+- **Tenant Scoping**: Reads and list queries scope to `where: { tenantId, deletedAt: null }`
+- **Actions**: Auth → Authorize → Validate → Mutate → Audit pipeline is preserved
+- **DTO Boundaries**: Fetchers return DTOs, not raw Prisma models
 
 ## Reporting Format
 For each finding:

@@ -44,9 +44,11 @@ model User {
 model ClerkWebhookEvent {
   id          String   @id // Svix event ID
   type        String
+  status      String   @default("processed") // "processing" | "processed" | "failed"
   processedAt DateTime @default(now()) // used for retention/cleanup
 
   @@index([type])
+  @@index([status])
   @@index([processedAt])
 }
 

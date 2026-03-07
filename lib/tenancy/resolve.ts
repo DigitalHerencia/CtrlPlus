@@ -9,6 +9,8 @@
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 
+const NGROK_FREE_APP_SUFFIX = ".ngrok-free.app";
+
 /**
  * Resolve tenant from current request context (subdomain).
  *
@@ -30,7 +32,7 @@ export async function resolveTenantFromRequest(): Promise<string | null> {
   }
 
   // Extract subdomain
-  const subdomain = extractSubdomain(host);
+  const subdomain = extractTenantSlugFromHost(host);
 
   if (!subdomain) {
     return null;
@@ -62,32 +64,54 @@ export async function resolveTenantFromRequest(): Promise<string | null> {
  * ctrlplus.com → null
  * ```
  */
-function extractSubdomain(host: string): string | null {
-  // Remove port if present
-  const hostname = host.split(":")[0];
-
-  // Split by dots
-  const parts = hostname.split(".");
-
-  // Need at least 2 parts for subdomain (subdomain.domain)
-  // For localhost development: tenant1.localhost
-  // For production: tenant1.ctrlplus.com
-  if (parts.length < 2) {
+export function extractTenantSlugFromHost(
+  host: string,
+  tenantDomainSuffix: string = process.env.NEXT_PUBLIC_TENANT_DOMAIN_SUFFIX ?? "",
+): string | null {
+  const hostname = host.split(":")[0]?.trim().toLowerCase();
+  if (!hostname) {
     return null;
   }
 
-  // If localhost, first part is subdomain
-  if (hostname.includes("localhost")) {
-    return parts[0];
-  }
-
-  // For production domains (ctrlplus.com), first part is subdomain
-  // But skip if it's the root domain (ctrlplus.com) or www
-  if (parts.length === 2 || parts[0] === "www") {
+  // Tunnel domains are allowed for webhook delivery only. Never derive tenant
+  // context from them because the suffix is public and not controlled by us.
+  if (hostname === "ngrok-free.app" || hostname.endsWith(NGROK_FREE_APP_SUFFIX)) {
     return null;
   }
 
-  return parts[0];
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return null;
+  }
+
+  if (hostname.endsWith(".localhost")) {
+    const subdomain = hostname.slice(0, -".localhost".length);
+    return isSingleTenantLabel(subdomain) ? subdomain : null;
+  }
+
+  const normalizedSuffix = normalizeTenantDomainSuffix(tenantDomainSuffix);
+  if (!normalizedSuffix) {
+    return null;
+  }
+
+  if (!hostname.endsWith(normalizedSuffix)) {
+    return null;
+  }
+
+  const subdomain = hostname.slice(0, -normalizedSuffix.length);
+  return isSingleTenantLabel(subdomain) ? subdomain : null;
+}
+
+function normalizeTenantDomainSuffix(suffix: string): string | null {
+  const normalized = suffix.trim().toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+
+  return normalized.startsWith(".") ? normalized : `.${normalized}`;
+}
+
+function isSingleTenantLabel(value: string): boolean {
+  return value.length > 0 && !value.includes(".") && value !== "www";
 }
 
 /**

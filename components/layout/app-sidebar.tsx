@@ -104,7 +104,7 @@ export function TenantSidebar() {
           </div>
         </div>
       </SidebarFooter>
-      <SidebarTrigger className="absolute top-1/8 -right-10 -translate-y-1/2 rounded-full border-2 border-neutral-800 bg-neutral-900 p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none" />
+      <SidebarTrigger className="absolute top-3/16 -right-10 -translate-y-1/2 rounded-full border-2 border-neutral-800 bg-neutral-900 p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none" />
     </Sidebar>
   );
 }
