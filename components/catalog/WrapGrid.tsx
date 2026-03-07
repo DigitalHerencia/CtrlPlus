@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { type WrapDTO } from "@/lib/catalog/types";
+import { Card, CardContent } from "@/components/ui/card";
 import { WrapCard } from "./WrapCard";
 
 interface WrapGridProps {
@@ -32,6 +32,7 @@ export function WrapGrid({ wraps }: WrapGridProps) {
             description: wrap.description,
             price: wrap.price,
             installationMinutes: wrap.installationMinutes,
+            images: wrap.images,
           }}
         />
       ))}

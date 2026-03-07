@@ -25,6 +25,8 @@ const mockWrap = {
   installationMinutes: null,
   createdAt: new Date("2024-01-01T00:00:00.000Z"),
   updatedAt: new Date("2024-01-02T00:00:00.000Z"),
+  images: [{ id: "img-1", url: "/uploads/wraps/a.jpg", displayOrder: 0 }],
+  categoryMappings: [{ category: { id: "cat-1", name: "Full", slug: "full", deletedAt: null } }],
 };
 
 // ─── Import fetchers after mock is set up ────────────────────────────────────

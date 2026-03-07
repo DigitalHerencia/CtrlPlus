@@ -5,27 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { createWrapSchema, type CreateWrapInput, type WrapDTO } from "../types";
 
-/**
- * Creates a new wrap in the catalog for the current tenant.
- *
- * Security pipeline:
- * 1. Authenticate  — verify user is signed in
- * 2. Authorize     — verify user is an admin or owner of the tenant
- * 3. Validate      — parse and validate input with Zod
- * 4. Mutate        — create the record scoped to tenantId
- * 5. Audit         — write an immutable audit log entry
- */
 export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
-  // 1. AUTHENTICATE
   const { userId, tenantId } = await requireAuth();
-
-  // 2. AUTHORIZE
   await assertTenantMembership(tenantId, userId, "admin");
 
-  // 3. VALIDATE
   const parsed = createWrapSchema.parse(input);
 
-  // 4. MUTATE (always scoped by tenantId)
   const wrap = await prisma.wrap.create({
     data: {
       tenantId,
@@ -34,9 +19,22 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
       price: parsed.price,
       installationMinutes: parsed.installationMinutes ?? null,
     },
+    include: {
+      images: {
+        where: { deletedAt: null },
+        select: { id: true, url: true, displayOrder: true },
+        orderBy: { displayOrder: "asc" },
+      },
+      categoryMappings: {
+        select: {
+          category: {
+            select: { id: true, name: true, slug: true, deletedAt: true },
+          },
+        },
+      },
+    },
   });
 
-  // 5. AUDIT
   await prisma.auditLog.create({
     data: {
       tenantId,
@@ -44,7 +42,7 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
       action: "wrap.created",
       resourceType: "Wrap",
       resourceId: wrap.id,
-      details: JSON.stringify({ name: wrap.name, price: wrap.price }),
+      details: JSON.stringify({ name: wrap.name, priceInCents: parsed.price }),
       timestamp: new Date(),
     },
   });
@@ -54,8 +52,30 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
     tenantId: wrap.tenantId,
     name: wrap.name,
     description: wrap.description,
-    price: wrap.price,
+    price: parsed.price,
     installationMinutes: wrap.installationMinutes,
+    images: wrap.images,
+    categories: wrap.categoryMappings
+      .map(
+        (mapping: {
+          category: { id: string; name: string; slug: string; deletedAt: Date | null };
+        }) => mapping.category,
+      )
+      .filter(
+        (category: { id: string; name: string; slug: string; deletedAt: Date | null }) =>
+          category.deletedAt === null,
+      )
+      .map(
+        ({
+          deletedAt: _deletedAt,
+          ...category
+        }: {
+          deletedAt: Date | null;
+          id: string;
+          name: string;
+          slug: string;
+        }) => category,
+      ),
     createdAt: wrap.createdAt,
     updatedAt: wrap.updatedAt,
   };
