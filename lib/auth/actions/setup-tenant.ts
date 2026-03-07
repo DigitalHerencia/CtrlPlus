@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { resolveTenantFromRequest } from "@/lib/tenancy/resolve";
+import { generateTenantSlug } from "@/lib/tenancy/slug";
 import { auth } from "@clerk/nextjs/server";
 
 /**
@@ -51,11 +52,11 @@ export async function setupUserTenant(): Promise<string> {
 
   if (!tenantId) {
     // No subdomain provided - create a new tenant for this user
-    // In production, tenant slug should be derived from tenantId or user email domain
+    // Use deterministic normalized slug generation for tenant safety.
     const tenant = await prisma.tenant.create({
       data: {
         name: `${clerkUserId}'s Workspace`,
-        slug: clerkUserId.toLowerCase(), // Use Clerk ID as slug
+        slug: generateTenantSlug(clerkUserId),
       },
       select: { id: true },
     });
