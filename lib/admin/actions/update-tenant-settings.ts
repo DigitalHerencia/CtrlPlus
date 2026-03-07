@@ -65,7 +65,7 @@ export async function updateTenantSettings(
     id: tenant.id,
     name: tenant.name,
     slug: tenant.slug,
-    createdAt: tenant.createdAt,
-    updatedAt: tenant.updatedAt,
+    createdAt: tenant.createdAt.toISOString(),
+    updatedAt: tenant.updatedAt.toISOString(),
   };
 }

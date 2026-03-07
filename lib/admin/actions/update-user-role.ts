@@ -3,10 +3,12 @@
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
+import { getInternalUserIdByClerkId } from "../user-id";
 import { updateUserRoleSchema, type UpdateUserRoleInput, type UserRoleDTO } from "../types";
 
 /**
- * Updates the role of an existing tenant member.
+ * Canonical action for updating tenant member roles.
+ * Owner-only; never allows assigning owner role or mutating current owner role.
  */
 export async function updateUserRole(input: UpdateUserRoleInput): Promise<UserRoleDTO> {
   const { tenantId, userId } = await getSession();
@@ -15,13 +17,21 @@ export async function updateUserRole(input: UpdateUserRoleInput): Promise<UserRo
   await assertTenantMembership(tenantId, userId, "owner");
 
   const parsed = updateUserRoleSchema.parse(input);
+  const targetUserId = await getInternalUserIdByClerkId(parsed.targetClerkUserId);
 
   const membership = await prisma.tenantUserMembership.findUnique({
     where: {
       tenantId_userId: {
         tenantId,
-        userId: parsed.targetClerkUserId,
+        userId: targetUserId,
       },
+    },
+    select: {
+      id: true,
+      tenantId: true,
+      userId: true,
+      role: true,
+      deletedAt: true,
     },
   });
 
@@ -37,10 +47,17 @@ export async function updateUserRole(input: UpdateUserRoleInput): Promise<UserRo
     where: {
       tenantId_userId: {
         tenantId,
-        userId: parsed.targetClerkUserId,
+        userId: targetUserId,
       },
     },
     data: { role: parsed.role },
+    select: {
+      id: true,
+      tenantId: true,
+      userId: true,
+      role: true,
+      updatedAt: true,
+    },
   });
 
   await prisma.auditLog.create({
@@ -51,7 +68,8 @@ export async function updateUserRole(input: UpdateUserRoleInput): Promise<UserRo
       resourceType: "TenantUserMembership",
       resourceId: updated.id,
       details: JSON.stringify({
-        targetUserId: parsed.targetClerkUserId,
+        targetClerkUserId: parsed.targetClerkUserId,
+        targetUserId,
         newRole: parsed.role,
       }),
     },
@@ -61,6 +79,6 @@ export async function updateUserRole(input: UpdateUserRoleInput): Promise<UserRo
     tenantId: updated.tenantId,
     userId: updated.userId,
     role: updated.role as "admin" | "member",
-    updatedAt: updated.updatedAt,
+    updatedAt: updated.updatedAt.toISOString(),
   };
 }
