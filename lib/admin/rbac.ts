@@ -17,5 +17,5 @@ import { assertTenantMembership } from "@/lib/tenancy/assert";
  * @throws Error if user is not a member or has only MEMBER role
  */
 export async function assertAdminOrOwner(tenantId: string, userId: string): Promise<void> {
-  await assertTenantMembership(tenantId, userId);
+  await assertTenantMembership(tenantId, userId, "admin");
 }

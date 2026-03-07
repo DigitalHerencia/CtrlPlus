@@ -1,9 +1,9 @@
-"use server"
+"use server";
 
-import { requireAuth } from "@/lib/auth/session"
-import { prisma } from "@/lib/prisma"
-import { assertTenantMembership } from "@/lib/tenancy/assert"
-import type { WrapDTO } from "../types"
+import { requireAuth } from "@/lib/auth/session";
+import { prisma } from "@/lib/prisma";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
+import type { WrapDTO } from "../types";
 
 /**
  * Soft-deletes a wrap from the catalog (sets deletedAt timestamp).
@@ -18,26 +18,26 @@ import type { WrapDTO } from "../types"
  */
 export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
   // 1. AUTHENTICATE
-  const { userId, tenantId } = await requireAuth()
+  const { userId, tenantId } = await requireAuth();
 
   // 2. AUTHORIZE — delete requires admin role (covers owner and admin)
-  await assertTenantMembership(tenantId, userId, "admin")
+  await assertTenantMembership(tenantId, userId, "admin");
 
   // 3. TENANT SCOPE — defensive ownership check before mutation
   const existing = await prisma.wrap.findFirst({
     where: { id: wrapId, tenantId, deletedAt: null },
-    select: { id: true, tenantId: true, name: true }
-  })
+    select: { id: true, tenantId: true, name: true },
+  });
 
   if (!existing) {
-    throw new Error("Forbidden: resource not found")
+    throw new Error("Forbidden: resource not found");
   }
 
   // 4. MUTATE — soft delete
   const wrap = await prisma.wrap.update({
     where: { id: wrapId },
-    data: { deletedAt: new Date() }
-  })
+    data: { deletedAt: new Date() },
+  });
 
   // 5. AUDIT
   await prisma.auditLog.create({
@@ -48,9 +48,9 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
       resourceType: "Wrap",
       resourceId: wrap.id,
       details: JSON.stringify({ name: wrap.name }),
-      timestamp: new Date()
-    }
-  })
+      timestamp: new Date(),
+    },
+  });
 
   return {
     id: wrap.id,
@@ -60,6 +60,6 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
     price: wrap.price,
     installationMinutes: wrap.installationMinutes,
     createdAt: wrap.createdAt,
-    updatedAt: wrap.updatedAt
-  }
+    updatedAt: wrap.updatedAt,
+  };
 }

@@ -19,11 +19,11 @@ import { assertTenantMembership } from "@/lib/tenancy/assert";
  */
 export async function cancelBooking(bookingId: string): Promise<BookingDTO> {
   // 1. AUTHENTICATE
-  const { tenantId } = await getSession();
-  if (!tenantId) throw new Error("Unauthorized: not authenticated");
+  const { tenantId, userId } = await getSession();
+  if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — any tenant member may cancel a booking
-  await assertTenantMembership(tenantId, tenantId);
+  await assertTenantMembership(tenantId, userId);
 
   // 3. TENANT SCOPE — defensive ownership check before mutation
   const existing = await prisma.booking.findFirst({
@@ -48,7 +48,7 @@ export async function cancelBooking(bookingId: string): Promise<BookingDTO> {
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: tenantId,
+      userId,
       action: "CANCEL_BOOKING",
       resourceType: "Booking",
       resourceId: booking.id,

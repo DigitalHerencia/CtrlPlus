@@ -4,11 +4,15 @@ import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
 import Stripe from "stripe";
+import { z } from "zod";
 import { type CheckoutSessionDTO, type InvoiceLineItemDTO } from "../types";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "");
 
 type InvoiceLineItemRow = Pick<InvoiceLineItemDTO, "description" | "quantity" | "unitPrice">;
+const checkoutInputSchema = z.object({
+  invoiceId: z.string().min(1),
+});
 
 /**
  * Creates a Stripe Checkout Session for the given invoice and returns the
@@ -22,19 +26,22 @@ type InvoiceLineItemRow = Pick<InvoiceLineItemDTO, "description" | "quantity" | 
  * 5. Mutate        — create Stripe Checkout Session
  * 6. Audit         — write an immutable audit event
  */
-export async function createCheckoutSession(): Promise<CheckoutSessionDTO> {
+export async function createCheckoutSession(rawInput: {
+  invoiceId: string;
+}): Promise<CheckoutSessionDTO> {
   // 1. AUTHENTICATE
-  const { tenantId } = await getSession();
-  if (!tenantId) throw new Error("Unauthorized: not authenticated");
+  const { tenantId, userId } = await getSession();
+  if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — any tenant member can initiate checkout for their invoice
-  await assertTenantMembership(tenantId, tenantId);
+  await assertTenantMembership(tenantId, userId);
 
   // 3. VALIDATE
+  const { invoiceId } = checkoutInputSchema.parse(rawInput);
 
   // 4. TENANT SCOPE — confirm invoice belongs to this tenant
   const invoice = await prisma.invoice.findFirst({
-    where: { tenantId, deletedAt: null },
+    where: { id: invoiceId, tenantId, deletedAt: null },
     select: {
       id: true,
       tenantId: true,
@@ -110,7 +117,7 @@ export async function createCheckoutSession(): Promise<CheckoutSessionDTO> {
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: tenantId,
+      userId,
       action: "CREATE_CHECKOUT_SESSION",
       resourceType: "Invoice",
       resourceId: invoice.id,

@@ -20,7 +20,6 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
   const { tab = "upcoming" } = await searchParams;
   const isUpcoming = tab !== "past";
 
-  // Fetch upcoming or past bookings
   let bookings: Awaited<ReturnType<typeof getBookingsForTenant>>["items"] = [];
   let total = 0;
 
@@ -39,64 +38,59 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Bookings</h1>
-          <p className="text-neutral-600 dark:text-neutral-400 mt-2">
-            Manage your installation appointments
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button asChild variant="outline">
-            <Link href="/scheduling">← Calendar</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/scheduling/book">New Booking</Link>
-          </Button>
+      <div className="rounded-xl border border-neutral-800 bg-gradient-to-r from-neutral-950 via-neutral-900 to-blue-950/60 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-neutral-100">Bookings</h1>
+            <p className="mt-2 text-neutral-300">
+              Manage your installation appointments across upcoming and past visits.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button asChild variant="outline">
+              <Link href="/scheduling">← Calendar</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/scheduling/book">New Booking</Link>
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Tab navigation */}
-      <div className="flex gap-1 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="flex gap-1 rounded-lg border border-neutral-800 bg-neutral-900 p-1">
         <Link
           href="/scheduling/bookings?tab=upcoming"
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            isUpcoming
-              ? "border-primary text-primary"
-              : "border-transparent text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+            isUpcoming ? "bg-blue-500 text-white" : "text-neutral-400 hover:text-neutral-100"
           }`}
         >
           Upcoming
         </Link>
         <Link
           href="/scheduling/bookings?tab=past"
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            !isUpcoming
-              ? "border-primary text-primary"
-              : "border-transparent text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+            !isUpcoming ? "bg-blue-500 text-white" : "text-neutral-400 hover:text-neutral-100"
           }`}
         >
           Past
         </Link>
       </div>
 
-      {/* Booking list */}
-      <Card>
+      <Card className="border-neutral-800 bg-neutral-900/60">
         <CardHeader>
-          <CardTitle className="text-base">
+          <CardTitle className="text-base text-neutral-100">
             {isUpcoming ? "Upcoming Appointments" : "Past Appointments"}
           </CardTitle>
           {total > 0 && (
-            <CardDescription>
+            <CardDescription className="text-neutral-400">
               {total} booking{total !== 1 ? "s" : ""}
             </CardDescription>
           )}
         </CardHeader>
         <CardContent>
           {bookings.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-neutral-500 text-sm">
+            <div className="py-12 text-center">
+              <p className="text-sm text-neutral-500">
                 {isUpcoming
                   ? "No upcoming bookings. Ready to schedule an appointment?"
                   : "No past bookings found."}

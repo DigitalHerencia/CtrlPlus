@@ -1,20 +1,26 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Upload, X, ImageIcon } from "lucide-react";
+import { ImageIcon, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { uploadVehiclePhoto } from "@/lib/visualizer/actions/upload-photo";
 import { generatePreview } from "@/lib/visualizer/actions/generate-preview";
+import { uploadVehiclePhoto } from "@/lib/visualizer/actions/upload-photo";
 import type { VisualizerPreviewDTO } from "@/lib/visualizer/types";
 
 interface UploadFormProps {
   wrapId: string;
   onPreviewReady: (preview: VisualizerPreviewDTO) => void;
+  onUploadingChange?: (isUploading: boolean) => void;
   className?: string;
 }
 
-export function UploadForm({ wrapId, onPreviewReady, className }: UploadFormProps) {
+export function UploadForm({
+  wrapId,
+  onPreviewReady,
+  onUploadingChange,
+  className,
+}: UploadFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -55,6 +61,7 @@ export function UploadForm({ wrapId, onPreviewReady, className }: UploadFormProp
     if (!previewUrl) return;
 
     setIsUploading(true);
+    onUploadingChange?.(true);
     setError(null);
 
     try {
@@ -69,19 +76,18 @@ export function UploadForm({ wrapId, onPreviewReady, className }: UploadFormProp
       setError(err instanceof Error ? err.message : "Upload failed. Please try again.");
     } finally {
       setIsUploading(false);
+      onUploadingChange?.(false);
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className={cn("space-y-4", className)}>
-      {/* Drop zone — use a <label> so it is keyboard-accessible and correctly
-          announced by screen readers as a file-upload control. */}
       <label
         htmlFor="vehicle-photo-input"
         className={cn(
-          "relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 cursor-pointer transition-colors",
-          "border-neutral-300 bg-neutral-50 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800",
-          previewUrl && "border-solid border-neutral-400",
+          "relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors",
+          "border-neutral-700 bg-neutral-950 hover:border-blue-500/60 hover:bg-neutral-900",
+          previewUrl && "border-solid border-blue-500/70",
         )}
       >
         {previewUrl ? (
@@ -90,7 +96,7 @@ export function UploadForm({ wrapId, onPreviewReady, className }: UploadFormProp
             <img
               src={previewUrl}
               alt="Selected vehicle"
-              className="max-h-48 max-w-full rounded object-contain"
+              className="max-h-48 max-w-full rounded-md object-contain"
             />
             <button
               type="button"
@@ -98,22 +104,20 @@ export function UploadForm({ wrapId, onPreviewReady, className }: UploadFormProp
                 e.stopPropagation();
                 handleRemove();
               }}
-              className="absolute right-2 top-2 rounded-full bg-white p-1 shadow dark:bg-neutral-800"
+              className="absolute top-2 right-2 rounded-full border border-neutral-600 bg-neutral-900 p-1 shadow"
               aria-label="Remove photo"
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4 text-neutral-200" />
             </button>
           </>
         ) : (
           <>
-            <ImageIcon className="h-10 w-10 text-neutral-400" />
+            <ImageIcon className="h-10 w-10 text-blue-500" />
             <div className="text-center">
-              <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+              <p className="text-sm font-semibold text-neutral-100">
                 Click to upload your vehicle photo
               </p>
-              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-                PNG, JPG, WEBP up to 10 MB
-              </p>
+              <p className="mt-1 text-xs text-neutral-400">PNG, JPG, WEBP up to 10 MB</p>
             </div>
           </>
         )}
@@ -130,12 +134,19 @@ export function UploadForm({ wrapId, onPreviewReady, className }: UploadFormProp
       />
 
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p
+          className="rounded-md border border-red-700/40 bg-red-950/30 px-3 py-2 text-sm text-red-300"
+          role="alert"
+        >
           {error}
         </p>
       )}
 
-      <Button type="submit" disabled={!selectedFile || isUploading} className="w-full">
+      <Button
+        type="submit"
+        disabled={!selectedFile || isUploading}
+        className="w-full bg-blue-600 text-white hover:bg-blue-700"
+      >
         {isUploading ? (
           <>
             <Upload className="mr-2 h-4 w-4 animate-pulse" />

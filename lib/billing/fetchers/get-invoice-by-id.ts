@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import {
   invoiceDTOFields,
+  invoiceLineItemDTOFields,
   paymentDTOFields,
   type InvoiceDetailDTO,
   type InvoiceLineItemDTO,
@@ -24,7 +25,7 @@ export async function getInvoiceById(
     select: {
       ...invoiceDTOFields,
       lineItems: {
-        select: invoiceDTOFields,
+        select: invoiceLineItemDTOFields,
         orderBy: { id: "asc" },
       },
       payments: {
@@ -77,7 +78,7 @@ export async function getInvoiceById(
         status: p.status as PaymentDTO["status"],
         amount: p.amount,
         createdAt: p.createdAt,
-        invoiceId: "",
+        invoiceId,
       }),
     ),
   };

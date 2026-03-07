@@ -77,14 +77,7 @@ export async function searchWraps(
   tenantId: string,
   filters: SearchWrapsInput = { page: 1, pageSize: 20 },
 ): Promise<WrapListDTO> {
-  const {
-    query,
-    maxPrice,
-    sortBy = "createdAt",
-    sortOrder = "desc",
-    page,
-    pageSize,
-  } = filters;
+  const { query, maxPrice, sortBy = "createdAt", sortOrder = "desc", page, pageSize } = filters;
   const skip = (page - 1) * pageSize;
 
   const where = {

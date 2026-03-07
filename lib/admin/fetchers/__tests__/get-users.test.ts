@@ -147,9 +147,9 @@ describe("getTeamMemberById", () => {
   it("throws when assertAdminOrOwner rejects (member role)", async () => {
     vi.mocked(assertAdminOrOwner).mockRejectedValue(new Error("Forbidden"));
 
-    await expect(
-      getTeamMemberById("tenant-abc", "mem-001", "user-member"),
-    ).rejects.toThrow("Forbidden");
+    await expect(getTeamMemberById("tenant-abc", "mem-001", "user-member")).rejects.toThrow(
+      "Forbidden",
+    );
 
     expect(prismaMock.tenantUserMembership.findFirst).not.toHaveBeenCalled();
   });

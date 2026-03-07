@@ -1,41 +1,36 @@
-"use server"
+"use server";
 
-import { getSession } from "@/lib/auth/session"
-import { prisma } from "@/lib/prisma"
-import { assertTenantMembership } from "@/lib/tenancy/assert"
-import { z } from "zod"
+import { getSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/prisma";
+import { toHHmm } from "@/lib/scheduling/utils";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
+import type { Prisma } from "@prisma/client";
+import { z } from "zod";
 
 // ─── Input validation schema ──────────────────────────────────────────────────
 
 const createBookingSchema = z
   .object({
     wrapId: z.string().min(1, "Wrap is required"),
-    startTime: z.coerce.date({}),
-    endTime: z.coerce.date({})
+    startTime: z.coerce.date(),
+    endTime: z.coerce.date(),
   })
   .refine((data) => data.endTime > data.startTime, {
     message: "End time must be after start time",
-    path: ["endTime"]
-  })
+    path: ["endTime"],
+  });
 
-export type CreateBookingInput = z.infer<typeof createBookingSchema>
+export type CreateBookingInput = z.infer<typeof createBookingSchema>;
 
 // ─── Result DTO ───────────────────────────────────────────────────────────────
 
 export interface CreatedBookingDTO {
-  id: string
-  wrapId: string
-  startTime: Date
-  endTime: Date
-  status: string
-  totalPrice: number
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/** Convert a Date to an "HH:MM" string in local time for comparison against AvailabilityRule times. */
-function toHHMM(date: Date): string {
-  return date.toTimeString().slice(0, 5)
+  id: string;
+  wrapId: string;
+  startTime: Date;
+  endTime: Date;
+  status: string;
+  totalPrice: number;
 }
 
 // ─── Server action ────────────────────────────────────────────────────────────
@@ -53,36 +48,38 @@ function toHHMM(date: Date): string {
  */
 export async function createBooking(input: CreateBookingInput): Promise<CreatedBookingDTO> {
   // Step 1: AUTHENTICATE
-  const { tenantId } = await getSession()
-  if (!tenantId) throw new Error("Unauthorized: not authenticated")
+  const { tenantId, userId } = await getSession();
+  if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
 
   // Step 2: AUTHORIZE
-  await assertTenantMembership(tenantId, tenantId)
+  await assertTenantMembership(tenantId, userId);
 
   // Step 3: VALIDATE
-  const parsed = createBookingSchema.parse(input)
+  const parsed = createBookingSchema.parse(input);
 
   // Step 4: AVAILABILITY CHECK (server-side, cannot be bypassed via direct action calls)
   // 4a. Find a matching AvailabilityRule for the day and time range
-  const dayOfWeek = parsed.startTime.getDay() // 0=Sun … 6=Sat
-  const startHHMM = toHHMM(parsed.startTime)
-  const endHHMM = toHHMM(parsed.endTime)
+  const dayOfWeek = parsed.startTime.getDay(); // 0=Sun … 6=Sat
+  const startHHmm = toHHmm(parsed.startTime);
+  const endHHmm = toHHmm(parsed.endTime);
 
-  const matchingRule = await prisma.availabilityRule.findFirst({
+  const matchingRules = await prisma.availabilityRule.findMany({
     where: {
       tenantId,
       dayOfWeek,
-      startTime: startHHMM,
-      endTime: endHHMM,
-      deletedAt: null
+      deletedAt: null,
     },
-    select: { id: true, capacitySlots: true }
-  })
+    select: { id: true, startTime: true, endTime: true, capacitySlots: true },
+  });
 
-  if (!matchingRule) {
+  const matchingCapacity = matchingRules
+    .filter((rule) => rule.startTime <= startHHmm && rule.endTime >= endHHmm)
+    .reduce((max, rule) => Math.max(max, rule.capacitySlots), 0);
+
+  if (matchingCapacity === 0) {
     throw new Error(
-      "The requested time slot is not within a configured availability window for this tenant"
-    )
+      "The requested time slot is not within a configured availability window for this tenant",
+    );
   }
 
   // 4b. Count existing non-cancelled bookings that overlap this time window
@@ -92,61 +89,65 @@ export async function createBooking(input: CreateBookingInput): Promise<CreatedB
       deletedAt: null,
       status: { notIn: ["cancelled"] },
       startTime: { lt: parsed.endTime },
-      endTime: { gt: parsed.startTime }
-    }
-  })
+      endTime: { gt: parsed.startTime },
+    },
+  });
 
-  if (overlappingCount >= matchingRule.capacitySlots) {
-    throw new Error("The requested time slot is fully booked — no remaining capacity")
+  if (overlappingCount >= matchingCapacity) {
+    throw new Error("The requested time slot is fully booked — no remaining capacity");
   }
 
   // Step 5: MUTATE
   // Look up wrap to get price (scoped to tenant)
   const wrap = await prisma.wrap.findFirst({
     where: { id: parsed.wrapId, tenantId, deletedAt: null },
-    select: { id: true, price: true }
-  })
+    select: { id: true, price: true },
+  });
 
   if (!wrap) {
-    throw new Error("Wrap not found or does not belong to this tenant")
+    throw new Error("Wrap not found or does not belong to this tenant");
   }
 
-  const booking = await prisma.booking.create({
-    data: {
-      tenantId,
-      customerId: tenantId,
-      wrapId: parsed.wrapId,
-      startTime: parsed.startTime,
-      endTime: parsed.endTime,
-      status: "pending",
-      totalPrice: wrap.price
-    },
-    select: {
-      id: true,
-      wrapId: true,
-      startTime: true,
-      endTime: true,
-      status: true,
-      totalPrice: true
-    }
-  })
+  const booking = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const createdBooking = await tx.booking.create({
+      data: {
+        tenantId,
+        customerId: userId,
+        wrapId: parsed.wrapId,
+        startTime: parsed.startTime,
+        endTime: parsed.endTime,
+        status: "pending",
+        totalPrice: wrap.price,
+      },
+      select: {
+        id: true,
+        wrapId: true,
+        startTime: true,
+        endTime: true,
+        status: true,
+        totalPrice: true,
+      },
+    });
 
-  // Step 6: AUDIT
-  await prisma.auditLog.create({
-    data: {
-      tenantId,
-      userId: tenantId,
-      action: "CREATE_BOOKING",
-      resourceType: "Booking",
-      resourceId: booking.id,
-      details: JSON.stringify({
-        wrapId: booking.wrapId,
-        startTime: booking.startTime.toISOString(),
-        endTime: booking.endTime.toISOString()
-      }),
-      timestamp: new Date()
-    }
-  })
+    // Step 6: AUDIT
+    await tx.auditLog.create({
+      data: {
+        tenantId,
+        userId,
+        action: "CREATE_BOOKING",
+        resourceType: "Booking",
+        resourceId: createdBooking.id,
+        details: JSON.stringify({
+          wrapId: createdBooking.wrapId,
+          startTime: createdBooking.startTime.toISOString(),
+          endTime: createdBooking.endTime.toISOString(),
+        }),
+        timestamp: new Date(),
+      },
+    });
+
+    return createdBooking;
+  });
 
   return {
     id: booking.id,
@@ -154,6 +155,6 @@ export async function createBooking(input: CreateBookingInput): Promise<CreatedB
     startTime: booking.startTime,
     endTime: booking.endTime,
     status: booking.status,
-    totalPrice: booking.totalPrice
-  }
+    totalPrice: booking.totalPrice,
+  };
 }

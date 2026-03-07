@@ -4,19 +4,19 @@ import { cn } from "@/lib/utils";
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   pending: {
     label: "Pending",
-    className: "bg-yellow-100 text-yellow-800 border-yellow-200",
+    className: "border-amber-300/70 bg-amber-500/10 text-amber-200",
   },
   confirmed: {
     label: "Confirmed",
-    className: "bg-blue-100 text-blue-800 border-blue-200",
+    className: "border-sky-300/70 bg-sky-500/10 text-sky-200",
   },
   completed: {
     label: "Completed",
-    className: "bg-green-100 text-green-800 border-green-200",
+    className: "border-emerald-300/70 bg-emerald-500/10 text-emerald-200",
   },
   cancelled: {
     label: "Cancelled",
-    className: "bg-red-100 text-red-800 border-red-200",
+    className: "border-rose-300/70 bg-rose-500/10 text-rose-200",
   },
 };
 
@@ -28,11 +28,11 @@ interface BookingStatusBadgeProps {
 export function BookingStatusBadge({ status, className }: BookingStatusBadgeProps) {
   const config = STATUS_CONFIG[status] ?? {
     label: status,
-    className: "bg-neutral-100 text-neutral-800 border-neutral-200",
+    className: "border-neutral-400/70 bg-neutral-700/20 text-neutral-200",
   };
 
   return (
-    <Badge variant="outline" className={cn(config.className, className)}>
+    <Badge variant="outline" className={cn("font-medium", config.className, className)}>
       {config.label}
     </Badge>
   );

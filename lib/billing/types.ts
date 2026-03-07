@@ -75,6 +75,14 @@ export const paymentDTOFields = {
   createdAt: true,
 } as const;
 
+export const invoiceLineItemDTOFields = {
+  id: true,
+  description: true,
+  quantity: true,
+  unitPrice: true,
+  totalPrice: true,
+} as const;
+
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
 export const invoiceListParamsSchema = z.object({
@@ -99,4 +107,10 @@ export interface CheckoutSessionDTO {
   sessionId: string;
   url: string;
   invoiceId: string;
+}
+
+export interface ConfirmPaymentResult {
+  invoiceId: string;
+  paymentId: string;
+  status: "pending" | "succeeded" | "failed";
 }

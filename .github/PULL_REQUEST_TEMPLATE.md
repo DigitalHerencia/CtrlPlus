@@ -66,9 +66,11 @@ Closes #
 - [ ] Self-reviewed my code
 - [ ] Commented complex logic
 - [ ] Updated documentation (if needed)
-- [ ] No compiler errors (`pnpm build`)
+- [ ] TypeScript passes (`pnpm typecheck`)
+- [ ] Prisma validates (`pnpm prisma:validate`)
+- [ ] Production build passes (`pnpm build`)
 - [ ] Linting passes (`pnpm lint`)
-- [ ] Formatting applied (`pnpm format`)
+- [ ] Formatting passes (`pnpm format:check`)
 - [ ] Tests added/updated (`pnpm test`)
 - [ ] Manual testing completed
 

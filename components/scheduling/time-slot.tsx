@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 
 interface TimeSlotProps {
-  startTime: string; // "HH:mm" 24-hour
-  endTime: string; // "HH:mm" 24-hour
+  startTime: string;
+  endTime: string;
   capacity: number;
   bookedCount?: number;
   isSelected?: boolean;
@@ -38,24 +38,24 @@ export function TimeSlot({
       disabled={effectivelyDisabled}
       onClick={onClick}
       className={cn(
-        "w-full text-left px-4 py-3 rounded-lg border transition-colors",
+        "w-full rounded-lg border px-4 py-3 text-left transition-colors",
         isSelected
-          ? "border-primary bg-primary/10 text-primary"
-          : "border-neutral-200 bg-white dark:bg-neutral-900 dark:border-neutral-700",
+          ? "border-blue-400 bg-blue-500/10 text-blue-100"
+          : "border-neutral-800 bg-neutral-950/60 text-neutral-100",
         !effectivelyDisabled && !isSelected
-          ? "hover:border-primary/50 hover:bg-neutral-50 dark:hover:bg-neutral-800 cursor-pointer"
+          ? "cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5"
           : "",
-        effectivelyDisabled && "opacity-50 cursor-not-allowed",
+        effectivelyDisabled && "cursor-not-allowed opacity-50",
       )}
     >
       <div className="flex items-center justify-between">
-        <span className="font-medium text-sm">
+        <span className="text-sm font-medium">
           {formatTime(startTime)} – {formatTime(endTime)}
         </span>
         <span
           className={cn(
             "text-xs",
-            isFull ? "text-red-500" : available <= 2 ? "text-yellow-600" : "text-neutral-500",
+            isFull ? "text-rose-300" : available <= 2 ? "text-amber-300" : "text-neutral-400",
           )}
         >
           {isFull ? "Full" : `${available} of ${capacity} open`}

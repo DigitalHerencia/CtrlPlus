@@ -105,7 +105,7 @@ describe("createWrap", () => {
     expect(prisma.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          action: "CREATE_WRAP",
+          action: "wrap.created",
           tenantId: "tenant-1",
           userId: "user-1",
           resourceType: "Wrap",

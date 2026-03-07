@@ -5,9 +5,9 @@
  * Uses Clerk's UserButton component with custom appearance.
  */
 
-"use client"
+"use client";
 
-import { UserButton } from "@clerk/nextjs"
+import { UserButton } from "@clerk/nextjs";
 
 export function UserMenu() {
   return (
@@ -16,9 +16,9 @@ export function UserMenu() {
         elements: {
           avatarBox: "h-9 w-9 rounded-full",
           userButtonPopoverCard: "shadow-lg",
-          userButtonPopoverActionButton: "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-        }
+          userButtonPopoverActionButton: "hover:bg-neutral-100 dark:hover:bg-neutral-800",
+        },
       }}
     />
-  )
+  );
 }

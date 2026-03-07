@@ -25,7 +25,6 @@ export default async function SchedulingPage() {
     redirect("/sign-in");
   }
 
-  // Fetch availability windows (active only)
   let availabilityWindows: Awaited<ReturnType<typeof getAvailabilityWindowsForTenant>>["items"] =
     [];
 
@@ -36,7 +35,6 @@ export default async function SchedulingPage() {
     // Gracefully degrade if availability data is unavailable
   }
 
-  // Fetch upcoming bookings (first 3 for preview)
   let upcomingBookings: Awaited<ReturnType<typeof getBookingsForTenant>>["items"] = [];
 
   try {
@@ -54,31 +52,31 @@ export default async function SchedulingPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-neutral-100">Scheduling</h1>
-          <p className="text-neutral-400 mt-2">
-            View availability and manage appointments
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button asChild variant="outline">
-            <Link href="/scheduling/bookings">All Bookings</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/scheduling/book">Book Appointment</Link>
-          </Button>
+      <div className="rounded-xl border border-neutral-800 bg-gradient-to-r from-neutral-950 via-neutral-900 to-blue-950/60 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-neutral-100">Scheduling</h1>
+            <p className="mt-2 text-neutral-300">
+              View availability and manage installation appointments.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button asChild variant="outline">
+              <Link href="/scheduling/bookings">All Bookings</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/scheduling/book">Book Appointment</Link>
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Card>
+          <Card className="border-neutral-800 bg-neutral-900/60">
             <CardHeader>
-              <CardTitle>Availability Calendar</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-neutral-100">Availability Calendar</CardTitle>
+              <CardDescription className="text-neutral-400">
                 Highlighted days have open time slots. Click a day to book.
               </CardDescription>
             </CardHeader>
@@ -88,26 +86,24 @@ export default async function SchedulingPage() {
           </Card>
         </div>
 
-        {/* Sidebar */}
         <div className="space-y-4">
-          {/* Availability summary */}
-          <Card>
+          <Card className="border-neutral-800 bg-neutral-900/60">
             <CardHeader>
-              <CardTitle className="text-base">Open Days</CardTitle>
+              <CardTitle className="text-base text-neutral-100">Open Days</CardTitle>
             </CardHeader>
             <CardContent>
               {availabilityWindows.length === 0 ? (
                 <p className="text-sm text-neutral-500">No availability windows configured.</p>
               ) : (
-                <ul className="space-y-1">
+                <ul className="space-y-1.5">
                   {[0, 1, 2, 3, 4, 5, 6]
                     .filter((d) => availableWeekdays.includes(d))
                     .map((dow) => {
                       const slots = availabilityWindows.filter((w) => w.dayOfWeek === dow);
                       return (
                         <li key={dow} className="flex items-center justify-between text-sm">
-                          <span className="font-medium">{DAY_NAMES[dow]}</span>
-                          <span className="text-neutral-500">
+                          <span className="font-medium text-neutral-200">{DAY_NAMES[dow]}</span>
+                          <span className="text-neutral-400">
                             {slots.length} slot{slots.length !== 1 ? "s" : ""}
                           </span>
                         </li>
@@ -118,10 +114,9 @@ export default async function SchedulingPage() {
             </CardContent>
           </Card>
 
-          {/* Upcoming bookings preview */}
-          <Card>
+          <Card className="border-neutral-800 bg-neutral-900/60">
             <CardHeader>
-              <CardTitle className="text-base">Upcoming Bookings</CardTitle>
+              <CardTitle className="text-base text-neutral-100">Upcoming Bookings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {upcomingBookings.length === 0 ? (
@@ -144,7 +139,7 @@ export default async function SchedulingPage() {
               {upcomingBookings.length > 0 && (
                 <Link
                   href="/scheduling/bookings"
-                  className="text-sm text-primary hover:underline block text-center"
+                  className="block text-center text-sm text-blue-300 hover:underline"
                 >
                   View all bookings →
                 </Link>

@@ -284,9 +284,10 @@ d:\CtrlPlus/
 ├── node_modules/
 ├── .env.local                        # Local env (do NOT commit)
 ├── .env.example                      # Template for .env
-├── .eslintrc.json                    # ESLint config
-├── .prettierrc                       # Prettier config
 ├── eslint.config.mjs                 # ESLint flat config
+├── prettier.config.mjs               # Prettier config
+├── .lintstagedrc.mjs                 # lint-staged config
+├── commitlint.config.mjs             # Commit message rules
 ├── next.config.ts                    # Next.js configuration
 ├── postcss.config.mjs                # PostCSS configuration
 ├── prisma/
@@ -560,8 +561,11 @@ pnpm dev
 # Run linting
 pnpm lint
 
-# Fix formatting
-pnpm format
+# Run formatting checks
+pnpm format:check
+
+# Run full CI-quality gate locally
+pnpm check
 
 # Run tests
 pnpm test

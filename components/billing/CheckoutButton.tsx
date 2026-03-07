@@ -9,7 +9,7 @@ interface CheckoutButtonProps {
   disabled?: boolean;
 }
 
-export function CheckoutButton({ disabled }: CheckoutButtonProps) {
+export function CheckoutButton({ invoiceId, disabled }: CheckoutButtonProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -17,8 +17,7 @@ export function CheckoutButton({ disabled }: CheckoutButtonProps) {
     setError(null);
     startTransition(async () => {
       try {
-        const result = await createCheckoutSession();
-        // Use window.location.href to navigate to the external Stripe hosted checkout page
+        const result = await createCheckoutSession({ invoiceId });
         window.location.href = result.url;
       } catch (err) {
         setError(err instanceof Error ? err.message : "Checkout failed. Please try again.");
@@ -28,8 +27,12 @@ export function CheckoutButton({ disabled }: CheckoutButtonProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <Button onClick={handleCheckout} disabled={disabled || isPending}>
-        {isPending ? "Redirecting…" : "Pay Now"}
+      <Button
+        onClick={handleCheckout}
+        disabled={disabled || isPending}
+        className="w-full sm:w-auto"
+      >
+        {isPending ? "Redirecting…" : "Pay with Stripe"}
       </Button>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>

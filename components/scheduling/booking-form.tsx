@@ -57,7 +57,7 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
 
   if (wraps.length === 0) {
     return (
-      <div className="text-center py-12 text-neutral-500">
+      <div className="rounded-lg border border-neutral-800 bg-neutral-900/60 py-12 text-center text-neutral-500">
         No wrap services are available for booking at this time.
       </div>
     );
@@ -95,9 +95,9 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
   const canSubmit = selectedDate !== null && selectedWindowId !== null && selectedWrapId !== "";
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       {/* Left: Calendar */}
-      <Card>
+      <Card className="border-neutral-800 bg-neutral-900/60">
         <CardHeader>
           <CardTitle className="text-base">Select a Date</CardTitle>
           <CardDescription>Highlighted days have available time slots.</CardDescription>
@@ -115,7 +115,7 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
       <div className="space-y-4">
         {selectedDate ? (
           <>
-            <Card>
+            <Card className="border-neutral-800 bg-neutral-900/60">
               <CardHeader>
                 <CardTitle className="text-base">
                   Available Times for{" "}
@@ -145,7 +145,7 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
             </Card>
 
             {wraps.length > 0 && (
-              <Card>
+              <Card className="border-neutral-800 bg-neutral-900/60">
                 <CardHeader>
                   <CardTitle className="text-base">Select a Wrap</CardTitle>
                 </CardHeader>
@@ -156,15 +156,15 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
                         key={wrap.id}
                         type="button"
                         onClick={() => setSelectedWrapId(wrap.id)}
-                        className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
+                        className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${
                           selectedWrapId === wrap.id
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-neutral-200 bg-white dark:bg-neutral-900 dark:border-neutral-700 hover:border-primary/50"
+                            ? "border-blue-400 bg-blue-500/10 text-blue-100"
+                            : "border-neutral-800 bg-neutral-950/60 text-neutral-100 hover:border-blue-500/50"
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-sm">{wrap.name}</span>
-                          <span className="text-sm text-neutral-600">
+                          <span className="text-sm font-medium">{wrap.name}</span>
+                          <span className="text-sm text-neutral-300">
                             {new Intl.NumberFormat("en-US", {
                               style: "currency",
                               currency: "USD",
@@ -179,14 +179,14 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
             )}
           </>
         ) : (
-          <Card>
-            <CardContent className="py-12 text-center text-neutral-500 text-sm">
+          <Card className="border-neutral-800 bg-neutral-900/60">
+            <CardContent className="py-12 text-center text-sm text-neutral-500">
               Select a date to see available time slots.
             </CardContent>
           </Card>
         )}
 
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && <p className="text-sm text-rose-300">{error}</p>}
 
         <Button onClick={handleSubmit} disabled={!canSubmit || isPending} className="w-full">
           {isPending ? "Booking…" : "Confirm Booking"}

@@ -89,14 +89,15 @@ export function WrapFilter() {
   const maxPrice = searchParams.get("maxPrice") ?? "";
   const sortBy = searchParams.get("sortBy") ?? "createdAt";
   const sortOrder = searchParams.get("sortOrder") ?? "desc";
+  const pageSize = searchParams.get("pageSize") ?? "20";
 
   const hasActiveFilters =
-    searchValue || maxPrice || sortBy !== "createdAt" || sortOrder !== "desc";
+    searchValue || maxPrice || sortBy !== "createdAt" || sortOrder !== "desc" || pageSize !== "20";
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end flex-wrap">
+    <div className="flex flex-col flex-wrap items-start gap-3 sm:flex-row sm:items-end">
       {/* Search input */}
-      <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
+      <div className="flex min-w-[180px] flex-1 flex-col gap-1">
         <label htmlFor="catalog-search" className="text-xs font-medium text-muted-foreground">
           Search
         </label>
@@ -106,12 +107,12 @@ export function WrapFilter() {
           placeholder="Search wraps..."
           value={searchValue}
           onChange={(e) => handleSearchChange(e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
 
       {/* Max price input */}
-      <div className="flex flex-col gap-1 w-full sm:w-36">
+      <div className="flex w-full flex-col gap-1 sm:w-36">
         <label htmlFor="catalog-max-price" className="text-xs font-medium text-muted-foreground">
           Max Price
         </label>
@@ -122,12 +123,12 @@ export function WrapFilter() {
           min={1}
           value={maxPrice}
           onChange={(e) => handleChange("maxPrice", e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
 
       {/* Sort by */}
-      <div className="flex flex-col gap-1 w-full sm:w-40">
+      <div className="flex w-full flex-col gap-1 sm:w-40">
         <label htmlFor="catalog-sort-by" className="text-xs font-medium text-muted-foreground">
           Sort By
         </label>
@@ -135,7 +136,7 @@ export function WrapFilter() {
           id="catalog-sort-by"
           value={sortBy}
           onChange={(e) => handleChange("sortBy", e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
         >
           <option value="createdAt">Date Added</option>
           <option value="name">Name</option>
@@ -144,7 +145,7 @@ export function WrapFilter() {
       </div>
 
       {/* Sort order */}
-      <div className="flex flex-col gap-1 w-full sm:w-32">
+      <div className="flex w-full flex-col gap-1 sm:w-32">
         <label htmlFor="catalog-sort-order" className="text-xs font-medium text-muted-foreground">
           Order
         </label>
@@ -152,10 +153,27 @@ export function WrapFilter() {
           id="catalog-sort-order"
           value={sortOrder}
           onChange={(e) => handleChange("sortOrder", e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
         >
           <option value="desc">Descending</option>
           <option value="asc">Ascending</option>
+        </select>
+      </div>
+
+      {/* Page size */}
+      <div className="flex w-full flex-col gap-1 sm:w-32">
+        <label htmlFor="catalog-page-size" className="text-xs font-medium text-muted-foreground">
+          Per Page
+        </label>
+        <select
+          id="catalog-page-size"
+          value={pageSize}
+          onChange={(e) => handleChange("pageSize", e.target.value)}
+          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+        >
+          <option value="12">12</option>
+          <option value="20">20</option>
+          <option value="32">32</option>
         </select>
       </div>
 
@@ -173,9 +191,7 @@ export function WrapFilter() {
       )}
 
       {isPending && (
-        <div className="self-end pb-2 text-xs text-muted-foreground animate-pulse">
-          Filtering…
-        </div>
+        <div className="animate-pulse self-end pb-2 text-xs text-muted-foreground">Filtering…</div>
       )}
     </div>
   );

@@ -1,3 +1,4 @@
+import { CalendarDays, Clock3, DollarSign } from "lucide-react";
 import { BookingStatusBadge } from "./booking-status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -41,25 +42,32 @@ function formatPrice(cents: number): string {
 
 export function BookingCard({ booking }: BookingCardProps) {
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="border-neutral-800 bg-neutral-950/60 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-medium text-sm truncate">
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="truncate text-sm font-semibold text-neutral-100">
                 {booking.wrapName ?? `Wrap ${booking.wrapId.slice(0, 8)}…`}
               </span>
               <BookingStatusBadge status={booking.status} />
             </div>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
+
+            <p className="flex items-center gap-2 text-sm text-neutral-300">
+              <CalendarDays className="size-4 text-blue-300" />
               {formatDate(booking.startTime)}
             </p>
-            <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-0.5">
+            <p className="flex items-center gap-2 text-xs text-neutral-400">
+              <Clock3 className="size-3.5 text-neutral-500" />
               {formatTime(booking.startTime)} – {formatTime(booking.endTime)}
             </p>
           </div>
-          <div className="text-right shrink-0">
-            <p className="font-semibold text-sm">{formatPrice(booking.totalPrice)}</p>
+
+          <div className="shrink-0 rounded-md border border-neutral-800 bg-neutral-900/70 px-3 py-2 text-right">
+            <p className="flex items-center gap-1 text-sm font-semibold text-neutral-100">
+              <DollarSign className="size-3.5 text-emerald-300" />
+              {formatPrice(booking.totalPrice)}
+            </p>
           </div>
         </div>
       </CardContent>

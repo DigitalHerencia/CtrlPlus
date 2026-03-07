@@ -1,8 +1,8 @@
-"use server"
+"use server";
 
-import { prisma } from "@/lib/prisma"
-import { resolveTenantFromRequest } from "@/lib/tenancy/resolve"
-import { auth } from "@clerk/nextjs/server"
+import { prisma } from "@/lib/prisma";
+import { resolveTenantFromRequest } from "@/lib/tenancy/resolve";
+import { auth } from "@clerk/nextjs/server";
 
 /**
  * Setup initial tenant for newly authenticated user
@@ -20,17 +20,17 @@ import { auth } from "@clerk/nextjs/server"
  */
 export async function setupUserTenant(): Promise<string> {
   // 1. Verify authentication
-  const { userId: clerkUserId } = await auth()
+  const { userId: clerkUserId } = await auth();
 
   if (!clerkUserId) {
-    throw new Error("Unauthorized: not authenticated")
+    throw new Error("Unauthorized: not authenticated");
   }
 
   // 2. Check if user already exists in database
   let user = await prisma.user.findUnique({
     where: { clerkUserId },
-    select: { id: true }
-  })
+    select: { id: true },
+  });
 
   // 3. If first time, create User record
   if (!user) {
@@ -39,15 +39,15 @@ export async function setupUserTenant(): Promise<string> {
         clerkUserId,
         email: "", // Will be synced by webhook
         firstName: null,
-        lastName: null
+        lastName: null,
       },
-      select: { id: true }
-    })
+      select: { id: true },
+    });
   }
 
   // 4. Get or create tenant for single-user model
   // Use subdomain-based resolution if available, otherwise create default tenant
-  let tenantId: string | null = await resolveTenantFromRequest()
+  let tenantId: string | null = await resolveTenantFromRequest();
 
   if (!tenantId) {
     // No subdomain provided - create a new tenant for this user
@@ -55,11 +55,11 @@ export async function setupUserTenant(): Promise<string> {
     const tenant = await prisma.tenant.create({
       data: {
         name: `${clerkUserId}'s Workspace`,
-        slug: clerkUserId.toLowerCase() // Use Clerk ID as slug
+        slug: clerkUserId.toLowerCase(), // Use Clerk ID as slug
       },
-      select: { id: true }
-    })
-    tenantId = tenant.id
+      select: { id: true },
+    });
+    tenantId = tenant.id;
   }
 
   // 5. Ensure user is a member of their tenant (OWNER role)
@@ -68,21 +68,20 @@ export async function setupUserTenant(): Promise<string> {
     where: {
       tenantId_userId: {
         tenantId,
-        userId: user.id
-      }
+        userId: user.id,
+      },
     },
     create: {
       tenantId,
       userId: user.id,
-      role: "owner" // New users are owners of their tenant
+      role: "owner", // New users are owners of their tenant
     },
     update: {
-      deletedAt: null // Restore if was soft-deleted
-    }
-  })
+      deletedAt: null, // Restore if was soft-deleted
+    },
+  });
 
-  // At this point tenantId is guaranteed to be a string
-  return tenantId as string
+  return tenantId;
 }
 
 /**
@@ -94,31 +93,31 @@ export async function setupUserTenant(): Promise<string> {
  * @returns Tenant ID or null if user has no tenants
  */
 export async function getUserFirstTenant(): Promise<string | null> {
-  const { userId: clerkUserId } = await auth()
+  const { userId: clerkUserId } = await auth();
 
   if (!clerkUserId) {
-    return null
+    return null;
   }
 
   // Get user by Clerk ID first
   const user = await prisma.user.findUnique({
     where: { clerkUserId },
-    select: { id: true }
-  })
+    select: { id: true },
+  });
 
   if (!user) {
-    return null
+    return null;
   }
 
   // Then query their memberships
   const membership = await prisma.tenantUserMembership.findFirst({
     where: {
       userId: user.id,
-      deletedAt: null
+      deletedAt: null,
     },
     select: { tenantId: true },
-    orderBy: { createdAt: "asc" }
-  })
+    orderBy: { createdAt: "asc" },
+  });
 
-  return membership?.tenantId ?? null
+  return membership?.tenantId ?? null;
 }

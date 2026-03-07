@@ -47,8 +47,8 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/clerk/webhook(.*)",
-  "/api/stripe/webhook(.*)"
-])
+  "/api/stripe/webhook(.*)",
+]);
 ```
 
 **Security**: STRONG - All unauthenticated access to protected routes properly redirected
@@ -72,17 +72,17 @@ const isPublicRoute = createRouteMatcher([
 
 ```typescript
 // Sign-in flow
-const result = await signIn.create({ identifier: email, password })
+const result = await signIn.create({ identifier: email, password });
 if (result.status === "complete") {
-  await setupUserTenant() // Server-side tenant setup
-  router.push("/catalog")
+  await setupUserTenant(); // Server-side tenant setup
+  router.push("/catalog");
 }
 
 // Sign-up flow
-const result = await signUp.create({ emailAddress: email, password })
+const result = await signUp.create({ emailAddress: email, password });
 if (result.status === "complete") {
-  await setupUserTenant() // Ensure server-side setup
-  router.push("/catalog")
+  await setupUserTenant(); // Ensure server-side setup
+  router.push("/catalog");
 }
 ```
 
@@ -106,14 +106,14 @@ if (result.status === "complete") {
 
 ```typescript
 export async function getSession(): Promise<SessionContext> {
-  const { userId, orgId } = await auth() // MUST await
-  const tenantId = (await resolveTenantFromRequest()) ?? ""
+  const { userId, orgId } = await auth(); // MUST await
+  const tenantId = (await resolveTenantFromRequest()) ?? "";
   return {
     userId: userId ?? null,
     tenantId,
     isAuthenticated: !!userId,
-    orgId: orgId ?? null
-  }
+    orgId: orgId ?? null,
+  };
 }
 ```
 
@@ -139,15 +139,15 @@ export async function getSession(): Promise<SessionContext> {
 
 ```typescript
 export async function resolveTenantFromRequest(): Promise<string | null> {
-  const host = (await headers()).get("host")
-  const subdomain = extractSubdomain(host)
+  const host = (await headers()).get("host");
+  const subdomain = extractSubdomain(host);
 
   const tenant = await prisma.tenant.findFirst({
     where: { slug: subdomain, deletedAt: null },
-    select: { id: true }
-  })
+    select: { id: true },
+  });
 
-  return tenant?.id ?? null
+  return tenant?.id ?? null;
 }
 ```
 
@@ -224,21 +224,18 @@ export async function setupUserTenant(): Promise<string> {
 **Code Review**:
 
 ```typescript
-export type TenantRole = "owner" | "admin" | "member"
+export type TenantRole = "owner" | "admin" | "member";
 
 export const ROLE_HIERARCHY: Record<TenantRole, number> = {
   owner: 3,
   admin: 2,
-  member: 1
-}
+  member: 1,
+};
 
-export function hasRolePermission(
-  userRole: string,
-  requiredRole: string
-): boolean {
-  const userNormalized = normalizeTenantRole(userRole)
-  const requiredNormalized = normalizeTenantRole(requiredRole)
-  return userLevel >= requiredLevel
+export function hasRolePermission(userRole: string, requiredRole: string): boolean {
+  const userNormalized = normalizeTenantRole(userRole);
+  const requiredNormalized = normalizeTenantRole(requiredRole);
+  return userLevel >= requiredLevel;
 }
 ```
 
@@ -264,18 +261,18 @@ export function hasRolePermission(
 export async function assertTenantMembership(
   tenantId: string,
   userId: string,
-  requiredRole: TenantRole = "member"
+  requiredRole: TenantRole = "member",
 ): Promise<void> {
   const membership = await prisma.tenantUserMembership.findFirst({
-    where: { tenantId, userId, deletedAt: null }
-  })
+    where: { tenantId, userId, deletedAt: null },
+  });
 
   if (!membership) {
-    throw new Error("Unauthorized: not a member of this tenant")
+    throw new Error("Unauthorized: not a member of this tenant");
   }
 
   if (!hasRolePermission(membership.role, requiredRole)) {
-    throw new Error("Forbidden: insufficient role")
+    throw new Error("Forbidden: insufficient role");
   }
 }
 ```
@@ -374,14 +371,14 @@ export async function createWrap(input: CreateWrapInput) {
 ```typescript
 export async function getWrapsForTenant(tenantId: string): Promise<Wrap[]> {
   const wraps = await prisma.wrap.findMany({
-    where: { tenantId, deletedAt: null }
-  })
+    where: { tenantId, deletedAt: null },
+  });
 
   return wraps.map((w) => ({
     id: w.id,
     name: w.name,
-    price: w.price
-  })) // Explicit DTO
+    price: w.price,
+  })); // Explicit DTO
 }
 ```
 

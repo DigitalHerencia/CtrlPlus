@@ -25,7 +25,7 @@ This project and everyone participating in it is governed by our [Code of Conduc
 ### Prerequisites
 
 - Node.js 20+ (LTS)
-- pnpm 9+
+- pnpm 10.24+
 - Git
 - A Neon PostgreSQL database
 - Clerk and Stripe accounts for testing
@@ -79,14 +79,22 @@ Use descriptive branch names:
 
 ### Commit Messages
 
-Follow [Conventional Commits](https://www.conventionalcommits.org/):
+Commit messages are enforced by Commitlint and must follow:
 
+```text
+type(scope): subject
 ```
-feat: add wrap category filtering
-fix: resolve tenant scope validation error
-docs: update installation instructions
-refactor: extract fetcher logic to domain
-test: add unit tests for booking actions
+
+Allowed types: `feat`, `fix`, `security`, `refactor`, `test`, `docs`, `chore`
+
+Allowed scopes: `admin`, `auth`, `billing`, `catalog`, `ci`, `docs`, `scheduling`, `tenancy`, `visualizer`
+
+Examples:
+
+```text
+feat(catalog): add wrap category filtering
+fix(tenancy): enforce tenant scoping in invoice lookup
+docs(ci): document local quality workflow
 ```
 
 ### Making Changes
@@ -105,18 +113,17 @@ test: add unit tests for booking actions
    pnpm test
    ```
 
-4. Run linting and formatting
+4. Run the local quality gates
 
    ```bash
-   pnpm lint
-   pnpm format
+   pnpm check
    ```
 
 5. Commit your changes
 
    ```bash
    git add .
-   git commit -m "feat: add your feature"
+   git commit -m "feat(catalog): add your feature"
    ```
 
 6. Push to your fork
@@ -149,6 +156,7 @@ These are security-critical architectural boundaries:
 
 1. **NO Prisma imports in `app/**`\*\*
    - Routes and pages must use `lib/{domain}/fetchers/` or `lib/{domain}/actions/`
+   - Only Clerk and Stripe webhook handlers under `app/api/` are allowed to touch Prisma directly
 
 2. **All reads via fetchers**
    - Database reads in `lib/{domain}/fetchers/`
@@ -159,7 +167,7 @@ These are security-critical architectural boundaries:
    - Enforce security pipeline: auth → tenant → permission → validate → mutate
 
 4. **Tenant scope ALL queries**
-   - Every Prisma query must include `where: { tenantId }`
+   - Every Prisma query must include `where: { tenantId, deletedAt: null }` unless the model does not support soft delete
    - Use `assertTenantScope()` for defensive checks
 
 ### File Organization
@@ -188,8 +196,7 @@ lib/{domain}/
 2. **Ensure tests pass**
 
    ```bash
-   pnpm test
-   pnpm lint
+   pnpm check
    ```
 
 3. **Fill out PR template** completely
@@ -210,10 +217,13 @@ lib/{domain}/
 - [ ] No Prisma imports in `app/**`
 - [ ] All queries scoped by `tenantId`
 - [ ] Tests added/updated
+- [ ] Formatting passes (`pnpm format:check`)
 - [ ] Linting passes (`pnpm lint`)
-- [ ] TypeScript compiles (`pnpm build`)
+- [ ] TypeScript compiles (`pnpm typecheck`)
+- [ ] Prisma validates (`pnpm prisma:validate`)
+- [ ] Production build passes (`pnpm build`)
 - [ ] Documentation updated
-- [ ] PR title follows Conventional Commits
+- [ ] Commit messages follow `type(scope): subject`
 
 ---
 

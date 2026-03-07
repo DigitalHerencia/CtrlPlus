@@ -6,35 +6,35 @@
  */
 
 export interface Tenant {
-  id: string
-  name: string
-  slug: string
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  name: string;
+  slug: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface TenantUserMembership {
-  id: string
-  tenantId: string
-  userId: string
+  id: string;
+  tenantId: string;
+  userId: string;
   /**
    * Normalized role as lowercase string.
    * Always use this for role comparisons and permission checks.
    */
-  role: TenantRole
-  createdAt: Date
-  updatedAt: Date
-  deletedAt: Date | null
+  role: TenantRole;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
 }
 
-export type TenantRole = "owner" | "admin" | "member"
+export type TenantRole = "owner" | "admin" | "member";
 
 /**
  * The role value as stored in the database (lowercase).
  * The database column defaults to "member" and stores "owner" | "admin" | "member".
  * Use `normalizeTenantRole()` to convert to the canonical `TenantRole` API type.
  */
-export type TenantRoleDb = "owner" | "admin" | "member"
+export type TenantRoleDb = "owner" | "admin" | "member";
 
 /**
  * Map of role hierarchy for permission checking.
@@ -43,8 +43,8 @@ export type TenantRoleDb = "owner" | "admin" | "member"
 export const ROLE_HIERARCHY: Record<TenantRole, number> = {
   owner: 3,
   admin: 2,
-  member: 1
-}
+  member: 1,
+};
 
 /**
  * Convert a raw database role string to the canonical lowercase `TenantRole`.
@@ -59,13 +59,13 @@ export const ROLE_HIERARCHY: Record<TenantRole, number> = {
  * ```
  */
 export function normalizeTenantRole(role: string): TenantRole {
-  const lower = role.toLowerCase()
+  const lower = role.toLowerCase();
   // Validate before casting: only cast to TenantRole after confirming it exists
   // in the hierarchy map to prevent unsafe assertions on unrecognized strings.
   if (!(lower in ROLE_HIERARCHY)) {
-    throw new Error(`Invalid tenant role: "${role}"`)
+    throw new Error(`Invalid tenant role: "${role}"`);
   }
-  return lower as TenantRole
+  return lower as TenantRole;
 }
 
 /**
@@ -74,16 +74,16 @@ export function normalizeTenantRole(role: string): TenantRole {
  * Returns false if either role string is not a recognized TenantRole.
  */
 export function hasRolePermission(userRole: string, requiredRole: string): boolean {
-  const userNormalized = normalizeTenantRole(userRole)
-  const requiredNormalized = normalizeTenantRole(requiredRole)
+  const userNormalized = normalizeTenantRole(userRole);
+  const requiredNormalized = normalizeTenantRole(requiredRole);
 
-  const userLevel = ROLE_HIERARCHY[userNormalized]
-  const requiredLevel = ROLE_HIERARCHY[requiredNormalized]
+  const userLevel = ROLE_HIERARCHY[userNormalized];
+  const requiredLevel = ROLE_HIERARCHY[requiredNormalized];
 
   // Return false for unrecognized roles to prevent unintended access grants
   if (userLevel === undefined || requiredLevel === undefined) {
-    return false
+    return false;
   }
 
-  return userLevel >= requiredLevel
+  return userLevel >= requiredLevel;
 }

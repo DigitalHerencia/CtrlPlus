@@ -5,8 +5,8 @@
  * Use these to prevent cross-tenant data leaks.
  */
 
-import { prisma } from "@/lib/prisma"
-import { type TenantRole, hasRolePermission, normalizeTenantRole } from "./types"
+import { prisma } from "@/lib/prisma";
+import { type TenantRole, hasRolePermission, normalizeTenantRole } from "./types";
 
 /**
  * Assert that a user is a member of a tenant with required role.
@@ -33,37 +33,37 @@ import { type TenantRole, hasRolePermission, normalizeTenantRole } from "./types
 export async function assertTenantMembership(
   tenantId: string,
   userId: string,
-  requiredRole: TenantRole = "member"
+  requiredRole: TenantRole = "member",
 ): Promise<void> {
   // Convert Clerk userId to internal database user.id
   const user = await prisma.user.findUnique({
     where: { clerkUserId: userId },
-    select: { id: true }
-  })
+    select: { id: true },
+  });
 
   if (!user) {
-    throw new Error("Unauthorized: user not found")
+    throw new Error("Unauthorized: user not found");
   }
 
   const membership = await prisma.tenantUserMembership.findFirst({
     where: {
       tenantId,
       userId: user.id,
-      deletedAt: null
+      deletedAt: null,
     },
     select: {
-      role: true
-    }
-  })
+      role: true,
+    },
+  });
 
   if (!membership) {
-    throw new Error("Unauthorized: not a member of this tenant")
+    throw new Error("Unauthorized: not a member of this tenant");
   }
 
-  const isAuthorized = hasRolePermission(membership.role, requiredRole)
+  const isAuthorized = hasRolePermission(membership.role, requiredRole);
 
   if (!isAuthorized) {
-    throw new Error("Forbidden: insufficient role")
+    throw new Error("Forbidden: insufficient role");
   }
 }
 
@@ -93,7 +93,7 @@ export async function assertTenantMembership(
  */
 export function assertTenantScope(recordTenantId: string, currentTenantId: string): void {
   if (recordTenantId !== currentTenantId) {
-    throw new Error("Forbidden: cross-tenant access detected")
+    throw new Error("Forbidden: cross-tenant access detected");
   }
 }
 
@@ -103,29 +103,29 @@ export function assertTenantScope(recordTenantId: string, currentTenantId: strin
  */
 export async function getUserTenantRole(
   tenantId: string,
-  userId: string
+  userId: string,
 ): Promise<TenantRole | null> {
   // Convert Clerk userId to internal database user.id
   const user = await prisma.user.findUnique({
     where: { clerkUserId: userId },
-    select: { id: true }
-  })
+    select: { id: true },
+  });
 
-  if (!user) return null
+  if (!user) return null;
 
   const membership = await prisma.tenantUserMembership.findFirst({
     where: {
       tenantId,
       userId: user.id,
-      deletedAt: null
+      deletedAt: null,
     },
     select: {
-      role: true
-    }
-  })
+      role: true,
+    },
+  });
 
-  if (!membership) return null
-  return normalizeTenantRole(membership.role)
+  if (!membership) return null;
+  return normalizeTenantRole(membership.role);
 }
 
 /**
@@ -135,10 +135,10 @@ export async function getUserTenantRole(
 export async function hasMinimumRole(
   tenantId: string,
   userId: string,
-  requiredRole: TenantRole
+  requiredRole: TenantRole,
 ): Promise<boolean> {
-  const userRole = await getUserTenantRole(tenantId, userId)
-  if (!userRole) return false
+  const userRole = await getUserTenantRole(tenantId, userId);
+  if (!userRole) return false;
 
-  return hasRolePermission(userRole, requiredRole)
+  return hasRolePermission(userRole, requiredRole);
 }

@@ -1,38 +1,36 @@
 # dependencies
 node_modules
 
-# production
+# build output
 .next
 out
 build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# local env files
-.env*.local
-
-# vercel
+dist
+coverage
+.turbo
 .vercel
 
-# typescript
-next-env.d.ts
-*.tsbuildinfo
-
-# pnpm
+# lock and package artifacts you usually don't want rewritten
 pnpm-lock.yaml
 
-# generated artifacts
-lib/generated/
+# generated files
+next-env.d.ts
+**/*.generated.*
+**/generated/**
+**/__snapshots__/**
 
-# prisma migration SQL snapshots
-prisma/migrations/
+# binary / media / exports
+public/**/*.min.*
+public/**/*.map
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg
+*.ico
+*.pdf
 
-# mcp
-mcp.json
+# env files
+.env
+.env.*

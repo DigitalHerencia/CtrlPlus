@@ -90,6 +90,7 @@ describe("getInvoiceById", () => {
     expect(result?.payments).toHaveLength(1);
     expect(result?.payments[0].stripePaymentIntentId).toBe("pi_test_123");
     expect(result?.payments[0].status).toBe("succeeded");
+    expect(result?.payments[0].invoiceId).toBe("inv-001");
   });
 
   it("returns null when invoice does not exist", async () => {

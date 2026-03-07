@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { updateTenantSettings } from "@/lib/admin/actions/update-tenant-settings";
 import { type TenantSettingsDTO } from "@/lib/admin/types";
 
@@ -20,12 +23,14 @@ export function SettingsForm({ settings }: SettingsFormProps) {
     event.preventDefault();
     setError(null);
     setSuccess(false);
+
     const formData = new FormData(event.currentTarget);
-    const name = formData.get("name") as string;
+    const name = (formData.get("name") as string).trim();
+    const slug = (formData.get("slug") as string).trim();
 
     startTransition(async () => {
       try {
-        await updateTenantSettings({ name });
+        await updateTenantSettings({ name, slug });
         setSuccess(true);
         router.refresh();
       } catch (err) {
@@ -37,10 +42,8 @@ export function SettingsForm({ settings }: SettingsFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <label htmlFor="name" className="text-sm font-medium">
-          Business Name
-        </label>
-        <input
+        <Label htmlFor="name">Business Name</Label>
+        <Input
           id="name"
           name="name"
           type="text"
@@ -48,20 +51,32 @@ export function SettingsForm({ settings }: SettingsFormProps) {
           required
           maxLength={100}
           disabled={isPending}
-          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
 
-      <div className="space-y-1">
-        <p className="text-sm font-medium text-muted-foreground">Subdomain</p>
-        <p className="text-sm">{settings.slug}</p>
+      <div className="space-y-2">
+        <Label htmlFor="slug">Tenant Slug</Label>
+        <Input
+          id="slug"
+          name="slug"
+          type="text"
+          defaultValue={settings.slug}
+          required
+          disabled={isPending}
+          maxLength={63}
+          pattern="^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"
+        />
         <p className="text-xs text-muted-foreground">
-          The subdomain cannot be changed after creation.
+          Lowercase letters, numbers, and hyphens only.
         </p>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {success && <p className="text-sm text-green-600">Settings saved successfully.</p>}
+      {success && (
+        <p className="text-sm text-emerald-600 dark:text-emerald-400">
+          Settings saved successfully.
+        </p>
+      )}
 
       <Button type="submit" disabled={isPending}>
         {isPending ? "Saving…" : "Save Changes"}

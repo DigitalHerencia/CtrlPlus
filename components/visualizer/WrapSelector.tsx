@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import type { WrapDTO } from "@/lib/catalog/types";
+import { cn } from "@/lib/utils";
 
 interface WrapSelectorProps {
   wraps: WrapDTO[];
@@ -10,17 +10,12 @@ interface WrapSelectorProps {
   className?: string;
 }
 
-export function WrapSelector({
-  wraps,
-  selectedWrapId,
-  onSelect,
-  className,
-}: WrapSelectorProps) {
+export function WrapSelector({ wraps, selectedWrapId, onSelect, className }: WrapSelectorProps) {
   if (wraps.length === 0) {
     return (
       <div
         className={cn(
-          "rounded-lg border border-dashed p-8 text-center text-sm text-neutral-500 dark:text-neutral-400",
+          "rounded-xl border border-dashed border-neutral-700 bg-neutral-950 p-8 text-center text-sm text-neutral-400",
           className,
         )}
       >
@@ -33,27 +28,26 @@ export function WrapSelector({
     <div className={cn("grid grid-cols-1 gap-3 sm:grid-cols-2", className)}>
       {wraps.map((wrap) => {
         const isSelected = wrap.id === selectedWrapId;
+
         return (
           <button
             key={wrap.id}
             type="button"
             onClick={() => onSelect(wrap.id)}
             className={cn(
-              "flex flex-col gap-1 rounded-lg border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "flex flex-col gap-1 rounded-xl border p-4 text-left transition-all focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none",
               isSelected
-                ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900"
-                : "border-neutral-200 bg-white hover:border-neutral-400 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:border-neutral-500",
+                ? "border-blue-500 bg-blue-500/10 text-white shadow-sm shadow-blue-900/30"
+                : "border-neutral-700 bg-neutral-950 text-neutral-100 hover:border-blue-500/50 hover:bg-neutral-900",
             )}
             aria-pressed={isSelected}
           >
-            <span className="text-sm font-semibold leading-tight">{wrap.name}</span>
+            <span className="text-sm leading-tight font-semibold">{wrap.name}</span>
             {wrap.description && (
               <span
                 className={cn(
                   "line-clamp-2 text-xs",
-                  isSelected
-                    ? "text-neutral-300 dark:text-neutral-600"
-                    : "text-neutral-500 dark:text-neutral-400",
+                  isSelected ? "text-neutral-200" : "text-neutral-400",
                 )}
               >
                 {wrap.description}
@@ -63,9 +57,7 @@ export function WrapSelector({
               <span
                 className={cn(
                   "mt-1 text-xs font-medium",
-                  isSelected
-                    ? "text-neutral-300 dark:text-neutral-600"
-                    : "text-neutral-600 dark:text-neutral-300",
+                  isSelected ? "text-blue-200" : "text-neutral-300",
                 )}
               >
                 {`${Math.floor(wrap.installationMinutes / 60)}h ${wrap.installationMinutes % 60}m install`}

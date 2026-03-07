@@ -22,11 +22,9 @@ const MONTH_NAMES = [
 ];
 
 interface CalendarClientProps {
-  /** Day-of-week indices (0=Sun … 6=Sat) that have availability windows */
   availableWeekdays: number[];
   selectedDate?: Date | null;
   onDateSelect?: (date: Date) => void;
-  /** Earliest selectable date; defaults to today */
   minDate?: Date;
 }
 
@@ -49,18 +47,18 @@ export function CalendarClient({
     if (viewMonth === 0) {
       setViewMonth(11);
       setViewYear(viewYear - 1);
-    } else {
-      setViewMonth(viewMonth - 1);
+      return;
     }
+    setViewMonth(viewMonth - 1);
   }
 
   function nextMonth() {
     if (viewMonth === 11) {
       setViewMonth(0);
       setViewYear(viewYear + 1);
-    } else {
-      setViewMonth(viewMonth + 1);
+      return;
     }
+    setViewMonth(viewMonth + 1);
   }
 
   const firstDayOfMonth = new Date(viewYear, viewMonth, 1).getDay();
@@ -90,19 +88,17 @@ export function CalendarClient({
     );
   }
 
-  // Build grid cells: leading nulls + day numbers
   const cells: (number | null)[] = [];
   for (let i = 0; i < firstDayOfMonth; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
   return (
-    <div className="w-full max-w-sm">
-      {/* Month navigation */}
-      <div className="flex items-center justify-between mb-4">
+    <div className="w-full max-w-sm rounded-xl border border-neutral-800 bg-neutral-950/50 p-3">
+      <div className="mb-4 flex items-center justify-between">
         <Button variant="outline" size="icon" onClick={prevMonth} aria-label="Previous month">
           ‹
         </Button>
-        <span className="font-semibold text-sm">
+        <span className="text-sm font-semibold text-neutral-100">
           {MONTH_NAMES[viewMonth]} {viewYear}
         </span>
         <Button variant="outline" size="icon" onClick={nextMonth} aria-label="Next month">
@@ -110,16 +106,14 @@ export function CalendarClient({
         </Button>
       </div>
 
-      {/* Day-of-week headers */}
-      <div className="grid grid-cols-7 gap-1 mb-1">
+      <div className="mb-1 grid grid-cols-7 gap-1">
         {DAYS_OF_WEEK.map((d) => (
-          <div key={d} className="text-center text-xs font-medium text-neutral-500 py-1">
+          <div key={d} className="py-1 text-center text-xs font-medium text-neutral-500">
             {d}
           </div>
         ))}
       </div>
 
-      {/* Day cells */}
       <div className="grid grid-cols-7 gap-1">
         {cells.map((day, idx) => {
           if (day === null) {
@@ -136,10 +130,12 @@ export function CalendarClient({
               onClick={() => onDateSelect?.(new Date(viewYear, viewMonth, day))}
               className={cn(
                 "h-9 w-full rounded-md text-sm transition-colors",
-                available && !selected ? "hover:bg-primary/10 cursor-pointer" : "",
-                selected ? "bg-primary text-primary-foreground hover:bg-primary/90" : "",
-                todayCell && !selected ? "border border-primary/50 font-medium" : "",
-                !available && "text-neutral-300 cursor-not-allowed opacity-50",
+                available && !selected
+                  ? "cursor-pointer text-neutral-100 hover:bg-blue-500/20"
+                  : "",
+                selected ? "bg-blue-500 text-white hover:bg-blue-500/90" : "",
+                todayCell && !selected ? "border border-blue-500/50 font-medium text-blue-200" : "",
+                !available && "cursor-not-allowed text-neutral-700 opacity-50",
               )}
             >
               {day}
@@ -149,7 +145,7 @@ export function CalendarClient({
       </div>
 
       {availableWeekdays.length === 0 && (
-        <p className="text-center text-sm text-neutral-500 mt-4">No availability configured.</p>
+        <p className="mt-4 text-center text-sm text-neutral-500">No availability configured.</p>
       )}
     </div>
   );

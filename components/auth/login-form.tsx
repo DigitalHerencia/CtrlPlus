@@ -1,154 +1,154 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { setupUserTenant } from "@/lib/auth/actions/setup-tenant"
-import { cn } from "@/lib/utils"
-import { useSignIn } from "@clerk/nextjs"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { Button } from "@/components/ui/button";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { setupUserTenant } from "@/lib/auth/actions/setup-tenant";
+import { cn } from "@/lib/utils";
+import { useSignIn } from "@clerk/nextjs";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export function LoginForm({ className, ...props }: React.ComponentProps<"form">) {
-  const { signIn } = useSignIn()
-  const router = useRouter()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [verificationCode, setVerificationCode] = useState("")
-  const [awaitingSecondFactor, setAwaitingSecondFactor] = useState(false)
+  const { signIn } = useSignIn();
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [awaitingSecondFactor, setAwaitingSecondFactor] = useState(false);
   const [secondFactorMethod, setSecondFactorMethod] = useState<"email_code" | "phone_code" | null>(
-    null
-  )
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+    null,
+  );
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const finalizeAndRedirect = async () => {
-    const finalizeResult = await signIn.finalize()
+    const finalizeResult = await signIn.finalize();
 
     if (finalizeResult.error) {
-      setError(finalizeResult.error.message || "Unable to finalize sign-in")
-      return false
+      setError(finalizeResult.error.message || "Unable to finalize sign-in");
+      return false;
     }
 
-    await setupUserTenant()
-    router.push("/catalog")
-    return true
-  }
+    await setupUserTenant();
+    router.push("/catalog");
+    return true;
+  };
 
   const sendSecondFactorCode = async () => {
     const supportsEmailCode = signIn.supportedSecondFactors.some(
-      (factor) => factor.strategy === "email_code"
-    )
+      (factor) => factor.strategy === "email_code",
+    );
 
     if (supportsEmailCode) {
-      const sendResult = await signIn.mfa.sendEmailCode()
+      const sendResult = await signIn.mfa.sendEmailCode();
       if (sendResult.error) {
-        setError(sendResult.error.message || "Could not send email verification code")
-        return false
+        setError(sendResult.error.message || "Could not send email verification code");
+        return false;
       }
 
-      setSecondFactorMethod("email_code")
-      return true
+      setSecondFactorMethod("email_code");
+      return true;
     }
 
     const supportsPhoneCode = signIn.supportedSecondFactors.some(
-      (factor) => factor.strategy === "phone_code"
-    )
+      (factor) => factor.strategy === "phone_code",
+    );
 
     if (supportsPhoneCode) {
-      const sendResult = await signIn.mfa.sendPhoneCode()
+      const sendResult = await signIn.mfa.sendPhoneCode();
       if (sendResult.error) {
-        setError(sendResult.error.message || "Could not send phone verification code")
-        return false
+        setError(sendResult.error.message || "Could not send phone verification code");
+        return false;
       }
 
-      setSecondFactorMethod("phone_code")
-      return true
+      setSecondFactorMethod("phone_code");
+      return true;
     }
 
-    setError("No supported verification method found. Please contact support.")
-    return false
-  }
+    setError("No supported verification method found. Please contact support.");
+    return false;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (isLoading) return
+    e.preventDefault();
+    if (isLoading) return;
 
-    setError("")
-    setIsLoading(true)
+    setError("");
+    setIsLoading(true);
 
     try {
       if (awaitingSecondFactor) {
         if (!verificationCode.trim()) {
-          setError("Please enter the verification code.")
-          return
+          setError("Please enter the verification code.");
+          return;
         }
 
         const verifyResult =
           secondFactorMethod === "phone_code"
             ? await signIn.mfa.verifyPhoneCode({ code: verificationCode.trim() })
-            : await signIn.mfa.verifyEmailCode({ code: verificationCode.trim() })
+            : await signIn.mfa.verifyEmailCode({ code: verificationCode.trim() });
 
         if (verifyResult.error) {
-          setError(verifyResult.error.message || "Invalid verification code")
-          return
+          setError(verifyResult.error.message || "Invalid verification code");
+          return;
         }
 
         if (signIn.status === "complete" || !!signIn.createdSessionId) {
-          const finalized = await finalizeAndRedirect()
-          if (finalized) return
+          const finalized = await finalizeAndRedirect();
+          if (finalized) return;
         }
 
-        setError(`Verification is not complete yet (status: ${signIn.status}).`)
-        return
+        setError(`Verification is not complete yet (status: ${signIn.status}).`);
+        return;
       }
 
       const passwordResult = await signIn.password({
         identifier: email,
-        password
-      })
+        password,
+      });
 
       if (passwordResult.error) {
-        setError(passwordResult.error.message || "Invalid email or password")
-        return
+        setError(passwordResult.error.message || "Invalid email or password");
+        return;
       }
 
       if (signIn.status === "complete" || !!signIn.createdSessionId) {
-        const finalized = await finalizeAndRedirect()
-        if (finalized) return
+        const finalized = await finalizeAndRedirect();
+        if (finalized) return;
       }
 
       if (signIn.status === "needs_client_trust" || signIn.status === "needs_second_factor") {
-        const sent = await sendSecondFactorCode()
+        const sent = await sendSecondFactorCode();
         if (sent) {
-          setAwaitingSecondFactor(true)
-          setError("")
+          setAwaitingSecondFactor(true);
+          setError("");
         }
-        return
+        return;
       }
 
       setError(
-        `Sign-in requires additional steps in Clerk (${signIn.status}). Please complete verification.`
-      )
+        `Sign-in requires additional steps in Clerk (${signIn.status}). Please complete verification.`,
+      );
     } catch (err: unknown) {
-      const error = err as { errors?: Array<{ message: string }> }
-      setError(error.errors?.[0]?.message || "Invalid email or password")
+      const error = err as { errors?: Array<{ message: string }> };
+      setError(error.errors?.[0]?.message || "Invalid email or password");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <form className={cn("flex flex-col gap-6", className)} onSubmit={handleSubmit} {...props}>
       <FieldGroup>
         <div className="flex flex-col items-center text-center">
-          <Link href="/" className="inline-flex items-center scale-200 mb-10">
-            <span className="text-lg sm:text-xl font-black tracking-normal text-neutral-100 border-2 border-white px-3 py-1.5 leading-none hover:scale-110">
+          <Link href="/" className="mb-10 inline-flex scale-200 items-center">
+            <span className="border-2 border-white px-3 py-1.5 text-lg leading-none font-black tracking-normal text-neutral-100 hover:scale-110 sm:text-xl">
               CTRL+
             </span>
           </Link>
-          <h1 className="text-4xl text-blue-600 font-bold uppercase tracking-tight mb-1">
+          <h1 className="mb-1 text-4xl font-bold tracking-tight text-blue-600 uppercase">
             Welcome Back
           </h1>
           <p className="text-sm text-balance text-neutral-100">Sign in to manage your account.</p>
@@ -161,13 +161,13 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
           </div>
         )}
         {error && (
-          <div className="bg-red-950/50 border border-red-800 p-3 text-sm text-red-200 animate-in fade-in">
+          <div className="border border-red-800 bg-red-950/50 p-3 text-sm text-red-200 animate-in fade-in">
             {error}
           </div>
         )}
         {awaitingSecondFactor ? (
           <div className="space-y-4">
-            <div className="flex flex-col gap-3 items-start">
+            <div className="flex flex-col items-start gap-3">
               <Field>
                 <Input
                   id="verificationCode"
@@ -183,25 +183,25 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
               </Field>
               <button
                 type="button"
-                className="text-sm font-semibold text-neutral-100 hover:text-blue-600 transition-all underline-offset-4 hover:underline"
+                className="text-sm font-semibold text-neutral-100 underline-offset-4 transition-all hover:text-blue-600 hover:underline"
                 onClick={async () => {
-                  if (isLoading) return
-                  setIsLoading(true)
-                  setError("")
-                  const sent = await sendSecondFactorCode()
+                  if (isLoading) return;
+                  setIsLoading(true);
+                  setError("");
+                  const sent = await sendSecondFactorCode();
                   if (sent) {
-                    setError("")
+                    setError("");
                   }
-                  setIsLoading(false)
+                  setIsLoading(false);
                 }}
                 disabled={isLoading}
               >
                 Resend code
               </button>
             </div>
-            <div className="flex flex-col gap-3 items-start">
+            <div className="flex flex-col items-start gap-3">
               <Button
-                className="bg-blue-600 text-neutral-100 font-semibold py-2.5 hover:bg-transparent hover:text-blue-600 hover:border-2 hover:border-blue-600 transition-all w-full"
+                className="w-full bg-blue-600 py-2.5 font-semibold text-neutral-100 transition-all hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600"
                 type="submit"
                 disabled={isLoading}
               >
@@ -209,14 +209,14 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
               </Button>
               <button
                 type="button"
-                className="text-sm text-neutral-100 hover:text-blue-600 transition-all underline-offset-4 hover:underline"
+                className="text-sm text-neutral-100 underline-offset-4 transition-all hover:text-blue-600 hover:underline"
                 onClick={async () => {
-                  await signIn.reset()
-                  setAwaitingSecondFactor(false)
-                  setSecondFactorMethod(null)
-                  setVerificationCode("")
-                  setPassword("")
-                  setError("")
+                  await signIn.reset();
+                  setAwaitingSecondFactor(false);
+                  setSecondFactorMethod(null);
+                  setVerificationCode("");
+                  setPassword("");
+                  setError("");
                 }}
                 disabled={isLoading}
               >
@@ -243,7 +243,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
                 <FieldLabel htmlFor="password">Password</FieldLabel>
                 <Link
                   href="/forgot-password"
-                  className="text-sm font-semibold text-blue-600 transition-all underline-offset-4 hover:underline"
+                  className="text-sm font-semibold text-blue-600 underline-offset-4 transition-all hover:underline"
                 >
                   Forgot password?
                 </Link>
@@ -258,17 +258,17 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
               />
             </Field>
             <Button
-              className="bg-blue-600 text-neutral-100 font-semibold py-2.5 hover:bg-transparent hover:text-blue-600 hover:border-2 hover:border-blue-600 transition-all w-full mt-6"
+              className="mt-6 w-full bg-blue-600 py-2.5 font-semibold text-neutral-100 transition-all hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600"
               type="submit"
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : awaitingSecondFactor ? "Verify code" : "Login"}
             </Button>
-            <div className="flex items-center gap-1 justify-center text-sm text-neutral-100">
+            <div className="flex items-center justify-center gap-1 text-sm text-neutral-100">
               <span>Don&apos;t have an account?</span>
               <Link
                 href="/sign-up"
-                className="text-blue-600 font-semibold transition-all underline-offset-4 hover:underline"
+                className="font-semibold text-blue-600 underline-offset-4 transition-all hover:underline"
               >
                 Sign up
               </Link>
@@ -278,5 +278,5 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"form">)
         )}
       </FieldGroup>
     </form>
-  )
+  );
 }

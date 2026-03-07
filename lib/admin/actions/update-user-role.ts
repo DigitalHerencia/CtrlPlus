@@ -1,36 +1,21 @@
 "use server";
 
 import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
-import {
-  updateUserRoleSchema,
-  type UpdateUserRoleInput,
-  type UserRoleDTO,
-} from "../types";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
+import { updateUserRoleSchema, type UpdateUserRoleInput, type UserRoleDTO } from "../types";
 
 /**
  * Updates the role of an existing tenant member.
- *
- * Security pipeline:
- * 1. Authenticate  — verify user is signed in
- * 2. Authorize     — verify caller is an owner of the tenant
- * 3. Validate      — parse and validate input with Zod
- * 4. Mutate        — update the membership record scoped to tenantId
- * 5. Audit         — write an immutable audit entry
  */
 export async function updateUserRole(input: UpdateUserRoleInput): Promise<UserRoleDTO> {
-  // 1. AUTHENTICATE
-  const { tenantId } = await getSession();
-  if (!tenantId) throw new Error("Unauthorized: not authenticated");
+  const { tenantId, userId } = await getSession();
+  if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
 
-  // 2. AUTHORIZE — only owners may change member roles
-  await assertTenantMembership(tenantId, "owner");
+  await assertTenantMembership(tenantId, userId, "owner");
 
-  // 3. VALIDATE
   const parsed = updateUserRoleSchema.parse(input);
 
-  // 4. MUTATE — look up the target membership, scoped by tenantId
   const membership = await prisma.tenantUserMembership.findUnique({
     where: {
       tenantId_userId: {
@@ -58,11 +43,10 @@ export async function updateUserRole(input: UpdateUserRoleInput): Promise<UserRo
     data: { role: parsed.role },
   });
 
-  // 5. AUDIT
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: "owner",
+      userId,
       action: "user.role_updated",
       resourceType: "TenantUserMembership",
       resourceId: updated.id,

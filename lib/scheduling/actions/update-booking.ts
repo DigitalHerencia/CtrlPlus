@@ -7,10 +7,15 @@ import type { Prisma } from "@prisma/client";
 import { toHHmm } from "../utils";
 import { z } from "zod";
 
-const updateBookingSchema = z.object({
-  startTime: z.date(),
-  endTime: z.date(),
-});
+const updateBookingSchema = z
+  .object({
+    startTime: z.date(),
+    endTime: z.date(),
+  })
+  .refine((data) => data.endTime > data.startTime, {
+    message: "End time must be after start time",
+    path: ["endTime"],
+  });
 
 type UpdateBookingInput = z.infer<typeof updateBookingSchema>;
 
@@ -21,7 +26,7 @@ type BookingActionDTO = {
   wrapId: string;
   startTime: Date;
   endTime: Date;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED";
+  status: "pending" | "confirmed" | "completed" | "cancelled";
   totalPrice: number;
   createdAt: Date;
   updatedAt: Date;
@@ -45,11 +50,11 @@ export async function updateBooking(
   input: UpdateBookingInput,
 ): Promise<BookingActionDTO> {
   // 1. AUTHENTICATE
-  const { tenantId } = await getSession();
-  if (!tenantId) throw new Error("Unauthorized: not authenticated");
+  const { tenantId, userId } = await getSession();
+  if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — any tenant member may reschedule a booking
-  await assertTenantMembership(tenantId, tenantId);
+  await assertTenantMembership(tenantId, userId);
 
   // 3. VALIDATE
   const parsed = updateBookingSchema.parse(input);
@@ -106,7 +111,7 @@ export async function updateBooking(
       where: {
         tenantId,
         deletedAt: null,
-        status: { not: "CANCELLED" },
+        status: { not: "cancelled" },
         id: { not: bookingId },
         startTime: { lt: endTime },
         endTime: { gt: startTime },
@@ -127,7 +132,7 @@ export async function updateBooking(
     await tx.auditLog.create({
       data: {
         tenantId,
-        userId: tenantId,
+        userId,
         action: "UPDATE_BOOKING",
         resourceType: "Booking",
         resourceId: updatedBooking.id,

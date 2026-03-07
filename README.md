@@ -71,7 +71,7 @@ Built with strict tenant isolation, RSC-first patterns, and domain-driven design
 
 - Vercel (production + preview)
 - GitHub Actions (CI/CD)
-- ESLint + Prettier
+- ESLint + Prettier + Husky
 
 **Testing**
 
@@ -85,7 +85,7 @@ Built with strict tenant isolation, RSC-first patterns, and domain-driven design
 ### Prerequisites
 
 - Node.js 20+ (LTS)
-- pnpm 9+
+- pnpm 10.24+
 - PostgreSQL database (Neon recommended)
 - Clerk account for authentication
 - Stripe account for payments
@@ -195,8 +195,20 @@ pnpm build        # Build for production
 pnpm start        # Run production server
 pnpm lint         # Run ESLint
 pnpm format       # Format code with Prettier
-pnpm test         # Run tests (unit + integration)
+pnpm format:check # Check formatting without writing files
+pnpm typecheck    # Run TypeScript compiler
+pnpm prisma:validate # Validate Prisma schema and config
+pnpm check        # Run the same quality gates as CI (format, lint, types, tests, Prisma, build)
+pnpm test         # Run Vitest unit/integration tests
+pnpm test:e2e     # Run Playwright tests
 ```
+
+### Quality Workflow
+
+- `pnpm install` automatically enables Husky hooks via `prepare`
+- Pre-commit runs `lint-staged` on staged files
+- Commit messages are validated with Commitlint and must use `type(scope): subject`
+- Before opening a PR, run `pnpm check`
 
 ### Database Commands
 

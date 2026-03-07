@@ -26,11 +26,12 @@ import {
  */
 export async function generatePreview(input: GeneratePreviewInput): Promise<VisualizerPreviewDTO> {
   // 1. AUTHENTICATE
-  const { tenantId } = await getSession();
+  const { tenantId, userId } = await getSession();
   if (!tenantId) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — any tenant member can generate a preview
-  await assertTenantMembership(tenantId, tenantId);
+  if (!userId) throw new Error("Unauthorized: not authenticated");
+  await assertTenantMembership(tenantId, userId);
 
   // 3. VALIDATE
   const parsed = generatePreviewSchema.parse(input);
@@ -73,7 +74,7 @@ export async function generatePreview(input: GeneratePreviewInput): Promise<Visu
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: tenantId,
+      userId,
       action: "GENERATE_PREVIEW",
       resourceType: "VisualizerPreview",
       resourceId: processed.id,

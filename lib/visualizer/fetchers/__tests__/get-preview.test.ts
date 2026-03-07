@@ -165,7 +165,11 @@ describe("getPreviewsByWrap", () => {
   });
 
   it("transforms raw records to VisualizerPreviewDTOs", async () => {
-    const completePreview = { ...mockPreview, status: "complete", processedImageUrl: "https://example.com/processed.jpg" };
+    const completePreview = {
+      ...mockPreview,
+      status: "complete",
+      processedImageUrl: "https://example.com/processed.jpg",
+    };
     prismaMock.visualizerPreview.findMany.mockResolvedValue([completePreview]);
 
     const result = await getPreviewsByWrap("tenant-abc", "wrap-001");

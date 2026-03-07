@@ -384,9 +384,7 @@ All actions in `lib/actions/**` must follow this pipeline:
  * @param input - User input (validated with Zod)
  * @returns Minimal DTO or error
  */
-export async function createWrapAction(
-  input: unknown,
-): Promise<ActionResult<WrapDTO>> {
+export async function createWrapAction(input: unknown): Promise<ActionResult<WrapDTO>> {
   try {
     // 1. Resolve auth
     const { userId, clerkUserId } = await requireAuth();
@@ -552,10 +550,14 @@ export async function createWrapAction(
 
 All PRs must pass:
 
-1. `pnpm lint` (ESLint)
-2. `pnpm typecheck` (TypeScript)
-3. `pnpm test` (unit + integration)
-4. `pnpm test:e2e` (conditional on file changes)
+1. `pnpm format:check` (Prettier)
+2. `pnpm lint` (ESLint)
+3. `pnpm typecheck` (TypeScript)
+4. `pnpm test` (Vitest unit/integration)
+5. `pnpm prisma:validate` (Prisma config + schema)
+6. `pnpm build` (Next.js production build)
+
+`pnpm check` runs the same quality gate sequence locally. Playwright remains a separate workflow triggered only for relevant application changes.
 
 ---
 
@@ -604,10 +606,15 @@ on:
 
 jobs:
   quality-gates:
+    - Format check (Prettier)
     - Lint (ESLint)
     - Typecheck (TypeScript)
-    - Test (unit + integration)
-    - E2E (conditional)
+    - Unit tests (Vitest)
+    - Prisma validate
+    - Build
+
+  e2e:
+    - Playwright (conditional on file changes or manual preview URL)
 
   deploy:
     - Vercel preview (on PR)
@@ -695,15 +702,14 @@ pnpm db:studio           # Open Prisma Studio
 pnpm db:seed             # Seed database
 
 # Testing
+pnpm format:check        # Check formatting
 pnpm lint                # Run ESLint
 pnpm typecheck           # Run TypeScript compiler
-pnpm test                # Run unit + integration tests
+pnpm test                # Run unit + integration tests (Vitest)
+pnpm prisma:validate     # Validate Prisma schema/config
+pnpm check               # Run CI-quality gates locally
 pnpm test:unit           # Run unit tests only
-pnpm test:integration    # Run integration tests only
 pnpm test:e2e            # Run E2E tests (Playwright)
-
-# Code Generation
-pnpm codegen             # Generate types and clients
 ```
 
 ---

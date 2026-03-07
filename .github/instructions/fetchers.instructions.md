@@ -26,9 +26,7 @@ import { type RecordDTO } from "../types";
  * @param tenantId - Tenant scope (server-side verified)
  * @returns Array of record DTOs
  */
-export async function getRecordsForTenant(
-  tenantId: string,
-): Promise<RecordDTO[]> {
+export async function getRecordsForTenant(tenantId: string): Promise<RecordDTO[]> {
   const records = await prisma.record.findMany({
     where: {
       tenantId, // 🚨 ALWAYS scope
@@ -60,10 +58,7 @@ export async function getRecordsForTenant(
  * @param recordId - Record ID
  * @returns Record DTO or null
  */
-export async function getRecordById(
-  tenantId: string,
-  recordId: string,
-): Promise<RecordDTO | null> {
+export async function getRecordById(tenantId: string, recordId: string): Promise<RecordDTO | null> {
   const record = await prisma.record.findFirst({
     where: {
       id: recordId,
@@ -228,9 +223,7 @@ where: { tenantId }
 ### List All for Tenant
 
 ```tsx
-export async function getCatalogsForTenant(
-  tenantId: string,
-): Promise<CatalogDTO[]> {
+export async function getCatalogsForTenant(tenantId: string): Promise<CatalogDTO[]> {
   const catalogs = await prisma.catalog.findMany({
     where: { tenantId, deletedAt: null },
     orderBy: { createdAt: "desc" },
@@ -252,10 +245,7 @@ function transformCatalogToDTO(catalog: any): CatalogDTO {
 ### Get Single by ID with Fallback
 
 ```tsx
-export async function getWrapById(
-  tenantId: string,
-  wrapId: string,
-): Promise<WrapDTO | null> {
+export async function getWrapById(tenantId: string, wrapId: string): Promise<WrapDTO | null> {
   const wrap = await prisma.wrap.findFirst({
     where: { id: wrapId, tenantId, deletedAt: null },
     select: wrapDTOFields,

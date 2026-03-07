@@ -11,33 +11,21 @@ import {
 
 /**
  * Updates tenant configuration (name, slug).
- *
- * Security pipeline:
- * 1. Authenticate  — verify user is signed in
- * 2. Authorize     — verify caller is an owner of the tenant
- * 3. Validate      — parse and validate input with Zod
- * 4. Mutate        — apply settings updates scoped to tenantId
- * 5. Audit         — write an immutable audit entry
  */
 export async function updateTenantSettings(
   input: UpdateTenantSettingsInput,
 ): Promise<TenantSettingsDTO> {
-  // 1. AUTHENTICATE
-  const { tenantId } = await getSession();
-  if (!tenantId) throw new Error("Unauthorized: not authenticated");
+  const { tenantId, userId } = await getSession();
+  if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
 
-  // 2. AUTHORIZE — only owners may change tenant settings
-  await assertTenantMembership(tenantId, "owner");
+  await assertTenantMembership(tenantId, userId, "owner");
 
-  // 3. VALIDATE
   const parsed = updateTenantSettingsSchema.parse(input);
 
-  // Build a partial update payload containing only provided fields
   const updateData: { name?: string; slug?: string } = {};
   if (parsed.name !== undefined) updateData.name = parsed.name;
   if (parsed.slug !== undefined) updateData.slug = parsed.slug;
 
-  // 4. MUTATE (always scoped by tenantId via where: { id: tenantId })
   let tenant;
   try {
     tenant = await prisma.tenant.update({
@@ -55,11 +43,10 @@ export async function updateTenantSettings(
     throw err;
   }
 
-  // 5. AUDIT
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: "owner",
+      userId,
       action: "tenant.settings_updated",
       resourceType: "Tenant",
       resourceId: tenantId,

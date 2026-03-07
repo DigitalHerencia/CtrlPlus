@@ -23,11 +23,12 @@ import {
  */
 export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<VisualizerPreviewDTO> {
   // 1. AUTHENTICATE
-  const { tenantId } = await getSession();
+  const { tenantId, userId } = await getSession();
   if (!tenantId) throw new Error("Unauthorized: not authenticated");
 
   // 2. AUTHORIZE — any tenant member can upload a preview
-  await assertTenantMembership(tenantId, tenantId);
+  if (!userId) throw new Error("Unauthorized: not authenticated");
+  await assertTenantMembership(tenantId, userId);
 
   // 3. VALIDATE
   const parsed = uploadPhotoSchema.parse(input);
@@ -92,7 +93,7 @@ export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<Visua
     await prisma.auditLog.create({
       data: {
         tenantId,
-        userId: tenantId,
+        userId,
         action: "UPLOAD_VEHICLE_PHOTO",
         resourceType: "VisualizerPreview",
         resourceId: refreshed.id,
@@ -130,7 +131,7 @@ export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<Visua
   await prisma.auditLog.create({
     data: {
       tenantId,
-      userId: tenantId,
+      userId,
       action: "UPLOAD_VEHICLE_PHOTO",
       resourceType: "VisualizerPreview",
       resourceId: preview.id,

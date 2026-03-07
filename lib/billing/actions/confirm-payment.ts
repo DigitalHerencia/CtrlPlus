@@ -19,7 +19,7 @@
 import { getStripeClient } from "@/lib/billing/stripe";
 import { prisma } from "@/lib/prisma";
 import type Stripe from "stripe";
-import { type PaymentStatus } from "../types";
+import { type ConfirmPaymentResult } from "../types";
 
 /**
  * Sentinel userId written to AuditLog entries that originate from the
@@ -40,13 +40,24 @@ function isPrismaUniqueConstraintError(err: unknown): boolean {
   );
 }
 
+function toPaymentStatus(status: string): ConfirmPaymentResult["status"] {
+  if (status === "pending" || status === "succeeded" || status === "failed") {
+    return status;
+  }
+
+  throw new Error(`Unsupported payment status: ${status}`);
+}
+
 /**
  * Processes a Stripe `checkout.session.completed` webhook event.
  *
  * @param payload   - Raw request body (string) from the webhook route
  * @param signature - Value of the `Stripe-Signature` HTTP header
  */
-export async function confirmPayment(payload: string, signature: string): Promise<PaymentStatus> {
+export async function confirmPayment(
+  payload: string,
+  signature: string,
+): Promise<ConfirmPaymentResult> {
   // 1. AUTHENTICATE — verify Stripe webhook signature
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
@@ -66,7 +77,7 @@ export async function confirmPayment(payload: string, signature: string): Promis
     throw new Error(`Unhandled Stripe event type: ${event.type}`);
   }
 
-  const session = event.data.object as Stripe.Checkout.Session;
+  const session = event.data.object;
 
   // Extract the invoice ID stored in client_reference_id or metadata
   const invoiceId = session.client_reference_id ?? session.metadata?.invoiceId ?? null;
@@ -119,8 +130,8 @@ export async function confirmPayment(payload: string, signature: string): Promis
     return {
       invoiceId: invoice.id,
       paymentId: existingPayment.id,
-      status: existingPayment.status,
-    } as unknown as PaymentStatus;
+      status: toPaymentStatus(existingPayment.status),
+    };
   }
 
   // 4. MUTATE — transactional: create Payment, update Invoice, update Booking
@@ -165,8 +176,8 @@ export async function confirmPayment(payload: string, signature: string): Promis
         return {
           invoiceId: invoice.id,
           paymentId: winner.id,
-          status: winner.status,
-        } as unknown as PaymentStatus;
+          status: toPaymentStatus(winner.status),
+        };
       }
     }
     throw err;
@@ -193,6 +204,5 @@ export async function confirmPayment(payload: string, signature: string): Promis
     invoiceId: invoice.id,
     paymentId: payment.id,
     status: "succeeded",
-  } as unknown as PaymentStatus;
+  };
 }
-
