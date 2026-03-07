@@ -3,7 +3,8 @@
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
-import crypto from "crypto";
+import { buildVisualizerCacheKey } from "@/lib/visualizer/cache-key";
+import { visualizerConfig } from "@/lib/visualizer/config";
 import {
   uploadPhotoSchema,
   type PreviewStatus,
@@ -11,49 +12,53 @@ import {
   type VisualizerPreviewDTO,
 } from "../types";
 
-/**
- * Uploads a vehicle photo and creates a VisualizerPreview record for the tenant.
- *
- * Security pipeline:
- * 1. Authenticate  — verify user is signed in
- * 2. Authorize     — verify user is a member of the tenant
- * 3. Validate      — parse and validate input with Zod
- * 4. Mutate        — create the preview record scoped to tenantId
- * 5. Audit         — write an immutable audit event
- */
-export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<VisualizerPreviewDTO> {
-  // 1. AUTHENTICATE
-  const { tenantId, userId } = await getSession();
-  if (!tenantId) throw new Error("Unauthorized: not authenticated");
+function validatePhotoInput(customerPhotoUrl: string): void {
+  if (!customerPhotoUrl.startsWith("data:")) return;
 
-  // 2. AUTHORIZE — any tenant member can upload a preview
-  if (!userId) throw new Error("Unauthorized: not authenticated");
+  const match = customerPhotoUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+  if (!match) throw new Error("Invalid image data format");
+
+  const mimeType = match[1].toLowerCase();
+  if (!visualizerConfig.supportedMimeTypes.includes(mimeType)) {
+    throw new Error("Unsupported image type");
+  }
+
+  const byteLength = Buffer.byteLength(match[2], "base64");
+  if (byteLength > visualizerConfig.maxUploadSizeBytes) {
+    throw new Error("Uploaded image exceeds max size");
+  }
+}
+
+export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<VisualizerPreviewDTO> {
+  const { tenantId, userId } = await getSession();
+  if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
+
   await assertTenantMembership(tenantId, userId);
 
-  // 3. VALIDATE
   const parsed = uploadPhotoSchema.parse(input);
+  validatePhotoInput(parsed.customerPhotoUrl);
 
-  // Verify the wrap belongs to this tenant
   const wrap = await prisma.wrap.findFirst({
     where: { id: parsed.wrapId, tenantId, deletedAt: null },
     select: { id: true },
   });
   if (!wrap) throw new Error("Wrap not found");
 
-  // 4. MUTATE — create preview record scoped to tenantId
-  const cacheKey = crypto
-    .createHash("sha256")
-    .update(`${tenantId}:${parsed.wrapId}:${parsed.customerPhotoUrl}`)
-    .digest("hex");
+  const cacheKey = buildVisualizerCacheKey({
+    tenantId,
+    wrapId: parsed.wrapId,
+    customerPhotoUrl: parsed.customerPhotoUrl,
+    maskModel: visualizerConfig.maskModel,
+    blendMode: visualizerConfig.blendMode,
+    opacity: visualizerConfig.overlayOpacity,
+  });
 
-  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+  const expiresAt = new Date(Date.now() + visualizerConfig.previewTtlMs);
 
-  // Check for any existing record with this cacheKey (unique constraint)
   const existing = await prisma.visualizerPreview.findUnique({
     where: { cacheKey },
   });
 
-  // If a valid cached preview exists for this tenant, return it
   if (
     existing &&
     existing.tenantId === tenantId &&
@@ -74,60 +79,30 @@ export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<Visua
     };
   }
 
-  // If a record exists but is expired or soft-deleted, update it in place to
-  // avoid a unique-constraint violation on `cacheKey` from a CREATE.
-  if (existing) {
-    const refreshed = await prisma.visualizerPreview.update({
-      where: { cacheKey },
-      data: {
-        tenantId,
-        wrapId: parsed.wrapId,
-        customerPhotoUrl: parsed.customerPhotoUrl,
-        processedImageUrl: null,
-        status: "pending",
-        expiresAt,
-        deletedAt: null,
-      },
-    });
+  const preview = existing
+    ? await prisma.visualizerPreview.update({
+        where: { cacheKey },
+        data: {
+          tenantId,
+          wrapId: parsed.wrapId,
+          customerPhotoUrl: parsed.customerPhotoUrl,
+          processedImageUrl: null,
+          status: "pending",
+          expiresAt,
+          deletedAt: null,
+        },
+      })
+    : await prisma.visualizerPreview.create({
+        data: {
+          tenantId,
+          wrapId: parsed.wrapId,
+          customerPhotoUrl: parsed.customerPhotoUrl,
+          status: "pending",
+          cacheKey,
+          expiresAt,
+        },
+      });
 
-    await prisma.auditLog.create({
-      data: {
-        tenantId,
-        userId,
-        action: "UPLOAD_VEHICLE_PHOTO",
-        resourceType: "VisualizerPreview",
-        resourceId: refreshed.id,
-        details: JSON.stringify({ wrapId: parsed.wrapId }),
-        timestamp: new Date(),
-      },
-    });
-
-    return {
-      id: refreshed.id,
-      tenantId: refreshed.tenantId,
-      wrapId: refreshed.wrapId,
-      customerPhotoUrl: refreshed.customerPhotoUrl,
-      processedImageUrl: refreshed.processedImageUrl,
-      status: refreshed.status as PreviewStatus,
-      cacheKey: refreshed.cacheKey,
-      expiresAt: refreshed.expiresAt,
-      createdAt: refreshed.createdAt,
-      updatedAt: refreshed.updatedAt,
-    };
-  }
-
-  const preview = await prisma.visualizerPreview.create({
-    data: {
-      tenantId,
-      wrapId: parsed.wrapId,
-      customerPhotoUrl: parsed.customerPhotoUrl,
-      status: "pending",
-      cacheKey,
-      expiresAt,
-    },
-  });
-
-  // 5. AUDIT
   await prisma.auditLog.create({
     data: {
       tenantId,
