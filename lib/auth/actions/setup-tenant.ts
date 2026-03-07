@@ -3,76 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { generateTenantSlug } from "@/lib/tenancy/slug";
 import { resolveTenantFromRequest } from "@/lib/tenancy/resolve";
-import { auth, currentUser } from "@clerk/nextjs/server";
-
-const TENANT_FALLBACK_PREFIX = "tenant";
-
-function getPrimaryEmailFromClerkUser(user: Awaited<ReturnType<typeof currentUser>>, clerkUserId: string): string {
-  if (!user) {
-    return `no-email+${clerkUserId.toLowerCase()}@local.invalid`;
-  }
-
-  const primaryEmail =
-    user.emailAddresses.find((entry) => entry.id === user.primaryEmailAddressId)?.emailAddress ??
-    user.emailAddresses[0]?.emailAddress ??
-    null;
-
-  return primaryEmail ? primaryEmail.trim().toLowerCase() : `no-email+${clerkUserId.toLowerCase()}@local.invalid`;
-}
-
-function getWorkspaceNameFromClerkUser(
-  user: Awaited<ReturnType<typeof currentUser>>,
-  fallbackEmail: string,
-): string {
-  const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(" ").trim();
-
-  if (fullName.length > 0) {
-    return `${fullName}'s Workspace`;
-  }
-
-  if (user?.username && user.username.trim().length > 0) {
-    return `${user.username.trim()}'s Workspace`;
-  }
-
-  if (fallbackEmail) {
-    const localPart = fallbackEmail.split("@")[0]?.trim();
-    if (localPart) {
-      return `${localPart}'s Workspace`;
-    }
-  }
-
-  return "My Workspace";
-}
-
-async function reserveUniqueTenantSlug(baseSlug: string): Promise<string> {
-  const collisionCandidates = await prisma.tenant.findMany({
-    where: {
-      slug: {
-        startsWith: baseSlug,
-      },
-    },
-    select: { slug: true },
-  });
-
-  const existingSlugs = new Set(collisionCandidates.map((candidate: { slug: string }) => candidate.slug));
-
-  if (!existingSlugs.has(baseSlug)) {
-    return baseSlug;
-  }
-
-  for (let suffix = 2; suffix < 5000; suffix += 1) {
-    const suffixString = `-${suffix}`;
-    const prefixLength = 63 - suffixString.length;
-    const prefix = baseSlug.slice(0, prefixLength).replace(/-+$/g, "");
-    const candidate = `${prefix}${suffixString}`;
-
-    if (!existingSlugs.has(candidate)) {
-      return candidate;
-    }
-  }
-
-  throw new Error("Unable to reserve a unique tenant slug");
-}
+import { generateTenantSlug } from "@/lib/tenancy/slug";
+import { auth } from "@clerk/nextjs/server";
 
 /**
  * Setup initial tenant for newly authenticated user.
@@ -107,18 +39,12 @@ export async function setupUserTenant(): Promise<string> {
   let tenantId = await resolveTenantFromRequest();
 
   if (!tenantId) {
-    const workspaceName = getWorkspaceNameFromClerkUser(clerkUser, email);
-    const baseSlug = generateTenantSlug({
-      workspaceName,
-      email,
-      fallbackPrefix: TENANT_FALLBACK_PREFIX,
-    });
-    const uniqueSlug = await reserveUniqueTenantSlug(baseSlug);
-
+    // No subdomain provided - create a new tenant for this user
+    // Use deterministic normalized slug generation for tenant safety.
     const tenant = await prisma.tenant.create({
       data: {
-        name: workspaceName,
-        slug: uniqueSlug,
+        name: `${clerkUserId}'s Workspace`,
+        slug: generateTenantSlug(clerkUserId),
       },
       select: { id: true },
     });

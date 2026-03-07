@@ -5,6 +5,7 @@
  * Never expose raw Prisma models — always use these explicit types.
  */
 
+import { TENANT_SLUG_REGEX } from "@/lib/tenancy/slug";
 import { z } from "zod";
 
 import { type TenantRole } from "@/lib/tenancy/types";
@@ -42,7 +43,7 @@ export const updateTenantSettingsSchema = z
       .min(1, "Slug cannot be empty")
       .max(63)
       .regex(
-        /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/,
+        TENANT_SLUG_REGEX,
         "Slug must be lowercase alphanumeric, may contain hyphens, and cannot start or end with a hyphen",
       )
       .optional(),

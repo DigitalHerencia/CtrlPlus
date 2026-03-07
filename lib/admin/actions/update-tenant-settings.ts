@@ -3,6 +3,7 @@
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { assertTenantMembership } from "@/lib/tenancy/assert";
+import { normalizeTenantSlug } from "@/lib/tenancy/slug";
 import {
   updateTenantSettingsSchema,
   type TenantSettingsDTO,
@@ -24,7 +25,13 @@ export async function updateTenantSettings(
 
   const updateData: { name?: string; slug?: string } = {};
   if (parsed.name !== undefined) updateData.name = parsed.name;
-  if (parsed.slug !== undefined) updateData.slug = parsed.slug;
+  if (parsed.slug !== undefined) {
+    const normalizedSlug = normalizeTenantSlug(parsed.slug);
+    if (!normalizedSlug) {
+      throw new Error("ValidationError: invalid tenant slug");
+    }
+    updateData.slug = normalizedSlug;
+  }
 
   let tenant;
   try {
