@@ -48,8 +48,7 @@ model ClerkWebhookEvent {
   processedAt DateTime @default(now()) // used for retention/cleanup
 
   @@index([type])
-  @@index([status])
-  @@index([processedAt])
+  @@index([status, processedAt])
 }
 
 // ============================================================================
@@ -58,25 +57,24 @@ model ClerkWebhookEvent {
 
 /// Represents a tenant (vehicle wrap business)
 model Tenant {
-  id                      String                    @id @default(cuid())
-  name                    String
-  slug                    String                    @unique
-  createdAt               DateTime                  @default(now())
-  updatedAt               DateTime                  @updatedAt
-  deletedAt               DateTime?
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   // Relations
-  members                 TenantUserMembership[]
-  wraps                   Wrap[]
-  wrapCategories          WrapCategory[]
-  availabilityRules       AvailabilityRule[]
-  bookings                Booking[]
-  previews                VisualizerPreview[]
-  invoices                Invoice[]
-  auditLogs               AuditLog[]
-  clerkSubscriptions      ClerkSubscription[]
+  members            TenantUserMembership[]
+  wraps              Wrap[]
+  wrapCategories     WrapCategory[]
+  availabilityRules  AvailabilityRule[]
+  bookings           Booking[]
+  previews           VisualizerPreview[]
+  invoices           Invoice[]
+  auditLogs          AuditLog[]
+  clerkSubscriptions ClerkSubscription[]
 
-  @@index([slug])
   @@index([deletedAt])
 }
 
@@ -136,17 +134,17 @@ model ClerkSms {
 
 /// Clerk subscription cache from webhooks
 model ClerkSubscription {
-  id            String                  @id // Clerk subscription ID
+  id            String    @id // Clerk subscription ID
   tenantId      String?
   clerkUserId   String?
   status        String?
   lastEventType String
-  createdAt     DateTime                @default(now())
-  updatedAt     DateTime                @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
 
-  tenant        Tenant?                 @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  items         ClerkSubscriptionItem[]
+  tenant Tenant?                 @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  items  ClerkSubscriptionItem[]
 
   @@index([tenantId])
   @@index([clerkUserId])
@@ -156,15 +154,15 @@ model ClerkSubscription {
 
 /// Clerk subscription item cache from webhooks
 model ClerkSubscriptionItem {
-  id               String            @id // Clerk subscription item ID
-  subscriptionId   String
-  status           String?
-  lastEventType    String
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  deletedAt        DateTime?
+  id             String    @id // Clerk subscription item ID
+  subscriptionId String
+  status         String?
+  lastEventType  String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
 
-  subscription     ClerkSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  subscription ClerkSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
 
   @@index([subscriptionId])
   @@index([status])
@@ -176,7 +174,7 @@ model ClerkPaymentAttempt {
   id            String    @id // Clerk payment attempt ID
   clerkUserId   String?
   status        String?
-  amount        Float?
+  amount        Int?
   currency      String?
   lastEventType String
   createdAt     DateTime  @default(now())
@@ -190,22 +188,21 @@ model ClerkPaymentAttempt {
 
 /// Tracks user membership and roles within a tenant (RBAC)
 model TenantUserMembership {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   tenantId  String
-  userId    String   // References User.id (database primary key)
-  role      String   @default("member") // "owner" | "admin" | "member"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  userId    String // References User.id (database primary key)
+  role      String    @default("member") // "owner" | "admin" | "member"
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   // Relations
-  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, userId])
-  @@index([tenantId])
-  @@index([userId])
-  @@index([deletedAt])
+  @@index([tenantId, deletedAt, role])
+  @@index([userId, deletedAt, createdAt])
 }
 
 // ============================================================================
@@ -214,45 +211,42 @@ model TenantUserMembership {
 
 /// Represents a wrap design
 model Wrap {
-  id                    String                  @id @default(cuid())
-  tenantId              String
-  name                  String
-  description           String?
-  price                 Float // in cents
-  installationMinutes   Int?
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
-  deletedAt             DateTime?
+  id                  String    @id @default(cuid())
+  tenantId            String
+  name                String
+  description         String?
+  price               Int // in cents
+  installationMinutes Int?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
 
   // Relations
-  tenant                Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  images                WrapImage[]
-  categoryMappings      WrapCategoryMapping[]
-  bookings              Booking[]
-  previews              VisualizerPreview[]
+  tenant           Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  images           WrapImage[]
+  categoryMappings WrapCategoryMapping[]
+  bookings         Booking[]
+  previews         VisualizerPreview[]
 
-  @@index([tenantId])
-  @@index([deletedAt])
-  @@unique([tenantId, id])
+  @@index([tenantId, deletedAt, createdAt])
 }
 
 /// Categories for organizing wraps
 model WrapCategory {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   tenantId  String
   name      String
   slug      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   // Relations
-  tenant    Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  wraps     WrapCategoryMapping[]
+  tenant Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  wraps  WrapCategoryMapping[]
 
   @@unique([tenantId, slug])
-  @@index([tenantId])
-  @@index([deletedAt])
+  @@index([tenantId, deletedAt, createdAt])
 }
 
 /// Junction table: many wraps to many categories
@@ -260,25 +254,24 @@ model WrapCategoryMapping {
   wrapId     String
   categoryId String
 
-  wrap       Wrap         @relation(fields: [wrapId], references: [id], onDelete: Cascade)
-  category   WrapCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  wrap     Wrap         @relation(fields: [wrapId], references: [id], onDelete: Cascade)
+  category WrapCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@id([wrapId, categoryId])
 }
 
 /// Images for wrap designs
 model WrapImage {
-  id            String   @id @default(cuid())
-  wrapId        String
-  url           String
-  displayOrder  Int      @default(0)
-  createdAt     DateTime @default(now())
-  deletedAt     DateTime?
+  id           String    @id @default(cuid())
+  wrapId       String
+  url          String
+  displayOrder Int       @default(0)
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
 
-  wrap          Wrap     @relation(fields: [wrapId], references: [id], onDelete: Cascade)
+  wrap Wrap @relation(fields: [wrapId], references: [id], onDelete: Cascade)
 
-  @@index([wrapId])
-  @@index([deletedAt])
+  @@index([wrapId, deletedAt, displayOrder])
 }
 
 // ============================================================================
@@ -287,48 +280,44 @@ model WrapImage {
 
 /// Availability rules for time slots
 model AvailabilityRule {
-  id             String   @id @default(cuid())
-  tenantId       String
-  dayOfWeek      Int      // 0=Sunday, 6=Saturday
-  startTime      String   // HH:MM format
-  endTime        String   // HH:MM format
-  capacitySlots  Int      // How many concurrent bookings
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  deletedAt      DateTime?
+  id            String    @id @default(cuid())
+  tenantId      String
+  dayOfWeek     Int // 0=Sunday, 6=Saturday
+  startTime     String // HH:MM format
+  endTime       String // HH:MM format
+  capacitySlots Int // How many concurrent bookings
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
 
-  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@index([tenantId])
-  @@index([dayOfWeek])
-  @@index([deletedAt])
+  @@index([tenantId, dayOfWeek, deletedAt, startTime, endTime])
 }
 
 /// Customer bookings
 model Booking {
-  id                String                @id @default(cuid())
-  tenantId          String
-  customerId        String                // Clerk user ID of customer
-  wrapId            String
-  startTime         DateTime
-  endTime           DateTime
-  status            String                @default("pending") // "pending" | "confirmed" | "completed" | "cancelled"
-  totalPrice        Float                 // in cents
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
-  deletedAt         DateTime?
+  id         String    @id @default(cuid())
+  tenantId   String
+  customerId String // Clerk user ID of customer
+  wrapId     String
+  startTime  DateTime
+  endTime    DateTime
+  status     String    @default("pending") // "pending" | "confirmed" | "completed" | "cancelled"
+  totalPrice Int // in cents
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
 
   // Relations
-  tenant            Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  wrap              Wrap                  @relation(fields: [wrapId], references: [id], onDelete: Cascade)
-  reservation       BookingReservation?
-  invoice           Invoice?
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  wrap        Wrap                @relation(fields: [wrapId], references: [id], onDelete: Cascade)
+  reservation BookingReservation?
+  invoice     Invoice?
 
-  @@index([tenantId])
-  @@index([customerId])
-  @@index([status])
-  @@index([deletedAt])
-  @@unique([tenantId, id])
+  @@index([tenantId, deletedAt, status, startTime])
+  @@index([tenantId, customerId, deletedAt, status])
+  @@index([tenantId, deletedAt, startTime, endTime])
 }
 
 /// 15-minute reservation hold on booking slots
@@ -339,7 +328,7 @@ model BookingReservation {
   reservedAt DateTime @default(now())
   createdAt  DateTime @default(now())
 
-  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@index([expiresAt])
 }
@@ -350,25 +339,23 @@ model BookingReservation {
 
 /// Preview generation results (cached for 24h)
 model VisualizerPreview {
-  id                 String   @id @default(cuid())
-  tenantId           String
-  wrapId             String
-  customerPhotoUrl   String
-  processedImageUrl  String?  // Filled after processing
-  status             String   @default("pending") // "pending" | "processing" | "complete" | "failed"
-  cacheKey           String   @unique // Deterministic hash for caching
-  expiresAt          DateTime
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  deletedAt          DateTime?
+  id                String    @id @default(cuid())
+  tenantId          String
+  wrapId            String
+  customerPhotoUrl  String
+  processedImageUrl String? // Filled after processing
+  status            String    @default("pending") // "pending" | "processing" | "complete" | "failed"
+  cacheKey          String    @unique // Deterministic hash for caching
+  expiresAt         DateTime
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  deletedAt         DateTime?
 
-  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  wrap               Wrap     @relation(fields: [wrapId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  wrap   Wrap   @relation(fields: [wrapId], references: [id], onDelete: Cascade)
 
-  @@index([tenantId])
-  @@index([status])
-  @@index([expiresAt])
-  @@index([deletedAt])
+  @@index([tenantId, wrapId, deletedAt, expiresAt, createdAt])
+  @@index([status, expiresAt])
 }
 
 // ============================================================================
@@ -377,54 +364,51 @@ model VisualizerPreview {
 
 /// Invoices for bookings
 model Invoice {
-  id         String   @id @default(cuid())
-  tenantId   String
-  bookingId  String   @unique
-  status     String   @default("draft") // "draft" | "sent" | "paid" | "failed" | "refunded"
-  totalAmount Float   // in cents
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  deletedAt  DateTime?
+  id          String    @id @default(cuid())
+  tenantId    String
+  bookingId   String    @unique
+  status      String    @default("draft") // "draft" | "sent" | "paid" | "failed" | "refunded"
+  totalAmount Int // in cents
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
 
-  tenant     Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  booking    Booking            @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  lineItems  InvoiceLineItem[]
-  payments   Payment[]
+  tenant    Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  booking   Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  lineItems InvoiceLineItem[]
+  payments  Payment[]
 
-  @@index([tenantId])
-  @@index([status])
-  @@index([deletedAt])
+  @@index([tenantId, deletedAt, status, createdAt])
+  @@index([tenantId, bookingId, deletedAt])
 }
 
 /// Line items for invoices
 model InvoiceLineItem {
-  id         String @id @default(cuid())
-  invoiceId  String
+  id          String @id @default(cuid())
+  invoiceId   String
   description String
-  quantity   Int
-  unitPrice  Float  // in cents
-  totalPrice Float  // in cents
+  quantity    Int
+  unitPrice   Int // in cents
+  totalPrice  Int // in cents
 
-  invoice    Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   @@index([invoiceId])
 }
 
 /// Payment records (Stripe integration)
 model Payment {
-  id                    String   @id @default(cuid())
+  id                    String    @id @default(cuid())
   invoiceId             String
-  stripePaymentIntentId String   @unique
-  status                String   @default("pending") // "pending" | "succeeded" | "failed"
-  amount                Float    // in cents
-  createdAt             DateTime @default(now())
+  stripePaymentIntentId String    @unique
+  status                String    @default("pending") // "pending" | "succeeded" | "failed"
+  amount                Int // in cents
+  createdAt             DateTime  @default(now())
   deletedAt             DateTime?
 
-  invoice               Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
-  @@index([invoiceId])
-  @@index([stripePaymentIntentId])
-  @@index([deletedAt])
+  @@index([invoiceId, deletedAt, createdAt])
 }
 
 // ============================================================================
@@ -433,14 +417,13 @@ model Payment {
 
 /// Tracks processed Stripe webhook events (idempotency guard)
 model StripeWebhookEvent {
-  id          String    @id // Stripe event ID (e.g. "evt_xxx")
-  type        String    // e.g. "checkout.session.completed"
-  status      String    @default("processed") // "processed" | "failed"
-  processedAt DateTime  @default(now())
+  id          String   @id // Stripe event ID (e.g. "evt_xxx")
+  type        String // e.g. "checkout.session.completed"
+  status      String   @default("processed") // "processed" | "failed"
+  processedAt DateTime @default(now())
 
   @@index([type])
-  @@index([status])
-  @@index([processedAt])
+  @@index([status, processedAt])
 }
 
 // ============================================================================
@@ -449,21 +432,20 @@ model StripeWebhookEvent {
 
 /// Audit trail for security and compliance
 model AuditLog {
-  id            String   @id @default(cuid())
-  tenantId      String
-  userId        String   // Clerk user ID
-  action        String   // e.g., "CREATE_WRAP", "CANCEL_BOOKING"
-  resourceType  String   // e.g., "Wrap", "Booking", "Invoice"
-  resourceId    String
-  details       String?  // JSON details
-  timestamp     DateTime @default(now())
-  deletedAt     DateTime?
+  id           String    @id @default(cuid())
+  tenantId     String
+  userId       String // Clerk user ID
+  action       String // e.g., "CREATE_WRAP", "CANCEL_BOOKING"
+  resourceType String // e.g., "Wrap", "Booking", "Invoice"
+  resourceId   String
+  details      String? // JSON details
+  timestamp    DateTime  @default(now())
+  deletedAt    DateTime?
 
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@index([tenantId])
-  @@index([userId])
+  @@index([tenantId, timestamp])
+  @@index([userId, timestamp])
   @@index([action])
-  @@index([timestamp])
   @@index([deletedAt])
 }

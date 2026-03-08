@@ -7,7 +7,7 @@ import type { WrapDTO } from "../types";
 
 export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
   const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId, "admin");
+  await assertTenantMembership(tenantId, userId);
 
   const existing = await prisma.wrap.findFirst({
     where: { id: wrapId, tenantId, deletedAt: null },

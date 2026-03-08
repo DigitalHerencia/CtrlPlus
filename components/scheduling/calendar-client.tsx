@@ -131,10 +131,10 @@ export function CalendarClient({
               className={cn(
                 "h-9 w-full rounded-md text-sm transition-colors",
                 available && !selected
-                  ? "cursor-pointer text-neutral-100 hover:bg-blue-500/20"
+                  ? "cursor-pointer text-neutral-100 hover:bg-blue-600/20"
                   : "",
-                selected ? "bg-blue-500 text-white hover:bg-blue-500/90" : "",
-                todayCell && !selected ? "border border-blue-500/50 font-medium text-blue-200" : "",
+                selected ? "bg-blue-600 text-white hover:bg-blue-600/90" : "",
+                todayCell && !selected ? "border border-blue-600/50 font-medium text-blue-200" : "",
                 !available && "cursor-not-allowed text-neutral-700 opacity-50",
               )}
             >

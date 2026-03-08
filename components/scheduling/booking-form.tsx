@@ -97,7 +97,7 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       {/* Left: Calendar */}
-      <Card className="border-neutral-800 bg-neutral-900/60">
+      <Card className="app-panel">
         <CardHeader>
           <CardTitle className="text-base">Select a Date</CardTitle>
           <CardDescription>Highlighted days have available time slots.</CardDescription>
@@ -115,7 +115,7 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
       <div className="space-y-4">
         {selectedDate ? (
           <>
-            <Card className="border-neutral-800 bg-neutral-900/60">
+            <Card className="app-panel">
               <CardHeader>
                 <CardTitle className="text-base">
                   Available Times for{" "}
@@ -145,7 +145,7 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
             </Card>
 
             {wraps.length > 0 && (
-              <Card className="border-neutral-800 bg-neutral-900/60">
+              <Card className="app-panel">
                 <CardHeader>
                   <CardTitle className="text-base">Select a Wrap</CardTitle>
                 </CardHeader>
@@ -158,8 +158,8 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
                         onClick={() => setSelectedWrapId(wrap.id)}
                         className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${
                           selectedWrapId === wrap.id
-                            ? "border-blue-400 bg-blue-500/10 text-blue-100"
-                            : "border-neutral-800 bg-neutral-950/60 text-neutral-100 hover:border-blue-500/50"
+                            ? "border-blue-600 bg-blue-600/10 text-blue-100"
+                            : "border-neutral-800 bg-neutral-950/60 text-neutral-100 hover:border-blue-600/50"
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -179,7 +179,7 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
             )}
           </>
         ) : (
-          <Card className="border-neutral-800 bg-neutral-900/60">
+          <Card className="app-panel">
             <CardContent className="py-12 text-center text-sm text-neutral-500">
               Select a date to see available time slots.
             </CardContent>

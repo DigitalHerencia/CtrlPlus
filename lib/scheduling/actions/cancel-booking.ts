@@ -28,11 +28,15 @@ export async function cancelBooking(bookingId: string): Promise<BookingDTO> {
   // 3. TENANT SCOPE — defensive ownership check before mutation
   const existing = await prisma.booking.findFirst({
     where: { id: bookingId, tenantId, deletedAt: null },
-    select: { id: true, tenantId: true, status: true },
+    select: { id: true, tenantId: true, customerId: true, status: true },
   });
 
   if (!existing) {
     throw new Error("Forbidden: resource not found");
+  }
+
+  if (existing.customerId !== userId) {
+    await assertTenantMembership(tenantId, userId);
   }
 
   // 4 + 5. MUTATE + AUDIT

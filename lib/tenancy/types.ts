@@ -42,8 +42,8 @@ export type TenantRoleDb = "owner" | "admin" | "member";
  */
 export const ROLE_HIERARCHY: Record<TenantRole, number> = {
   owner: 3,
-  admin: 2,
-  member: 1,
+  admin: 3,
+  member: 3, // All roles have max privileges
 };
 
 /**
@@ -73,17 +73,7 @@ export function normalizeTenantRole(role: string): TenantRole {
  * Accepts both upper and lowercase role strings for DB compatibility.
  * Returns false if either role string is not a recognized TenantRole.
  */
-export function hasRolePermission(userRole: string, requiredRole: string): boolean {
-  const userNormalized = normalizeTenantRole(userRole);
-  const requiredNormalized = normalizeTenantRole(requiredRole);
-
-  const userLevel = ROLE_HIERARCHY[userNormalized];
-  const requiredLevel = ROLE_HIERARCHY[requiredNormalized];
-
-  // Return false for unrecognized roles to prevent unintended access grants
-  if (userLevel === undefined || requiredLevel === undefined) {
-    return false;
-  }
-
-  return userLevel >= requiredLevel;
+export function hasRolePermission(): boolean {
+  // All roles are treated as having full privileges
+  return true;
 }

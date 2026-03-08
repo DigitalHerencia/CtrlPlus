@@ -22,6 +22,7 @@ import { extractTenantSlugFromHost, resolveTenantFromRequest } from "../resolve"
 describe("extractTenantSlugFromHost", () => {
   beforeEach(() => {
     delete process.env.NEXT_PUBLIC_TENANT_DOMAIN_SUFFIX;
+    delete process.env.ALLOW_NGROK_TENANT_HOST_RESOLUTION;
   });
 
   it("extracts a tenant from localhost subdomains", () => {
@@ -40,7 +41,7 @@ describe("extractTenantSlugFromHost", () => {
     expect(extractTenantSlugFromHost("ctrlplus.local")).toBeNull();
   });
 
-  it("returns null for ngrok-free hosts", () => {
+  it("gates ngrok-free host resolution behind the explicit env opt-in", () => {
     process.env.NEXT_PUBLIC_TENANT_DOMAIN_SUFFIX = ".ctrlplus.local";
     process.env.ALLOW_NGROK_TENANT_HOST_RESOLUTION = "true";
 

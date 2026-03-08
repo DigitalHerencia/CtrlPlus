@@ -2,9 +2,9 @@
 
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
-import { getInternalUserIdByClerkId } from "../user-id";
+// All roles have access; no RBAC check needed
 import { updateUserRoleSchema, type UpdateUserRoleInput, type UserRoleDTO } from "../types";
+import { getInternalUserIdByClerkId } from "../user-id";
 
 /**
  * Canonical action for updating tenant member roles.
@@ -14,7 +14,7 @@ export async function updateUserRole(input: UpdateUserRoleInput): Promise<UserRo
   const { tenantId, userId } = await getSession();
   if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
 
-  await assertTenantMembership(tenantId, userId, "owner");
+  // All roles have access; no RBAC check
 
   const parsed = updateUserRoleSchema.parse(input);
   const targetUserId = await getInternalUserIdByClerkId(parsed.targetClerkUserId);

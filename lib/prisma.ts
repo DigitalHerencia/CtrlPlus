@@ -37,8 +37,28 @@ if (typeof WebSocket === "undefined") {
 // Optional: Configure connection pooling and caching behavior
 // Global type declaration for singleton pattern (prevents multiple instances in dev)
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient;
+  prisma?: PrismaClient;
+  prismaSignalHandlersAttached?: boolean;
 };
+
+function assertNeonPooledRuntimeUrl(connectionString: string): void {
+  let hostname: string;
+
+  try {
+    hostname = new URL(connectionString).hostname.toLowerCase();
+  } catch {
+    throw new Error("DATABASE_URL must be a valid PostgreSQL connection string.");
+  }
+
+  const isNeonHost = hostname.includes("neon.tech");
+
+  if (isNeonHost && !hostname.includes("-pooler")) {
+    throw new Error(
+      "DATABASE_URL must use Neon's pooled hostname (-pooler) for application traffic. " +
+        "Use the direct connection only for Prisma CLI operations in prisma.config.ts.",
+    );
+  }
+}
 
 /**
  * Primary Prisma Client instance with Neon adapter
@@ -49,7 +69,6 @@ const globalForPrisma = globalThis as unknown as {
 export const prisma =
   globalForPrisma.prisma ||
   (() => {
-    // Create Neon connection pool with optimized settings for serverless
     const connectionString = process.env.DATABASE_URL;
 
     if (!connectionString) {
@@ -60,13 +79,16 @@ export const prisma =
       );
     }
 
-    // Create Neon adapter with connection config (not Pool instance)
-    // PrismaNeon expects a PoolConfig object { connectionString: string }
+    assertNeonPooledRuntimeUrl(connectionString);
+
     const adapter = new PrismaNeon({ connectionString });
 
     return new PrismaClient({
       adapter,
-      log: process.env.NODE_ENV === "development" ? ["query", "warn", "error"] : ["error"],
+      log:
+        process.env.DEBUG_PRISMA_QUERIES === "true"
+          ? ["query", "warn", "error"]
+          : ["warn", "error"],
     });
   })();
 
@@ -79,7 +101,8 @@ function disconnectPrisma(): void {
   void prisma.$disconnect();
 }
 
-// Graceful disconnection on process termination
-process.on("SIGTERM", disconnectPrisma);
-
-process.on("SIGINT", disconnectPrisma);
+if (!globalForPrisma.prismaSignalHandlersAttached) {
+  process.on("SIGTERM", disconnectPrisma);
+  process.on("SIGINT", disconnectPrisma);
+  globalForPrisma.prismaSignalHandlersAttached = true;
+}

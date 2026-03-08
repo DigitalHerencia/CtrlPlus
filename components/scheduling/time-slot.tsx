@@ -40,10 +40,10 @@ export function TimeSlot({
       className={cn(
         "w-full rounded-lg border px-4 py-3 text-left transition-colors",
         isSelected
-          ? "border-blue-400 bg-blue-500/10 text-blue-100"
+          ? "border-blue-600 bg-blue-600/10 text-blue-100"
           : "border-neutral-800 bg-neutral-950/60 text-neutral-100",
         !effectivelyDisabled && !isSelected
-          ? "cursor-pointer hover:border-blue-500/50 hover:bg-blue-500/5"
+          ? "cursor-pointer hover:border-blue-600/50 hover:bg-blue-600/5"
           : "",
         effectivelyDisabled && "cursor-not-allowed opacity-50",
       )}

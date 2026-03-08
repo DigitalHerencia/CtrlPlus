@@ -7,7 +7,7 @@ import { createWrapSchema, type CreateWrapInput, type WrapDTO } from "../types";
 
 export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
   const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId, "admin");
+  await assertTenantMembership(tenantId, userId);
 
   const parsed = createWrapSchema.parse(input);
 

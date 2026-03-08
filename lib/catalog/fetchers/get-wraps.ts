@@ -1,5 +1,11 @@
 import { prisma } from "@/lib/prisma";
-import { type SearchWrapsInput, type WrapDTO, wrapDTOFields, type WrapListDTO } from "../types";
+import {
+  searchWrapsSchema,
+  type SearchWrapsInput,
+  type WrapDTO,
+  wrapDTOFields,
+  type WrapListDTO,
+} from "../types";
 
 function normalizePriceInCents(value: number): number {
   return Number.isInteger(value) ? value : Math.round(value);
@@ -66,6 +72,7 @@ export async function searchWraps(
   tenantId: string,
   filters: SearchWrapsInput = { page: 1, pageSize: 20 },
 ): Promise<WrapListDTO> {
+  const parsedFilters = searchWrapsSchema.parse(filters);
   const {
     query,
     maxPrice,
@@ -74,7 +81,7 @@ export async function searchWraps(
     page,
     pageSize,
     categoryId,
-  } = filters;
+  } = parsedFilters;
   const skip = (page - 1) * pageSize;
 
   const where = {

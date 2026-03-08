@@ -92,4 +92,16 @@ describe("confirmBooking", () => {
 
     await expect(confirmBooking("booking-1")).rejects.toThrow("Reservation has expired");
   });
+
+  it("requires admin access to confirm another member's booking", async () => {
+    vi.mocked(prisma.booking.findFirst).mockResolvedValue({
+      ...bookingRecord,
+      customerId: "user-2",
+    } as never);
+
+    await confirmBooking("booking-1");
+
+    expect(assertTenantMembership).toHaveBeenNthCalledWith(1, "tenant-1", "user-1");
+    expect(assertTenantMembership).toHaveBeenNthCalledWith(2, "tenant-1", "user-1", "admin");
+  });
 });

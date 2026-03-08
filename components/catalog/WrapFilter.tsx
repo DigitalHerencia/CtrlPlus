@@ -100,9 +100,12 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
     pageSize !== "20";
 
   return (
-    <div className="flex flex-col flex-wrap items-start gap-3 sm:flex-row sm:items-end">
+    <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(5,minmax(0,0.75fr))] lg:items-end">
       <div className="flex min-w-[180px] flex-1 flex-col gap-1">
-        <label htmlFor="catalog-search" className="text-xs font-medium text-muted-foreground">
+        <label
+          htmlFor="catalog-search"
+          className="text-xs font-medium tracking-[0.16em] text-neutral-400 uppercase"
+        >
           Search
         </label>
         <input
@@ -111,19 +114,22 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
           placeholder="Search wraps..."
           value={searchValue}
           onChange={(e) => handleSearchChange(e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          className="app-input"
         />
       </div>
 
-      <div className="flex w-full flex-col gap-1 sm:w-44">
-        <label htmlFor="catalog-category" className="text-xs font-medium text-muted-foreground">
+      <div className="flex w-full flex-col gap-1">
+        <label
+          htmlFor="catalog-category"
+          className="text-xs font-medium tracking-[0.16em] text-neutral-400 uppercase"
+        >
           Category
         </label>
         <select
           id="catalog-category"
           value={categoryId}
           onChange={(e) => handleChange("categoryId", e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+          className="app-select"
         >
           <option value="">All categories</option>
           {categories.map((category) => (
@@ -134,8 +140,11 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
         </select>
       </div>
 
-      <div className="flex w-full flex-col gap-1 sm:w-36">
-        <label htmlFor="catalog-max-price" className="text-xs font-medium text-muted-foreground">
+      <div className="flex w-full flex-col gap-1">
+        <label
+          htmlFor="catalog-max-price"
+          className="text-xs font-medium tracking-[0.16em] text-neutral-400 uppercase"
+        >
           Max Price (cents)
         </label>
         <input
@@ -146,19 +155,22 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
           step={1}
           value={maxPrice}
           onChange={(e) => handleChange("maxPrice", e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          className="app-input"
         />
       </div>
 
-      <div className="flex w-full flex-col gap-1 sm:w-40">
-        <label htmlFor="catalog-sort-by" className="text-xs font-medium text-muted-foreground">
+      <div className="flex w-full flex-col gap-1">
+        <label
+          htmlFor="catalog-sort-by"
+          className="text-xs font-medium tracking-[0.16em] text-neutral-400 uppercase"
+        >
           Sort By
         </label>
         <select
           id="catalog-sort-by"
           value={sortBy}
           onChange={(e) => handleChange("sortBy", e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+          className="app-select"
         >
           <option value="createdAt">Date Added</option>
           <option value="name">Name</option>
@@ -166,30 +178,36 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
         </select>
       </div>
 
-      <div className="flex w-full flex-col gap-1 sm:w-32">
-        <label htmlFor="catalog-sort-order" className="text-xs font-medium text-muted-foreground">
+      <div className="flex w-full flex-col gap-1">
+        <label
+          htmlFor="catalog-sort-order"
+          className="text-xs font-medium tracking-[0.16em] text-neutral-400 uppercase"
+        >
           Order
         </label>
         <select
           id="catalog-sort-order"
           value={sortOrder}
           onChange={(e) => handleChange("sortOrder", e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+          className="app-select"
         >
           <option value="desc">Descending</option>
           <option value="asc">Ascending</option>
         </select>
       </div>
 
-      <div className="flex w-full flex-col gap-1 sm:w-32">
-        <label htmlFor="catalog-page-size" className="text-xs font-medium text-muted-foreground">
+      <div className="flex w-full flex-col gap-1">
+        <label
+          htmlFor="catalog-page-size"
+          className="text-xs font-medium tracking-[0.16em] text-neutral-400 uppercase"
+        >
           Per Page
         </label>
         <select
           id="catalog-page-size"
           value={pageSize}
           onChange={(e) => handleChange("pageSize", e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+          className="app-select"
         >
           <option value="12">12</option>
           <option value="20">20</option>
@@ -203,14 +221,16 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
           size="sm"
           onClick={handleReset}
           disabled={isPending}
-          className="self-end"
+          className="self-end lg:justify-self-start"
         >
           Clear Filters
         </Button>
       )}
 
       {isPending && (
-        <div className="animate-pulse self-end pb-2 text-xs text-muted-foreground">Filtering…</div>
+        <div className="animate-pulse self-end pb-2 text-xs text-neutral-500 lg:justify-self-end">
+          Filtering…
+        </div>
       )}
     </div>
   );

@@ -23,7 +23,7 @@ async function assertWrapOwnedByTenant(wrapId: string, tenantId: string): Promis
 
 export async function addWrapImage(input: WrapImageUploadInput): Promise<WrapImageDTO> {
   const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId, "admin");
+  await assertTenantMembership(tenantId, userId);
 
   const parsed = wrapImageUploadSchema.parse(input);
   await assertWrapOwnedByTenant(parsed.wrapId, tenantId);
@@ -66,7 +66,7 @@ export async function addWrapImage(input: WrapImageUploadInput): Promise<WrapIma
 
 export async function removeWrapImage(wrapId: string, imageId: string): Promise<void> {
   const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId, "admin");
+  await assertTenantMembership(tenantId, userId);
 
   await assertWrapOwnedByTenant(wrapId, tenantId);
 
@@ -105,7 +105,7 @@ export async function removeWrapImage(wrapId: string, imageId: string): Promise<
 
 export async function reorderWrapImages(wrapId: string, imageIdsInOrder: string[]): Promise<void> {
   const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId, "admin");
+  await assertTenantMembership(tenantId, userId);
 
   await assertWrapOwnedByTenant(wrapId, tenantId);
 

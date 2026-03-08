@@ -40,7 +40,9 @@ function textureSvg(textureId: TextureId, width: number, height: number): string
 
 async function generateTexture(wrapId: string, width: number, height: number): Promise<Buffer> {
   const textureId = textureFromWrapId(wrapId);
-  return sharp(Buffer.from(textureSvg(textureId, width, height))).png().toBuffer();
+  return sharp(Buffer.from(textureSvg(textureId, width, height)))
+    .png()
+    .toBuffer();
 }
 
 export async function readPhotoBuffer(

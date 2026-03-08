@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { WrapDTO } from "@/lib/catalog/types";
 import {
   buildTemplatePreview,
@@ -58,7 +60,7 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_1fr]">
       <div className="space-y-6">
-        <section className="rounded-2xl border border-neutral-800 bg-neutral-900/90 p-6 shadow-lg shadow-black/20">
+        <section className="app-panel p-6">
           <h2 className="mb-4 text-base font-semibold text-neutral-100">
             <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
               1
@@ -68,91 +70,90 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
           <WrapSelector wraps={wraps} selectedWrapId={selectedWrapId} onSelect={handleWrapSelect} />
         </section>
 
-        <section className="rounded-2xl border border-neutral-800 bg-neutral-900/90 p-6 shadow-lg shadow-black/20">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-neutral-100">
-              <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
-                2
-              </span>
-              Select Preview Mode
-            </h2>
-            <div className="inline-flex rounded-lg border border-neutral-700 bg-neutral-950 p-1">
-              <button
-                type="button"
-                className={`rounded-md px-3 py-1 text-xs font-medium transition ${
-                  mode === "upload"
-                    ? "bg-blue-600 text-white"
-                    : "text-neutral-300 hover:bg-neutral-800"
-                }`}
-                onClick={() => setMode("upload")}
-              >
-                Upload
-              </button>
-              <button
-                type="button"
-                className={`rounded-md px-3 py-1 text-xs font-medium transition ${
-                  mode === "template"
-                    ? "bg-blue-600 text-white"
-                    : "text-neutral-300 hover:bg-neutral-800"
-                }`}
-                onClick={() => setMode("template")}
-              >
-                Template
-              </button>
+        <section className="app-panel p-6">
+          <Tabs
+            value={mode}
+            onValueChange={(value) => setMode(value as PreviewMode)}
+            className="space-y-4"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold text-neutral-100">
+                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
+                  2
+                </span>
+                Select Preview Mode
+              </h2>
+              <TabsList className="rounded-2xl border border-neutral-800 bg-neutral-950 p-1">
+                <TabsTrigger
+                  value="upload"
+                  className="rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-neutral-100"
+                >
+                  Upload
+                </TabsTrigger>
+                <TabsTrigger
+                  value="template"
+                  className="rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-neutral-100"
+                >
+                  Template
+                </TabsTrigger>
+              </TabsList>
             </div>
-          </div>
 
-          {selectedWrapId ? (
-            mode === "upload" ? (
-              <UploadForm
-                wrapId={selectedWrapId}
-                onPreviewReady={handlePreviewReady}
-                onUploadingChange={setIsLoading}
-              />
+            {selectedWrapId ? (
+              <>
+                <TabsContent value="upload" className="mt-0">
+                  <UploadForm
+                    wrapId={selectedWrapId}
+                    onPreviewReady={handlePreviewReady}
+                    onUploadingChange={setIsLoading}
+                  />
+                </TabsContent>
+                <TabsContent value="template" className="mt-0">
+                  <div className="space-y-3">
+                    <p className="text-sm text-neutral-300">
+                      Instant fallback preview using curated stock vehicle images.
+                    </p>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {templateVehicleOptions.map((vehicle) => {
+                        const selected = vehicle.id === selectedTemplate.id;
+                        return (
+                          <button
+                            key={vehicle.id}
+                            type="button"
+                            onClick={() => handleTemplatePreview(vehicle)}
+                            className={`overflow-hidden rounded-2xl border text-left transition ${
+                              selected
+                                ? "border-blue-600 ring-1 ring-blue-600"
+                                : "border-neutral-700 hover:border-blue-600/50"
+                            }`}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={vehicle.imageUrl}
+                              alt={vehicle.label}
+                              className="h-28 w-full object-cover"
+                            />
+                            <p className="px-3 py-2 text-xs font-medium text-neutral-200">
+                              {vehicle.label}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </TabsContent>
+              </>
             ) : (
-              <div className="space-y-3">
-                <p className="text-sm text-neutral-300">
-                  Instant fallback preview using curated stock vehicle images.
-                </p>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {templateVehicleOptions.map((vehicle) => {
-                    const selected = vehicle.id === selectedTemplate.id;
-                    return (
-                      <button
-                        key={vehicle.id}
-                        type="button"
-                        onClick={() => handleTemplatePreview(vehicle)}
-                        className={`overflow-hidden rounded-xl border text-left transition ${
-                          selected
-                            ? "border-blue-500 ring-1 ring-blue-500"
-                            : "border-neutral-700 hover:border-blue-500/50"
-                        }`}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={vehicle.imageUrl}
-                          alt={vehicle.label}
-                          className="h-28 w-full object-cover"
-                        />
-                        <p className="px-3 py-2 text-xs font-medium text-neutral-200">
-                          {vehicle.label}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )
-          ) : (
-            <p className="text-sm text-neutral-400">
-              Select a wrap above to unlock preview generation.
-            </p>
-          )}
+              <p className="text-sm text-neutral-400">
+                Select a wrap above to unlock preview generation.
+              </p>
+            )}
+          </Tabs>
         </section>
       </div>
 
       <div className="space-y-4">
-        <section className="rounded-2xl border border-neutral-800 bg-neutral-900/90 p-6 shadow-lg shadow-black/20">
+        <section className="app-panel p-6">
           <h2 className="mb-4 text-base font-semibold text-neutral-100">
             <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
               3

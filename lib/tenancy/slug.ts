@@ -1,7 +1,14 @@
+import { randomBytes } from "node:crypto";
+
 const MAX_TENANT_SLUG_LENGTH = 63;
 const FALLBACK_TENANT_SLUG = "tenant";
 
 export const TENANT_SLUG_REGEX = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+
+export interface GenerateTenantSlugInput {
+  workspaceName: string;
+  email?: string;
+}
 
 /**
  * Normalize arbitrary input into a valid tenant slug candidate.
@@ -25,9 +32,25 @@ export function normalizeTenantSlug(input: string): string | null {
   return TENANT_SLUG_REGEX.test(normalized) ? normalized : null;
 }
 
+function getEmailSlugCandidate(email?: string): string | null {
+  if (!email) {
+    return null;
+  }
+
+  const [localPart = "", domain = ""] = email.trim().toLowerCase().split("@");
+  const domainLabel = domain.split(".")[0] ?? "";
+  return normalizeTenantSlug([localPart, domainLabel].filter(Boolean).join("-"));
+}
+
+function createFallbackTenantSlug(): string {
+  return `${FALLBACK_TENANT_SLUG}-${randomBytes(4).toString("hex")}`;
+}
+
 /**
- * Deterministically generate a safe tenant slug from a seed.
+ * Generate a safe tenant slug from a workspace name, email fallback, or random suffix.
  */
-export function generateTenantSlug(seed: string): string {
-  return normalizeTenantSlug(seed) ?? FALLBACK_TENANT_SLUG;
+export function generateTenantSlug({ workspaceName, email }: GenerateTenantSlugInput): string {
+  return (
+    normalizeTenantSlug(workspaceName) ?? getEmailSlugCandidate(email) ?? createFallbackTenantSlug()
+  );
 }

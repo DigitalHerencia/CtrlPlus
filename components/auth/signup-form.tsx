@@ -4,13 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { setupUserTenant } from "@/lib/auth/actions/setup-tenant";
+import { sanitizePostAuthRedirect } from "@/lib/auth/redirect";
 import { cn } from "@/lib/utils";
 import { useSignUp } from "@clerk/nextjs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function SignupForm({ className, ...props }: React.ComponentProps<"form">) {
+interface SignupFormProps extends React.ComponentProps<"form"> {
+  redirectUrl?: string;
+}
+
+export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps) {
   const { signUp } = useSignUp();
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -19,6 +24,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"form">
   const [awaitingVerification, setAwaitingVerification] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const nextUrl = sanitizePostAuthRedirect(redirectUrl);
 
   const finalizeAndRedirect = async () => {
     const finalizeResult = await signUp.finalize();
@@ -29,7 +35,7 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"form">
     }
 
     await setupUserTenant();
-    router.push("/catalog");
+    router.push(nextUrl);
     return true;
   };
 
@@ -231,7 +237,11 @@ export function SignupForm({ className, ...props }: React.ComponentProps<"form">
             <div className="flex items-center justify-center gap-1 text-sm text-neutral-100">
               <span>Already have an account?</span>
               <Link
-                href="/sign-in"
+                href={
+                  redirectUrl
+                    ? `/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`
+                    : "/sign-in"
+                }
                 className="font-semibold text-blue-600 underline-offset-4 transition-all hover:underline"
               >
                 Sign in

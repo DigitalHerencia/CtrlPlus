@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
@@ -48,7 +48,7 @@ describe("getTeamMembers", () => {
       }),
     ]);
 
-    const result = await getTeamMembers("tenant-abc", "clerk-admin");
+    const result = await getTeamMembers("tenant-abc");
 
     expect(result.total).toBe(2);
     expect(result.page).toBe(1);
@@ -64,7 +64,7 @@ describe("getTeamMembers", () => {
   it("scopes list query to tenant and active memberships", async () => {
     prismaMock.tenantUserMembership.findMany.mockResolvedValue([]);
 
-    await getTeamMembers("tenant-abc", "clerk-admin");
+    await getTeamMembers("tenant-abc");
 
     expect(prismaMock.tenantUserMembership.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -78,9 +78,7 @@ describe("getTeamMembers", () => {
       makeMemberRecord({ role: "superadmin" }),
     ]);
 
-    await expect(getTeamMembers("tenant-abc", "clerk-admin")).rejects.toThrow(
-      'Invalid tenant role: "superadmin"',
-    );
+    await expect(getTeamMembers("tenant-abc")).rejects.toThrow('Invalid tenant role: "superadmin"');
   });
 });
 
@@ -93,7 +91,7 @@ describe("getTeamMemberById", () => {
   it("returns null when no tenant-scoped membership exists", async () => {
     prismaMock.tenantUserMembership.findFirst.mockResolvedValue(null);
 
-    const result = await getTeamMemberById("tenant-abc", "mem-404", "clerk-admin");
+    const result = await getTeamMemberById("tenant-abc", "mem-404");
 
     expect(result).toBeNull();
     expect(prismaMock.tenantUserMembership.findFirst).toHaveBeenCalledWith(

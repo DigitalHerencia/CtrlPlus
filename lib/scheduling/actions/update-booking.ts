@@ -1,9 +1,9 @@
 "use server";
 
 import { getSession } from "@/lib/auth/session";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { prisma } from "@/lib/prisma";
 import { assertSlotHasCapacity } from "@/lib/scheduling/capacity";
+import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -66,6 +66,7 @@ export async function updateBooking(
     select: {
       id: true,
       tenantId: true,
+      customerId: true,
       startTime: true,
       endTime: true,
       status: true,
@@ -74,6 +75,10 @@ export async function updateBooking(
 
   if (!existing) {
     throw new Error("Forbidden: resource not found");
+  }
+
+  if (existing.customerId !== userId) {
+    await assertTenantMembership(tenantId, userId);
   }
 
   // 5 + 6 + 7. AVAILABILITY CHECK + MUTATE + AUDIT — performed atomically

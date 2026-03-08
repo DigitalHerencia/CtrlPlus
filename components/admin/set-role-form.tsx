@@ -46,7 +46,7 @@ export function SetRoleForm({ clerkUserId, currentRole }: SetRoleFormProps) {
           defaultValue={currentRole === "owner" ? "admin" : currentRole}
           disabled={isPending}
           aria-label="Select role"
-          className="h-9 rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+          className="app-select min-w-32 text-xs"
         >
           {SELECTABLE_ROLES.map((role) => (
             <option key={role} value={role}>

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import {
   BookingStatus,
+  bookingListParamsSchema,
   type BookingDTO,
   type BookingListParams,
   type BookingListResult,
@@ -64,7 +65,7 @@ export async function getBookingsForTenant(
   tenantId: string,
   params: BookingListParams = DEFAULT_BOOKING_LIST_PARAMS,
 ): Promise<BookingListResult> {
-  const { page, pageSize, status, fromDate, toDate } = params;
+  const { page, pageSize, status, fromDate, toDate } = bookingListParamsSchema.parse(params);
   const skip = (page - 1) * pageSize;
 
   const where = {

@@ -15,18 +15,21 @@ import { type TenantStatsDTO } from "../types";
  * @returns TenantStatsDTO with wrapCount, memberCount, bookingCount, totalRevenue
  * @throws Error if caller is not an admin or owner of the tenant
  */
-export async function getTenantStats(
-  tenantId: string,
-  requestingUserId: string,
-): Promise<TenantStatsDTO> {
-  await assertAdminOrOwner(tenantId, requestingUserId);
+export async function getTenantStats(tenantId: string): Promise<TenantStatsDTO> {
+  await assertAdminOrOwner();
 
   const [wrapCount, memberCount, bookingCount, revenueAggregate] = await Promise.all([
     prisma.wrap.count({
       where: { tenantId, deletedAt: null },
     }),
     prisma.tenantUserMembership.count({
-      where: { tenantId, deletedAt: null },
+      where: {
+        tenantId,
+        deletedAt: null,
+        user: {
+          deletedAt: null,
+        },
+      },
     }),
     prisma.booking.count({
       where: { tenantId, deletedAt: null },

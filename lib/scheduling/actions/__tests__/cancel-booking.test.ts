@@ -43,6 +43,7 @@ const mockSession = {
 const existingBooking = {
   id: "booking-1",
   tenantId: "tenant-1",
+  customerId: "user-1",
   status: "confirmed",
 };
 
@@ -103,5 +104,25 @@ describe("cancelBooking", () => {
         data: expect.objectContaining({ status: "cancelled" }),
       }),
     );
+  });
+
+  it("requires admin access to cancel another member's booking", async () => {
+    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+    vi.mocked(prisma.booking.findFirst).mockResolvedValue({
+      ...existingBooking,
+      customerId: "user-2",
+    } as never);
+    vi.mocked(prisma.bookingReservation.deleteMany).mockResolvedValue({ count: 1 } as never);
+    vi.mocked(prisma.booking.update).mockResolvedValue({
+      ...cancelledBookingRecord,
+      customerId: "user-2",
+    } as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
+
+    await cancelBooking("booking-1");
+
+    expect(assertTenantMembership).toHaveBeenNthCalledWith(1, "tenant-1", "user-1");
+    expect(assertTenantMembership).toHaveBeenNthCalledWith(2, "tenant-1", "user-1", "admin");
   });
 });

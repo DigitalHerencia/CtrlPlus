@@ -1,23 +1,34 @@
 import { TenantSidebar } from "@/components/layout/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { TenantHeader } from "@/components/layout/tenant-header";
+import { TenantLayoutClient } from "@/components/layout/tenant-layout-client";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { getSession } from "@/lib/auth/session";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import React from "react";
+import type { CSSProperties, ReactNode } from "react";
 
-export default async function TenantLayout({ children }: { children: React.ReactNode }) {
-  // Require authentication for tenant routes
+const SIDEBAR_COOKIE_NAME = "sidebar_state";
+
+const sidebarStyle = {
+  "--sidebar-width": "18.5rem",
+  "--sidebar-width-icon": "4.5rem",
+} as CSSProperties;
+
+export default async function TenantLayout({ children }: { children: ReactNode }) {
   const session = await getSession();
-
   if (!session.isAuthenticated) {
     redirect("/sign-in");
   }
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get(SIDEBAR_COOKIE_NAME)?.value !== "false";
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={defaultOpen} style={sidebarStyle}>
       <TenantSidebar />
-      <SidebarInset>
-        <main className="flex flex-1 flex-col gap-4 p-4 md:p-6">{children}</main>
-      </SidebarInset>
+      <TenantLayoutClient>
+        <TenantHeader />
+        <main className="flex-1">{children}</main>
+      </TenantLayoutClient>
     </SidebarProvider>
   );
 }

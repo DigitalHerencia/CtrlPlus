@@ -66,9 +66,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
           maxLength={63}
           pattern="^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$"
         />
-        <p className="text-xs text-muted-foreground">
-          Lowercase letters, numbers, and hyphens only.
-        </p>
+        <p className="text-xs text-neutral-500">Lowercase letters, numbers, and hyphens only.</p>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}

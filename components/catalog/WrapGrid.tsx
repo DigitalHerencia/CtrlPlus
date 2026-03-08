@@ -1,5 +1,5 @@
 import { type WrapDTO } from "@/lib/catalog/types";
-import { Card, CardContent } from "@/components/ui/card";
+import { TenantEmptyState } from "@/components/tenant/page-shell";
 import { WrapCard } from "./WrapCard";
 
 interface WrapGridProps {
@@ -9,15 +9,10 @@ interface WrapGridProps {
 export function WrapGrid({ wraps }: WrapGridProps) {
   if (wraps.length === 0) {
     return (
-      <Card className="border-dashed">
-        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="mb-4 text-5xl">🔍</div>
-          <h3 className="mb-2 text-lg font-semibold">No wraps found</h3>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            Try adjusting your search or filter criteria to find what you&apos;re looking for.
-          </p>
-        </CardContent>
-      </Card>
+      <TenantEmptyState
+        title="No wraps found"
+        description="Try adjusting your search or filter criteria to find the wrap package you need."
+      />
     );
   }
 

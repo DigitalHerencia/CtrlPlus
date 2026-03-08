@@ -1,7 +1,7 @@
 import { addWrapImage } from "@/lib/catalog/actions/manage-wrap-images";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const wrapId = formData.get("wrapId");

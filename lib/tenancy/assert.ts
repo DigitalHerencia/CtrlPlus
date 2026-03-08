@@ -5,7 +5,10 @@
  * Use these to prevent cross-tenant data leaks.
  */
 
-import { prisma } from "@/lib/prisma";
+import {
+  getActiveLocalUserByClerkId,
+  getActiveTenantMembershipByUserId,
+} from "@/lib/auth/local-user";
 import { type TenantRole, hasRolePermission, normalizeTenantRole } from "./types";
 
 /**
@@ -30,37 +33,20 @@ import { type TenantRole, hasRolePermission, normalizeTenantRole } from "./types
  * }
  * ```
  */
-export async function assertTenantMembership(
-  tenantId: string,
-  userId: string,
-  requiredRole: TenantRole = "member",
-): Promise<void> {
-  // Convert Clerk userId to internal database user.id
-  const user = await prisma.user.findUnique({
-    where: { clerkUserId: userId },
-    select: { id: true },
-  });
+export async function assertTenantMembership(tenantId: string, userId: string): Promise<void> {
+  const user = await getActiveLocalUserByClerkId(userId);
 
   if (!user) {
     throw new Error("Unauthorized: user not found");
   }
 
-  const membership = await prisma.tenantUserMembership.findFirst({
-    where: {
-      tenantId,
-      userId: user.id,
-      deletedAt: null,
-    },
-    select: {
-      role: true,
-    },
-  });
+  const membership = await getActiveTenantMembershipByUserId(tenantId, user.id);
 
   if (!membership) {
     throw new Error("Unauthorized: not a member of this tenant");
   }
 
-  const isAuthorized = hasRolePermission(membership.role, requiredRole);
+  const isAuthorized = hasRolePermission();
 
   if (!isAuthorized) {
     throw new Error("Forbidden: insufficient role");
@@ -105,24 +91,11 @@ export async function getUserTenantRole(
   tenantId: string,
   userId: string,
 ): Promise<TenantRole | null> {
-  // Convert Clerk userId to internal database user.id
-  const user = await prisma.user.findUnique({
-    where: { clerkUserId: userId },
-    select: { id: true },
-  });
+  const user = await getActiveLocalUserByClerkId(userId);
 
   if (!user) return null;
 
-  const membership = await prisma.tenantUserMembership.findFirst({
-    where: {
-      tenantId,
-      userId: user.id,
-      deletedAt: null,
-    },
-    select: {
-      role: true,
-    },
-  });
+  const membership = await getActiveTenantMembershipByUserId(tenantId, user.id);
 
   if (!membership) return null;
   return normalizeTenantRole(membership.role);
@@ -132,13 +105,9 @@ export async function getUserTenantRole(
  * Check if user has a specific role or higher in tenant.
  * Returns false if user is not a member.
  */
-export async function hasMinimumRole(
-  tenantId: string,
-  userId: string,
-  requiredRole: TenantRole,
-): Promise<boolean> {
+export async function hasMinimumRole(tenantId: string, userId: string): Promise<boolean> {
   const userRole = await getUserTenantRole(tenantId, userId);
   if (!userRole) return false;
 
-  return hasRolePermission(userRole, requiredRole);
+  return hasRolePermission();
 }

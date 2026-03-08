@@ -25,7 +25,7 @@ export function PreviewCanvas({
           className,
         )}
       >
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         <p className="text-sm text-neutral-300">Generating your preview…</p>
       </div>
     );
@@ -55,7 +55,7 @@ export function PreviewCanvas({
           className,
         )}
       >
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         <p className="text-sm text-neutral-300">Processing your preview…</p>
       </div>
     );

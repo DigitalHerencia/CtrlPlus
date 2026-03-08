@@ -6,7 +6,7 @@
  */
 
 import { assertTenantMembership } from "@/lib/tenancy/assert";
-import { type TenantRole, ROLE_HIERARCHY } from "@/lib/tenancy/types";
+import { type TenantRole } from "@/lib/tenancy/types";
 
 export { assertTenantMembership };
 export type { TenantRole };
@@ -50,28 +50,26 @@ export type Permission =
  */
 export const ROLE_PERMISSIONS: Record<TenantRole, string[]> = {
   owner: [
-    PERMISSIONS.catalog.read,
-    PERMISSIONS.catalog.write,
-    PERMISSIONS.catalog.delete,
-    PERMISSIONS.scheduling.read,
-    PERMISSIONS.scheduling.write,
-    PERMISSIONS.billing.read,
-    PERMISSIONS.billing.write,
-    PERMISSIONS.admin.read,
-    PERMISSIONS.admin.write,
-    PERMISSIONS.admin.users,
-    PERMISSIONS.visualizer.write,
+    ...Object.values(PERMISSIONS.catalog),
+    ...Object.values(PERMISSIONS.scheduling),
+    ...Object.values(PERMISSIONS.billing),
+    ...Object.values(PERMISSIONS.admin),
+    ...Object.values(PERMISSIONS.visualizer),
   ],
   admin: [
-    PERMISSIONS.catalog.read,
-    PERMISSIONS.catalog.write,
-    PERMISSIONS.scheduling.read,
-    PERMISSIONS.scheduling.write,
-    PERMISSIONS.billing.read,
-    PERMISSIONS.admin.read,
-    PERMISSIONS.visualizer.write,
+    ...Object.values(PERMISSIONS.catalog),
+    ...Object.values(PERMISSIONS.scheduling),
+    ...Object.values(PERMISSIONS.billing),
+    ...Object.values(PERMISSIONS.admin),
+    ...Object.values(PERMISSIONS.visualizer),
   ],
-  member: [PERMISSIONS.catalog.read, PERMISSIONS.scheduling.read, PERMISSIONS.visualizer.write],
+  member: [
+    ...Object.values(PERMISSIONS.catalog),
+    ...Object.values(PERMISSIONS.scheduling),
+    ...Object.values(PERMISSIONS.billing),
+    ...Object.values(PERMISSIONS.admin),
+    ...Object.values(PERMISSIONS.visualizer),
+  ],
 };
 
 // ─── Utility functions ────────────────────────────────────────────────────────
@@ -83,14 +81,9 @@ export const ROLE_PERMISSIONS: Record<TenantRole, string[]> = {
  * @param userRole - The user's current role
  * @param requiredRole - The required role or array of acceptable roles
  */
-export function hasRole(userRole: TenantRole, requiredRole: TenantRole | TenantRole[]): boolean {
-  const userLevel = ROLE_HIERARCHY[userRole] ?? 0;
-
-  if (Array.isArray(requiredRole)) {
-    return requiredRole.some((r) => userLevel >= (ROLE_HIERARCHY[r] ?? 0));
-  }
-
-  return userLevel >= (ROLE_HIERARCHY[requiredRole] ?? 0);
+export function hasRole(): boolean {
+  // All roles are treated as having full privileges
+  return true;
 }
 
 /**
@@ -101,10 +94,8 @@ export function hasRole(userRole: TenantRole, requiredRole: TenantRole | TenantR
  * @param requiredRole - The required role or array of acceptable roles
  * @throws Error if role is insufficient
  */
-export function requireRole(userRole: TenantRole, requiredRole: TenantRole | TenantRole[]): void {
-  if (!hasRole(userRole, requiredRole)) {
-    throw new Error("Forbidden: insufficient role");
-  }
+export function requireRole(): void {
+  // All roles are treated as having full privileges; never throw
 }
 
 /**
@@ -113,10 +104,9 @@ export function requireRole(userRole: TenantRole, requiredRole: TenantRole | Ten
  * @param role - The role to check
  * @param permission - The permission string to check for
  */
-export function hasPermission(role: TenantRole, permission: string): boolean {
-  const permissions = ROLE_PERMISSIONS[role];
-  if (!permissions) return false;
-  return permissions.includes(permission);
+export function hasPermission(): boolean {
+  // All roles have all permissions
+  return true;
 }
 
 /**

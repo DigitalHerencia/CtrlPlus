@@ -1,6 +1,10 @@
-import { prisma } from "@/lib/prisma";
+import {
+  getActiveLocalUserByClerkId,
+  getActiveTenantMembershipsByUserId,
+} from "@/lib/auth/local-user";
 import { resolveTenantFromRequest } from "@/lib/tenancy/resolve";
 import { auth } from "@clerk/nextjs/server";
+import { cache } from "react";
 
 /**
  * The session context returned by getSession().
@@ -51,42 +55,29 @@ export interface Session {
  *
  * @returns SessionContext with userId, tenantId, isAuthenticated, and orgId
  */
-export async function getSession(): Promise<SessionContext> {
+export const getSession = cache(async (): Promise<SessionContext> => {
   const { userId, orgId } = await auth();
+  const activeLocalUser = userId ? await getActiveLocalUserByClerkId(userId) : null;
 
   // Resolve tenantId from request host (subdomain-based multi-tenancy).
   let tenantId = (await resolveTenantFromRequest()) ?? "";
 
-  // Fallback: if no subdomain and user is authenticated, use their first tenant
-  if (!tenantId && userId) {
-    const user = await prisma.user.findUnique({
-      where: { clerkUserId: userId },
-      select: { id: true },
-    });
+  // Fall back only when a signed-in user has exactly one active workspace.
+  if (!tenantId && activeLocalUser) {
+    const memberships = await getActiveTenantMembershipsByUserId(activeLocalUser.id);
 
-    if (user) {
-      const membership = await prisma.tenantUserMembership.findFirst({
-        where: {
-          userId: user.id,
-          deletedAt: null,
-        },
-        select: { tenantId: true },
-        orderBy: { createdAt: "asc" },
-      });
-
-      if (membership) {
-        tenantId = membership.tenantId;
-      }
+    if (memberships.length === 1) {
+      tenantId = memberships[0]?.tenantId ?? "";
     }
   }
 
   return {
-    userId: userId ?? null,
+    userId: activeLocalUser && userId ? userId : null,
     tenantId,
-    isAuthenticated: !!userId,
+    isAuthenticated: Boolean(activeLocalUser && userId),
     orgId: orgId ?? null,
   };
-}
+});
 
 /**
  * Requires the current user to be authenticated.

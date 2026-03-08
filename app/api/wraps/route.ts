@@ -1,9 +1,9 @@
 import { getSession } from "@/lib/auth/session";
 import { searchWraps } from "@/lib/catalog/fetchers/get-wraps";
 import { parseCatalogSearchParams } from "@/lib/catalog/search-params";
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { tenantId, userId } = await getSession();
 
   if (!tenantId || !userId) {

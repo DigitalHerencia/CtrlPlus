@@ -23,6 +23,7 @@ interface ClerkWebhookEvent {
 
 type JsonObject = Record<string, unknown>;
 type WebhookEventState = "process" | "processed" | "processing";
+const WEBHOOK_PROCESSING_TIMEOUT_MS = 5 * 60 * 1000;
 
 const SUPPORTED_EVENTS = new Set([
   "email.created",
@@ -176,12 +177,15 @@ export async function claimClerkWebhookEvent(
   eventId: string,
   eventType: string,
 ): Promise<WebhookEventState> {
+  const now = new Date();
+
   try {
     await prisma.clerkWebhookEvent.create({
       data: {
         id: eventId,
         type: eventType,
         status: "processing",
+        processedAt: now,
       },
     });
 
@@ -210,7 +214,7 @@ export async function claimClerkWebhookEvent(
       data: {
         type: eventType,
         status: "processing",
-        processedAt: new Date(),
+        processedAt: now,
       },
     });
 
@@ -228,6 +232,28 @@ export async function claimClerkWebhookEvent(
     }
 
     return refreshedEvent.status === "processed" ? "processed" : "processing";
+  }
+
+  if (existingEvent.status === "processing") {
+    const staleBefore = new Date(now.getTime() - WEBHOOK_PROCESSING_TIMEOUT_MS);
+
+    const retryClaim = await prisma.clerkWebhookEvent.updateMany({
+      where: {
+        id: eventId,
+        status: "processing",
+        processedAt: {
+          lte: staleBefore,
+        },
+      },
+      data: {
+        type: eventType,
+        processedAt: now,
+      },
+    });
+
+    if (retryClaim.count === 1) {
+      return "process";
+    }
   }
 
   return existingEvent.status === "processed" ? "processed" : "processing";
@@ -251,10 +277,21 @@ async function handleUserEvent(eventType: string, data: unknown): Promise<void> 
   }
 
   const emailAddresses = getPathValue(data, ["email_addresses"]);
+  const primaryEmailAddressId = getFirstStringPath(data, [["primary_email_address_id"]]);
   let email = `no-email+${clerkUserId}@local.invalid`;
 
   if (Array.isArray(emailAddresses)) {
-    for (const item of emailAddresses) {
+    const emailAddressRecords = emailAddresses as unknown[];
+    const primaryEmailRecord = primaryEmailAddressId
+      ? emailAddressRecords.find(
+          (item) => getFirstStringPath(item, [["id"]]) === primaryEmailAddressId,
+        )
+      : null;
+    const prioritizedEmailAddresses = primaryEmailRecord
+      ? [primaryEmailRecord, ...emailAddressRecords.filter((item) => item !== primaryEmailRecord)]
+      : emailAddressRecords;
+
+    for (const item of prioritizedEmailAddresses) {
       const emailAddress = getFirstStringPath(item, [["email_address"]]);
       if (emailAddress) {
         email = emailAddress.toLowerCase();
@@ -268,10 +305,65 @@ async function handleUserEvent(eventType: string, data: unknown): Promise<void> 
   const imageUrl = getFirstStringPath(data, [["image_url"]]) ?? null;
 
   if (eventType === "user.deleted") {
-    await prisma.user.updateMany({
-      where: { clerkUserId },
-      data: { deletedAt: new Date() },
+    const deletedAt = new Date();
+    const user = await prisma.user.findFirst({
+      where: {
+        clerkUserId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+      },
     });
+
+    await prisma.$transaction(async (tx) => {
+      await tx.user.updateMany({
+        where: { clerkUserId },
+        data: {
+          email: `deleted+${clerkUserId}@local.invalid`,
+          firstName: null,
+          lastName: null,
+          imageUrl: null,
+          deletedAt,
+        },
+      });
+
+      if (user) {
+        await tx.tenantUserMembership.updateMany({
+          where: {
+            userId: user.id,
+            deletedAt: null,
+          },
+          data: {
+            deletedAt,
+          },
+        });
+      }
+
+      await Promise.all([
+        tx.clerkSession.updateMany({
+          where: { clerkUserId, deletedAt: null },
+          data: { deletedAt },
+        }),
+        tx.clerkEmail.updateMany({
+          where: { clerkUserId, deletedAt: null },
+          data: { deletedAt },
+        }),
+        tx.clerkSms.updateMany({
+          where: { clerkUserId, deletedAt: null },
+          data: { deletedAt },
+        }),
+        tx.clerkSubscription.updateMany({
+          where: { clerkUserId, deletedAt: null },
+          data: { deletedAt },
+        }),
+        tx.clerkPaymentAttempt.updateMany({
+          where: { clerkUserId, deletedAt: null },
+          data: { deletedAt },
+        }),
+      ]);
+    });
+
     return;
   }
 

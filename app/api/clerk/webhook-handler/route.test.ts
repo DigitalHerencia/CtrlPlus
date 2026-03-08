@@ -62,7 +62,9 @@ describe("clerk webhook idempotency", () => {
 
   it("returns processed for previously processed events", async () => {
     vi.mocked(prisma.clerkWebhookEvent.create).mockRejectedValue({ code: "P2002" });
-    vi.mocked(prisma.clerkWebhookEvent.findUnique).mockResolvedValue({ status: "processed" } as never);
+    vi.mocked(prisma.clerkWebhookEvent.findUnique).mockResolvedValue({
+      status: "processed",
+    } as never);
 
     const state = await claimClerkWebhookEvent("evt_2", "user.updated");
 

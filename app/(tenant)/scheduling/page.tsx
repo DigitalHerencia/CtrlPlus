@@ -1,5 +1,6 @@
 import { BookingCard } from "@/components/scheduling/booking-card";
 import { CalendarClient } from "@/components/scheduling/calendar-client";
+import { TenantMetricCard, TenantPageHeader } from "@/components/tenant/page-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
@@ -22,7 +23,7 @@ export default async function SchedulingPage() {
   const { tenantId } = await getSession();
 
   if (!tenantId) {
-    redirect("/sign-in");
+    redirect("/sign-in"); // Only redirect if not authenticated
   }
 
   let availabilityWindows: Awaited<ReturnType<typeof getAvailabilityWindowsForTenant>>["items"] =
@@ -52,28 +53,43 @@ export default async function SchedulingPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-neutral-800 bg-gradient-to-r from-neutral-950 via-neutral-900 to-blue-950/60 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-neutral-100">Scheduling</h1>
-            <p className="mt-2 text-neutral-300">
-              View availability and manage installation appointments.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
+      <TenantPageHeader
+        eyebrow="Calendar"
+        title="Scheduling"
+        description="Review open days, monitor upcoming installs, and move into booking without leaving the tenant dashboard flow."
+        actions={
+          <>
             <Button asChild variant="outline">
               <Link href="/scheduling/bookings">All Bookings</Link>
             </Button>
             <Button asChild>
               <Link href="/scheduling/book">Book Appointment</Link>
             </Button>
-          </div>
-        </div>
+          </>
+        }
+      />
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <TenantMetricCard
+          label="Open Days"
+          value={availableWeekdays.length}
+          description="Weekdays currently accepting bookings."
+        />
+        <TenantMetricCard
+          label="Availability Windows"
+          value={availabilityWindows.length}
+          description="Total configured time windows for the shop."
+        />
+        <TenantMetricCard
+          label="Upcoming Jobs"
+          value={upcomingBookings.length}
+          description="Appointments coming up next."
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Card className="border-neutral-800 bg-neutral-900/60">
+          <Card className="app-panel">
             <CardHeader>
               <CardTitle className="text-neutral-100">Availability Calendar</CardTitle>
               <CardDescription className="text-neutral-400">
@@ -87,7 +103,7 @@ export default async function SchedulingPage() {
         </div>
 
         <div className="space-y-4">
-          <Card className="border-neutral-800 bg-neutral-900/60">
+          <Card className="app-panel">
             <CardHeader>
               <CardTitle className="text-base text-neutral-100">Open Days</CardTitle>
             </CardHeader>
@@ -114,7 +130,7 @@ export default async function SchedulingPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-neutral-800 bg-neutral-900/60">
+          <Card className="app-panel">
             <CardHeader>
               <CardTitle className="text-base text-neutral-100">Upcoming Bookings</CardTitle>
             </CardHeader>

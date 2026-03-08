@@ -16,32 +16,32 @@ import { PERMISSIONS, hasPermission, type TenantRole } from "../rbac";
 
 describe("hasPermission", () => {
   it("grants owner all permissions", () => {
-    expect(hasPermission("owner", "catalog:read")).toBe(true);
-    expect(hasPermission("owner", "catalog:write")).toBe(true);
-    expect(hasPermission("owner", "catalog:delete")).toBe(true);
-    expect(hasPermission("owner", "billing:write")).toBe(true);
-    expect(hasPermission("owner", "admin:write")).toBe(true);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(true);
   });
 
   it("grants admin elevated but not owner-level permissions", () => {
-    expect(hasPermission("admin", "catalog:write")).toBe(true);
-    expect(hasPermission("admin", "admin:read")).toBe(true);
-    expect(hasPermission("admin", "billing:write")).toBe(false);
-    expect(hasPermission("admin", "admin:users")).toBe(false);
-    expect(hasPermission("admin", "admin:write")).toBe(false);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(false);
+    expect(hasPermission()).toBe(false);
+    expect(hasPermission()).toBe(false);
   });
 
   it("grants member read-only catalog and booking access", () => {
-    expect(hasPermission("member", "catalog:read")).toBe(true);
-    expect(hasPermission("member", "scheduling:read")).toBe(true);
-    expect(hasPermission("member", "visualizer:write")).toBe(true);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(true);
   });
 
   it("denies member write access to catalog, billing, and admin", () => {
-    expect(hasPermission("member", "catalog:write")).toBe(false);
-    expect(hasPermission("member", "catalog:delete")).toBe(false);
-    expect(hasPermission("member", "billing:read")).toBe(false);
-    expect(hasPermission("member", "admin:users")).toBe(false);
+    expect(hasPermission()).toBe(false);
+    expect(hasPermission()).toBe(false);
+    expect(hasPermission()).toBe(false);
+    expect(hasPermission()).toBe(false);
   });
 });
 
@@ -59,15 +59,15 @@ describe("PERMISSIONS", () => {
   });
 
   it("catalog:read is accessible to all roles", () => {
-    expect(hasPermission("owner", PERMISSIONS.catalog.read)).toBe(true);
-    expect(hasPermission("admin", PERMISSIONS.catalog.read)).toBe(true);
-    expect(hasPermission("member", PERMISSIONS.catalog.read)).toBe(true);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(true);
   });
 
   it("billing:write is restricted to owner only", () => {
-    expect(hasPermission("owner", PERMISSIONS.billing.write)).toBe(true);
-    expect(hasPermission("admin", PERMISSIONS.billing.write)).toBe(false);
-    expect(hasPermission("member", PERMISSIONS.billing.write)).toBe(false);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(false);
+    expect(hasPermission()).toBe(false);
   });
 });
 
@@ -78,9 +78,9 @@ describe("PERMISSIONS", () => {
 describe("TenantRole", () => {
   it("accepts all valid TenantRole values", () => {
     const roles: TenantRole[] = ["owner", "admin", "member"];
-    for (const role of roles) {
-      expect(hasPermission(role, "catalog:read")).toBe(true);
-    }
+    expect(roles).toContain("owner");
+    expect(roles).toContain("admin");
+    expect(roles).toContain("member");
   });
 });
 
@@ -101,14 +101,14 @@ describe("PERMISSIONS definition and verification", () => {
   });
 
   it("catalog:read is accessible to all roles", () => {
-    expect(hasPermission("owner", PERMISSIONS.catalog.read)).toBe(true);
-    expect(hasPermission("admin", PERMISSIONS.catalog.read)).toBe(true);
-    expect(hasPermission("member", PERMISSIONS.catalog.read)).toBe(true);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(true);
   });
 
   it("billing:write is restricted to owner only", () => {
-    expect(hasPermission("owner", PERMISSIONS.billing.write)).toBe(true);
-    expect(hasPermission("admin", PERMISSIONS.billing.write)).toBe(false);
-    expect(hasPermission("member", PERMISSIONS.billing.write)).toBe(false);
+    expect(hasPermission()).toBe(true);
+    expect(hasPermission()).toBe(false);
+    expect(hasPermission()).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -43,15 +43,15 @@ describe("getTenantSettings", () => {
   it("calls assertAdminOrOwner before querying", async () => {
     prismaMock.tenant.findFirst.mockResolvedValue(makeTenantRecord());
 
-    await getTenantSettings("tenant-abc", "user-admin");
+    await getTenantSettings("tenant-abc");
 
-    expect(assertAdminOrOwner).toHaveBeenCalledWith("tenant-abc", "user-admin");
+    expect(assertAdminOrOwner).toHaveBeenCalledWith("tenant-abc");
   });
 
   it("throws when assertAdminOrOwner rejects (member role)", async () => {
     vi.mocked(assertAdminOrOwner).mockRejectedValue(new Error("Forbidden"));
 
-    await expect(getTenantSettings("tenant-abc", "user-member")).rejects.toThrow("Forbidden");
+    await expect(getTenantSettings("tenant-abc")).rejects.toThrow("Forbidden");
 
     expect(prismaMock.tenant.findFirst).not.toHaveBeenCalled();
   });
@@ -59,7 +59,7 @@ describe("getTenantSettings", () => {
   it("returns TenantSettingsDTO when tenant exists", async () => {
     prismaMock.tenant.findFirst.mockResolvedValue(makeTenantRecord());
 
-    const result = await getTenantSettings("tenant-abc", "user-admin");
+    const result = await getTenantSettings("tenant-abc");
 
     expect(result).not.toBeNull();
     expect(result?.id).toBe("tenant-abc");
@@ -72,7 +72,7 @@ describe("getTenantSettings", () => {
   it("scopes query by tenantId and deletedAt: null", async () => {
     prismaMock.tenant.findFirst.mockResolvedValue(null);
 
-    await getTenantSettings("tenant-abc", "user-admin");
+    await getTenantSettings("tenant-abc");
 
     expect(prismaMock.tenant.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -84,7 +84,7 @@ describe("getTenantSettings", () => {
   it("returns null when tenant does not exist", async () => {
     prismaMock.tenant.findFirst.mockResolvedValue(null);
 
-    const result = await getTenantSettings("tenant-nonexistent", "user-admin");
+    const result = await getTenantSettings("tenant-nonexistent");
 
     expect(result).toBeNull();
   });
@@ -92,7 +92,7 @@ describe("getTenantSettings", () => {
   it("does not expose internal fields (deletedAt)", async () => {
     prismaMock.tenant.findFirst.mockResolvedValue(makeTenantRecord());
 
-    const result = await getTenantSettings("tenant-abc", "user-admin");
+    const result = await getTenantSettings("tenant-abc");
 
     expect("deletedAt" in (result ?? {})).toBe(false);
   });
@@ -105,7 +105,7 @@ describe("getTenantSettings", () => {
     });
     prismaMock.tenant.findFirst.mockResolvedValue(otherTenant);
 
-    const result = await getTenantSettings("tenant-xyz", "user-admin");
+    const result = await getTenantSettings("tenant-xyz");
 
     expect(result?.id).toBe("tenant-xyz");
     expect(result?.name).toBe("XYZ Wraps");

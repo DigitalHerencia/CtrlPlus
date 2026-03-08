@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { type WrapDTO } from "@/lib/catalog/types";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatPrice, formatInstallationTime } from "@/lib/catalog/formatters";
+import { formatInstallationTime, formatPrice } from "@/lib/catalog/formatters";
+import { type WrapDTO } from "@/lib/catalog/types";
+
 import { WrapImageManager } from "./WrapImageManager";
 
 interface WrapDetailProps {
@@ -14,25 +16,28 @@ export function WrapDetail({ wrap }: WrapDetailProps) {
   const installationTime = formatInstallationTime(wrap.installationMinutes);
 
   return (
-    <div className="max-w-3xl space-y-5">
+    <div className="max-w-4xl space-y-5">
       <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit">
-        <Link href="/catalog">← Back to Catalog</Link>
+        <Link href="/catalog">Back to Catalog</Link>
       </Button>
 
-      <Card className="overflow-hidden border-border/70 bg-gradient-to-br from-card to-card/70">
+      <Card className="app-hero-panel overflow-hidden">
         {wrap.images[0] && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={wrap.images[0].url} alt={wrap.name} className="h-64 w-full object-cover" />
+          <img src={wrap.images[0].url} alt={wrap.name} className="h-72 w-full object-cover" />
         )}
         <CardHeader className="gap-3">
-          <CardTitle className="text-3xl tracking-tight">{wrap.name}</CardTitle>
+          <p className="app-kicker">Wrap Detail</p>
+          <CardTitle className="text-4xl font-black tracking-tight text-neutral-100">
+            {wrap.name}
+          </CardTitle>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-3xl font-bold text-primary tabular-nums">
+            <span className="text-3xl font-black text-blue-300 tabular-nums">
               {formatPrice(wrap.price)}
             </span>
-            {installationTime && (
-              <Badge variant="secondary">⏱ {installationTime} installation</Badge>
-            )}
+            {installationTime ? (
+              <Badge variant="secondary">{installationTime} installation</Badge>
+            ) : null}
             {wrap.categories.map((category) => (
               <Badge key={category.id} variant="outline">
                 {category.name}
@@ -42,22 +47,22 @@ export function WrapDetail({ wrap }: WrapDetailProps) {
         </CardHeader>
       </Card>
 
-      {wrap.description && (
-        <Card>
+      {wrap.description ? (
+        <Card className="app-panel">
           <CardHeader>
-            <CardTitle className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            <CardTitle className="text-sm font-semibold tracking-wide text-neutral-400 uppercase">
               Description
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm leading-relaxed">{wrap.description}</p>
+            <p className="text-sm leading-relaxed text-neutral-300">{wrap.description}</p>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
-      <Card>
+      <Card className="app-panel">
         <CardHeader>
-          <CardTitle className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+          <CardTitle className="text-sm font-semibold tracking-wide text-neutral-400 uppercase">
             Wrap Images
           </CardTitle>
         </CardHeader>

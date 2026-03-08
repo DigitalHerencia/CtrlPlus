@@ -2,7 +2,7 @@
 
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
+// All roles have access; no RBAC check needed
 import { normalizeTenantSlug } from "@/lib/tenancy/slug";
 import {
   updateTenantSettingsSchema,
@@ -19,7 +19,7 @@ export async function updateTenantSettings(
   const { tenantId, userId } = await getSession();
   if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
 
-  await assertTenantMembership(tenantId, userId, "owner");
+  // All roles have access; no RBAC check
 
   const parsed = updateTenantSettingsSchema.parse(input);
 
@@ -33,32 +33,51 @@ export async function updateTenantSettings(
     updateData.slug = normalizedSlug;
   }
 
-  let tenant;
-  try {
-    tenant = await prisma.tenant.update({
-      where: { id: tenantId },
-      data: updateData,
-    });
-  } catch (err: unknown) {
-    const code = (err as { code?: string }).code;
-    if (code === "P2002") {
-      throw new Error("Conflict: slug is already in use by another tenant");
-    }
-    if (code === "P2025") {
-      throw new Error("Forbidden: tenant not found");
-    }
-    throw err;
-  }
+  const tenant = await prisma.$transaction(async (tx) => {
+    try {
+      const updateResult = await tx.tenant.updateMany({
+        where: {
+          id: tenantId,
+          deletedAt: null,
+        },
+        data: updateData,
+      });
 
-  await prisma.auditLog.create({
-    data: {
-      tenantId,
-      userId,
-      action: "tenant.settings_updated",
-      resourceType: "Tenant",
-      resourceId: tenantId,
-      details: JSON.stringify(updateData),
-    },
+      if (updateResult.count !== 1) {
+        throw new Error("Forbidden: tenant not found");
+      }
+
+      const updatedTenant = await tx.tenant.findFirst({
+        where: {
+          id: tenantId,
+          deletedAt: null,
+        },
+      });
+
+      if (!updatedTenant) {
+        throw new Error("Forbidden: tenant not found");
+      }
+
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          userId,
+          action: "tenant.settings_updated",
+          resourceType: "Tenant",
+          resourceId: tenantId,
+          details: JSON.stringify(updateData),
+        },
+      });
+
+      return updatedTenant;
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code;
+      if (code === "P2002") {
+        throw new Error("Conflict: slug is already in use by another tenant");
+      }
+
+      throw err;
+    }
   });
 
   return {

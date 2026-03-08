@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import {
   invoiceDTOFields,
+  invoiceListParamsSchema,
   type InvoiceDTO,
   type InvoiceListParams,
   type InvoiceListResult,
@@ -40,7 +41,7 @@ export async function getInvoicesForTenant(
   tenantId: string,
   params: InvoiceListParams = { page: 1, pageSize: 20 },
 ): Promise<InvoiceListResult> {
-  const { page, pageSize, status } = params;
+  const { page, pageSize, status } = invoiceListParamsSchema.parse(params);
   const skip = (page - 1) * pageSize;
 
   const where = {

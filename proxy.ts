@@ -2,7 +2,8 @@
  * Proxy for Route Protection
  *
  * Uses Clerk middleware to protect routes and handle authentication.
- * Public routes: /, /about, /features, /contact, /sign-in, /sign-up, /api/clerk/webhook, /api/stripe/webhook
+ * Public routes: /, /about, /features, /contact, /sign-in, /sign-up,
+ * /api/clerk/webhook-handler, /api/stripe/webhook
  * Protected routes: /catalog, /visualizer, /scheduling, /billing, /admin
  */
 
@@ -29,7 +30,7 @@ export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
 
   // Get the pathname
-  const { pathname } = req.nextUrl;
+  const { pathname, search } = req.nextUrl;
 
   // Redirect authenticated users away from auth pages
   if (isAuthRoute(req) && userId) {
@@ -45,7 +46,7 @@ export default clerkMiddleware(async (auth, req) => {
   // Protect all other routes - require authentication
   if (!userId) {
     const signInUrl = new URL("/sign-in", req.url);
-    signInUrl.searchParams.set("redirect_url", pathname);
+    signInUrl.searchParams.set("redirect_url", `${pathname}${search}`);
     return NextResponse.redirect(signInUrl);
   }
 

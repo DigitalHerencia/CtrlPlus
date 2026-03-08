@@ -222,6 +222,7 @@ CtrlPlus now uses `spec -> implement -> verify -> document` as the default relea
 
 ```bash
 pnpm prisma migrate dev --name <name>   # Create migration
+pnpm db:migrate:deploy                  # Apply committed migrations in production
 pnpm prisma generate                    # Generate Prisma client
 pnpm prisma studio                      # Open Prisma Studio
 ```

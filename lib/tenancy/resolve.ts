@@ -87,9 +87,8 @@ export function extractTenantSlugFromHost(
     return null;
   }
 
-  // Tunnel domains are for webhook delivery only and must never be interpreted
-  // as tenant subdomains.
-  if (hostname === "ngrok-free.app" || hostname.endsWith(NGROK_FREE_APP_SUFFIX)) {
+  // Tunnel domains are only eligible when explicitly opted in for development.
+  if (shouldIgnoreNgrokHostForTenantResolution(hostname)) {
     return null;
   }
 

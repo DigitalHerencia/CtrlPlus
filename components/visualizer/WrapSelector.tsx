@@ -35,10 +35,10 @@ export function WrapSelector({ wraps, selectedWrapId, onSelect, className }: Wra
             type="button"
             onClick={() => onSelect(wrap.id)}
             className={cn(
-              "flex flex-col gap-2 rounded-xl border p-4 text-left transition-all focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none",
+              "flex flex-col gap-2 rounded-xl border p-4 text-left transition-all focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none",
               isSelected
-                ? "border-blue-500 bg-blue-500/10 text-white shadow-sm shadow-blue-900/30"
-                : "border-neutral-700 bg-neutral-950 text-neutral-100 hover:border-blue-500/50 hover:bg-neutral-900",
+                ? "border-blue-600 bg-blue-600/10 text-white shadow-sm shadow-blue-900/30"
+                : "border-neutral-700 bg-neutral-950 text-neutral-100 hover:border-blue-600/50 hover:bg-neutral-900",
             )}
             aria-pressed={isSelected}
           >

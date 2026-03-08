@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
@@ -31,7 +31,7 @@ describe("getTenantStats", () => {
     prismaMock.booking.count.mockResolvedValue(0);
     prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
 
-    await getTenantStats("tenant-abc", "user-001");
+    await getTenantStats("tenant-abc");
 
     expect(assertAdminOrOwner).toHaveBeenCalledWith("tenant-abc", "user-001");
   });
@@ -39,7 +39,7 @@ describe("getTenantStats", () => {
   it("throws when assertAdminOrOwner rejects (member role)", async () => {
     vi.mocked(assertAdminOrOwner).mockRejectedValue(new Error("Forbidden"));
 
-    await expect(getTenantStats("tenant-abc", "user-member")).rejects.toThrow("Forbidden");
+    await expect(getTenantStats("tenant-abc")).rejects.toThrow("Forbidden");
 
     expect(prismaMock.wrap.count).not.toHaveBeenCalled();
   });
@@ -50,7 +50,7 @@ describe("getTenantStats", () => {
     prismaMock.booking.count.mockResolvedValue(12);
     prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: 8000 } });
 
-    const result = await getTenantStats("tenant-abc", "user-001");
+    const result = await getTenantStats("tenant-abc");
 
     expect(result.wrapCount).toBe(5);
     expect(result.memberCount).toBe(3);
@@ -64,7 +64,7 @@ describe("getTenantStats", () => {
     prismaMock.booking.count.mockResolvedValue(0);
     prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
 
-    await getTenantStats("tenant-abc", "user-001");
+    await getTenantStats("tenant-abc");
 
     expect(prismaMock.wrap.count).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -79,7 +79,7 @@ describe("getTenantStats", () => {
     prismaMock.booking.count.mockResolvedValue(0);
     prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
 
-    await getTenantStats("tenant-abc", "user-001");
+    await getTenantStats("tenant-abc");
 
     expect(prismaMock.tenantUserMembership.count).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -94,7 +94,7 @@ describe("getTenantStats", () => {
     prismaMock.booking.count.mockResolvedValue(0);
     prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
 
-    await getTenantStats("tenant-abc", "user-001");
+    await getTenantStats("tenant-abc");
 
     expect(prismaMock.booking.count).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -109,7 +109,7 @@ describe("getTenantStats", () => {
     prismaMock.booking.count.mockResolvedValue(0);
     prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
 
-    await getTenantStats("tenant-abc", "user-001");
+    await getTenantStats("tenant-abc");
 
     expect(prismaMock.invoice.aggregate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -129,7 +129,7 @@ describe("getTenantStats", () => {
     prismaMock.booking.count.mockResolvedValue(0);
     prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: null } });
 
-    const result = await getTenantStats("tenant-abc", "user-001");
+    const result = await getTenantStats("tenant-abc");
 
     expect(result.totalRevenue).toBe(0);
   });
@@ -140,7 +140,7 @@ describe("getTenantStats", () => {
     prismaMock.booking.count.mockResolvedValue(1);
     prismaMock.invoice.aggregate.mockResolvedValue({ _sum: { totalAmount: 4250 } });
 
-    const result = await getTenantStats("tenant-abc", "user-001");
+    const result = await getTenantStats("tenant-abc");
 
     expect(result.totalRevenue).toBe(4250);
   });

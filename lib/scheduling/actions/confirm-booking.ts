@@ -59,6 +59,10 @@ export async function confirmBooking(bookingId: string): Promise<ConfirmedBookin
       throw new Error("Forbidden: resource not found");
     }
 
+    if (booking.customerId !== userId) {
+      await assertTenantMembership(tenantId, userId);
+    }
+
     if (booking.status !== "pending") {
       throw new Error("Only pending bookings can be confirmed");
     }

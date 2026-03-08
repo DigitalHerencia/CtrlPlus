@@ -1,4 +1,5 @@
 import { BookingCard } from "@/components/scheduling/booking-card";
+import { TenantEmptyState, TenantPageHeader } from "@/components/tenant/page-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
@@ -14,7 +15,7 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
   const { tenantId } = await getSession();
 
   if (!tenantId) {
-    redirect("/sign-in");
+    redirect("/sign-in"); // Only redirect if not authenticated
   }
 
   const { tab = "upcoming" } = await searchParams;
@@ -38,45 +39,46 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-neutral-800 bg-gradient-to-r from-neutral-950 via-neutral-900 to-blue-950/60 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-neutral-100">Bookings</h1>
-            <p className="mt-2 text-neutral-300">
-              Manage your installation appointments across upcoming and past visits.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
+      <TenantPageHeader
+        eyebrow="Appointments"
+        title="Bookings"
+        description="Flip between upcoming and past installs while keeping navigation and actions consistent with the rest of the tenant workspace."
+        actions={
+          <>
             <Button asChild variant="outline">
-              <Link href="/scheduling">← Calendar</Link>
+              <Link href="/scheduling">Calendar</Link>
             </Button>
             <Button asChild>
               <Link href="/scheduling/book">New Booking</Link>
             </Button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      <div className="flex gap-1 rounded-lg border border-neutral-800 bg-neutral-900 p-1">
+      <div className="inline-flex gap-1 rounded-2xl border border-neutral-800 bg-neutral-900/80 p-1">
         <Link
           href="/scheduling/bookings?tab=upcoming"
-          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            isUpcoming ? "bg-blue-500 text-white" : "text-neutral-400 hover:text-neutral-100"
+          className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+            isUpcoming
+              ? "bg-blue-600 text-neutral-100 shadow-[0_16px_30px_-20px_rgba(37,99,235,0.9)]"
+              : "text-neutral-400 hover:text-neutral-100"
           }`}
         >
           Upcoming
         </Link>
         <Link
           href="/scheduling/bookings?tab=past"
-          className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-            !isUpcoming ? "bg-blue-500 text-white" : "text-neutral-400 hover:text-neutral-100"
+          className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+            !isUpcoming
+              ? "bg-blue-600 text-neutral-100 shadow-[0_16px_30px_-20px_rgba(37,99,235,0.9)]"
+              : "text-neutral-400 hover:text-neutral-100"
           }`}
         >
           Past
         </Link>
       </div>
 
-      <Card className="border-neutral-800 bg-neutral-900/60">
+      <Card className="app-panel">
         <CardHeader>
           <CardTitle className="text-base text-neutral-100">
             {isUpcoming ? "Upcoming Appointments" : "Past Appointments"}
@@ -89,18 +91,22 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
         </CardHeader>
         <CardContent>
           {bookings.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="text-sm text-neutral-500">
-                {isUpcoming
-                  ? "No upcoming bookings. Ready to schedule an appointment?"
-                  : "No past bookings found."}
-              </p>
-              {isUpcoming && (
-                <Button asChild className="mt-4">
-                  <Link href="/scheduling/book">Book Appointment</Link>
-                </Button>
-              )}
-            </div>
+            <TenantEmptyState
+              title={isUpcoming ? "No upcoming bookings" : "No past bookings"}
+              description={
+                isUpcoming
+                  ? "Ready to schedule the next install? Start a new booking from here."
+                  : "Completed and historical appointments will appear here once they exist."
+              }
+              action={
+                isUpcoming ? (
+                  <Button asChild>
+                    <Link href="/scheduling/book">Book Appointment</Link>
+                  </Button>
+                ) : null
+              }
+              className="border-0 bg-transparent shadow-none"
+            />
           ) : (
             <div className="space-y-3">
               {bookings.map((b) => (

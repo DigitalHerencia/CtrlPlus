@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+// All roles have access; no RBAC check needed
 import { assertAdminOrOwner } from "../rbac";
 import { type TenantSettingsDTO } from "../types";
 
@@ -22,11 +23,8 @@ const tenantSettingsFields = {
  * @returns TenantSettingsDTO or null if the tenant does not exist
  * @throws Error if caller is not an admin or owner of the tenant
  */
-export async function getTenantSettings(
-  tenantId: string,
-  requestingUserId: string,
-): Promise<TenantSettingsDTO | null> {
-  await assertAdminOrOwner(tenantId, requestingUserId);
+export async function getTenantSettings(tenantId: string): Promise<TenantSettingsDTO | null> {
+  await assertAdminOrOwner();
 
   const record = await prisma.tenant.findFirst({
     where: { id: tenantId, deletedAt: null },

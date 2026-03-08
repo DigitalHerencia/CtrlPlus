@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import {
+  availabilityListParamsSchema,
   type AvailabilityListParams,
   type AvailabilityListResult,
   type AvailabilityRuleDTO,
@@ -58,7 +59,7 @@ export async function getAvailabilityRulesForTenant(
   tenantId: string,
   params: AvailabilityListParams = DEFAULT_AVAILABILITY_LIST_PARAMS,
 ): Promise<AvailabilityListResult> {
-  const { page, pageSize, dayOfWeek } = params;
+  const { page, pageSize, dayOfWeek } = availabilityListParamsSchema.parse(params);
   const skip = (page - 1) * pageSize;
 
   const where = {

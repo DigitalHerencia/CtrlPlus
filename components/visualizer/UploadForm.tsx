@@ -86,8 +86,8 @@ export function UploadForm({
         htmlFor="vehicle-photo-input"
         className={cn(
           "relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors",
-          "border-neutral-700 bg-neutral-950 hover:border-blue-500/60 hover:bg-neutral-900",
-          previewUrl && "border-solid border-blue-500/70",
+          "border-neutral-700 bg-neutral-950 hover:border-blue-600/60 hover:bg-neutral-900",
+          previewUrl && "border-solid border-blue-600/70",
         )}
       >
         {previewUrl ? (
@@ -112,7 +112,7 @@ export function UploadForm({
           </>
         ) : (
           <>
-            <ImageIcon className="h-10 w-10 text-blue-500" />
+            <ImageIcon className="h-10 w-10 text-blue-600" />
             <div className="text-center">
               <p className="text-sm font-semibold text-neutral-100">
                 Click to upload your vehicle photo

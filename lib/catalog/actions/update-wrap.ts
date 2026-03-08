@@ -7,7 +7,7 @@ import { updateWrapSchema, type UpdateWrapInput, type WrapDTO } from "../types";
 
 export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promise<WrapDTO> {
   const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId, "admin");
+  await assertTenantMembership(tenantId, userId);
 
   const parsed = updateWrapSchema.parse(input);
 

@@ -54,6 +54,7 @@ const validInput = { startTime: NEW_START, endTime: NEW_END };
 const existingBooking = {
   id: "booking-1",
   tenantId: "tenant-1",
+  customerId: "user-1",
   startTime: OLD_START,
   endTime: OLD_END,
   status: "confirmed",
@@ -254,5 +255,26 @@ describe("updateBooking", () => {
 
     await expect(updateBooking("booking-1", badInput)).rejects.toThrow();
     expect(prisma.booking.update).not.toHaveBeenCalled();
+  });
+
+  it("requires admin access to reschedule another member's booking", async () => {
+    vi.mocked(getSession).mockResolvedValue(mockSession);
+    vi.mocked(assertTenantMembership).mockResolvedValue(undefined);
+    vi.mocked(prisma.booking.findFirst).mockResolvedValue({
+      ...existingBooking,
+      customerId: "user-2",
+    } as never);
+    vi.mocked(prisma.availabilityRule.findMany).mockResolvedValue([mockRule] as never);
+    vi.mocked(prisma.booking.count).mockResolvedValue(0);
+    vi.mocked(prisma.booking.update).mockResolvedValue({
+      ...updatedBookingRecord,
+      customerId: "user-2",
+    } as never);
+    vi.mocked(prisma.auditLog.create).mockResolvedValue({} as never);
+
+    await updateBooking("booking-1", validInput);
+
+    expect(assertTenantMembership).toHaveBeenNthCalledWith(1, "tenant-1", "user-1");
+    expect(assertTenantMembership).toHaveBeenNthCalledWith(2, "tenant-1", "user-1", "admin");
   });
 });

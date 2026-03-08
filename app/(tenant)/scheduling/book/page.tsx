@@ -1,4 +1,5 @@
 import { BookingForm } from "@/components/scheduling/booking-form";
+import { TenantPageHeader } from "@/components/tenant/page-shell";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth/session";
 import { getWrapsForTenant } from "@/lib/catalog/fetchers/get-wraps";
@@ -10,7 +11,7 @@ export default async function BookPage() {
   const { tenantId } = await getSession();
 
   if (!tenantId) {
-    redirect("/sign-in");
+    redirect("/sign-in"); // Only redirect if not authenticated
   }
 
   let availabilityWindows: {
@@ -49,21 +50,16 @@ export default async function BookPage() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-neutral-800 bg-gradient-to-r from-neutral-950 via-neutral-900 to-blue-950/60 p-6">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-neutral-100">
-              Book an Appointment
-            </h1>
-            <p className="mt-2 text-neutral-300">
-              Select a date, time slot, and wrap package to schedule your installation.
-            </p>
-          </div>
+      <TenantPageHeader
+        eyebrow="Booking"
+        title="Book an Appointment"
+        description="Select an available date, claim a time slot, and attach the right wrap package for the installation."
+        actions={
           <Button asChild variant="outline">
-            <Link href="/scheduling">← Back to Calendar</Link>
+            <Link href="/scheduling">Back to Calendar</Link>
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {wraps.length === 0 && (
         <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">

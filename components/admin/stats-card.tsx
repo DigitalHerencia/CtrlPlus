@@ -8,13 +8,15 @@ interface StatsCardProps {
 
 export function StatsCard({ title, value, description }: StatsCardProps) {
   return (
-    <Card className="border-border/70 bg-card/95">
+    <Card className="app-panel">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+        <CardTitle className="text-sm font-medium tracking-[0.16em] text-neutral-400 uppercase">
+          {title}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold tracking-tight text-foreground">{value}</div>
-        {description && <p className="mt-1 text-xs text-muted-foreground">{description}</p>}
+        <div className="text-2xl font-black tracking-tight text-neutral-100">{value}</div>
+        {description && <p className="mt-1 text-xs text-neutral-400">{description}</p>}
       </CardContent>
     </Card>
   );

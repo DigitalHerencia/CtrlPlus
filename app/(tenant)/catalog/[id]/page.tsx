@@ -11,7 +11,7 @@ export default async function WrapDetailPage({ params }: WrapDetailPageProps) {
   const { tenantId, userId } = await getSession();
 
   if (!userId) {
-    redirect("/sign-in");
+    redirect("/sign-in"); // Only redirect if not authenticated
   }
 
   const { id } = await params;

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { normalizeTenantRole } from "@/lib/tenancy/types";
+// All roles have access; no RBAC check needed
 import { assertAdminOrOwner } from "../rbac";
 import { type TeamMemberDTO, type TeamMemberListDTO } from "../types";
 
@@ -37,14 +38,17 @@ function toTeamMemberDTO(record: {
   };
 }
 
-export async function getTeamMembers(
-  tenantId: string,
-  requestingUserId: string,
-): Promise<TeamMemberListDTO> {
-  await assertAdminOrOwner(tenantId, requestingUserId);
+export async function getTeamMembers(tenantId: string): Promise<TeamMemberListDTO> {
+  await assertAdminOrOwner();
 
   const records = await prisma.tenantUserMembership.findMany({
-    where: { tenantId, deletedAt: null },
+    where: {
+      tenantId,
+      deletedAt: null,
+      user: {
+        deletedAt: null,
+      },
+    },
     orderBy: { createdAt: "asc" },
     select: memberDTOFields,
   });
@@ -62,12 +66,18 @@ export async function getTeamMembers(
 export async function getTeamMemberById(
   tenantId: string,
   membershipId: string,
-  requestingUserId: string,
 ): Promise<TeamMemberDTO | null> {
-  await assertAdminOrOwner(tenantId, requestingUserId);
+  await assertAdminOrOwner();
 
   const record = await prisma.tenantUserMembership.findFirst({
-    where: { id: membershipId, tenantId, deletedAt: null },
+    where: {
+      id: membershipId,
+      tenantId,
+      deletedAt: null,
+      user: {
+        deletedAt: null,
+      },
+    },
     select: memberDTOFields,
   });
 

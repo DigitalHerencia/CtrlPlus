@@ -15,7 +15,7 @@ import {
 
 export async function createWrapCategory(input: CreateWrapCategoryInput): Promise<WrapCategoryDTO> {
   const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId, "admin");
+  await assertTenantMembership(tenantId, userId);
 
   const parsed = createWrapCategorySchema.parse(input);
 
@@ -48,7 +48,7 @@ export async function updateWrapCategory(
   input: UpdateWrapCategoryInput,
 ): Promise<WrapCategoryDTO> {
   const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId, "admin");
+  await assertTenantMembership(tenantId, userId);
 
   const parsed = updateWrapCategorySchema.parse(input);
 
@@ -91,7 +91,7 @@ export async function updateWrapCategory(
 
 export async function deleteWrapCategory(categoryId: string): Promise<void> {
   const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId, "admin");
+  await assertTenantMembership(tenantId, userId);
 
   const result = await prisma.wrapCategory.updateMany({
     where: {
@@ -128,7 +128,7 @@ export async function deleteWrapCategory(categoryId: string): Promise<void> {
 
 export async function setWrapCategoryMappings(input: SetWrapCategoryMappingsInput): Promise<void> {
   const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId, "admin");
+  await assertTenantMembership(tenantId, userId);
 
   const parsed = setWrapCategoryMappingsSchema.parse(input);
 

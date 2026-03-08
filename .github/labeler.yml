@@ -1,45 +1,61 @@
 domain:catalog:
-  - "app/(tenant)/catalog/**"
-  - "components/catalog/**"
-  - "lib/catalog/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/(tenant)/catalog/**"
+          - "components/catalog/**"
+          - "lib/catalog/**"
 
 domain:visualizer:
-  - "app/(tenant)/visualizer/**"
-  - "components/visualizer/**"
-  - "lib/visualizer/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/(tenant)/visualizer/**"
+          - "components/visualizer/**"
+          - "lib/visualizer/**"
 
 domain:scheduling:
-  - "app/(tenant)/scheduling/**"
-  - "components/scheduling/**"
-  - "lib/scheduling/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/(tenant)/scheduling/**"
+          - "components/scheduling/**"
+          - "lib/scheduling/**"
 
 domain:billing:
-  - "app/(tenant)/billing/**"
-  - "app/api/stripe/**"
-  - "components/billing/**"
-  - "lib/billing/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/(tenant)/billing/**"
+          - "app/api/stripe/**"
+          - "components/billing/**"
+          - "lib/billing/**"
 
 domain:admin:
-  - "app/(tenant)/admin/**"
-  - "components/admin/**"
-  - "lib/admin/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/(tenant)/admin/**"
+          - "components/admin/**"
+          - "lib/admin/**"
 
 domain:auth:
-  - "app/(auth)/**"
-  - "app/api/clerk/**"
-  - "components/auth/**"
-  - "lib/auth/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/(auth)/**"
+          - "app/api/clerk/**"
+          - "components/auth/**"
+          - "lib/auth/**"
 
 domain:tenancy:
-  - "lib/tenancy/**"
+  - changed-files:
+      - any-glob-to-any-file:
+          - "lib/tenancy/**"
 
 domain:ci:
-  - ".github/workflows/**"
-  - ".github/labeler.yml"
-  - ".husky/**"
-  - "commitlint.config.mjs"
-  - "eslint.config.mjs"
-  - "package.json"
-  - "prettier.config.mjs"
-  - "pnpm-lock.yaml"
-  - "vitest.config.ts"
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/workflows/**"
+          - ".github/labeler.yml"
+          - ".husky/**"
+          - "commitlint.config.mjs"
+          - "eslint.config.mjs"
+          - "package.json"
+          - "prettier.config.mjs"
+          - "pnpm-lock.yaml"
+          - "vitest.config.ts"
