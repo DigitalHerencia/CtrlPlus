@@ -1,5 +1,5 @@
 import { BookingCard } from "@/components/scheduling/booking-card";
-import { TenantEmptyState, TenantPageHeader } from "@/components/tenant/page-shell";
+import { WorkspaceEmptyState, WorkspacePageIntro } from "@/components/layout/page-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
@@ -39,8 +39,8 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
 
   return (
     <div className="space-y-6">
-      <TenantPageHeader
-        eyebrow="Appointments"
+      <WorkspacePageIntro
+        label="Appointments"
         title="Bookings"
         description="Flip between upcoming and past installs while keeping navigation and actions consistent with the rest of the tenant workspace."
         actions={
@@ -91,7 +91,7 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
         </CardHeader>
         <CardContent>
           {bookings.length === 0 ? (
-            <TenantEmptyState
+            <WorkspaceEmptyState
               title={isUpcoming ? "No upcoming bookings" : "No past bookings"}
               description={
                 isUpcoming

@@ -9,7 +9,7 @@
  *  - Each `test.describe` block represents a segment of the customer journey.
  */
 
-import { expect, mockWraps, test } from "./fixtures/index";
+import { expect, mockWraps, test } from "./fixtures/test-fixtures";
 
 // ─── Homepage & navigation ────────────────────────────────────────────────────
 

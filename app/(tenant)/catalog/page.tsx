@@ -2,7 +2,7 @@ import { CatalogPagination } from "@/components/catalog/CatalogPagination";
 import { WrapFilter } from "@/components/catalog/WrapFilter";
 import { WrapGrid } from "@/components/catalog/WrapGrid";
 import { Card, CardContent } from "@/components/ui/card";
-import { TenantEmptyState, TenantPageHeader } from "@/components/tenant/page-shell";
+import { WorkspaceEmptyState, WorkspacePageIntro } from "@/components/layout/page-elements";
 import { getSession } from "@/lib/auth/session";
 import { getWrapCategoriesForTenant } from "@/lib/catalog/fetchers/get-wrap-categories";
 import { searchWraps } from "@/lib/catalog/fetchers/get-wraps";
@@ -60,8 +60,8 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
 
   return (
     <div className="space-y-6">
-      <TenantPageHeader
-        eyebrow="Catalog"
+      <WorkspacePageIntro
+        label="Catalog"
         title="Vehicle Wrap Collection"
         description="Explore premium wrap packages, compare finishes, and jump into detail views with a single consistent storefront system."
         detail={
@@ -81,7 +81,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
       </Card>
 
       {!data ? (
-        <TenantEmptyState
+        <WorkspaceEmptyState
           title="Sign in to browse your catalog"
           description="Catalog results and category filters are only available inside an authenticated tenant workspace."
         />

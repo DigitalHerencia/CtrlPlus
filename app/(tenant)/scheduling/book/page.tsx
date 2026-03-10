@@ -1,5 +1,5 @@
 import { BookingForm } from "@/components/scheduling/booking-form";
-import { TenantPageHeader } from "@/components/tenant/page-shell";
+import { WorkspacePageIntro } from "@/components/layout/page-elements";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth/session";
 import { getWrapsForTenant } from "@/lib/catalog/fetchers/get-wraps";
@@ -50,8 +50,8 @@ export default async function BookPage() {
 
   return (
     <div className="space-y-6">
-      <TenantPageHeader
-        eyebrow="Booking"
+      <WorkspacePageIntro
+        label="Booking"
         title="Book an Appointment"
         description="Select an available date, claim a time slot, and attach the right wrap package for the installation."
         actions={

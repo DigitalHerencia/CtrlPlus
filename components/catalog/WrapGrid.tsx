@@ -1,5 +1,5 @@
 import { type WrapDTO } from "@/lib/catalog/types";
-import { TenantEmptyState } from "@/components/tenant/page-shell";
+import { WorkspaceEmptyState } from "@/components/layout/page-elements";
 import { WrapCard } from "./WrapCard";
 
 interface WrapGridProps {
@@ -9,7 +9,7 @@ interface WrapGridProps {
 export function WrapGrid({ wraps }: WrapGridProps) {
   if (wraps.length === 0) {
     return (
-      <TenantEmptyState
+      <WorkspaceEmptyState
         title="No wraps found"
         description="Try adjusting your search or filter criteria to find the wrap package you need."
       />

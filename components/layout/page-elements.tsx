@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-interface TenantPageHeaderProps {
-  eyebrow: string;
+interface WorkspacePageIntroProps {
+  label: string;
   title: string;
   description: string;
   actions?: ReactNode;
@@ -14,20 +14,20 @@ interface TenantPageHeaderProps {
   className?: string;
 }
 
-export function TenantPageHeader({
-  eyebrow,
+export function WorkspacePageIntro({
+  label,
   title,
   description,
   actions,
   detail,
   className,
-}: TenantPageHeaderProps) {
+}: WorkspacePageIntroProps) {
   return (
     <section className={cn("app-hero-panel px-6 py-7 sm:px-8 sm:py-8", className)}>
       <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-[radial-gradient(circle_at_center,rgba(37,99,235,0.3),transparent_68%)]" />
       <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-3">
-          <p className="app-kicker">{eyebrow}</p>
+          <p className="app-kicker">{label}</p>
           <div className="space-y-3">
             <h1 className="app-heading">{title}</h1>
             <p className="app-subheading">{description}</p>
@@ -44,7 +44,7 @@ export function TenantPageHeader({
   );
 }
 
-interface TenantMetricCardProps {
+interface WorkspaceMetricCardProps {
   label: string;
   value: ReactNode;
   description?: ReactNode;
@@ -53,14 +53,14 @@ interface TenantMetricCardProps {
   className?: string;
 }
 
-export function TenantMetricCard({
+export function WorkspaceMetricCard({
   label,
   value,
   description,
   icon: Icon,
   badge,
   className,
-}: TenantMetricCardProps) {
+}: WorkspaceMetricCardProps) {
   return (
     <Card className={cn("app-panel border-neutral-800/90 bg-neutral-900/80", className)}>
       <CardHeader className="gap-3 pb-2">
@@ -90,14 +90,19 @@ export function TenantMetricCard({
   );
 }
 
-interface TenantEmptyStateProps {
+interface WorkspaceEmptyStateProps {
   title: string;
   description: string;
   action?: ReactNode;
   className?: string;
 }
 
-export function TenantEmptyState({ title, description, action, className }: TenantEmptyStateProps) {
+export function WorkspaceEmptyState({
+  title,
+  description,
+  action,
+  className,
+}: WorkspaceEmptyStateProps) {
   return (
     <Card className={cn("app-panel border-dashed text-center", className)}>
       <CardContent className="flex flex-col items-center gap-4 py-14">

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { SettingsForm } from "@/components/admin/settings-form";
-import { TenantPageHeader } from "@/components/tenant/page-shell";
+import { WorkspacePageIntro } from "@/components/layout/page-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTenantSettings } from "@/lib/admin/fetchers/get-tenant-settings";
@@ -19,8 +19,8 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <TenantPageHeader
-        eyebrow="Configuration"
+      <WorkspacePageIntro
+        label="Configuration"
         title="Tenant Settings"
         description="Control business identity, route naming, and the metadata that defines your tenant throughout the app."
         actions={

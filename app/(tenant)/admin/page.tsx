@@ -2,7 +2,7 @@ import { ShieldCheck, Users, Wrench } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { TenantMetricCard, TenantPageHeader } from "@/components/tenant/page-shell";
+import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/layout/page-elements";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,8 +26,8 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <TenantPageHeader
-        eyebrow="Operations"
+      <WorkspacePageIntro
+        label="Operations"
         title="Admin Command Center"
         description="Review tenant health, monitor commercial performance, and jump into role or settings work without losing the dark workspace aesthetic."
         detail={
@@ -51,19 +51,19 @@ export default async function AdminDashboardPage() {
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <TenantMetricCard
+        <WorkspaceMetricCard
           label="Team Members"
           value={stats.memberCount}
           description="Active members with access to this tenant."
           icon={Users}
         />
-        <TenantMetricCard
+        <WorkspaceMetricCard
           label="Booked Jobs"
           value={stats.bookingCount}
           description="Appointments currently tracked in the workspace."
           icon={ShieldCheck}
         />
-        <TenantMetricCard
+        <WorkspaceMetricCard
           label="Collected Revenue"
           value={formattedRevenue}
           description="Paid invoice volume captured for this tenant."

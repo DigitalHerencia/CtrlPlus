@@ -1,6 +1,6 @@
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { InvoiceStatusBadge } from "@/components/billing/InvoiceStatusBadge";
-import { TenantMetricCard, TenantPageHeader } from "@/components/tenant/page-shell";
+import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/layout/page-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -47,8 +47,8 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
 
   return (
     <div className="max-w-4xl space-y-6">
-      <TenantPageHeader
-        eyebrow="Collections"
+      <WorkspacePageIntro
+        label="Collections"
         title="Invoice Detail"
         description="Inspect line items, review payment attempts, and move into checkout from the billing workspace."
         detail={<InvoiceStatusBadge status={invoice.status} />}
@@ -76,17 +76,17 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
       )}
 
       <div className="grid gap-4 md:grid-cols-3">
-        <TenantMetricCard
+        <WorkspaceMetricCard
           label="Invoice"
           value={<span className="font-mono text-xl">{invoice.id.slice(0, 12)}…</span>}
           description="Internal invoice reference."
         />
-        <TenantMetricCard
+        <WorkspaceMetricCard
           label="Created"
           value={invoice.createdAt.toLocaleDateString()}
           description="Issue date for this invoice."
         />
-        <TenantMetricCard
+        <WorkspaceMetricCard
           label="Total"
           value={currencyFormatter.format(invoice.totalAmount / 100)}
           description="Current amount due on the invoice."

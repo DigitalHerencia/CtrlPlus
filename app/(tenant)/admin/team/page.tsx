@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { RoleBadge } from "@/components/admin/role-badge";
 import { SetRoleForm } from "@/components/admin/set-role-form";
-import { TenantMetricCard, TenantPageHeader } from "@/components/tenant/page-shell";
+import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/layout/page-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -27,8 +27,8 @@ export default async function TeamPage() {
 
   return (
     <div className="space-y-6">
-      <TenantPageHeader
-        eyebrow="Access"
+      <WorkspacePageIntro
+        label="Access"
         title="Team"
         description="Manage tenant membership and keep role assignments tight without leaving the primary workspace flow."
         actions={
@@ -38,7 +38,7 @@ export default async function TeamPage() {
         }
       />
 
-      <TenantMetricCard
+      <WorkspaceMetricCard
         label="Active Members"
         value={total}
         description={`Currently managing ${total} active member${total === 1 ? "" : "s"}.`}

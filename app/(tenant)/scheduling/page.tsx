@@ -1,6 +1,6 @@
 import { BookingCard } from "@/components/scheduling/booking-card";
 import { CalendarClient } from "@/components/scheduling/calendar-client";
-import { TenantMetricCard, TenantPageHeader } from "@/components/tenant/page-shell";
+import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/layout/page-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
@@ -53,8 +53,8 @@ export default async function SchedulingPage() {
 
   return (
     <div className="space-y-6">
-      <TenantPageHeader
-        eyebrow="Calendar"
+      <WorkspacePageIntro
+        label="Calendar"
         title="Scheduling"
         description="Review open days, monitor upcoming installs, and move into booking without leaving the tenant dashboard flow."
         actions={
@@ -70,17 +70,17 @@ export default async function SchedulingPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <TenantMetricCard
+        <WorkspaceMetricCard
           label="Open Days"
           value={availableWeekdays.length}
           description="Weekdays currently accepting bookings."
         />
-        <TenantMetricCard
+        <WorkspaceMetricCard
           label="Availability Windows"
           value={availabilityWindows.length}
           description="Total configured time windows for the shop."
         />
-        <TenantMetricCard
+        <WorkspaceMetricCard
           label="Upcoming Jobs"
           value={upcomingBookings.length}
           description="Appointments coming up next."

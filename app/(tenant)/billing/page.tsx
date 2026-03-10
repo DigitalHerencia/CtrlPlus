@@ -1,9 +1,9 @@
 import { InvoiceStatusBadge } from "@/components/billing/InvoiceStatusBadge";
 import {
-  TenantEmptyState,
-  TenantMetricCard,
-  TenantPageHeader,
-} from "@/components/tenant/page-shell";
+  WorkspaceEmptyState,
+  WorkspaceMetricCard,
+  WorkspacePageIntro,
+} from "@/components/layout/page-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -39,8 +39,8 @@ export default async function BillingPage() {
 
   return (
     <div className="space-y-6">
-      <TenantPageHeader
-        eyebrow="Revenue"
+      <WorkspacePageIntro
+        label="Revenue"
         title="Billing"
         description="Monitor invoices, track payment status, and move directly into detail or collection actions from one financial workspace."
         actions={
@@ -51,17 +51,17 @@ export default async function BillingPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <TenantMetricCard
+        <WorkspaceMetricCard
           label="Total Invoices"
           value={total}
           description="Every invoice issued for this tenant."
         />
-        <TenantMetricCard
+        <WorkspaceMetricCard
           label="Outstanding"
           value={currencyFormatter.format(outstanding / 100)}
           description="Draft and sent invoices that still need attention."
         />
-        <TenantMetricCard
+        <WorkspaceMetricCard
           label="Paid"
           value={invoices.filter((invoice) => invoice.status === "paid").length}
           description="Invoices that have cleared successfully."
@@ -69,7 +69,7 @@ export default async function BillingPage() {
       </div>
 
       {invoices.length === 0 ? (
-        <TenantEmptyState
+        <WorkspaceEmptyState
           title="No invoices found"
           description="Once appointments create invoices, they will appear here with payment status and detail links."
         />
