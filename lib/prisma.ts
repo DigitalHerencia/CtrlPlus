@@ -13,7 +13,7 @@
  *
  * Usage:
  *   import { prisma } from '@/lib/prisma'
- *   const users = await prisma.tenant.findMany()
+ *   const wraps = await prisma.wrap.findMany()
  *
  * Connection URLs from environment:
  * - DATABASE_URL: Pooled connection for queries (ends with -pooler for pgBouncer)

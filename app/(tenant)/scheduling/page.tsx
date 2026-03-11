@@ -1,11 +1,12 @@
 import { BookingCard } from "@/components/scheduling/booking-card";
 import { CalendarClient } from "@/components/scheduling/calendar-client";
-import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/layout/page-elements";
+import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
-import { getAvailabilityWindowsForTenant } from "@/lib/scheduling/fetchers/get-availability";
-import { getBookingsForTenant } from "@/lib/scheduling/fetchers/get-bookings";
+import { hasCapability } from "@/lib/authz/policy";
+import { getAvailabilityWindows } from "@/lib/scheduling/fetchers/get-availability";
+import { getBookings } from "@/lib/scheduling/fetchers/get-bookings";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -20,30 +21,34 @@ const DAY_NAMES = [
 ] as const;
 
 export default async function SchedulingPage() {
-  const { tenantId } = await getSession();
+  const { userId, authz } = await getSession();
 
-  if (!tenantId) {
+  if (!userId) {
     redirect("/sign-in"); // Only redirect if not authenticated
   }
 
-  let availabilityWindows: Awaited<ReturnType<typeof getAvailabilityWindowsForTenant>>["items"] =
-    [];
+  const canViewAllBookings = hasCapability(authz, "scheduling.read.all");
+
+  let availabilityWindows: Awaited<ReturnType<typeof getAvailabilityWindows>>["items"] = [];
 
   try {
-    const result = await getAvailabilityWindowsForTenant(tenantId);
+    const result = await getAvailabilityWindows();
     availabilityWindows = result.items;
   } catch {
     // Gracefully degrade if availability data is unavailable
   }
 
-  let upcomingBookings: Awaited<ReturnType<typeof getBookingsForTenant>>["items"] = [];
+  let upcomingBookings: Awaited<ReturnType<typeof getBookings>>["items"] = [];
 
   try {
-    const result = await getBookingsForTenant(tenantId, {
-      page: 1,
-      pageSize: 3,
-      fromDate: new Date(),
-    });
+    const result = await getBookings(
+      {
+        page: 1,
+        pageSize: 3,
+        fromDate: new Date(),
+      },
+      canViewAllBookings ? {} : { customerId: userId },
+    );
     upcomingBookings = result.items;
   } catch {
     // Gracefully degrade
@@ -56,7 +61,7 @@ export default async function SchedulingPage() {
       <WorkspacePageIntro
         label="Calendar"
         title="Scheduling"
-        description="Review open days, monitor upcoming installs, and move into booking without leaving the tenant dashboard flow."
+        description="Review open days, monitor upcoming installs, and move into booking without leaving the workspace flow."
         actions={
           <>
             <Button asChild variant="outline">
@@ -89,7 +94,7 @@ export default async function SchedulingPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Card className="app-panel">
+          <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
             <CardHeader>
               <CardTitle className="text-neutral-100">Availability Calendar</CardTitle>
               <CardDescription className="text-neutral-400">
@@ -103,7 +108,7 @@ export default async function SchedulingPage() {
         </div>
 
         <div className="space-y-4">
-          <Card className="app-panel">
+          <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
             <CardHeader>
               <CardTitle className="text-base text-neutral-100">Open Days</CardTitle>
             </CardHeader>
@@ -130,7 +135,7 @@ export default async function SchedulingPage() {
             </CardContent>
           </Card>
 
-          <Card className="app-panel">
+          <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
             <CardHeader>
               <CardTitle className="text-base text-neutral-100">Upcoming Bookings</CardTitle>
             </CardHeader>

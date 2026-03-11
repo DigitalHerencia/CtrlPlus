@@ -1,16 +1,17 @@
+import { WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
 import { BookingForm } from "@/components/scheduling/booking-form";
-import { WorkspacePageIntro } from "@/components/layout/page-elements";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth/session";
-import { getWrapsForTenant } from "@/lib/catalog/fetchers/get-wraps";
-import { getAvailabilityWindowsForTenant } from "@/lib/scheduling/fetchers/get-availability";
+import { hasCapability } from "@/lib/authz/policy";
+import { getWraps } from "@/lib/catalog/fetchers/get-wraps";
+import { getAvailabilityWindows } from "@/lib/scheduling/fetchers/get-availability";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function BookPage() {
-  const { tenantId } = await getSession();
+  const session = await getSession();
 
-  if (!tenantId) {
+  if (!session.userId) {
     redirect("/sign-in"); // Only redirect if not authenticated
   }
 
@@ -23,7 +24,7 @@ export default async function BookPage() {
   }[] = [];
 
   try {
-    const result = await getAvailabilityWindowsForTenant(tenantId);
+    const result = await getAvailabilityWindows();
     availabilityWindows = result.items.map((w) => ({
       id: w.id,
       dayOfWeek: w.dayOfWeek,
@@ -38,7 +39,9 @@ export default async function BookPage() {
   let wraps: { id: string; name: string; price: number }[] = [];
 
   try {
-    const result = await getWrapsForTenant(tenantId);
+    const result = await getWraps({
+      includeHidden: hasCapability(session.authz, "catalog.manage"),
+    });
     wraps = result.map((w) => ({
       id: w.id,
       name: w.name,
@@ -62,14 +65,13 @@ export default async function BookPage() {
       />
 
       {wraps.length === 0 && (
-        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
-          No wraps are available for this tenant yet. Please add wraps to the catalog before
-          booking.
+        <div className="border border-neutral-700 bg-neutral-900 p-4 text-sm text-neutral-100">
+          No wraps are available yet. Please add wraps to the catalog before booking.
         </div>
       )}
 
       {availabilityWindows.length === 0 && (
-        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-200">
+        <div className="border border-neutral-700 bg-neutral-900 p-4 text-sm text-neutral-100">
           No availability windows are configured. Please contact the shop to set up booking
           availability.
         </div>

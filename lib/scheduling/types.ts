@@ -19,7 +19,6 @@ export type BookingStatusValue = "pending" | "confirmed" | "completed" | "cancel
 
 export interface BookingDTO {
   id: string;
-  tenantId: string;
   customerId: string;
   wrapId: string;
   startTime: Date;
@@ -52,7 +51,6 @@ export type BookingListParams = z.infer<typeof bookingListParamsSchema>;
 
 export interface AvailabilityRuleDTO {
   id: string;
-  tenantId: string;
   /** 0 = Sunday … 6 = Saturday */
   dayOfWeek: number;
   /** "HH:mm" 24-hour format */

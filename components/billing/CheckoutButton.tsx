@@ -34,7 +34,7 @@ export function CheckoutButton({ invoiceId, disabled }: CheckoutButtonProps) {
       >
         {isPending ? "Redirecting…" : "Pay with Stripe"}
       </Button>
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="text-sm text-neutral-100">{error}</p>}
     </div>
   );
 }

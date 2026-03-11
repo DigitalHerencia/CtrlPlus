@@ -15,11 +15,11 @@ const STATUS_CONFIG: Record<
   }
 > = {
   draft: { label: "Draft", variant: "secondary" },
-  sent: { label: "Sent", variant: "outline", className: "border-blue-600/30 text-blue-200" },
+  sent: { label: "Sent", variant: "outline", className: "border-blue-600 text-neutral-100" },
   paid: {
     label: "Paid",
     variant: "outline",
-    className: "border-emerald-500/30 bg-emerald-500/12 text-emerald-200",
+    className: "border-blue-600 bg-neutral-900 text-neutral-100",
   },
   failed: { label: "Failed", variant: "destructive" },
   refunded: {

@@ -12,6 +12,7 @@
  */
 
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
+import { resolveGlobalRoleForClerkUserId } from "@/lib/auth/identity";
 import { prisma } from "@/lib/prisma";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -303,19 +304,10 @@ async function handleUserEvent(eventType: string, data: unknown): Promise<void> 
   const firstName = getFirstStringPath(data, [["first_name"]]) ?? null;
   const lastName = getFirstStringPath(data, [["last_name"]]) ?? null;
   const imageUrl = getFirstStringPath(data, [["image_url"]]) ?? null;
+  const globalRole = resolveGlobalRoleForClerkUserId(clerkUserId);
 
   if (eventType === "user.deleted") {
     const deletedAt = new Date();
-    const user = await prisma.user.findFirst({
-      where: {
-        clerkUserId,
-        deletedAt: null,
-      },
-      select: {
-        id: true,
-      },
-    });
-
     await prisma.$transaction(async (tx) => {
       await tx.user.updateMany({
         where: { clerkUserId },
@@ -327,18 +319,6 @@ async function handleUserEvent(eventType: string, data: unknown): Promise<void> 
           deletedAt,
         },
       });
-
-      if (user) {
-        await tx.tenantUserMembership.updateMany({
-          where: {
-            userId: user.id,
-            deletedAt: null,
-          },
-          data: {
-            deletedAt,
-          },
-        });
-      }
 
       await Promise.all([
         tx.clerkSession.updateMany({
@@ -372,12 +352,14 @@ async function handleUserEvent(eventType: string, data: unknown): Promise<void> 
     create: {
       clerkUserId,
       email,
+      globalRole,
       firstName,
       lastName,
       imageUrl,
     },
     update: {
       email,
+      globalRole,
       firstName,
       lastName,
       imageUrl,
@@ -481,11 +463,6 @@ async function handleSubscriptionEvent(eventType: string, data: unknown): Promis
   }
 
   const clerkUserId = getFirstStringPath(data, [["user_id"], ["subscriber", "user_id"]]);
-  const tenantId = getFirstStringPath(data, [
-    ["public_metadata", "tenantId"],
-    ["metadata", "tenantId"],
-    ["tenant_id"],
-  ]);
   const payloadStatus = getFirstStringPath(data, [["status"]]);
   const status = deriveSubscriptionStatus(eventType, payloadStatus);
 
@@ -493,13 +470,11 @@ async function handleSubscriptionEvent(eventType: string, data: unknown): Promis
     where: { id: subscriptionId },
     create: {
       id: subscriptionId,
-      tenantId,
       clerkUserId,
       status,
       lastEventType: eventType,
     },
     update: {
-      tenantId,
       clerkUserId,
       status,
       lastEventType: eventType,

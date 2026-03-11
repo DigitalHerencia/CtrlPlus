@@ -38,10 +38,10 @@ export function TimeSlot({
       disabled={effectivelyDisabled}
       onClick={onClick}
       className={cn(
-        "w-full rounded-lg border px-4 py-3 text-left transition-colors",
+        "w-full border px-4 py-3 text-left transition-colors",
         isSelected
           ? "border-blue-600 bg-blue-600/10 text-blue-100"
-          : "border-neutral-800 bg-neutral-950/60 text-neutral-100",
+          : "border-neutral-700 bg-neutral-900 text-neutral-100",
         !effectivelyDisabled && !isSelected
           ? "cursor-pointer hover:border-blue-600/50 hover:bg-blue-600/5"
           : "",
@@ -55,7 +55,7 @@ export function TimeSlot({
         <span
           className={cn(
             "text-xs",
-            isFull ? "text-rose-300" : available <= 2 ? "text-amber-300" : "text-neutral-400",
+            isFull ? "text-neutral-100" : available <= 2 ? "text-blue-600" : "text-neutral-100",
           )}
         >
           {isFull ? "Full" : `${available} of ${capacity} open`}

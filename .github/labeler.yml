@@ -42,10 +42,18 @@ domain:auth:
           - "components/auth/**"
           - "lib/auth/**"
 
-domain:tenancy:
+domain:settings:
   - changed-files:
       - any-glob-to-any-file:
-          - "lib/tenancy/**"
+          - "app/(tenant)/settings/**"
+          - "components/settings/**"
+          - "lib/settings/**"
+
+domain:platform:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "app/(tenant)/platform/**"
+          - "lib/platform/**"
 
 domain:ci:
   - changed-files:

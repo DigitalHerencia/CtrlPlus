@@ -1,5 +1,5 @@
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { SiteFooter } from "@/components/nav/site-footer";
+import { SiteHeader } from "@/components/nav/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -118,7 +118,7 @@ export default function HomePage() {
   return (
     <>
       <SiteHeader />
-      <div className="min-h-screen bg-neutral-950 text-neutral-100">
+      <div className="min-h-screen bg-neutral-900 text-neutral-100">
         {/* Hero Section */}
         <section className="relative flex min-h-screen w-full items-center justify-start overflow-hidden py-16 lg:py-20">
           {/* Background Image - Zoomed and positioned right */}
@@ -131,7 +131,7 @@ export default function HomePage() {
               preload
             />
             {/* Dark Overlay */}
-            <div className="absolute inset-0 bg-black/50" />
+            <div className="absolute inset-0 bg-neutral-900/60" />
           </div>
 
           {/* Hero Content - Left aligned */}
@@ -159,7 +159,7 @@ export default function HomePage() {
         </section>
 
         {/* Features Section */}
-        <section className="bg-neutral-950 px-6 py-20 sm:px-8 lg:px-12 lg:py-24">
+        <section className="bg-neutral-900 px-6 py-20 sm:px-8 lg:px-12 lg:py-24">
           <div className="mx-auto max-w-7xl pb-10">
             <div className="mb-14 py-10 text-center lg:mb-16">
               <h2 className="mb-4 text-4xl font-black tracking-tight text-neutral-100 uppercase sm:text-5xl lg:text-6xl">
@@ -175,10 +175,10 @@ export default function HomePage() {
                 return (
                   <Card
                     key={idx}
-                    className="border-neutral-800 bg-neutral-900 transition-all duration-300 hover:border-blue-600/50 hover:shadow-lg hover:shadow-blue-600/10"
+                    className="border-neutral-700 bg-neutral-900 transition-all duration-300 hover:border-blue-600/50 hover:shadow-lg hover:shadow-blue-600/10"
                   >
                     <CardHeader className="pb-4">
-                      <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600/10">
+                      <div className="mb-5 flex h-12 w-12 items-center justify-center bg-blue-600/10">
                         <Icon className="h-6 w-6 text-blue-600" />
                       </div>
                       <CardTitle className="text-xl font-semibold text-blue-600">
@@ -196,7 +196,7 @@ export default function HomePage() {
         </section>
 
         {/* Pricing Section */}
-        <section className="relative overflow-hidden bg-linear-to-b from-neutral-950 to-neutral-900 px-6 py-20 sm:px-8 lg:px-12 lg:py-24">
+        <section className="relative overflow-hidden bg-neutral-900 px-6 py-20 sm:px-8 lg:px-12 lg:py-24">
           <div className="absolute inset-0 z-0">
             <Image
               src="/chili-truck-el-paso-downtown.png"
@@ -204,7 +204,7 @@ export default function HomePage() {
               fill
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-black/70" />
+            <div className="absolute inset-0 bg-neutral-900/80" />
           </div>
 
           <div className="relative z-10 mx-auto max-w-7xl">
@@ -241,8 +241,8 @@ export default function HomePage() {
                     <ul className="mb-8 flex-1 space-y-4">
                       {tier.features.map((feature, fidx) => (
                         <li key={fidx} className="flex items-start gap-3">
-                          <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-600/20">
-                            <div className="h-2.5 w-2.5 rounded-full bg-blue-600" />
+                          <div className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center bg-blue-600/20">
+                            <div className="h-2.5 w-2.5 bg-blue-600" />
                           </div>
                           <span className="text-base leading-relaxed text-neutral-100">
                             {feature}
@@ -254,8 +254,8 @@ export default function HomePage() {
                       <Button
                         className={`w-full py-6 text-base font-semibold ${
                           tier.popular
-                            ? "bg-blue-600 text-white shadow-lg hover:bg-blue-700"
-                            : "bg-neutral-800 text-neutral-100 hover:bg-neutral-700"
+                            ? "bg-blue-600 text-neutral-100 shadow-lg hover:bg-blue-600"
+                            : "bg-neutral-900 text-neutral-100 hover:bg-neutral-900"
                         }`}
                       >
                         {tier.cta}

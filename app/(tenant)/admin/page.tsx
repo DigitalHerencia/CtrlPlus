@@ -1,23 +1,18 @@
-import { ShieldCheck, Users, Wrench } from "lucide-react";
+import { ClipboardList, DollarSign, Grid3x3, Layers } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/layout/page-elements";
-import { Badge } from "@/components/ui/badge";
+import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getTenantStats } from "@/lib/admin/fetchers/get-tenant-stats";
 import { getSession } from "@/lib/auth/session";
-import { getUserTenantRole } from "@/lib/tenancy/assert";
+import { getOwnerDashboardStats } from "@/lib/admin/fetchers/get-owner-dashboard-stats";
 
 export default async function AdminDashboardPage() {
-  const { tenantId, userId } = await getSession();
-  if (!tenantId || !userId) redirect("/sign-in");
+  const session = await getSession();
+  if (!session.isAuthenticated || !session.userId) redirect("/sign-in");
 
-  const role = await getUserTenantRole(tenantId, userId);
-  // All roles have access; no role check
-
-  const stats = await getTenantStats(tenantId);
+  const stats = await getOwnerDashboardStats();
 
   const formattedRevenue = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -27,83 +22,85 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <WorkspacePageIntro
-        label="Operations"
-        title="Admin Command Center"
-        description="Review tenant health, monitor commercial performance, and jump into role or settings work without losing the dark workspace aesthetic."
+        label="Owner Dashboard"
+        title="Store Operations"
+        description="Manage the shared catalog, scheduling flow, and customer billing operations from one place."
         detail={
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-xs font-semibold tracking-[0.18em] text-emerald-300 uppercase">
-            <ShieldCheck className="h-4 w-4" />
-            Role {role}
+          <div className="inline-flex items-center gap-2 border border-blue-600 bg-neutral-900 px-4 py-2 text-xs font-semibold tracking-[0.18em] text-neutral-100 uppercase">
+            Role {session.role}
           </div>
         }
         actions={
           <>
             <Button asChild variant="outline">
-              <Link href="/admin/team">Manage Team</Link>
+              <Link href="/catalog">Catalog</Link>
             </Button>
-            {role === "owner" ? (
-              <Button asChild>
-                <Link href="/admin/settings">Tenant Settings</Link>
-              </Button>
-            ) : null}
+            <Button asChild variant="outline">
+              <Link href="/scheduling/bookings">Scheduling</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/billing">Billing</Link>
+            </Button>
           </>
         }
       />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <WorkspaceMetricCard
-          label="Team Members"
-          value={stats.memberCount}
-          description="Active members with access to this tenant."
-          icon={Users}
+          label="Catalog Items"
+          value={stats.wrapCount}
+          description={`${stats.hiddenWrapCount} currently hidden from customers.`}
+          icon={Grid3x3}
         />
         <WorkspaceMetricCard
-          label="Booked Jobs"
-          value={stats.bookingCount}
-          description="Appointments currently tracked in the workspace."
-          icon={ShieldCheck}
+          label="Upcoming Jobs"
+          value={stats.upcomingBookingCount}
+          description={`${stats.bookingCount} total appointments in the system.`}
+          icon={ClipboardList}
         />
         <WorkspaceMetricCard
           label="Collected Revenue"
           value={formattedRevenue}
-          description="Paid invoice volume captured for this tenant."
-          icon={Wrench}
+          description={`${stats.openInvoiceCount} open invoices awaiting payment.`}
+          icon={DollarSign}
         />
       </div>
 
-      <Card className="app-panel">
+      <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <Badge variant="outline">Access</Badge>
-            <CardTitle className="text-2xl font-bold text-neutral-100">Management</CardTitle>
-          </div>
+          <CardTitle className="text-2xl font-bold text-neutral-100">Management Tools</CardTitle>
           <CardDescription>
-            Move between access control and tenant identity controls.
+            Owner tools are optimized for the shared store catalog, scheduling, and billing.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-2">
+        <CardContent className="grid gap-3 sm:grid-cols-3">
           <Link
-            href="/admin/team"
-            className="group rounded-2xl border border-neutral-800 bg-neutral-950/70 p-5 transition hover:border-blue-600/40 hover:bg-neutral-900"
+            href="/catalog"
+            className="group border border-neutral-800 bg-neutral-950/70 p-5 transition hover:border-blue-600/40 hover:bg-neutral-900"
           >
             <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.16em] text-neutral-100 uppercase">
-              <Users className="h-4 w-4 text-blue-400" /> Team
+              <Grid3x3 className="h-4 w-4 text-blue-400" /> Catalog
             </p>
-            <p className="mt-2 text-sm text-neutral-400">Manage members and role assignments.</p>
+            <p className="mt-2 text-sm text-neutral-400">Add, hide, or remove catalog items.</p>
           </Link>
-          {role === "owner" && (
-            <Link
-              href="/admin/settings"
-              className="group rounded-2xl border border-neutral-800 bg-neutral-950/70 p-5 transition hover:border-blue-600/40 hover:bg-neutral-900"
-            >
-              <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.16em] text-neutral-100 uppercase">
-                <Wrench className="h-4 w-4 text-blue-400" /> Settings
-              </p>
-              <p className="mt-2 text-sm text-neutral-400">
-                Configure tenant identity and metadata.
-              </p>
-            </Link>
-          )}
+          <Link
+            href="/scheduling/bookings"
+            className="group border border-neutral-800 bg-neutral-950/70 p-5 transition hover:border-blue-600/40 hover:bg-neutral-900"
+          >
+            <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.16em] text-neutral-100 uppercase">
+              <ClipboardList className="h-4 w-4 text-blue-400" /> Scheduling
+            </p>
+            <p className="mt-2 text-sm text-neutral-400">Review all customer appointments.</p>
+          </Link>
+          <Link
+            href="/billing"
+            className="group border border-neutral-800 bg-neutral-950/70 p-5 transition hover:border-blue-600/40 hover:bg-neutral-900"
+          >
+            <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.16em] text-neutral-100 uppercase">
+              <Layers className="h-4 w-4 text-blue-400" /> Billing
+            </p>
+            <p className="mt-2 text-sm text-neutral-400">Track invoices and payment status.</p>
+          </Link>
         </CardContent>
       </Card>
     </div>

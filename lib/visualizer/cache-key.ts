@@ -1,7 +1,6 @@
 import crypto from "crypto";
 
 export interface PreviewCacheKeyInput {
-  tenantId: string;
   wrapId: string;
   customerPhotoUrl: string;
   textureId?: string;
@@ -12,7 +11,6 @@ export interface PreviewCacheKeyInput {
 
 export function buildVisualizerCacheKey(input: PreviewCacheKeyInput): string {
   const normalized = {
-    tenantId: input.tenantId,
     wrapId: input.wrapId,
     customerPhotoHash: crypto.createHash("sha256").update(input.customerPhotoUrl).digest("hex"),
     textureId: input.textureId ?? "default",

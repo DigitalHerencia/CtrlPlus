@@ -36,11 +36,11 @@ export interface WrapCategoryDTO {
 /** Read model returned by catalog fetchers. Never exposes raw Prisma model. */
 export interface WrapDTO {
   id: string;
-  tenantId: string;
   name: string;
   description: string | null;
   /** Price in cents as an integer number */
   price: number;
+  isHidden: boolean;
   installationMinutes: number | null;
   images: WrapImageDTO[];
   categories: WrapCategoryDTO[];
@@ -61,10 +61,10 @@ export interface WrapListDTO {
 /** Explicit Prisma `select` object for WrapDTO fields. */
 export const wrapDTOFields = {
   id: true,
-  tenantId: true,
   name: true,
   description: true,
   price: true,
+  isHidden: true,
   installationMinutes: true,
   createdAt: true,
   updatedAt: true,
@@ -112,7 +112,9 @@ export const createWrapSchema = z.object({
 
 export type CreateWrapInput = z.infer<typeof createWrapSchema>;
 
-export const updateWrapSchema = createWrapSchema.partial();
+export const updateWrapSchema = createWrapSchema.partial().extend({
+  isHidden: z.boolean().optional(),
+});
 
 export type UpdateWrapInput = z.infer<typeof updateWrapSchema>;
 

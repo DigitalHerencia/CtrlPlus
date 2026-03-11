@@ -1,25 +1,27 @@
 "use server";
 
-import { requireAuth } from "@/lib/auth/session";
+import { requireOwnerOrPlatformAdmin } from "@/lib/authz/guards";
 import { prisma } from "@/lib/prisma";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import type { WrapDTO } from "../types";
 
 export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
-  const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId);
+  const session = await requireOwnerOrPlatformAdmin();
 
   const existing = await prisma.wrap.findFirst({
-    where: { id: wrapId, tenantId, deletedAt: null },
-    select: {
-      id: true,
-      tenantId: true,
-      name: true,
-      description: true,
-      price: true,
-      installationMinutes: true,
-      createdAt: true,
-      updatedAt: true,
+    where: { id: wrapId, deletedAt: null },
+    include: {
+      images: {
+        where: { deletedAt: null },
+        select: { id: true, url: true, displayOrder: true },
+        orderBy: { displayOrder: "asc" },
+      },
+      categoryMappings: {
+        select: {
+          category: {
+            select: { id: true, name: true, slug: true, deletedAt: true },
+          },
+        },
+      },
     },
   });
 
@@ -27,32 +29,34 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
     throw new Error("Forbidden: resource not found");
   }
 
-  const wrap = await prisma.wrap.update({
+  await prisma.wrap.update({
     where: { id: wrapId },
     data: { deletedAt: new Date() },
   });
 
   await prisma.auditLog.create({
     data: {
-      tenantId,
-      userId,
+      userId: session.userId ?? "system",
       action: "wrap.deleted",
       resourceType: "Wrap",
-      resourceId: wrap.id,
-      details: JSON.stringify({ name: wrap.name }),
+      resourceId: wrapId,
+      details: JSON.stringify({ name: existing.name }),
       timestamp: new Date(),
     },
   });
 
   return {
     id: existing.id,
-    tenantId: existing.tenantId,
     name: existing.name,
     description: existing.description,
     price: Number.isInteger(existing.price) ? existing.price : Math.round(existing.price),
+    isHidden: existing.isHidden,
     installationMinutes: existing.installationMinutes,
-    images: [],
-    categories: [],
+    images: existing.images,
+    categories: existing.categoryMappings
+      .map((mapping) => mapping.category)
+      .filter((category) => category.deletedAt === null)
+      .map(({ deletedAt: _deletedAt, ...category }) => category),
     createdAt: existing.createdAt,
     updatedAt: existing.updatedAt,
   };

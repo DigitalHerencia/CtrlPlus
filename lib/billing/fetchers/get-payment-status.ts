@@ -1,23 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { type PaymentDTO, type PaymentStatus, paymentDTOFields } from "../types";
 
-/**
- * Returns all non-deleted payment records for a given invoice, scoped to a
- * tenant via the parent invoice's tenantId.
- * Returns null when the invoice is not found or belongs to a different tenant.
- *
- * @param tenantId  - Tenant scope (server-side verified)
- * @param invoiceId - Invoice primary key
- */
-export async function getPaymentStatusForInvoice(
-  tenantId: string,
-  invoiceId: string,
-): Promise<PaymentDTO[] | null> {
-  // Verify the invoice exists and belongs to this tenant
+export async function getPaymentStatusForInvoice(invoiceId: string): Promise<PaymentDTO[] | null> {
   const invoice = await prisma.invoice.findFirst({
     where: {
       id: invoiceId,
-      tenantId, // defensive scope check
       deletedAt: null,
     },
     select: { id: true },

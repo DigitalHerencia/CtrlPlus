@@ -20,8 +20,12 @@
     "hooks": "@/hooks"
   },
   "registries": {
-    "@shadcn": "https://ui.shadcn.com/r/{name}.json",
-    "@clerk": "https://clerk.com/r/{name}.json",
-    "@shadcnblocks": "https://shadcnblocks.com/r/{name}.json"
+    "@clerk": "https://registry.clerk.com/{name}.json",
+    "@shadcnblocks": {
+      "url": "https://shadcnblocks.com/r/{name}.json",
+      "headers": {
+        "Authorization": "Bearer ${SHADCNBLOCKS_API_KEY}"
+      }
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { InvoiceStatusBadge } from "@/components/billing/InvoiceStatusBadge";
-import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/layout/page-elements";
+import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getSession } from "@/lib/auth/session";
+import { hasCapability } from "@/lib/authz/policy";
 import { getInvoiceById } from "@/lib/billing/fetchers/get-invoice-by-id";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -30,14 +31,13 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
   const { id } = await params;
   const { payment } = await searchParams;
 
-  const { tenantId, userId } = await getSession();
+  const { userId, authz } = await getSession();
   if (!userId) {
     redirect("/sign-in");
   }
 
-  // All roles have access; no role check
-
-  const invoice = await getInvoiceById(tenantId, id);
+  const canViewAllInvoices = hasCapability(authz, "billing.read.all");
+  const invoice = await getInvoiceById(id, canViewAllInvoices ? {} : { customerId: userId });
 
   if (!invoice) {
     notFound();
@@ -60,16 +60,16 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
       />
 
       {payment === "success" && (
-        <Card className="border-emerald-500/30 bg-emerald-500/10">
-          <CardContent className="py-4 text-center text-sm font-medium text-emerald-300">
+        <Card className="border-blue-600 bg-neutral-900">
+          <CardContent className="py-4 text-center text-sm font-medium text-neutral-100">
             ✓ Payment received — thank you!
           </CardContent>
         </Card>
       )}
 
       {payment === "cancelled" && (
-        <Card className="border-amber-500/30 bg-amber-500/10">
-          <CardContent className="py-4 text-center text-sm font-medium text-amber-300">
+        <Card className="border-neutral-700 bg-neutral-900">
+          <CardContent className="py-4 text-center text-sm font-medium text-neutral-100">
             Payment was cancelled. You can try again whenever you&apos;re ready.
           </CardContent>
         </Card>
@@ -93,7 +93,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
         />
       </div>
 
-      <Card className="app-panel">
+      <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-neutral-100">Summary</CardTitle>
         </CardHeader>
@@ -118,7 +118,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
       </Card>
 
       {invoice.lineItems.length > 0 && (
-        <Card className="app-panel overflow-hidden">
+        <Card className="overflow-hidden border-neutral-700 bg-neutral-900 text-neutral-100">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-neutral-100">Line Items</CardTitle>
           </CardHeader>
@@ -162,7 +162,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
       )}
 
       {invoice.payments.length > 0 && (
-        <Card className="app-panel">
+        <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-neutral-100">Payment History</CardTitle>
             <CardDescription>
@@ -173,7 +173,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
             {invoice.payments.map((paymentItem) => (
               <div
                 key={paymentItem.id}
-                className="flex items-center justify-between rounded-2xl border border-neutral-800 bg-neutral-950/70 px-4 py-3 text-sm"
+                className="flex items-center justify-between border border-neutral-800 bg-neutral-950/70 px-4 py-3 text-sm"
               >
                 <div>
                   <p className="font-mono text-xs text-neutral-400">
@@ -198,7 +198,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
       )}
 
       {canPay && (
-        <Card className="app-panel">
+        <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-neutral-100">Pay Invoice</CardTitle>
             <CardDescription>

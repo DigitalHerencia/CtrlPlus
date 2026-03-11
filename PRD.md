@@ -1,17 +1,28 @@
-# CtrlPlus Product Requirements
+# Product Requirements (Single-Store)
 
-The maintained product requirements live in [`.github/instructions/PRD.md`](./.github/instructions/PRD.md).
+CTRL+ is a single-store vehicle wrap platform.
 
-This top-level entry point exists because the repository, contributor docs, and release workflow refer to `PRD.md` as a public document.
+## Personas
 
-## Current Focus
+- Customer
+- Store Owner
+- Platform Admin (developer)
 
-- Convert catalog browsing into paid bookings.
-- Keep the visualizer as the differentiating step in the funnel.
-- Preserve strict tenant isolation across every domain.
-- Keep fallback paths available so preview issues never block scheduling or payment.
+## Goals
 
-## Release Notes
+- Let customers browse one shared catalog, preview wraps, book appointments, and pay invoices.
+- Give owner/admin management dashboards for catalog, scheduling, and billing.
+- Give admin platform diagnostics and maintenance tools.
 
-- Operational rollout and release readiness now live in [`OPERATIONS.md`](./OPERATIONS.md).
-- Technical implementation constraints live in [`TECH-REQUIREMENTS.md`](./TECH-REQUIREMENTS.md).
+## Authorization Outcomes
+
+- Customers can only access their own bookings, invoices, and settings.
+- Owner can access and manage all customer bookings and invoices.
+- Admin can access owner capabilities plus platform/database operations.
+- Owner/admin Clerk IDs are configured only through environment variables.
+
+## Non-Goals
+
+- Multi-tenant hosting
+- Clerk organizations
+- In-app owner/admin assignment workflows

@@ -1,9 +1,9 @@
 "use client";
 
+import { LogoMark } from "@/components/nav/logo-mark";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { setupUserTenant } from "@/lib/auth/actions/setup-tenant";
 import { sanitizePostAuthRedirect } from "@/lib/auth/redirect";
 import { cn } from "@/lib/utils";
 import { useSignUp } from "@clerk/nextjs";
@@ -34,7 +34,6 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
       return false;
     }
 
-    await setupUserTenant();
     router.push(nextUrl);
     return true;
   };
@@ -121,10 +120,8 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
     <form className={cn("flex flex-col gap-6", className)} onSubmit={handleSubmit} {...props}>
       <FieldGroup>
         <div className="flex flex-col items-center text-center">
-          <Link href="/" className="mb-10 inline-flex scale-200 items-center">
-            <span className="border-2 border-white px-3 py-1.5 text-lg leading-none font-black tracking-normal text-neutral-100 hover:scale-110 sm:text-xl">
-              CTRL+
-            </span>
+          <Link href="/" className="mb-10 inline-flex items-center">
+            <LogoMark className="scale-150" />
           </Link>
           <h1 className="mb-1 text-4xl font-bold tracking-tight text-blue-600 uppercase">
             Get Started Today
@@ -139,7 +136,7 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
           </div>
         )}
         {error && (
-          <div className="border border-red-800 bg-red-950/50 p-3 text-sm text-red-200 animate-in fade-in">
+          <div className="border border-neutral-700 bg-neutral-900 p-3 text-sm text-neutral-100 animate-in fade-in">
             {error}
           </div>
         )}
@@ -150,6 +147,7 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
                 <Input
                   id="verificationCode"
                   type="text"
+                  className="1g-neutral-neutral-100900utral-100 placehol9er px-1:2ext-neutral-100 border border-neutral-700 py-2"
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   placeholder="Verification code"
@@ -204,10 +202,13 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
         ) : (
           <div className="space-y-4">
             <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <FieldLabel className="text-neutral-100" htmlFor="email">
+                Email
+              </FieldLabel>
               <Input
                 id="email"
                 type="email"
+                className="border border-neutral-700 bg-neutral-100 px-2 py-1 text-neutral-900 placeholder:text-neutral-900"
                 placeholder="m@example.com"
                 required
                 value={email}
@@ -216,10 +217,13 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
+              <FieldLabel className="text-neutral-100" htmlFor="password">
+                Password
+              </FieldLabel>
               <Input
                 id="password"
                 type="password"
+                className="border border-neutral-700 bg-neutral-100 px-2 py-1 text-neutral-900 placeholder:text-neutral-900"
                 placeholder="Must be at least 8 characters long."
                 required
                 value={password}

@@ -4,15 +4,15 @@ import { parseCatalogSearchParams } from "@/lib/catalog/search-params";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const { tenantId, userId } = await getSession();
+  const { userId, isOwner, isPlatformAdmin } = await getSession();
 
-  if (!tenantId || !userId) {
+  if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const url = new URL(request.url);
   const parsed = parseCatalogSearchParams(Object.fromEntries(url.searchParams.entries()));
-  const wraps = await searchWraps(tenantId, parsed.filters);
+  const wraps = await searchWraps(parsed.filters, { includeHidden: isOwner || isPlatformAdmin });
 
   return NextResponse.json(wraps);
 }

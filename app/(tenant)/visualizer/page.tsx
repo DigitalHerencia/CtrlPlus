@@ -1,11 +1,18 @@
 import { VisualizerClient } from "@/components/visualizer/VisualizerClient";
-import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/layout/page-elements";
+import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
 import { getSession } from "@/lib/auth/session";
-import { getWrapsForTenant } from "@/lib/catalog/fetchers/get-wraps";
+import { hasCapability } from "@/lib/authz/policy";
+import { getWraps } from "@/lib/catalog/fetchers/get-wraps";
+import { redirect } from "next/navigation";
 
 export default async function VisualizerPage() {
-  const { tenantId } = await getSession();
-  const wraps = tenantId ? await getWrapsForTenant(tenantId) : [];
+  const session = await getSession();
+  if (!session.isAuthenticated) {
+    redirect("/sign-in");
+  }
+  const wraps = await getWraps({
+    includeHidden: hasCapability(session.authz, "catalog.manage"),
+  });
 
   return (
     <div className="space-y-6">

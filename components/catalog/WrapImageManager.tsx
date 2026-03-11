@@ -1,13 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   addWrapImage,
   removeWrapImage,
   reorderWrapImages,
 } from "@/lib/catalog/actions/manage-wrap-images";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
 interface WrapImageManagerProps {
   wrapId: string;
@@ -71,21 +71,24 @@ export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
   return (
     <div className="space-y-3">
       <div>
-        <label className="text-sm font-medium">Add image</label>
+        <label className="text-sm font-medium text-neutral-100">Add image</label>
         <input
           type="file"
           accept="image/png,image/jpeg,image/webp"
           onChange={handleUpload}
           disabled={isPending}
-          className="mt-1 block w-full text-sm"
+          className="mt-1 block w-full border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-neutral-100"
         />
       </div>
 
       <div className="space-y-2">
         {images.map((image, index) => (
-          <div key={image.id} className="flex items-center gap-3 rounded-lg border p-2">
+          <div
+            key={image.id}
+            className="flex items-center gap-3 border border-neutral-700 bg-neutral-900 p-2"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={image.url} alt="Wrap" className="h-16 w-20 rounded object-cover" />
+            <img src={image.url} alt="Wrap" className="h-16 w-20 object-cover" />
             <div className="ml-auto flex gap-2">
               <Button
                 size="sm"
@@ -105,7 +108,8 @@ export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
               </Button>
               <Button
                 size="sm"
-                variant="destructive"
+                variant="outline"
+                className="border-neutral-700 text-neutral-100 hover:border-blue-600 hover:bg-neutral-900"
                 disabled={isPending}
                 onClick={() => handleRemove(image.id)}
               >
@@ -116,7 +120,7 @@ export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
         ))}
       </div>
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+      {error && <p className="text-sm text-neutral-100">{error}</p>}
     </div>
   );
 }

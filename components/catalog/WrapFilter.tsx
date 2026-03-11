@@ -98,6 +98,10 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
     sortBy !== "createdAt" ||
     sortOrder !== "desc" ||
     pageSize !== "20";
+  const inputClassName =
+    "h-10 border border-neutral-700 bg-neutral-900 px-3 text-sm text-neutral-100 placeholder:text-neutral-100 focus-visible:border-blue-600 focus-visible:outline-none";
+  const selectClassName =
+    "h-10 border border-neutral-700 bg-neutral-900 px-3 text-sm text-neutral-100 focus-visible:border-blue-600 focus-visible:outline-none";
 
   return (
     <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(5,minmax(0,0.75fr))] lg:items-end">
@@ -114,7 +118,7 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
           placeholder="Search wraps..."
           value={searchValue}
           onChange={(e) => handleSearchChange(e.target.value)}
-          className="app-input"
+          className={inputClassName}
         />
       </div>
 
@@ -129,7 +133,7 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
           id="catalog-category"
           value={categoryId}
           onChange={(e) => handleChange("categoryId", e.target.value)}
-          className="app-select"
+          className={selectClassName}
         >
           <option value="">All categories</option>
           {categories.map((category) => (
@@ -155,7 +159,7 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
           step={1}
           value={maxPrice}
           onChange={(e) => handleChange("maxPrice", e.target.value)}
-          className="app-input"
+          className={inputClassName}
         />
       </div>
 
@@ -170,7 +174,7 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
           id="catalog-sort-by"
           value={sortBy}
           onChange={(e) => handleChange("sortBy", e.target.value)}
-          className="app-select"
+          className={selectClassName}
         >
           <option value="createdAt">Date Added</option>
           <option value="name">Name</option>
@@ -189,7 +193,7 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
           id="catalog-sort-order"
           value={sortOrder}
           onChange={(e) => handleChange("sortOrder", e.target.value)}
-          className="app-select"
+          className={selectClassName}
         >
           <option value="desc">Descending</option>
           <option value="asc">Ascending</option>
@@ -207,7 +211,7 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
           id="catalog-page-size"
           value={pageSize}
           onChange={(e) => handleChange("pageSize", e.target.value)}
-          className="app-select"
+          className={selectClassName}
         >
           <option value="12">12</option>
           <option value="20">20</option>

@@ -2,7 +2,6 @@
 
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { visualizerConfig } from "@/lib/visualizer/config";
 import { generateCompositePreview } from "@/lib/visualizer/preview-pipeline";
 import {
@@ -14,7 +13,6 @@ import {
 
 function toDTO(record: {
   id: string;
-  tenantId: string;
   wrapId: string;
   customerPhotoUrl: string;
   processedImageUrl: string | null;
@@ -26,7 +24,6 @@ function toDTO(record: {
 }): VisualizerPreviewDTO {
   return {
     id: record.id,
-    tenantId: record.tenantId,
     wrapId: record.wrapId,
     customerPhotoUrl: record.customerPhotoUrl,
     processedImageUrl: record.processedImageUrl,
@@ -39,15 +36,14 @@ function toDTO(record: {
 }
 
 export async function generatePreview(input: GeneratePreviewInput): Promise<VisualizerPreviewDTO> {
-  const { tenantId, userId } = await getSession();
-  if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
-
-  await assertTenantMembership(tenantId, userId);
+  const session = await getSession();
+  const userId = session.userId;
+  if (!session.isAuthenticated || !userId) throw new Error("Unauthorized: not authenticated");
 
   const parsed = generatePreviewSchema.parse(input);
 
   const existing = await prisma.visualizerPreview.findFirst({
-    where: { id: parsed.previewId, tenantId, deletedAt: null },
+    where: { id: parsed.previewId, deletedAt: null },
   });
 
   if (!existing) throw new Error("Preview not found");
@@ -67,7 +63,6 @@ export async function generatePreview(input: GeneratePreviewInput): Promise<Visu
 
   try {
     const processedImageUrl = await generateCompositePreview({
-      tenantId,
       wrapId: existing.wrapId,
       previewId: existing.id,
       customerPhotoUrl: existing.customerPhotoUrl,
@@ -84,7 +79,6 @@ export async function generatePreview(input: GeneratePreviewInput): Promise<Visu
 
     await prisma.auditLog.create({
       data: {
-        tenantId,
         userId,
         action: "GENERATE_PREVIEW",
         resourceType: "VisualizerPreview",

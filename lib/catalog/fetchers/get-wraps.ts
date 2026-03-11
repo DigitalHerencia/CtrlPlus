@@ -7,16 +7,20 @@ import {
   type WrapListDTO,
 } from "../types";
 
+export interface WrapVisibilityScope {
+  includeHidden?: boolean;
+}
+
 function normalizePriceInCents(value: number): number {
   return Number.isInteger(value) ? value : Math.round(value);
 }
 
 function toWrapDTO(prismaWrap: {
   id: string;
-  tenantId: string;
   name: string;
   description: string | null;
   price: number;
+  isHidden: boolean;
   installationMinutes: number | null;
   createdAt: Date;
   updatedAt: Date;
@@ -27,10 +31,10 @@ function toWrapDTO(prismaWrap: {
 }): WrapDTO {
   return {
     id: prismaWrap.id,
-    tenantId: prismaWrap.tenantId,
     name: prismaWrap.name,
     description: prismaWrap.description,
     price: normalizePriceInCents(prismaWrap.price),
+    isHidden: prismaWrap.isHidden,
     installationMinutes: prismaWrap.installationMinutes,
     images: prismaWrap.images,
     categories: prismaWrap.categoryMappings
@@ -42,11 +46,15 @@ function toWrapDTO(prismaWrap: {
   };
 }
 
-export async function getWrapsForTenant(tenantId: string): Promise<WrapDTO[]> {
+function getVisibilityFilter(scope: WrapVisibilityScope) {
+  return scope.includeHidden ? {} : { isHidden: false };
+}
+
+export async function getWraps(scope: WrapVisibilityScope = {}): Promise<WrapDTO[]> {
   const wraps = await prisma.wrap.findMany({
     where: {
-      tenantId,
       deletedAt: null,
+      ...getVisibilityFilter(scope),
     },
     orderBy: { createdAt: "desc" },
     select: wrapDTOFields,
@@ -55,12 +63,15 @@ export async function getWrapsForTenant(tenantId: string): Promise<WrapDTO[]> {
   return wraps.map(toWrapDTO);
 }
 
-export async function getWrapById(tenantId: string, wrapId: string): Promise<WrapDTO | null> {
+export async function getWrapById(
+  wrapId: string,
+  scope: WrapVisibilityScope = {},
+): Promise<WrapDTO | null> {
   const wrap = await prisma.wrap.findFirst({
     where: {
       id: wrapId,
-      tenantId,
       deletedAt: null,
+      ...getVisibilityFilter(scope),
     },
     select: wrapDTOFields,
   });
@@ -69,8 +80,8 @@ export async function getWrapById(tenantId: string, wrapId: string): Promise<Wra
 }
 
 export async function searchWraps(
-  tenantId: string,
   filters: SearchWrapsInput = { page: 1, pageSize: 20 },
+  scope: WrapVisibilityScope = {},
 ): Promise<WrapListDTO> {
   const parsedFilters = searchWrapsSchema.parse(filters);
   const {
@@ -85,8 +96,8 @@ export async function searchWraps(
   const skip = (page - 1) * pageSize;
 
   const where = {
-    tenantId,
     deletedAt: null,
+    ...getVisibilityFilter(scope),
     ...(query && {
       OR: [
         { name: { contains: query, mode: "insensitive" as const } },
@@ -99,7 +110,6 @@ export async function searchWraps(
         some: {
           categoryId,
           category: {
-            tenantId,
             deletedAt: null,
           },
         },

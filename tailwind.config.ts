@@ -1,81 +1,50 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: ["class", ".dark"],
-  content: [
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./lib/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./lib/**/*.{ts,tsx}"],
   theme: {
+    screens: {
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
+    },
     extend: {
-      fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
+      typography: {
+        DEFAULT: {
+          css: {
+            color: "var(--foreground)",
+            h1: { color: "var(--foreground)" },
+            h2: { color: "var(--foreground)" },
+            h3: { color: "var(--foreground)" },
+            h4: { color: "var(--foreground)" },
+            strong: { color: "var(--foreground)" },
+            a: { color: "var(--primary)" },
+            code: { color: "var(--foreground)" },
+            blockquote: {
+              color: "var(--foreground)",
+              borderLeftColor: "var(--border)",
+            },
+          },
+        },
       },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        slideInUp: {
+          "0%": { opacity: "0", transform: "translateY(0.5rem)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
-      boxShadow: {
-        glow: "0 24px 80px -40px rgba(37, 99, 235, 0.6)",
-      },
-      colors: {
-        brand: {
-          DEFAULT: "#2563eb",
-          foreground: "#f5f5f5",
-        },
-        surface: {
-          DEFAULT: "#171717",
-          elevated: "#262626",
-          foreground: "#f5f5f5",
-        },
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-        card: {
-          DEFAULT: "var(--card)",
-          foreground: "var(--card-foreground)",
-        },
-        popover: {
-          DEFAULT: "var(--popover)",
-          foreground: "var(--popover-foreground)",
-        },
-        primary: {
-          DEFAULT: "var(--primary)",
-          foreground: "var(--primary-foreground)",
-        },
-        secondary: {
-          DEFAULT: "var(--secondary)",
-          foreground: "var(--secondary-foreground)",
-        },
-        muted: {
-          DEFAULT: "var(--muted)",
-          foreground: "var(--muted-foreground)",
-        },
-        accent: {
-          DEFAULT: "var(--accent)",
-          foreground: "var(--accent-foreground)",
-        },
-        destructive: {
-          DEFAULT: "var(--destructive)",
-          foreground: "var(--destructive-foreground)",
-        },
-        border: "var(--border)",
-        input: "var(--input)",
-        ring: "var(--ring)",
-        chart: {
-          "1": "var(--chart-1)",
-          "2": "var(--chart-2)",
-          "3": "var(--chart-3)",
-          "4": "var(--chart-4)",
-          "5": "var(--chart-5)",
-        },
+      animation: {
+        "fade-in": "fadeIn 0.2s ease-out",
+        "slide-in-up": "slideInUp 0.2s ease-out",
       },
     },
   },
-  plugins: [],
 };
 
 export default config;

@@ -13,8 +13,8 @@ export function CatalogPagination({ page, totalPages, createPageHref }: CatalogP
   }
 
   return (
-    <div className="app-panel flex items-center justify-between gap-3 px-4 py-3">
-      <p className="text-sm text-neutral-400">
+    <div className="flex items-center justify-between gap-3 border border-neutral-700 bg-neutral-900 px-4 py-3 text-neutral-100">
+      <p className="text-sm text-neutral-100">
         Page <span className="font-semibold text-neutral-100">{page}</span> of {totalPages}
       </p>
       <div className="flex items-center gap-2">

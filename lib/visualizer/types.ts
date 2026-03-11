@@ -16,7 +16,6 @@ export type PreviewStatus = (typeof PreviewStatus)[keyof typeof PreviewStatus];
 /** Read model returned by visualizer fetchers. Never exposes raw Prisma model. */
 export interface VisualizerPreviewDTO {
   id: string;
-  tenantId: string;
   wrapId: string;
   customerPhotoUrl: string;
   processedImageUrl: string | null;
@@ -32,7 +31,6 @@ export interface VisualizerPreviewDTO {
 /** Explicit Prisma `select` object for VisualizerPreviewDTO fields. */
 export const visualizerPreviewDTOFields = {
   id: true,
-  tenantId: true,
   wrapId: true,
   customerPhotoUrl: true,
   processedImageUrl: true,

@@ -21,15 +21,11 @@ export function validateWrapImageFile(file: File): void {
   }
 }
 
-export async function persistWrapImage(params: {
-  tenantId: string;
-  wrapId: string;
-  file: File;
-}): Promise<string> {
+export async function persistWrapImage(params: { wrapId: string; file: File }): Promise<string> {
   validateWrapImageFile(params.file);
 
   const ext = imageExtByType[params.file.type];
-  const fileName = `${params.tenantId}-${params.wrapId}-${randomUUID()}.${ext}`;
+  const fileName = `${params.wrapId}-${randomUUID()}.${ext}`;
   const relativeDir = path.join("uploads", "wraps");
   const relativePath = path.join(relativeDir, fileName);
   const absoluteDir = path.join(process.cwd(), "public", relativeDir);

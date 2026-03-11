@@ -1,8 +1,8 @@
 "use server";
 
 import { getSession } from "@/lib/auth/session";
+import { requireCustomerOwnedResourceAccess } from "@/lib/authz/policy";
 import { prisma } from "@/lib/prisma";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -35,25 +35,23 @@ function normalizeCents(amount: number): number {
 export async function ensureInvoiceForBooking(rawInput: {
   bookingId: string;
 }): Promise<EnsureInvoiceResult> {
-  const { tenantId, userId } = await getSession();
-  if (!tenantId || !userId) {
+  const session = await getSession();
+  const userId = session.userId;
+
+  if (!session.isAuthenticated || !userId) {
     throw new Error("Unauthorized: not authenticated");
   }
-
-  await assertTenantMembership(tenantId, userId);
 
   const { bookingId } = ensureInvoiceInputSchema.parse(rawInput);
 
   const booking = await prisma.booking.findFirst({
     where: {
       id: bookingId,
-      tenantId,
-      customerId: userId,
       deletedAt: null,
     },
     select: {
       id: true,
-      tenantId: true,
+      customerId: true,
       wrapId: true,
       totalPrice: true,
       invoice: {
@@ -70,6 +68,8 @@ export async function ensureInvoiceForBooking(rawInput: {
     throw new Error("Forbidden: booking not found");
   }
 
+  requireCustomerOwnedResourceAccess(session.authz, booking.customerId);
+
   if (booking.invoice) {
     return {
       invoiceId: booking.invoice.id,
@@ -82,7 +82,6 @@ export async function ensureInvoiceForBooking(rawInput: {
   const createInvoice = async (tx: Prisma.TransactionClient) => {
     const created = await tx.invoice.create({
       data: {
-        tenantId,
         bookingId: booking.id,
         status: "draft",
         totalAmount: roundedTotalPrice,
@@ -102,7 +101,6 @@ export async function ensureInvoiceForBooking(rawInput: {
 
     await tx.auditLog.create({
       data: {
-        tenantId,
         userId,
         action: "ENSURE_INVOICE_FOR_BOOKING",
         resourceType: "Invoice",

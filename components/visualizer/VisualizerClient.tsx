@@ -60,9 +60,9 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_1fr]">
       <div className="space-y-6">
-        <section className="app-panel p-6">
+        <section className="border border-neutral-700 bg-neutral-900 p-6 text-neutral-100">
           <h2 className="mb-4 text-base font-semibold text-neutral-100">
-            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
+            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center bg-blue-600 text-xs text-neutral-100">
               1
             </span>
             Choose a Wrap
@@ -70,7 +70,7 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
           <WrapSelector wraps={wraps} selectedWrapId={selectedWrapId} onSelect={handleWrapSelect} />
         </section>
 
-        <section className="app-panel p-6">
+        <section className="border border-neutral-700 bg-neutral-900 p-6 text-neutral-100">
           <Tabs
             value={mode}
             onValueChange={(value) => setMode(value as PreviewMode)}
@@ -78,21 +78,21 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
           >
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-base font-semibold text-neutral-100">
-                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
+                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center bg-blue-600 text-xs text-neutral-100">
                   2
                 </span>
                 Select Preview Mode
               </h2>
-              <TabsList className="rounded-2xl border border-neutral-800 bg-neutral-950 p-1">
+              <TabsList className="border border-neutral-700 bg-neutral-900 p-1">
                 <TabsTrigger
                   value="upload"
-                  className="rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-neutral-100"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-neutral-100"
                 >
                   Upload
                 </TabsTrigger>
                 <TabsTrigger
                   value="template"
-                  className="rounded-xl data-[state=active]:bg-blue-600 data-[state=active]:text-neutral-100"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-neutral-100"
                 >
                   Template
                 </TabsTrigger>
@@ -121,7 +121,7 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
                             key={vehicle.id}
                             type="button"
                             onClick={() => handleTemplatePreview(vehicle)}
-                            className={`overflow-hidden rounded-2xl border text-left transition ${
+                            className={`overflow-hidden border text-left transition ${
                               selected
                                 ? "border-blue-600 ring-1 ring-blue-600"
                                 : "border-neutral-700 hover:border-blue-600/50"
@@ -153,9 +153,9 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
       </div>
 
       <div className="space-y-4">
-        <section className="app-panel p-6">
+        <section className="border border-neutral-700 bg-neutral-900 p-6 text-neutral-100">
           <h2 className="mb-4 text-base font-semibold text-neutral-100">
-            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs text-white">
+            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center bg-blue-600 text-xs text-neutral-100">
               3
             </span>
             Preview
@@ -173,7 +173,7 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
             wrapOverlayUrl={selectedWrap?.images[0]?.url ?? null}
           />
 
-          <div className="mt-4 flex items-center justify-between gap-3 border-t border-neutral-800 pt-4">
+          <div className="mt-4 flex items-center justify-between gap-3 border-t border-neutral-700 pt-4">
             <p className="text-xs text-neutral-400">
               Preview issues won’t block your booking flow.
             </p>

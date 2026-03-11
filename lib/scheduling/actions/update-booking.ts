@@ -1,9 +1,9 @@
 "use server";
 
 import { getSession } from "@/lib/auth/session";
+import { requireCustomerOwnedResourceAccess } from "@/lib/authz/policy";
 import { prisma } from "@/lib/prisma";
 import { assertSlotHasCapacity } from "@/lib/scheduling/capacity";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -21,7 +21,6 @@ type UpdateBookingInput = z.infer<typeof updateBookingSchema>;
 
 type BookingActionDTO = {
   id: string;
-  tenantId: string;
   customerId: string;
   wrapId: string;
   startTime: Date;
@@ -32,40 +31,24 @@ type BookingActionDTO = {
   updatedAt: Date;
 };
 
-/**
- * Reschedules an existing booking to a new time slot after re-validating
- * time-slot availability (excluding the current booking from the count).
- *
- * Security pipeline:
- * 1. Authenticate  — verify user is signed in
- * 2. Authorize     — verify user is a member of the tenant
- * 3. Validate      — parse and validate input with Zod
- * 4. Tenant scope  — confirm the booking belongs to the current tenant
- * 5. Availability  — check capacity for the new time slot (atomic)
- * 6. Mutate        — update startTime / endTime scoped to tenantId (atomic)
- * 7. Audit         — write an immutable audit log entry (atomic)
- */
 export async function updateBooking(
   bookingId: string,
   input: UpdateBookingInput,
 ): Promise<BookingActionDTO> {
-  // 1. AUTHENTICATE
-  const { tenantId, userId } = await getSession();
-  if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
+  const session = await getSession();
+  const userId = session.userId;
 
-  // 2. AUTHORIZE — any tenant member may reschedule a booking
-  await assertTenantMembership(tenantId, userId);
+  if (!session.isAuthenticated || !userId) {
+    throw new Error("Unauthorized: not authenticated");
+  }
 
-  // 3. VALIDATE
   const parsed = updateBookingSchema.parse(input);
   const { startTime, endTime } = parsed;
 
-  // 4. TENANT SCOPE — defensive ownership check before mutation
   const existing = await prisma.booking.findFirst({
-    where: { id: bookingId, tenantId, deletedAt: null },
+    where: { id: bookingId, deletedAt: null },
     select: {
       id: true,
-      tenantId: true,
       customerId: true,
       startTime: true,
       endTime: true,
@@ -77,30 +60,23 @@ export async function updateBooking(
     throw new Error("Forbidden: resource not found");
   }
 
-  if (existing.customerId !== userId) {
-    await assertTenantMembership(tenantId, userId);
-  }
+  requireCustomerOwnedResourceAccess(session.authz, existing.customerId);
 
-  // 5 + 6 + 7. AVAILABILITY CHECK + MUTATE + AUDIT — performed atomically
   const booking = await prisma.$transaction(
     async (tx: Prisma.TransactionClient) => {
       await assertSlotHasCapacity(tx, {
-        tenantId,
         startTime,
         endTime,
         excludeBookingId: bookingId,
       });
 
-      // 6. MUTATE — update time slot scoped by tenantId
       const updatedBooking = await tx.booking.update({
-        where: { id: bookingId, tenantId },
+        where: { id: bookingId },
         data: { startTime, endTime },
       });
 
-      // 7. AUDIT
       await tx.auditLog.create({
         data: {
-          tenantId,
           userId,
           action: "UPDATE_BOOKING",
           resourceType: "Booking",
@@ -122,7 +98,6 @@ export async function updateBooking(
 
   return {
     id: booking.id,
-    tenantId: booking.tenantId,
     customerId: booking.customerId,
     wrapId: booking.wrapId,
     startTime: booking.startTime,

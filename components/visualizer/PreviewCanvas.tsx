@@ -1,8 +1,8 @@
 "use client";
 
-import { ImageOff, Loader2 } from "lucide-react";
-import { PreviewStatus, type VisualizerPreviewDTO } from "@/lib/visualizer/types";
 import { cn } from "@/lib/utils";
+import { PreviewStatus, type VisualizerPreviewDTO } from "@/lib/visualizer/types";
+import { ImageOff, Loader2 } from "lucide-react";
 
 interface PreviewCanvasProps {
   preview: VisualizerPreviewDTO | null;
@@ -21,7 +21,7 @@ export function PreviewCanvas({
     return (
       <div
         className={cn(
-          "flex flex-col items-center justify-center gap-3 rounded-xl border border-neutral-700 bg-neutral-950 p-12",
+          "flex flex-col items-center gap-3 border border-neutral-700 bg-neutral-900 p-12",
           className,
         )}
       >
@@ -35,7 +35,7 @@ export function PreviewCanvas({
     return (
       <div
         className={cn(
-          "flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-neutral-700 bg-neutral-950 p-12 text-center",
+          "flex flex-col items-center justify-center gap-3 border border-dashed border-neutral-700 bg-neutral-900 p-12 text-center",
           className,
         )}
       >
@@ -51,7 +51,7 @@ export function PreviewCanvas({
     return (
       <div
         className={cn(
-          "flex flex-col items-center justify-center gap-3 rounded-xl border border-neutral-700 bg-neutral-950 p-12",
+          "flex flex-col items-center justify-center gap-3 border border-neutral-700 bg-neutral-900 p-12",
           className,
         )}
       >
@@ -65,12 +65,12 @@ export function PreviewCanvas({
     return (
       <div
         className={cn(
-          "flex flex-col items-center justify-center gap-3 rounded-xl border border-red-900/60 bg-red-950/20 p-12 text-center",
+          "flex flex-col items-center justify-center gap-3 border border-neutral-700 bg-neutral-900 p-12 text-center",
           className,
         )}
       >
-        <ImageOff className="h-10 w-10 text-red-400" />
-        <p className="text-sm text-red-300">
+        <ImageOff className="h-10 w-10 text-blue-600" />
+        <p className="text-sm text-neutral-100">
           Preview generation failed. Try template mode or continue to scheduling.
         </p>
       </div>
@@ -80,12 +80,7 @@ export function PreviewCanvas({
   const imageUrl = preview.processedImageUrl ?? preview.customerPhotoUrl;
 
   return (
-    <div
-      className={cn(
-        "overflow-hidden rounded-xl border border-neutral-700 bg-neutral-950",
-        className,
-      )}
-    >
+    <div className={cn("overflow-hidden border border-neutral-700 bg-neutral-900", className)}>
       <div className="relative h-full min-h-72">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

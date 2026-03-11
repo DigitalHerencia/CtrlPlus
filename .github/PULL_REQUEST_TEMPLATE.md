@@ -55,10 +55,10 @@ Closes #
 - [ ] No Prisma imports in `app/**`
 - [ ] All database reads via `lib/{domain}/fetchers/`
 - [ ] All database writes via `lib/{domain}/actions/`
-- [ ] All queries scoped by `tenantId`
+- [ ] Ownership checks enforced server-side (`customerId` / `clerkUserId` as applicable)
 - [ ] Authorization checks in place (server-side)
 - [ ] Input validation with Zod schemas
-- [ ] No `tenantId` accepted from client payloads
+- [ ] No role/ownership scope accepted from client payloads
 
 ## Code Quality Checklist
 

@@ -39,11 +39,11 @@ project_root_markers = [
 
     [agents.scout]
         config_file = "agents/scout.toml"
-        description = "Maps impacted files and proposes a tenant-safe implementation plan before edits."
+        description = "Maps impacted files and proposes an authorization-safe implementation plan before edits."
 
     [agents.security]
         config_file = "agents/security.toml"
-        description = "Audits tenant isolation, authz checks, and webhook safety requirements."
+        description = "Audits authorization checks, ownership boundaries, and webhook safety requirements."
 
 [mcp_servers]
 

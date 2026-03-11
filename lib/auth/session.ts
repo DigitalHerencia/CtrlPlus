@@ -1,24 +1,22 @@
-import {
-  getActiveLocalUserByClerkId,
-  getActiveTenantMembershipsByUserId,
-} from "@/lib/auth/local-user";
-import { resolveTenantFromRequest } from "@/lib/tenancy/resolve";
+import { resolveGlobalRoleForClerkUserId } from "@/lib/auth/identity";
+import { type AuthzContext } from "@/lib/authz/types";
 import { auth } from "@clerk/nextjs/server";
 import { cache } from "react";
 
 /**
  * The session context returned by getSession().
- * Provides all authentication and tenant information for the current request.
+ * Provides authentication and role context for the current request.
  */
 export interface SessionContext {
   /** Clerk user ID, or null if not authenticated */
   userId: string | null;
-  /** Resolved tenant ID from the request host/subdomain */
-  tenantId: string;
   /** Whether the current user is authenticated */
   isAuthenticated: boolean;
-  /** Clerk organization ID, or null if not in an org context */
-  orgId: string | null;
+  /** Unified authorization context */
+  authz: AuthzContext;
+  role: AuthzContext["role"];
+  isOwner: boolean;
+  isPlatformAdmin: boolean;
 }
 
 /**
@@ -37,7 +35,6 @@ export interface SessionUser {
  */
 export interface Session {
   user: SessionUser | null;
-  tenantId: string;
   /** Convenience flag: true when user is authenticated */
   isAuthenticated: boolean;
   /** Convenience accessor: Clerk user ID or empty string when unauthenticated */
@@ -45,37 +42,32 @@ export interface Session {
 }
 
 /**
- * Resolves the current authenticated user and tenant from the Clerk session.
- * The tenantId is derived server-side from the request host, never from client input.
- *
- * Tenant resolution strategy:
- * 1. First, try to resolve from subdomain (multi-tenant scenario)
- * 2. If no subdomain, fall back to user's first tenant (single-user account)
- * 3. Otherwise return empty string
- *
- * @returns SessionContext with userId, tenantId, isAuthenticated, and orgId
+ * Resolves the current authenticated user and authorization role from Clerk.
  */
 export const getSession = cache(async (): Promise<SessionContext> => {
-  const { userId, orgId } = await auth();
-  const activeLocalUser = userId ? await getActiveLocalUserByClerkId(userId) : null;
+  const { userId: clerkUserId } = await auth();
+  const isAuthenticated = Boolean(clerkUserId);
+  const resolvedClerkUserId = clerkUserId ?? null;
+  const role =
+    resolvedClerkUserId && isAuthenticated
+      ? resolveGlobalRoleForClerkUserId(resolvedClerkUserId)
+      : "customer";
 
-  // Resolve tenantId from request host (subdomain-based multi-tenancy).
-  let tenantId = (await resolveTenantFromRequest()) ?? "";
-
-  // Fall back only when a signed-in user has exactly one active workspace.
-  if (!tenantId && activeLocalUser) {
-    const memberships = await getActiveTenantMembershipsByUserId(activeLocalUser.id);
-
-    if (memberships.length === 1) {
-      tenantId = memberships[0]?.tenantId ?? "";
-    }
-  }
+  const authz: AuthzContext = {
+    userId: resolvedClerkUserId,
+    role,
+    isAuthenticated,
+    isOwner: role === "owner",
+    isPlatformAdmin: role === "admin",
+  };
 
   return {
-    userId: activeLocalUser && userId ? userId : null,
-    tenantId,
-    isAuthenticated: Boolean(activeLocalUser && userId),
-    orgId: orgId ?? null,
+    userId: resolvedClerkUserId,
+    isAuthenticated,
+    authz,
+    role: authz.role,
+    isOwner: authz.isOwner,
+    isPlatformAdmin: authz.isPlatformAdmin,
   };
 });
 
@@ -91,8 +83,7 @@ export const getSession = cache(async (): Promise<SessionContext> => {
  * @example
  * ```typescript
  * export async function createWrap(input: CreateWrapInput) {
- *   const { userId, tenantId } = await requireAuth();
- *   await assertTenantMembership(tenantId, userId, 'ADMIN');
+ *   const { userId } = await requireAuth();
  *   // ...
  * }
  * ```

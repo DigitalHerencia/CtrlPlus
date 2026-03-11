@@ -32,7 +32,6 @@ export interface InvoiceLineItemDTO {
 
 export interface InvoiceDTO {
   id: string;
-  tenantId: string;
   bookingId: string;
   status: InvoiceStatus;
   totalAmount: number;
@@ -58,7 +57,6 @@ export interface PaymentDTO {
 
 export const invoiceDTOFields = {
   id: true,
-  tenantId: true,
   bookingId: true,
   status: true,
   totalAmount: true,

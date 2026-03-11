@@ -1,38 +1,12 @@
-/**
- * confirmPayment
- *
- * Webhook handler callback invoked by the Stripe route handler
- * (`app/api/stripe/webhook/route.ts`) after receiving a
- * `checkout.session.completed` event.
- *
- * Security pipeline (adapted for system-triggered webhooks):
- * 1. Authenticate  — verify Stripe webhook signature (replaces user auth)
- * 2. Validate      — parse and validate the Stripe event payload
- * 3. Idempotency   — skip if the payment was already processed
- * 4. Mutate        — create Payment record, update Invoice and Booking status
- * 5. Audit         — write an immutable audit log entry
- *
- * NOTE: This function is NOT a Next.js Server Action ("use server").
- * It is a plain async function imported directly by the webhook route handler.
- */
-
 import { constructWebhookEvent } from "@/lib/billing/stripe";
 import { prisma } from "@/lib/prisma";
 import type Stripe from "stripe";
 import { type ConfirmPaymentResult } from "../types";
 
-/**
- * Sentinel userId written to AuditLog entries that originate from the
- * Stripe webhook (no human actor).
- */
 export const STRIPE_WEBHOOK_ACTOR = "system:stripe-webhook";
 
 type WebhookEventState = "process" | "processed" | "processing";
 
-/**
- * Returns true when `err` is a Prisma unique-constraint violation (P2002).
- * Used to detect a concurrent duplicate payment creation inside a transaction.
- */
 function isPrismaUniqueConstraintError(err: unknown): boolean {
   return (
     typeof err === "object" &&
@@ -121,20 +95,12 @@ async function finalizeStripeWebhookEvent(eventId: string, status: "processed" |
   });
 }
 
-/**
- * Processes a Stripe `checkout.session.completed` webhook event.
- *
- * @param payload   - Raw request body (string) from the webhook route
- * @param signature - Value of the `Stripe-Signature` HTTP header
- */
 export async function confirmPayment(
   payload: string,
   signature: string,
 ): Promise<ConfirmPaymentResult> {
-  // 1. AUTHENTICATE — verify Stripe webhook signature
   let event: Stripe.Event;
   try {
-    // constructEvent is synchronous — any signature error throws immediately
     event = constructWebhookEvent(payload, signature);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "";
@@ -151,7 +117,6 @@ export async function confirmPayment(
 
   const webhookState = await claimStripeWebhookEvent(event.id, event.type);
 
-  // 2. VALIDATE — only handle the event type we care about
   if (event.type !== "checkout.session.completed") {
     if (webhookState === "process") {
       await finalizeStripeWebhookEvent(event.id, "processed");
@@ -161,8 +126,6 @@ export async function confirmPayment(
   }
 
   const session = event.data.object;
-
-  // Extract the invoice ID stored in client_reference_id or metadata
   const invoiceId = session.client_reference_id ?? session.metadata?.invoiceId ?? null;
   if (!invoiceId) {
     throw new Error(
@@ -177,11 +140,6 @@ export async function confirmPayment(
 
   if (!stripePaymentIntentId) {
     throw new Error("Stripe session is missing payment_intent");
-  }
-
-  const tenantId = session.metadata?.tenantId ?? null;
-  if (!tenantId) {
-    throw new Error("Stripe session metadata is missing tenantId");
   }
 
   if (webhookState !== "process") {
@@ -206,16 +164,13 @@ export async function confirmPayment(
   }
 
   try {
-    // Locate the invoice, always scoped by tenantId
     const invoice = await prisma.invoice.findFirst({
       where: {
         id: invoiceId,
-        tenantId,
         deletedAt: null,
       },
       select: {
         id: true,
-        tenantId: true,
         bookingId: true,
         totalAmount: true,
       },
@@ -225,7 +180,6 @@ export async function confirmPayment(
       throw new Error(`Invoice not found: ${invoiceId}`);
     }
 
-    // 3. IDEMPOTENCY — return early if we already recorded this payment
     const existingPayment = await prisma.payment.findUnique({
       where: { stripePaymentIntentId },
       select: { id: true, status: true },
@@ -241,12 +195,6 @@ export async function confirmPayment(
       };
     }
 
-    // 4. MUTATE — transactional: create Payment, update Invoice, update Booking
-    //
-    // The $transaction is wrapped in a try/catch for P2002 to handle a rare
-    // TOCTOU race: if two webhook deliveries for the same intent arrive close
-    // together, the second create will fail on the unique payment-intent
-    // constraint and we fall back to the winner's record.
     const amountPaid = session.amount_total ?? invoice.totalAmount;
 
     let payment: { id: string };
@@ -290,10 +238,8 @@ export async function confirmPayment(
       throw err;
     }
 
-    // 5. AUDIT
     await prisma.auditLog.create({
       data: {
-        tenantId: invoice.tenantId,
         userId: STRIPE_WEBHOOK_ACTOR,
         action: "CONFIRM_PAYMENT",
         resourceType: "Payment",

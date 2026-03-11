@@ -1,12 +1,11 @@
 import { put } from "@vercel/blob";
 
 export async function storePreviewImage(params: {
-  tenantId: string;
   previewId: string;
   buffer: Buffer;
   contentType?: string;
 }): Promise<string> {
-  const filename = `visualizer/${params.tenantId}/${params.previewId}.png`;
+  const filename = `visualizer/previews/${params.previewId}.png`;
 
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     const result = await put(filename, params.buffer, {

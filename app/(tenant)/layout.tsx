@@ -1,5 +1,6 @@
-import { TenantSidebarLayout } from "@/components/nav/tenant-sidebar-layout";
+import { WorkspaceSidebarLayout } from "@/components/nav/workspace-sidebar-layout";
 import { getSession } from "@/lib/auth/session";
+import { hasCapability } from "@/lib/authz/policy";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -10,5 +11,15 @@ export default async function TenantLayout({ children }: { children: ReactNode }
     redirect("/sign-in");
   }
 
-  return <TenantSidebarLayout>{children}</TenantSidebarLayout>;
+  const canAccessOwnerDashboard = hasCapability(session.authz, "dashboard.owner");
+  const canAccessAdminConsole = hasCapability(session.authz, "dashboard.platform");
+
+  return (
+    <WorkspaceSidebarLayout
+      canAccessOwnerDashboard={canAccessOwnerDashboard}
+      canAccessAdminConsole={canAccessAdminConsole}
+    >
+      {children}
+    </WorkspaceSidebarLayout>
+  );
 }

@@ -57,7 +57,7 @@ test.describe("Catalog – unauthenticated access", () => {
 
 test.describe("Catalog – authenticated flow", () => {
   test.beforeEach(async ({ page }) => {
-    // Mock the Clerk auth endpoint so the tenant layout thinks we're signed in
+    // Mock the Clerk auth endpoint so protected pages think we're signed in
     // by intercepting the __clerk_db_jwt__ cookie check
     await page.route("**/__clerk_db_jwt**", async (route) => {
       await route.fulfill({ status: 200, body: "ok" });
@@ -74,7 +74,6 @@ test.describe("Catalog – authenticated flow", () => {
           wraps: [
             {
               id: "wrap-001",
-              tenantId: "tenant-test",
               name: "Matte Black Full Wrap",
               description: "Premium matte black vinyl wrap.",
               price: 120000,
@@ -141,7 +140,6 @@ test.describe("Customer journey – catalog to payment (mocked)", () => {
           items: [
             {
               id: "avail-001",
-              tenantId: "tenant-test",
               dayOfWeek: 1,
               startTime: "08:00",
               endTime: "17:00",
@@ -164,7 +162,6 @@ test.describe("Customer journey – catalog to payment (mocked)", () => {
           contentType: "application/json",
           body: JSON.stringify({
             id: "booking-001",
-            tenantId: "tenant-test",
             customerId: "user-test",
             wrapId: "wrap-001",
             status: "PENDING",

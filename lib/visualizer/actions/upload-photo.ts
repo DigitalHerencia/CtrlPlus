@@ -2,7 +2,6 @@
 
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { buildVisualizerCacheKey } from "@/lib/visualizer/cache-key";
 import { visualizerConfig } from "@/lib/visualizer/config";
 import {
@@ -30,22 +29,24 @@ function validatePhotoInput(customerPhotoUrl: string): void {
 }
 
 export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<VisualizerPreviewDTO> {
-  const { tenantId, userId } = await getSession();
-  if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
-
-  await assertTenantMembership(tenantId, userId);
+  const session = await getSession();
+  const userId = session.userId;
+  if (!session.isAuthenticated || !userId) throw new Error("Unauthorized: not authenticated");
 
   const parsed = uploadPhotoSchema.parse(input);
   validatePhotoInput(parsed.customerPhotoUrl);
 
   const wrap = await prisma.wrap.findFirst({
-    where: { id: parsed.wrapId, tenantId, deletedAt: null },
+    where: {
+      id: parsed.wrapId,
+      deletedAt: null,
+      ...(!session.isOwner && !session.isPlatformAdmin ? { isHidden: false } : {}),
+    },
     select: { id: true },
   });
   if (!wrap) throw new Error("Wrap not found");
 
   const cacheKey = buildVisualizerCacheKey({
-    tenantId,
     wrapId: parsed.wrapId,
     customerPhotoUrl: parsed.customerPhotoUrl,
     maskModel: visualizerConfig.maskModel,
@@ -59,15 +60,9 @@ export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<Visua
     where: { cacheKey },
   });
 
-  if (
-    existing &&
-    existing.tenantId === tenantId &&
-    existing.expiresAt > new Date() &&
-    existing.deletedAt === null
-  ) {
+  if (existing && existing.expiresAt > new Date() && existing.deletedAt === null) {
     return {
       id: existing.id,
-      tenantId: existing.tenantId,
       wrapId: existing.wrapId,
       customerPhotoUrl: existing.customerPhotoUrl,
       processedImageUrl: existing.processedImageUrl,
@@ -83,7 +78,6 @@ export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<Visua
     ? await prisma.visualizerPreview.update({
         where: { cacheKey },
         data: {
-          tenantId,
           wrapId: parsed.wrapId,
           customerPhotoUrl: parsed.customerPhotoUrl,
           processedImageUrl: null,
@@ -94,7 +88,6 @@ export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<Visua
       })
     : await prisma.visualizerPreview.create({
         data: {
-          tenantId,
           wrapId: parsed.wrapId,
           customerPhotoUrl: parsed.customerPhotoUrl,
           status: "pending",
@@ -105,7 +98,6 @@ export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<Visua
 
   await prisma.auditLog.create({
     data: {
-      tenantId,
       userId,
       action: "UPLOAD_VEHICLE_PHOTO",
       resourceType: "VisualizerPreview",
@@ -117,7 +109,6 @@ export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<Visua
 
   return {
     id: preview.id,
-    tenantId: preview.tenantId,
     wrapId: preview.wrapId,
     customerPhotoUrl: preview.customerPhotoUrl,
     processedImageUrl: preview.processedImageUrl,

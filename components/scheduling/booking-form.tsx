@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { CalendarClient } from "./calendar-client";
-import { TimeSlot } from "./time-slot";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { createBooking } from "@/lib/scheduling/actions/create-booking";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { CalendarClient } from "./calendar-client";
+import { TimeSlot } from "./time-slot";
 
 interface AvailabilityWindow {
   id: string;
@@ -57,7 +57,7 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
 
   if (wraps.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900/60 py-12 text-center text-neutral-500">
+      <div className="border border-neutral-700 bg-neutral-900 py-12 text-center text-neutral-100">
         No wrap services are available for booking at this time.
       </div>
     );
@@ -97,7 +97,7 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
       {/* Left: Calendar */}
-      <Card className="app-panel">
+      <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
         <CardHeader>
           <CardTitle className="text-base">Select a Date</CardTitle>
           <CardDescription>Highlighted days have available time slots.</CardDescription>
@@ -115,7 +115,7 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
       <div className="space-y-4">
         {selectedDate ? (
           <>
-            <Card className="app-panel">
+            <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
               <CardHeader>
                 <CardTitle className="text-base">
                   Available Times for{" "}
@@ -145,7 +145,7 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
             </Card>
 
             {wraps.length > 0 && (
-              <Card className="app-panel">
+              <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
                 <CardHeader>
                   <CardTitle className="text-base">Select a Wrap</CardTitle>
                 </CardHeader>
@@ -156,10 +156,10 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
                         key={wrap.id}
                         type="button"
                         onClick={() => setSelectedWrapId(wrap.id)}
-                        className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${
+                        className={`w-full border px-4 py-3 text-left transition-colors ${
                           selectedWrapId === wrap.id
-                            ? "border-blue-600 bg-blue-600/10 text-blue-100"
-                            : "border-neutral-800 bg-neutral-950/60 text-neutral-100 hover:border-blue-600/50"
+                            ? "border-blue-600 bg-neutral-900 text-neutral-100"
+                            : "border-neutral-700 bg-neutral-900 text-neutral-100 hover:border-blue-600"
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -179,14 +179,14 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
             )}
           </>
         ) : (
-          <Card className="app-panel">
-            <CardContent className="py-12 text-center text-sm text-neutral-500">
+          <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+            <CardContent className="py-12 text-center text-sm text-neutral-100">
               Select a date to see available time slots.
             </CardContent>
           </Card>
         )}
 
-        {error && <p className="text-sm text-rose-300">{error}</p>}
+        {error && <p className="text-sm text-neutral-100">{error}</p>}
 
         <Button onClick={handleSubmit} disabled={!canSubmit || isPending} className="w-full">
           {isPending ? "Booking…" : "Confirm Booking"}

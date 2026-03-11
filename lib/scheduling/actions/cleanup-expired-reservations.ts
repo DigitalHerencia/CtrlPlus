@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
 export interface CleanupExpiredReservationsInput {
-  tenantId?: string;
   now?: Date;
   limit?: number;
 }
@@ -11,11 +10,6 @@ export interface CleanupExpiredReservationsResult {
   processedBookingIds: string[];
 }
 
-/**
- * Job-safe cleanup for expired booking reservations.
- *
- * Intended for cron/manual invocation from an internal job runner.
- */
 export async function cleanupExpiredReservations(
   input: CleanupExpiredReservationsInput = {},
 ): Promise<CleanupExpiredReservationsResult> {
@@ -28,7 +22,6 @@ export async function cleanupExpiredReservations(
       booking: {
         deletedAt: null,
         status: "pending",
-        ...(input.tenantId ? { tenantId: input.tenantId } : {}),
       },
     },
     select: {
@@ -36,7 +29,7 @@ export async function cleanupExpiredReservations(
       bookingId: true,
       booking: {
         select: {
-          tenantId: true,
+          customerId: true,
         },
       },
     },
@@ -72,8 +65,7 @@ export async function cleanupExpiredReservations(
 
     await tx.auditLog.createMany({
       data: expired.map((record) => ({
-        tenantId: record.booking.tenantId,
-        userId: "system",
+        userId: record.booking.customerId,
         action: "EXPIRE_BOOKING_RESERVATION",
         resourceType: "Booking",
         resourceId: record.bookingId,

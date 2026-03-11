@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { formatPrice, formatInstallationTime } from "@/lib/catalog/formatters";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatInstallationTime, formatPrice } from "@/lib/catalog/formatters";
+import Link from "next/link";
 
 export interface WrapCardData {
   id: string;
@@ -24,7 +24,7 @@ export function WrapCard({ wrap }: WrapCardProps) {
   const image = wrap.images[0];
 
   return (
-    <Card className="group app-panel flex h-full flex-col overflow-hidden bg-neutral-900/95 transition duration-200 hover:-translate-y-1 hover:border-blue-600/40">
+    <Card className="group flex h-full flex-col overflow-hidden border-neutral-700 bg-neutral-900 text-neutral-100 transition duration-200 hover:-translate-y-1 hover:border-blue-600">
       {image && (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={image.url} alt={wrap.name} className="h-44 w-full object-cover" />
@@ -35,7 +35,7 @@ export function WrapCard({ wrap }: WrapCardProps) {
           <CardTitle className="line-clamp-2 text-lg leading-tight text-neutral-100">
             {wrap.name}
           </CardTitle>
-          <span className="rounded-full border border-blue-600/20 bg-blue-600/10 px-2 py-1 text-[10px] font-semibold tracking-[0.16em] text-blue-200 uppercase">
+          <span className="border border-blue-600/20 bg-blue-600/10 px-2 py-1 text-[10px] font-semibold tracking-[0.16em] text-blue-200 uppercase">
             Wrap
           </span>
         </div>

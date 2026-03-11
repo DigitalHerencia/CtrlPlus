@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { ImageIcon, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { generatePreview } from "@/lib/visualizer/actions/generate-preview";
 import { uploadVehiclePhoto } from "@/lib/visualizer/actions/upload-photo";
 import type { VisualizerPreviewDTO } from "@/lib/visualizer/types";
+import { ImageIcon, Upload, X } from "lucide-react";
+import { useRef, useState } from "react";
 
 interface UploadFormProps {
   wrapId: string;
@@ -85,8 +85,8 @@ export function UploadForm({
       <label
         htmlFor="vehicle-photo-input"
         className={cn(
-          "relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 transition-colors",
-          "border-neutral-700 bg-neutral-950 hover:border-blue-600/60 hover:bg-neutral-900",
+          "relative flex cursor-pointer flex-col items-center justify-center gap-3 border-2 border-dashed p-8 transition-colors",
+          "border-neutral-700 bg-neutral-900 hover:border-blue-600/60 hover:bg-neutral-900",
           previewUrl && "border-solid border-blue-600/70",
         )}
       >
@@ -96,7 +96,7 @@ export function UploadForm({
             <img
               src={previewUrl}
               alt="Selected vehicle"
-              className="max-h-48 max-w-full rounded-md object-contain"
+              className="max-h-48 max-w-full object-contain"
             />
             <button
               type="button"
@@ -104,7 +104,7 @@ export function UploadForm({
                 e.stopPropagation();
                 handleRemove();
               }}
-              className="absolute top-2 right-2 rounded-full border border-neutral-600 bg-neutral-900 p-1 shadow"
+              className="absolute top-2 right-2 border border-neutral-600 bg-neutral-900 p-1 shadow"
               aria-label="Remove photo"
             >
               <X className="h-4 w-4 text-neutral-200" />
@@ -135,7 +135,7 @@ export function UploadForm({
 
       {error && (
         <p
-          className="rounded-md border border-red-700/40 bg-red-950/30 px-3 py-2 text-sm text-red-300"
+          className="border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm text-neutral-100"
           role="alert"
         >
           {error}
@@ -145,7 +145,7 @@ export function UploadForm({
       <Button
         type="submit"
         disabled={!selectedFile || isUploading}
-        className="w-full bg-blue-600 text-white hover:bg-blue-700"
+        className="w-full bg-blue-600 text-neutral-100 hover:bg-blue-600"
       >
         {isUploading ? (
           <>

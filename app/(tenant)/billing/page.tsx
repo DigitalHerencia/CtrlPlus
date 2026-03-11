@@ -3,7 +3,7 @@ import {
   WorkspaceEmptyState,
   WorkspaceMetricCard,
   WorkspacePageIntro,
-} from "@/components/layout/page-elements";
+} from "@/components/nav/workspace-page-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -15,7 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getSession } from "@/lib/auth/session";
-import { getInvoicesForTenant } from "@/lib/billing/fetchers/get-invoices";
+import { hasCapability } from "@/lib/authz/policy";
+import { getInvoices } from "@/lib/billing/fetchers/get-invoices";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -25,14 +26,16 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 });
 
 export default async function BillingPage() {
-  const { tenantId, userId } = await getSession();
+  const { userId, authz } = await getSession();
   if (!userId) {
     redirect("/sign-in");
   }
 
-  // All roles have access; no role check
-
-  const { invoices, total } = await getInvoicesForTenant(tenantId);
+  const canViewAllInvoices = hasCapability(authz, "billing.read.all");
+  const { invoices, total } = await getInvoices(
+    undefined,
+    canViewAllInvoices ? {} : { customerId: userId },
+  );
   const outstanding = invoices
     .filter((invoice) => invoice.status === "sent" || invoice.status === "draft")
     .reduce((sum, invoice) => sum + invoice.totalAmount, 0);
@@ -54,7 +57,7 @@ export default async function BillingPage() {
         <WorkspaceMetricCard
           label="Total Invoices"
           value={total}
-          description="Every invoice issued for this tenant."
+          description="Every invoice currently tracked by the store."
         />
         <WorkspaceMetricCard
           label="Outstanding"
@@ -74,7 +77,7 @@ export default async function BillingPage() {
           description="Once appointments create invoices, they will appear here with payment status and detail links."
         />
       ) : (
-        <Card className="app-panel overflow-hidden">
+        <Card className="overflow-hidden border-neutral-700 bg-neutral-900 text-neutral-100">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-neutral-100">Invoices</CardTitle>
           </CardHeader>

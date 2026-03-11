@@ -1,9 +1,10 @@
+import { WorkspaceEmptyState, WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
 import { BookingCard } from "@/components/scheduling/booking-card";
-import { WorkspaceEmptyState, WorkspacePageIntro } from "@/components/layout/page-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
-import { getBookingsForTenant } from "@/lib/scheduling/fetchers/get-bookings";
+import { hasCapability } from "@/lib/authz/policy";
+import { getBookings } from "@/lib/scheduling/fetchers/get-bookings";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -12,16 +13,18 @@ interface BookingsPageProps {
 }
 
 export default async function BookingsPage({ searchParams }: BookingsPageProps) {
-  const { tenantId } = await getSession();
+  const { userId, authz } = await getSession();
 
-  if (!tenantId) {
+  if (!userId) {
     redirect("/sign-in"); // Only redirect if not authenticated
   }
+
+  const canViewAllBookings = hasCapability(authz, "scheduling.read.all");
 
   const { tab = "upcoming" } = await searchParams;
   const isUpcoming = tab !== "past";
 
-  let bookings: Awaited<ReturnType<typeof getBookingsForTenant>>["items"] = [];
+  let bookings: Awaited<ReturnType<typeof getBookings>>["items"] = [];
   let total = 0;
 
   try {
@@ -30,7 +33,7 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
       ? { page: 1, pageSize: 20, fromDate: now }
       : { page: 1, pageSize: 20, toDate: now };
 
-    const result = await getBookingsForTenant(tenantId, params);
+    const result = await getBookings(params, canViewAllBookings ? {} : { customerId: userId });
     bookings = result.items;
     total = result.total;
   } catch {
@@ -42,7 +45,7 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
       <WorkspacePageIntro
         label="Appointments"
         title="Bookings"
-        description="Flip between upcoming and past installs while keeping navigation and actions consistent with the rest of the tenant workspace."
+        description="Flip between upcoming and past installs while keeping navigation and actions consistent with the rest of the workspace."
         actions={
           <>
             <Button asChild variant="outline">
@@ -55,10 +58,10 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
         }
       />
 
-      <div className="inline-flex gap-1 rounded-2xl border border-neutral-800 bg-neutral-900/80 p-1">
+      <div className="inline-flex gap-1 border border-neutral-800 bg-neutral-900/80 p-1">
         <Link
           href="/scheduling/bookings?tab=upcoming"
-          className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`px-4 py-2 text-sm font-semibold transition-colors ${
             isUpcoming
               ? "bg-blue-600 text-neutral-100 shadow-[0_16px_30px_-20px_rgba(37,99,235,0.9)]"
               : "text-neutral-400 hover:text-neutral-100"
@@ -68,7 +71,7 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
         </Link>
         <Link
           href="/scheduling/bookings?tab=past"
-          className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+          className={`px-4 py-2 text-sm font-semibold transition-colors ${
             !isUpcoming
               ? "bg-blue-600 text-neutral-100 shadow-[0_16px_30px_-20px_rgba(37,99,235,0.9)]"
               : "text-neutral-400 hover:text-neutral-100"
@@ -78,7 +81,7 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
         </Link>
       </div>
 
-      <Card className="app-panel">
+      <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
         <CardHeader>
           <CardTitle className="text-base text-neutral-100">
             {isUpcoming ? "Upcoming Appointments" : "Past Appointments"}

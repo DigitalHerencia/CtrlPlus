@@ -2,10 +2,10 @@
  * Clerk Authentication E2E Tests
  *
  * Tests the complete authentication flow including:
- * - Sign-up with automatic tenant creation
- * - Sign-in with tenant resolution
+ * - Sign-up with user synchronization
+ * - Sign-in with role resolution
  * - Post-auth redirect to catalog
- * - RBAC enforcement
+ * - Authorization enforcement
  *
  * Note: These tests use the Clerk testing utilities for isolated auth context.
  * Each test gets a fresh auth session.
@@ -210,13 +210,13 @@ test.describe("Clerk Authentication Flow", () => {
   });
 });
 
-test.describe("Tenant Creation on Sign-Up", () => {
-  test("sign-up flow creates tenant for new user", async ({ page }) => {
+test.describe("User Sync on Sign-Up", () => {
+  test("sign-up flow syncs a new user", async ({ page }) => {
     // Note: This test requires actual Clerk authentication
     // In a real test environment, you would:
     // 1. Use setupClerkTestingToken() from Clerk testing utilities
     // 2. Create a test user with unique email
-    // 3. Verify tenant was created in database
+    // 3. Verify user was synced in database
 
     // For now, we just verify the form can be submitted
     await page.goto("/sign-up");
@@ -225,7 +225,7 @@ test.describe("Tenant Creation on Sign-Up", () => {
     const emailInput = page.locator('input[type="email"]');
     if (await emailInput.isVisible()) {
       // Fill in test data (won't actually sign up without Clerk setup)
-      await emailInput.fill("test-tenant@example.com");
+      await emailInput.fill("test-user@example.com");
       await page.locator('input[type="password"]').fill("TestPassword123");
       await page.locator('input[id="confirmPassword"]').fill("TestPassword123");
 
@@ -254,22 +254,22 @@ test.describe("Tenant Creation on Sign-Up", () => {
 });
 
 test.describe("Post-Sign-In Flows", () => {
-  test("successful sign-in calls setupUserTenant", async ({ page }) => {
+  test("successful sign-in resolves role and sync context", async ({ page }) => {
     // This is a conceptual test - in practice, you'd need:
     // 1. Real Clerk test credentials
-    // 2. Database monitoring to verify tenant creation
+    // 2. Database monitoring to verify user sync
     //
     // The flow should be:
     // 1. User submits sign-in form
     // 2. Clerk authenticates
-    // 3. setupUserTenant() runs (server action)
+    // 3. Session role is resolved from env + Clerk user id
     // 4. User redirected to /catalog
-    // 5. TenantUserMembership created with 'owner' role
+    // 5. Role-specific navigation is rendered
 
     // For E2E testing with real auth:
     // - Use Clerk's test API keys
     // - Call setupClerkTestingToken() in beforeAll hook
-    // - Create real test user and verify tenants in DB
+    // - Create real test user and verify user sync in DB
 
     await page.goto("/sign-in");
     await page.waitForLoadState("domcontentloaded");

@@ -4,19 +4,19 @@ import { cn } from "@/lib/utils";
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
   pending: {
     label: "Pending",
-    className: "border-amber-300/70 bg-amber-500/10 text-amber-200",
+    className: "border-neutral-700 bg-neutral-900 text-neutral-100",
   },
   confirmed: {
     label: "Confirmed",
-    className: "border-sky-300/70 bg-sky-500/10 text-sky-200",
+    className: "border-blue-600 bg-neutral-900 text-neutral-100",
   },
   completed: {
     label: "Completed",
-    className: "border-emerald-300/70 bg-emerald-500/10 text-emerald-200",
+    className: "border-blue-600 bg-neutral-900 text-neutral-100",
   },
   cancelled: {
     label: "Cancelled",
-    className: "border-rose-300/70 bg-rose-500/10 text-rose-200",
+    className: "border-neutral-700 bg-neutral-900 text-neutral-100",
   },
 };
 

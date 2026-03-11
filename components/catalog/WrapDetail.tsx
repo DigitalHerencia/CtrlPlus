@@ -21,13 +21,15 @@ export function WrapDetail({ wrap }: WrapDetailProps) {
         <Link href="/catalog">Back to Catalog</Link>
       </Button>
 
-      <Card className="app-hero-panel overflow-hidden">
+      <Card className="overflow-hidden border-neutral-700 bg-neutral-900 text-neutral-100">
         {wrap.images[0] && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={wrap.images[0].url} alt={wrap.name} className="h-72 w-full object-cover" />
         )}
         <CardHeader className="gap-3">
-          <p className="app-kicker">Wrap Detail</p>
+          <p className="text-xs font-semibold tracking-[0.24em] text-blue-600 uppercase">
+            Wrap Detail
+          </p>
           <CardTitle className="text-4xl font-black tracking-tight text-neutral-100">
             {wrap.name}
           </CardTitle>
@@ -48,9 +50,9 @@ export function WrapDetail({ wrap }: WrapDetailProps) {
       </Card>
 
       {wrap.description ? (
-        <Card className="app-panel">
+        <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
           <CardHeader>
-            <CardTitle className="text-sm font-semibold tracking-wide text-neutral-400 uppercase">
+            <CardTitle className="text-sm font-semibold tracking-wide text-neutral-100 uppercase">
               Description
             </CardTitle>
           </CardHeader>
@@ -60,9 +62,9 @@ export function WrapDetail({ wrap }: WrapDetailProps) {
         </Card>
       ) : null}
 
-      <Card className="app-panel">
+      <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
         <CardHeader>
-          <CardTitle className="text-sm font-semibold tracking-wide text-neutral-400 uppercase">
+          <CardTitle className="text-sm font-semibold tracking-wide text-neutral-100 uppercase">
             Wrap Images
           </CardTitle>
         </CardHeader>

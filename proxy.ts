@@ -4,7 +4,9 @@
  * Uses Clerk middleware to protect routes and handle authentication.
  * Public routes: /, /about, /features, /contact, /sign-in, /sign-up,
  * /api/clerk/webhook-handler, /api/stripe/webhook
- * Protected routes: /catalog, /visualizer, /scheduling, /billing, /admin
+ * Protected routes: /catalog, /visualizer, /scheduling, /billing, /settings, /admin, /platform
+ *
+ * Auth routes are force-redirected for signed-in users to `/catalog`.
  */
 
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
@@ -32,7 +34,7 @@ export default clerkMiddleware(async (auth, req) => {
   // Get the pathname
   const { pathname, search } = req.nextUrl;
 
-  // Redirect authenticated users away from auth pages
+  // Redirect authenticated users away from auth pages.
   if (isAuthRoute(req) && userId) {
     const redirectUrl = new URL("/catalog", req.url);
     return NextResponse.redirect(redirectUrl);

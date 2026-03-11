@@ -1,6 +1,6 @@
+import { Card, CardContent } from "@/components/ui/card";
 import { CalendarDays, Clock3, DollarSign } from "lucide-react";
 import { BookingStatusBadge } from "./booking-status-badge";
-import { Card, CardContent } from "@/components/ui/card";
 
 export interface BookingCardItem {
   id: string;
@@ -42,7 +42,7 @@ function formatPrice(cents: number): string {
 
 export function BookingCard({ booking }: BookingCardProps) {
   return (
-    <Card className="app-panel bg-neutral-950/70 shadow-sm transition-all hover:-translate-y-0.5">
+    <Card className="border-neutral-700 bg-neutral-900 text-neutral-100 shadow-sm transition-all hover:-translate-y-0.5">
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1 space-y-1">
@@ -63,9 +63,9 @@ export function BookingCard({ booking }: BookingCardProps) {
             </p>
           </div>
 
-          <div className="shrink-0 rounded-xl border border-neutral-800 bg-neutral-900/80 px-3 py-2 text-right">
+          <div className="shrink-0 border border-neutral-700 bg-neutral-900 px-3 py-2 text-right">
             <p className="flex items-center gap-1 text-sm font-semibold text-neutral-100">
-              <DollarSign className="size-3.5 text-emerald-300" />
+              <DollarSign className="size-3.5 text-blue-600" />
               {formatPrice(booking.totalPrice)}
             </p>
           </div>

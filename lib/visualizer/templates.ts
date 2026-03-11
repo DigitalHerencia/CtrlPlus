@@ -30,7 +30,6 @@ export const templateVehicleOptions: TemplateVehicleOption[] = [
 ];
 
 export function buildTemplatePreview(params: {
-  tenantId?: string;
   wrapId: string;
   imageUrl: string;
 }): VisualizerPreviewDTO {
@@ -38,7 +37,6 @@ export function buildTemplatePreview(params: {
 
   return {
     id: `template-${params.wrapId}-${Date.now()}`,
-    tenantId: params.tenantId ?? "template",
     wrapId: params.wrapId,
     customerPhotoUrl: params.imageUrl,
     processedImageUrl: params.imageUrl,

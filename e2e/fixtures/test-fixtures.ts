@@ -5,7 +5,6 @@ import { test as base, type Page } from "@playwright/test";
 export const mockWraps = [
   {
     id: "wrap-001",
-    tenantId: "tenant-test",
     name: "Matte Black Full Wrap",
     description: "Premium matte black vinyl wrap for full vehicle coverage.",
     price: 120000,
@@ -15,7 +14,6 @@ export const mockWraps = [
   },
   {
     id: "wrap-002",
-    tenantId: "tenant-test",
     name: "Gloss White Partial Wrap",
     description: "High-gloss white vinyl for partial vehicle coverage.",
     price: 75000,
@@ -25,7 +23,6 @@ export const mockWraps = [
   },
   {
     id: "wrap-003",
-    tenantId: "tenant-test",
     name: "Carbon Fiber Accent Wrap",
     description: "Carbon fiber texture vinyl for accent panels.",
     price: 45000,
@@ -46,7 +43,6 @@ export const mockWrapListResponse = {
 export const mockAvailabilityWindows = [
   {
     id: "avail-001",
-    tenantId: "tenant-test",
     dayOfWeek: 1,
     startTime: "08:00",
     endTime: "17:00",
@@ -57,7 +53,6 @@ export const mockAvailabilityWindows = [
   },
   {
     id: "avail-002",
-    tenantId: "tenant-test",
     dayOfWeek: 2,
     startTime: "08:00",
     endTime: "17:00",
@@ -70,7 +65,6 @@ export const mockAvailabilityWindows = [
 
 export const mockBooking = {
   id: "booking-001",
-  tenantId: "tenant-test",
   customerId: "user-test",
   wrapId: "wrap-001",
   dropOffStart: new Date("2024-03-10T08:00:00.000Z").toISOString(),
@@ -84,7 +78,6 @@ export const mockBooking = {
 
 export const mockInvoice = {
   id: "invoice-001",
-  tenantId: "tenant-test",
   customerId: "user-test",
   bookingId: "booking-001",
   status: "draft",

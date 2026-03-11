@@ -1,8 +1,7 @@
 "use server";
 
-import { requireAuth } from "@/lib/auth/session";
+import { requireOwnerOrPlatformAdmin } from "@/lib/authz/guards";
 import { prisma } from "@/lib/prisma";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import {
   deletePersistedWrapImage,
   persistWrapImage,
@@ -10,9 +9,9 @@ import {
 } from "../image-storage";
 import { wrapImageUploadSchema, type WrapImageDTO, type WrapImageUploadInput } from "../types";
 
-async function assertWrapOwnedByTenant(wrapId: string, tenantId: string): Promise<void> {
+async function assertWrapExists(wrapId: string): Promise<void> {
   const wrap = await prisma.wrap.findFirst({
-    where: { id: wrapId, tenantId, deletedAt: null },
+    where: { id: wrapId, deletedAt: null },
     select: { id: true },
   });
 
@@ -22,15 +21,12 @@ async function assertWrapOwnedByTenant(wrapId: string, tenantId: string): Promis
 }
 
 export async function addWrapImage(input: WrapImageUploadInput): Promise<WrapImageDTO> {
-  const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId);
-
+  const session = await requireOwnerOrPlatformAdmin();
   const parsed = wrapImageUploadSchema.parse(input);
-  await assertWrapOwnedByTenant(parsed.wrapId, tenantId);
+  await assertWrapExists(parsed.wrapId);
   validateWrapImageFile(parsed.file);
 
   const imageUrl = await persistWrapImage({
-    tenantId,
     wrapId: parsed.wrapId,
     file: parsed.file,
   });
@@ -51,8 +47,7 @@ export async function addWrapImage(input: WrapImageUploadInput): Promise<WrapIma
 
   await prisma.auditLog.create({
     data: {
-      tenantId,
-      userId,
+      userId: session.userId ?? "system",
       action: "wrapImage.added",
       resourceType: "Wrap",
       resourceId: parsed.wrapId,
@@ -65,10 +60,8 @@ export async function addWrapImage(input: WrapImageUploadInput): Promise<WrapIma
 }
 
 export async function removeWrapImage(wrapId: string, imageId: string): Promise<void> {
-  const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId);
-
-  await assertWrapOwnedByTenant(wrapId, tenantId);
+  const session = await requireOwnerOrPlatformAdmin();
+  await assertWrapExists(wrapId);
 
   const image = await prisma.wrapImage.findFirst({
     where: {
@@ -92,8 +85,7 @@ export async function removeWrapImage(wrapId: string, imageId: string): Promise<
 
   await prisma.auditLog.create({
     data: {
-      tenantId,
-      userId,
+      userId: session.userId ?? "system",
       action: "wrapImage.removed",
       resourceType: "Wrap",
       resourceId: wrapId,
@@ -104,10 +96,8 @@ export async function removeWrapImage(wrapId: string, imageId: string): Promise<
 }
 
 export async function reorderWrapImages(wrapId: string, imageIdsInOrder: string[]): Promise<void> {
-  const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId);
-
-  await assertWrapOwnedByTenant(wrapId, tenantId);
+  const session = await requireOwnerOrPlatformAdmin();
+  await assertWrapExists(wrapId);
 
   const existing = await prisma.wrapImage.findMany({
     where: {
@@ -139,8 +129,7 @@ export async function reorderWrapImages(wrapId: string, imageIdsInOrder: string[
 
   await prisma.auditLog.create({
     data: {
-      tenantId,
-      userId,
+      userId: session.userId ?? "system",
       action: "wrapImage.reordered",
       resourceType: "Wrap",
       resourceId: wrapId,

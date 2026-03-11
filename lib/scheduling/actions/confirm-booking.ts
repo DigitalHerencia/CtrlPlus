@@ -1,12 +1,11 @@
 "use server";
 
 import { getSession } from "@/lib/auth/session";
+import { requireCustomerOwnedResourceAccess } from "@/lib/authz/policy";
 import { prisma } from "@/lib/prisma";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 
 export interface ConfirmedBookingDTO {
   id: string;
-  tenantId: string;
   customerId: string;
   wrapId: string;
   startTime: Date;
@@ -17,14 +16,13 @@ export interface ConfirmedBookingDTO {
   updatedAt: Date;
 }
 
-/**
- * Confirms a pending booking if its reservation is still active.
- */
 export async function confirmBooking(bookingId: string): Promise<ConfirmedBookingDTO> {
-  const { tenantId, userId } = await getSession();
-  if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
+  const session = await getSession();
+  const userId = session.userId;
 
-  await assertTenantMembership(tenantId, userId);
+  if (!session.isAuthenticated || !userId) {
+    throw new Error("Unauthorized: not authenticated");
+  }
 
   return prisma.$transaction(async (tx) => {
     const now = new Date();
@@ -32,12 +30,10 @@ export async function confirmBooking(bookingId: string): Promise<ConfirmedBookin
     const booking = await tx.booking.findFirst({
       where: {
         id: bookingId,
-        tenantId,
         deletedAt: null,
       },
       select: {
         id: true,
-        tenantId: true,
         customerId: true,
         wrapId: true,
         startTime: true,
@@ -59,9 +55,7 @@ export async function confirmBooking(bookingId: string): Promise<ConfirmedBookin
       throw new Error("Forbidden: resource not found");
     }
 
-    if (booking.customerId !== userId) {
-      await assertTenantMembership(tenantId, userId);
-    }
+    requireCustomerOwnedResourceAccess(session.authz, booking.customerId);
 
     if (booking.status !== "pending") {
       throw new Error("Only pending bookings can be confirmed");
@@ -72,7 +66,7 @@ export async function confirmBooking(bookingId: string): Promise<ConfirmedBookin
     }
 
     const confirmed = await tx.booking.update({
-      where: { id: booking.id, tenantId },
+      where: { id: booking.id },
       data: {
         status: "confirmed",
         reservation: {
@@ -83,7 +77,6 @@ export async function confirmBooking(bookingId: string): Promise<ConfirmedBookin
 
     await tx.auditLog.create({
       data: {
-        tenantId,
         userId,
         action: "CONFIRM_BOOKING",
         resourceType: "Booking",
@@ -98,7 +91,6 @@ export async function confirmBooking(bookingId: string): Promise<ConfirmedBookin
 
     return {
       id: confirmed.id,
-      tenantId: confirmed.tenantId,
       customerId: confirmed.customerId,
       wrapId: confirmed.wrapId,
       startTime: confirmed.startTime,

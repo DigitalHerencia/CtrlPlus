@@ -12,13 +12,12 @@ const DEFAULT_BOOKING_LIST_PARAMS: BookingListParams = {
   pageSize: 20,
 };
 
-/**
- * Maps a raw Prisma Booking record to a BookingDTO.
- * Never exposes deletedAt or other internal fields.
- */
+interface BookingScope {
+  customerId?: string;
+}
+
 function toBookingDTO(record: {
   id: string;
-  tenantId: string;
   customerId: string;
   wrapId: string;
   startTime: Date;
@@ -30,7 +29,6 @@ function toBookingDTO(record: {
 }): BookingDTO {
   return {
     id: record.id,
-    tenantId: record.tenantId,
     customerId: record.customerId,
     wrapId: record.wrapId,
     startTime: record.startTime,
@@ -44,7 +42,6 @@ function toBookingDTO(record: {
 
 const bookingSelectFields = {
   id: true,
-  tenantId: true,
   customerId: true,
   wrapId: true,
   startTime: true,
@@ -55,22 +52,16 @@ const bookingSelectFields = {
   updatedAt: true,
 } as const;
 
-/**
- * Returns a paginated list of non-deleted bookings for a tenant.
- *
- * @param tenantId - Tenant scope (server-side verified)
- * @param params   - Optional filter / pagination options
- */
-export async function getBookingsForTenant(
-  tenantId: string,
+export async function getBookings(
   params: BookingListParams = DEFAULT_BOOKING_LIST_PARAMS,
+  scope: BookingScope = {},
 ): Promise<BookingListResult> {
   const { page, pageSize, status, fromDate, toDate } = bookingListParamsSchema.parse(params);
   const skip = (page - 1) * pageSize;
 
   const where = {
-    tenantId,
-    deletedAt: null, // soft-delete filter
+    deletedAt: null,
+    ...(scope.customerId ? { customerId: scope.customerId } : {}),
     ...(status !== undefined && { status }),
     ...((fromDate !== undefined || toDate !== undefined) && {
       startTime: {
@@ -100,21 +91,14 @@ export async function getBookingsForTenant(
   };
 }
 
-/**
- * Returns a single non-deleted booking by ID, scoped to a tenant.
- * Returns null when not found or when it belongs to a different tenant.
- *
- * @param tenantId  - Tenant scope (server-side verified)
- * @param bookingId - Booking primary key
- */
 export async function getBookingById(
-  tenantId: string,
   bookingId: string,
+  scope: BookingScope = {},
 ): Promise<BookingDTO | null> {
   const record = await prisma.booking.findFirst({
     where: {
       id: bookingId,
-      tenantId, // defensive scope check
+      ...(scope.customerId ? { customerId: scope.customerId } : {}),
       deletedAt: null,
     },
     select: bookingSelectFields,
@@ -123,20 +107,13 @@ export async function getBookingById(
   return record ? toBookingDTO(record) : null;
 }
 
-/**
- * Returns the count of upcoming (non-cancelled, non-completed) bookings for a
- * tenant starting at or after `from` (defaults to now).
- *
- * @param tenantId - Tenant scope (server-side verified)
- * @param from     - Lower-bound date (defaults to current time)
- */
 export async function getUpcomingBookingCount(
-  tenantId: string,
   from: Date = new Date(),
+  scope: BookingScope = {},
 ): Promise<number> {
   return prisma.booking.count({
     where: {
-      tenantId,
+      ...(scope.customerId ? { customerId: scope.customerId } : {}),
       deletedAt: null,
       status: { notIn: [BookingStatus.CANCELLED, BookingStatus.COMPLETED] },
       startTime: { gte: from },

@@ -1,18 +1,44 @@
-# CtrlPlus Technical Requirements
+# Technical Requirements
 
-The detailed technical specification lives in [`.github/instructions/TECH-REQUIREMENTS.md`](./.github/instructions/TECH-REQUIREMENTS.md).
+## Stack
 
-This top-level document exists so public repository links resolve correctly and contributors have a stable entry point.
+- Next.js 16+ (App Router, RSC)
+- React 19+
+- TypeScript 5+ (strict)
+- Prisma 7+
+- Neon Serverless Postgres
+- Clerk authentication (no organizations)
+- Tailwind CSS 4
 
-## Non-Negotiables
+## Architecture
 
-- No Prisma imports in `app/**` outside the allowed webhook handlers.
-- All tenant-owned queries must stay scoped by `tenantId` and soft-delete filters where applicable.
-- `tenantId` is resolved server-side from request context, never from client input.
-- Mutations follow `Auth -> Authorize -> Validate -> Mutate -> Audit`.
-- Fetchers return explicit DTOs instead of raw Prisma models.
+- Feature-first domains under `lib/{domain}`.
+- Read path: `lib/{domain}/fetchers`.
+- Write path: `lib/{domain}/actions`.
+- API/UI layers import domain modules, not Prisma.
 
-## Operational Extensions
+## Authorization
 
-- Release workflow, Notion planning structure, and ship checklist are documented in [`OPERATIONS.md`](./OPERATIONS.md).
-- Visualizer model-selection and Hugging Face evaluation guidance for v1 are also documented in [`OPERATIONS.md`](./OPERATIONS.md).
+- Roles: `customer`, `owner`, `admin`.
+- Role source: server-side env mapping + authenticated Clerk user ID.
+- `STORE_OWNER_CLERK_USER_ID` and `PLATFORM_DEV_CLERK_USER_ID` are optional.
+- No in-app role assignment UI.
+
+## Security Pipeline
+
+All actions must follow:
+
+`auth -> authorize -> validate -> mutate -> audit`
+
+## Data Rules
+
+- Never accept ownership scope from client payloads.
+- Customer-scoped data must enforce `customerId`/`clerkUserId` ownership checks.
+- Shared data (catalog) is global; visibility can be controlled with `isHidden`.
+- Soft delete filters (`deletedAt: null`) must be applied where relevant.
+
+## Database Shape
+
+- No tenant tables or tenant foreign keys.
+- Single catalog for the whole store.
+- Website settings are per user (`WebsiteSettings.clerkUserId`).

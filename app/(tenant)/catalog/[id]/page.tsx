@@ -1,5 +1,6 @@
 import { WrapDetail } from "@/components/catalog/WrapDetail";
 import { getSession } from "@/lib/auth/session";
+import { hasCapability } from "@/lib/authz/policy";
 import { getWrapById } from "@/lib/catalog/fetchers/get-wraps";
 import { notFound, redirect } from "next/navigation";
 
@@ -8,15 +9,16 @@ interface WrapDetailPageProps {
 }
 
 export default async function WrapDetailPage({ params }: WrapDetailPageProps) {
-  const { tenantId, userId } = await getSession();
+  const session = await getSession();
 
-  if (!userId) {
+  if (!session.userId) {
     redirect("/sign-in"); // Only redirect if not authenticated
   }
 
   const { id } = await params;
+  const canManageCatalog = hasCapability(session.authz, "catalog.manage");
 
-  const wrap = await getWrapById(tenantId, id);
+  const wrap = await getWrapById(id, { includeHidden: canManageCatalog });
 
   if (!wrap) {
     notFound();

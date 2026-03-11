@@ -84,7 +84,6 @@ export async function readPhotoBuffer(
 }
 
 export async function generateCompositePreview(params: {
-  tenantId: string;
   wrapId: string;
   previewId: string;
   customerPhotoUrl: string;
@@ -116,7 +115,6 @@ export async function generateCompositePreview(params: {
   });
 
   return storePreviewImage({
-    tenantId: params.tenantId,
     previewId: params.previewId,
     buffer: composited,
     contentType: "image/png",

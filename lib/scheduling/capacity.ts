@@ -7,7 +7,6 @@ export interface SlotRange {
 }
 
 export interface AssertSlotCapacityInput extends SlotRange {
-  tenantId: string;
   excludeBookingId?: string;
   now?: Date;
 }
@@ -18,7 +17,6 @@ function getDayOfWeekUtc(date: Date): number {
 
 async function getMaxCapacityForSlot(
   tx: Prisma.TransactionClient,
-  tenantId: string,
   range: SlotRange,
 ): Promise<number> {
   const dayOfWeek = getDayOfWeekUtc(range.startTime);
@@ -26,7 +24,7 @@ async function getMaxCapacityForSlot(
   const slotEndHHmm = toHHmm(range.endTime);
 
   const rules = await tx.availabilityRule.findMany({
-    where: { tenantId, dayOfWeek, deletedAt: null },
+    where: { dayOfWeek, deletedAt: null },
     select: { startTime: true, endTime: true, capacitySlots: true },
   });
 
@@ -53,7 +51,6 @@ async function countOverlappingActiveBookings(
 
   return tx.booking.count({
     where: {
-      tenantId: input.tenantId,
       deletedAt: null,
       id: input.excludeBookingId ? { not: input.excludeBookingId } : undefined,
       startTime: { lt: input.endTime },
@@ -74,18 +71,14 @@ async function countOverlappingActiveBookings(
   });
 }
 
-/**
- * Verifies that a slot is covered by availability rules and has remaining
- * capacity for active bookings/reservations.
- */
 export async function assertSlotHasCapacity(
   tx: Prisma.TransactionClient,
   input: AssertSlotCapacityInput,
 ): Promise<void> {
-  const maxCapacity = await getMaxCapacityForSlot(tx, input.tenantId, input);
+  const maxCapacity = await getMaxCapacityForSlot(tx, input);
   const overlappingCount = await countOverlappingActiveBookings(tx, input);
 
   if (overlappingCount >= maxCapacity) {
-    throw new Error("The requested time slot is fully booked — no remaining capacity");
+    throw new Error("The requested time slot is fully booked - no remaining capacity");
   }
 }

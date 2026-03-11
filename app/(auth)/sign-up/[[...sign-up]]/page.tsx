@@ -21,7 +21,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
           className="object-cover"
         />
       </div>
-      <div className="flex flex-col items-center justify-center gap-6 bg-neutral-950 p-6 md:p-16">
+      <div className="flex flex-col items-center justify-center gap-6 bg-neutral-900 p-6 md:p-16">
         <div className="w-full max-w-sm">
           <SignupForm redirectUrl={redirectUrl} />
         </div>

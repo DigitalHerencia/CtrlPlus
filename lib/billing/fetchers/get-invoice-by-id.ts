@@ -8,20 +8,26 @@ import {
   type PaymentDTO,
 } from "../types";
 
-/**
- * Returns a single invoice with its line items and payment history, scoped to
- * the given tenant.  Returns null when the invoice does not exist or belongs to
- * a different tenant (prevents information disclosure).
- *
- * @param tenantId  - Tenant scope (server-side verified)
- * @param invoiceId - Invoice ID to look up
- */
+interface InvoiceScope {
+  customerId?: string;
+}
+
 export async function getInvoiceById(
-  tenantId: string,
   invoiceId: string,
+  scope: InvoiceScope = {},
 ): Promise<InvoiceDetailDTO | null> {
   const row = await prisma.invoice.findFirst({
-    where: { id: invoiceId, tenantId, deletedAt: null },
+    where: {
+      id: invoiceId,
+      deletedAt: null,
+      ...(scope.customerId
+        ? {
+            booking: {
+              customerId: scope.customerId,
+            },
+          }
+        : {}),
+    },
     select: {
       ...invoiceDTOFields,
       lineItems: {
@@ -40,7 +46,6 @@ export async function getInvoiceById(
 
   return {
     id: row.id,
-    tenantId: row.tenantId,
     bookingId: row.bookingId,
     status: row.status as InvoiceDetailDTO["status"],
     totalAmount: row.totalAmount,

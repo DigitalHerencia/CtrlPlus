@@ -3,7 +3,6 @@
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { assertSlotHasCapacity } from "@/lib/scheduling/capacity";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
@@ -32,15 +31,13 @@ export interface ReservedBookingDTO {
   reservationExpiresAt: Date;
 }
 
-/**
- * Reserves an available slot for 15 minutes by creating a pending booking and
- * an associated BookingReservation record.
- */
 export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBookingDTO> {
-  const { tenantId, userId } = await getSession();
-  if (!tenantId || !userId) throw new Error("Unauthorized: not authenticated");
+  const session = await getSession();
+  const userId = session.userId;
 
-  await assertTenantMembership(tenantId, userId);
+  if (!session.isAuthenticated || !userId) {
+    throw new Error("Unauthorized: not authenticated");
+  }
 
   const parsed = reserveSlotSchema.parse(input);
 
@@ -50,16 +47,19 @@ export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBook
       const expiresAt = new Date(now.getTime() + RESERVATION_TTL_MINUTES * 60 * 1000);
 
       const wrap = await tx.wrap.findFirst({
-        where: { id: parsed.wrapId, tenantId, deletedAt: null },
-        select: { id: true, price: true },
+        where: {
+          id: parsed.wrapId,
+          deletedAt: null,
+          ...(!session.isOwner && !session.isPlatformAdmin ? { isHidden: false } : {}),
+        },
+        select: { id: true, price: true, isHidden: true },
       });
 
       if (!wrap) {
-        throw new Error("Wrap not found or does not belong to this tenant");
+        throw new Error("Wrap not found");
       }
 
       await assertSlotHasCapacity(tx, {
-        tenantId,
         startTime: parsed.startTime,
         endTime: parsed.endTime,
         now,
@@ -69,7 +69,6 @@ export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBook
         where: {
           expiresAt: { gt: now },
           booking: {
-            tenantId,
             customerId: userId,
             status: "pending",
             deletedAt: null,
@@ -79,12 +78,11 @@ export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBook
       });
 
       if (existingReservation) {
-        throw new Error("You already have an active reservation in this tenant");
+        throw new Error("You already have an active reservation");
       }
 
       const booking = await tx.booking.create({
         data: {
-          tenantId,
           customerId: userId,
           wrapId: parsed.wrapId,
           startTime: parsed.startTime,
@@ -114,7 +112,6 @@ export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBook
 
       await tx.auditLog.create({
         data: {
-          tenantId,
           userId,
           action: "RESERVE_SLOT",
           resourceType: "Booking",

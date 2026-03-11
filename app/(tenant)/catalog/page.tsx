@@ -1,28 +1,31 @@
 import { CatalogPagination } from "@/components/catalog/CatalogPagination";
 import { WrapFilter } from "@/components/catalog/WrapFilter";
 import { WrapGrid } from "@/components/catalog/WrapGrid";
+import { WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
 import { Card, CardContent } from "@/components/ui/card";
-import { WorkspaceEmptyState, WorkspacePageIntro } from "@/components/layout/page-elements";
 import { getSession } from "@/lib/auth/session";
-import { getWrapCategoriesForTenant } from "@/lib/catalog/fetchers/get-wrap-categories";
+import { hasCapability } from "@/lib/authz/policy";
+import { getWrapCategories } from "@/lib/catalog/fetchers/get-wrap-categories";
 import { searchWraps } from "@/lib/catalog/fetchers/get-wraps";
 import { parseCatalogSearchParams } from "@/lib/catalog/search-params";
+import { redirect } from "next/navigation";
 
 interface CatalogPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
-  const { tenantId, userId } = await getSession();
+  const session = await getSession();
   const parsedSearch = parseCatalogSearchParams(await searchParams);
+  if (!session.isAuthenticated || !session.userId) {
+    redirect("/sign-in");
+  }
 
-  const [data, categories] =
-    userId && tenantId
-      ? await Promise.all([
-          searchWraps(tenantId, parsedSearch.filters),
-          getWrapCategoriesForTenant(tenantId),
-        ])
-      : [null, []];
+  const canManageCatalog = hasCapability(session.authz, "catalog.manage");
+  const [data, categories] = await Promise.all([
+    searchWraps(parsedSearch.filters, { includeHidden: canManageCatalog }),
+    getWrapCategories(),
+  ]);
 
   const createPageHref = (page: number) => {
     const params = new URLSearchParams();
@@ -66,7 +69,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         description="Explore premium wrap packages, compare finishes, and jump into detail views with a single consistent storefront system."
         detail={
           data ? (
-            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 px-5 py-4 text-right">
+            <div className="border border-neutral-800 bg-neutral-900/80 px-5 py-4 text-right">
               <p className="text-[11px] tracking-[0.18em] text-neutral-400 uppercase">Results</p>
               <p className="text-3xl font-black text-neutral-100 tabular-nums">{data.total}</p>
             </div>
@@ -74,32 +77,23 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         }
       />
 
-      <Card className="app-panel">
+      <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
         <CardContent className="pt-6">
           <WrapFilter categories={categories} />
         </CardContent>
       </Card>
 
-      {!data ? (
-        <WorkspaceEmptyState
-          title="Sign in to browse your catalog"
-          description="Catalog results and category filters are only available inside an authenticated tenant workspace."
-        />
-      ) : (
-        <>
-          {parsedSearch.hasActiveFilters && (
-            <p className="text-sm text-neutral-400">
-              Showing filtered results for your catalog search.
-            </p>
-          )}
-          <WrapGrid wraps={data.wraps} />
-          <CatalogPagination
-            page={data.page}
-            totalPages={data.totalPages}
-            createPageHref={createPageHref}
-          />
-        </>
+      {parsedSearch.hasActiveFilters && (
+        <p className="text-sm text-neutral-400">
+          Showing filtered results for your catalog search.
+        </p>
       )}
+      <WrapGrid wraps={data.wraps} />
+      <CatalogPagination
+        page={data.page}
+        totalPages={data.totalPages}
+        createPageHref={createPageHref}
+      />
     </div>
   );
 }

@@ -1,8 +1,7 @@
 "use server";
 
-import { requireAuth } from "@/lib/auth/session";
+import { requireOwnerOrPlatformAdmin } from "@/lib/authz/guards";
 import { prisma } from "@/lib/prisma";
-import { assertTenantMembership } from "@/lib/tenancy/assert";
 import {
   createWrapCategorySchema,
   setWrapCategoryMappingsSchema,
@@ -14,14 +13,11 @@ import {
 } from "../types";
 
 export async function createWrapCategory(input: CreateWrapCategoryInput): Promise<WrapCategoryDTO> {
-  const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId);
-
+  const session = await requireOwnerOrPlatformAdmin();
   const parsed = createWrapCategorySchema.parse(input);
 
   const category = await prisma.wrapCategory.create({
     data: {
-      tenantId,
       name: parsed.name,
       slug: parsed.slug,
     },
@@ -30,8 +26,7 @@ export async function createWrapCategory(input: CreateWrapCategoryInput): Promis
 
   await prisma.auditLog.create({
     data: {
-      tenantId,
-      userId,
+      userId: session.userId ?? "system",
       action: "wrapCategory.created",
       resourceType: "WrapCategory",
       resourceId: category.id,
@@ -47,15 +42,12 @@ export async function updateWrapCategory(
   categoryId: string,
   input: UpdateWrapCategoryInput,
 ): Promise<WrapCategoryDTO> {
-  const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId);
-
+  const session = await requireOwnerOrPlatformAdmin();
   const parsed = updateWrapCategorySchema.parse(input);
 
   const result = await prisma.wrapCategory.updateMany({
     where: {
       id: categoryId,
-      tenantId,
       deletedAt: null,
     },
     data: parsed,
@@ -66,7 +58,7 @@ export async function updateWrapCategory(
   }
 
   const category = await prisma.wrapCategory.findFirst({
-    where: { id: categoryId, tenantId, deletedAt: null },
+    where: { id: categoryId, deletedAt: null },
     select: { id: true, name: true, slug: true },
   });
 
@@ -76,8 +68,7 @@ export async function updateWrapCategory(
 
   await prisma.auditLog.create({
     data: {
-      tenantId,
-      userId,
+      userId: session.userId ?? "system",
       action: "wrapCategory.updated",
       resourceType: "WrapCategory",
       resourceId: category.id,
@@ -90,13 +81,11 @@ export async function updateWrapCategory(
 }
 
 export async function deleteWrapCategory(categoryId: string): Promise<void> {
-  const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId);
+  const session = await requireOwnerOrPlatformAdmin();
 
   const result = await prisma.wrapCategory.updateMany({
     where: {
       id: categoryId,
-      tenantId,
       deletedAt: null,
     },
     data: {
@@ -116,8 +105,7 @@ export async function deleteWrapCategory(categoryId: string): Promise<void> {
 
   await prisma.auditLog.create({
     data: {
-      tenantId,
-      userId,
+      userId: session.userId ?? "system",
       action: "wrapCategory.deleted",
       resourceType: "WrapCategory",
       resourceId: categoryId,
@@ -127,15 +115,12 @@ export async function deleteWrapCategory(categoryId: string): Promise<void> {
 }
 
 export async function setWrapCategoryMappings(input: SetWrapCategoryMappingsInput): Promise<void> {
-  const { userId, tenantId } = await requireAuth();
-  await assertTenantMembership(tenantId, userId);
-
+  const session = await requireOwnerOrPlatformAdmin();
   const parsed = setWrapCategoryMappingsSchema.parse(input);
 
   const wrap = await prisma.wrap.findFirst({
     where: {
       id: parsed.wrapId,
-      tenantId,
       deletedAt: null,
     },
     select: { id: true },
@@ -149,7 +134,6 @@ export async function setWrapCategoryMappings(input: SetWrapCategoryMappingsInpu
     const categories = await prisma.wrapCategory.findMany({
       where: {
         id: { in: parsed.categoryIds },
-        tenantId,
         deletedAt: null,
       },
       select: { id: true },
@@ -177,8 +161,7 @@ export async function setWrapCategoryMappings(input: SetWrapCategoryMappingsInpu
 
   await prisma.auditLog.create({
     data: {
-      tenantId,
-      userId,
+      userId: session.userId ?? "system",
       action: "wrapCategory.mappingsSet",
       resourceType: "Wrap",
       resourceId: parsed.wrapId,
