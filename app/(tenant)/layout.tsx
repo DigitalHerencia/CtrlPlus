@@ -1,12 +1,11 @@
-import { TenantSidebar } from "@/components/nav/tenant-sidebar";
+import { TenantSidebar } from "@/components/shared/tenant-sidebar";
 import { getSession } from "@/lib/auth/session";
 import { hasCapability } from "@/lib/authz/policy";
 import { redirect } from "next/navigation";
-import type { ReactNode } from "react";
+import { type ReactNode } from "react";
 
 export default async function TenantLayout({ children }: { children: ReactNode }) {
   const session = await getSession();
-
   if (!session.isAuthenticated) {
     redirect("/sign-in");
   }

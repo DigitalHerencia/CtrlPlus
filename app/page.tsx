@@ -1,5 +1,5 @@
-import { SiteFooter } from "@/components/nav/site-footer";
-import { SiteHeader } from "@/components/nav/site-header";
+import { SiteFooter } from "@/components/shared/site-footer";
+import { SiteHeader } from "@/components/shared/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {

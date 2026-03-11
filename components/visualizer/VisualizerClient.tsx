@@ -60,7 +60,7 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_1fr]">
       <div className="space-y-6">
-        <section className="border border-neutral-700 bg-neutral-900 p-6 text-neutral-100">
+        <section className="border border-neutral-700 bg-neutral-950/80 p-6 text-neutral-100">
           <h2 className="mb-4 text-base font-semibold text-neutral-100">
             <span className="mr-2 inline-flex h-6 w-6 items-center justify-center bg-blue-600 text-xs text-neutral-100">
               1
@@ -70,7 +70,7 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
           <WrapSelector wraps={wraps} selectedWrapId={selectedWrapId} onSelect={handleWrapSelect} />
         </section>
 
-        <section className="border border-neutral-700 bg-neutral-900 p-6 text-neutral-100">
+        <section className="border border-neutral-700 bg-neutral-950/80 p-6 text-neutral-100">
           <Tabs
             value={mode}
             onValueChange={(value) => setMode(value as PreviewMode)}
@@ -153,7 +153,7 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
       </div>
 
       <div className="space-y-4">
-        <section className="border border-neutral-700 bg-neutral-900 p-6 text-neutral-100">
+        <section className="border border-neutral-700 bg-neutral-950/80 p-6 text-neutral-100">
           <h2 className="mb-4 text-base font-semibold text-neutral-100">
             <span className="mr-2 inline-flex h-6 w-6 items-center justify-center bg-blue-600 text-xs text-neutral-100">
               3
@@ -181,7 +181,7 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
               asChild
               size="sm"
               variant="outline"
-              className="border-neutral-700 bg-transparent text-neutral-100"
+              className="bg-blue-600 text-neutral-100 transition-all hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600"
             >
               <Link href="/scheduling/book">Continue to scheduling</Link>
             </Button>

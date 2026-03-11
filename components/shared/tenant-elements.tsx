@@ -23,7 +23,7 @@ export function WorkspacePageIntro({
   className,
 }: WorkspacePageIntroProps) {
   return (
-    <section className={cn("border border-neutral-700 bg-neutral-900 px-6 py-7", className)}>
+    <section className={cn("border border-neutral-700 bg-neutral-950/80 px-6 py-7", className)}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-2">
           <p className="text-xs font-semibold tracking-[0.24em] text-blue-600 uppercase">{label}</p>
@@ -63,7 +63,7 @@ export function WorkspaceMetricCard({
   className,
 }: WorkspaceMetricCardProps) {
   return (
-    <Card className={cn("border-neutral-700 bg-neutral-900 text-neutral-100", className)}>
+    <Card className={cn("border-neutral-700 bg-neutral-950/80 text-neutral-100", className)}>
       <CardHeader className="gap-3 pb-2">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-2">
@@ -111,7 +111,7 @@ export function WorkspaceEmptyState({
   return (
     <Card
       className={cn(
-        "border border-dashed border-neutral-700 bg-neutral-900 text-center",
+        "border border-dashed border-neutral-700 bg-neutral-950/80 text-center",
         className,
       )}
     >

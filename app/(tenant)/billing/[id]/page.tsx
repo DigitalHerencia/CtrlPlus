@@ -1,6 +1,6 @@
 import { CheckoutButton } from "@/components/billing/CheckoutButton";
 import { InvoiceStatusBadge } from "@/components/billing/InvoiceStatusBadge";
-import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
+import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/shared/tenant-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {

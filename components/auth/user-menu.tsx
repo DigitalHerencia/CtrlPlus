@@ -15,7 +15,7 @@ export function UserMenu() {
       appearance={{
         elements: {
           avatarBox: "h-9 w-9",
-          userButtonPopoverCard: "border border-neutral-700 bg-neutral-900 text-neutral-100",
+          userButtonPopoverCard: "border border-neutral-700 bg-neutral-950/80 text-neutral-100",
           userButtonPopoverActionButton: "hover:bg-blue-600 hover:text-neutral-100",
         },
       }}

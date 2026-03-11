@@ -1,8 +1,8 @@
 "use client";
 
 import { UserMenu } from "@/components/auth/user-menu";
-import { LogoIcon } from "@/components/nav/logo-icon";
-import { LogoMark } from "@/components/nav/logo-mark";
+import { LogoIcon } from "@/components/shared/logo-icon";
+import { LogoMark } from "@/components/shared/logo-mark";
 import {
   Sidebar,
   SidebarContent,
@@ -13,8 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarTrigger,
-  useSidebar,
+  SidebarRail,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -30,23 +29,6 @@ interface TenantSidebarProps {
   canAccessAdminConsole: boolean;
   children: ReactNode;
 }
-
-function TenantSidebarTrigger() {
-  const { open } = useSidebar();
-
-  return (
-    <SidebarTrigger
-      className={cn(
-        "fixed top-3 left-3 z-50 h-8 w-8 rounded-md border border-neutral-700/60 bg-neutral-950/90 text-neutral-100 shadow-sm backdrop-blur transition-[left,transform,background-color,border-color] duration-300 ease-out hover:border-blue-500/60 hover:bg-neutral-900",
-        "focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-0 md:top-4",
-        open
-          ? "md:left-[calc(var(--sidebar-width)-0.9rem)]"
-          : "md:left-[calc(var(--sidebar-width-icon)-0.9rem)]",
-      )}
-    />
-  );
-}
-
 export function TenantSidebar({
   canAccessOwnerDashboard,
   canAccessAdminConsole,
@@ -95,16 +77,17 @@ export function TenantSidebar({
     >
       <Sidebar
         collapsible="icon"
-        className="border-r border-neutral-700 bg-neutral-950/90 text-neutral-100 backdrop-blur supports-[backdrop-filter]:bg-neutral-950/80"
+        className="border-r border-neutral-700 bg-neutral-950/90 text-neutral-100 backdrop-blur supports-backdrop-filter:bg-neutral-950/80"
       >
+        <SidebarRail />
         <SidebarHeader className="border-b border-neutral-700 px-3 py-4">
           <Link href="/catalog" className="mx-auto flex items-center">
-            <LogoMark className="my-4 scale-150 transition-all duration-200 group-data-[collapsible=icon]:hidden" />
-            <LogoIcon className="my-1 hidden scale-75 transition-all duration-200 group-data-[collapsible=icon]:inline-flex" />
+            <LogoMark className="my-4 scale-150 transition-all duration-250 group-data-[collapsible=icon]:hidden" />
+            <LogoIcon className="hidden scale-75 transition-all duration-250 group-data-[collapsible=icon]:inline-flex" />
           </Link>
         </SidebarHeader>
 
-        <SidebarContent className="px-2 py-4">
+        <SidebarContent className="mx-auto px-2 py-4">
           <SidebarMenu>
             {visibleNavItems.map((item) => {
               const active = isTenantNavActive(pathname, item.href);
@@ -114,9 +97,8 @@ export function TenantSidebar({
                   <SidebarMenuButton
                     asChild
                     isActive={active}
-                    tooltip={item.title}
                     className={cn(
-                      "h-11 border border-transparent px-3 text-neutral-200 transition-all duration-200 ease-out hover:border-neutral-700 hover:bg-neutral-900 hover:text-neutral-100",
+                      "h-11 border border-transparent px-3 text-neutral-200 transition-all duration-250 ease-out hover:border-neutral-700 hover:bg-neutral-900 hover:text-neutral-100",
                       "data-[active=true]:border-blue-600 data-[active=true]:bg-blue-600/15 data-[active=true]:text-neutral-100",
                       "group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
                     )}
@@ -136,17 +118,25 @@ export function TenantSidebar({
           <div className="mx-auto flex items-center gap-3 py-2">
             <UserMenu />
             <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-              <p className="truncate text-sm font-semibold text-blue-600">Account</p>
-              <p className="truncate text-sm font-semibold text-blue-600">Preferences</p>
+              <p className="truncate text-sm leading-tight font-semibold text-blue-600">
+                User Menu
+              </p>
             </div>
           </div>
         </SidebarFooter>
       </Sidebar>
 
-      <TenantSidebarTrigger />
-
-      <SidebarInset className="bg-neutral-100 text-neutral-100 transition-[width,margin] duration-300 ease-out motion-reduce:transition-none">
-        {children}
+      <SidebarInset
+        className={cn(
+          "overflow-x-hidden bg-neutral-900 text-neutral-100 transition-[width,margin,max-width] duration-100 ease-out motion-reduce:transition-none",
+          open
+            ? "ml-48 max-w-[calc(100vw-var(--sidebar-width-icon))] pr-2"
+            : "ml-16 max-w-[calc(100vw-var(--sidebar-width-icon))]",
+        )}
+      >
+        <main className="mx-auto min-h-screen w-full px-6 py-6 transition-[max-width,padding] duration-100 ease-out motion-reduce:transition-none">
+          {children}
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );

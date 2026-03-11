@@ -2,11 +2,11 @@ import { ClipboardList, DollarSign, Grid3x3, Layers } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
+import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/shared/tenant-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { getSession } from "@/lib/auth/session";
 import { getOwnerDashboardStats } from "@/lib/admin/fetchers/get-owner-dashboard-stats";
+import { getSession } from "@/lib/auth/session";
 
 export default async function AdminDashboardPage() {
   const session = await getSession();
@@ -66,7 +66,7 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
-      <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+      <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
         <CardHeader>
           <CardTitle className="text-2xl font-bold text-neutral-100">Management Tools</CardTitle>
           <CardDescription>
@@ -76,28 +76,28 @@ export default async function AdminDashboardPage() {
         <CardContent className="grid gap-3 sm:grid-cols-3">
           <Link
             href="/catalog"
-            className="group border border-neutral-800 bg-neutral-950/70 p-5 transition hover:border-blue-600/40 hover:bg-neutral-900"
+            className="group border border-neutral-700 bg-neutral-900 p-5 transition-all hover:scale-103 hover:border-blue-600"
           >
             <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.16em] text-neutral-100 uppercase">
-              <Grid3x3 className="h-4 w-4 text-blue-400" /> Catalog
+              <Grid3x3 className="h-4 w-4 text-blue-600" /> Catalog
             </p>
             <p className="mt-2 text-sm text-neutral-400">Add, hide, or remove catalog items.</p>
           </Link>
           <Link
             href="/scheduling/bookings"
-            className="group border border-neutral-800 bg-neutral-950/70 p-5 transition hover:border-blue-600/40 hover:bg-neutral-900"
+            className="group border border-neutral-700 bg-neutral-900 p-5 transition-all hover:scale-103 hover:border-blue-600"
           >
             <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.16em] text-neutral-100 uppercase">
-              <ClipboardList className="h-4 w-4 text-blue-400" /> Scheduling
+              <ClipboardList className="h-4 w-4 text-blue-600" /> Scheduling
             </p>
             <p className="mt-2 text-sm text-neutral-400">Review all customer appointments.</p>
           </Link>
           <Link
             href="/billing"
-            className="group border border-neutral-800 bg-neutral-950/70 p-5 transition hover:border-blue-600/40 hover:bg-neutral-900"
+            className="group border border-neutral-700 bg-neutral-900 p-5 transition-all hover:scale-103 hover:border-blue-600"
           >
             <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.16em] text-neutral-100 uppercase">
-              <Layers className="h-4 w-4 text-blue-400" /> Billing
+              <Layers className="h-4 w-4 text-blue-600" /> Billing
             </p>
             <p className="mt-2 text-sm text-neutral-400">Track invoices and payment status.</p>
           </Link>

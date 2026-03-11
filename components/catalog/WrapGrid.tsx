@@ -1,5 +1,5 @@
+import { WorkspaceEmptyState } from "@/components/shared/tenant-elements";
 import { type WrapDTO } from "@/lib/catalog/types";
-import { WorkspaceEmptyState } from "@/components/nav/workspace-page-elements";
 import { WrapCard } from "./WrapCard";
 
 interface WrapGridProps {

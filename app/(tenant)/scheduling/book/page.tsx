@@ -1,5 +1,5 @@
-import { WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
 import { BookingForm } from "@/components/scheduling/booking-form";
+import { WorkspacePageIntro } from "@/components/shared/tenant-elements";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/auth/session";
 import { hasCapability } from "@/lib/authz/policy";

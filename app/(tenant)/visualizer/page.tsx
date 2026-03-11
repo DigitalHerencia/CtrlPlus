@@ -1,5 +1,5 @@
+import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/shared/tenant-elements";
 import { VisualizerClient } from "@/components/visualizer/VisualizerClient";
-import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
 import { getSession } from "@/lib/auth/session";
 import { hasCapability } from "@/lib/authz/policy";
 import { getWraps } from "@/lib/catalog/fetchers/get-wraps";

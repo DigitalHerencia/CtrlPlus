@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 interface WrapFilterProps {
   categories?: Array<{ id: string; name: string }>;
@@ -105,7 +105,7 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
 
   return (
     <div className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_repeat(5,minmax(0,0.75fr))] lg:items-end">
-      <div className="flex min-w-[180px] flex-1 flex-col gap-1">
+      <div className="flex min-w-45 flex-1 flex-col gap-1">
         <label
           htmlFor="catalog-search"
           className="text-xs font-medium tracking-[0.16em] text-neutral-400 uppercase"

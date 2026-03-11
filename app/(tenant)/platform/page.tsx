@@ -1,4 +1,4 @@
-import { WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
+import { WorkspacePageIntro } from "@/components/shared/tenant-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -40,7 +40,7 @@ export default async function PlatformPage() {
       />
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+        <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
           <CardHeader>
             <CardTitle>Database Health</CardTitle>
             <CardDescription>Live snapshot of Neon/Postgres runtime state.</CardDescription>
@@ -53,7 +53,7 @@ export default async function PlatformPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+        <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
           <CardHeader>
             <CardTitle>Connection Diagnostics</CardTitle>
             <CardDescription>Database version and generated timestamp.</CardDescription>
@@ -67,7 +67,7 @@ export default async function PlatformPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+        <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
           <CardHeader>
             <CardTitle>Clerk Webhooks</CardTitle>
             <CardDescription>
@@ -82,7 +82,7 @@ export default async function PlatformPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+        <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
           <CardHeader>
             <CardTitle>Stripe Webhooks</CardTitle>
             <CardDescription>Status of checkout/payment webhook processing.</CardDescription>
@@ -96,7 +96,7 @@ export default async function PlatformPage() {
         </Card>
       </div>
 
-      <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+      <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
         <CardHeader>
           <CardTitle>Safe Recovery Actions</CardTitle>
           <CardDescription>
@@ -110,7 +110,11 @@ export default async function PlatformPage() {
               await clearStuckWebhookProcessingEvents();
             }}
           >
-            <Button type="submit" variant="outline">
+            <Button
+              type="submit"
+              className="transition-all hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600"
+              variant="default"
+            >
               Clear Stale Processing Locks
             </Button>
           </form>
@@ -124,7 +128,11 @@ export default async function PlatformPage() {
             }}
           >
             <input type="hidden" name="eventIds" value={serializeFailureIds(clerkFailureIds)} />
-            <Button type="submit" variant="outline">
+            <Button
+              type="submit"
+              className="transition-all hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600"
+              variant="default"
+            >
               Reset Clerk Failed Locks
             </Button>
           </form>
@@ -138,7 +146,11 @@ export default async function PlatformPage() {
             }}
           >
             <input type="hidden" name="eventIds" value={serializeFailureIds(stripeFailureIds)} />
-            <Button type="submit" variant="outline">
+            <Button
+              type="submit"
+              className="transition-all hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600"
+              variant="default"
+            >
               Reset Stripe Failed Locks
             </Button>
           </form>
@@ -146,7 +158,7 @@ export default async function PlatformPage() {
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+        <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
           <CardHeader>
             <CardTitle>Recent Clerk Failures</CardTitle>
           </CardHeader>
@@ -164,7 +176,7 @@ export default async function PlatformPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+        <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
           <CardHeader>
             <CardTitle>Recent Stripe Failures</CardTitle>
           </CardHeader>

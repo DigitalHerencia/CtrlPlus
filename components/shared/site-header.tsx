@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { LogoMark } from "@/components/nav/logo-mark";
+import { LogoMark } from "@/components/shared/logo-mark";
 import { Button } from "@/components/ui/button";
 
 export function SiteHeader() {

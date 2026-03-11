@@ -3,7 +3,7 @@ import {
   WorkspaceEmptyState,
   WorkspaceMetricCard,
   WorkspacePageIntro,
-} from "@/components/nav/workspace-page-elements";
+} from "@/components/shared/tenant-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {

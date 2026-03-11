@@ -1,5 +1,5 @@
-import { WorkspaceEmptyState, WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
 import { BookingCard } from "@/components/scheduling/booking-card";
+import { WorkspaceEmptyState, WorkspacePageIntro } from "@/components/shared/tenant-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";

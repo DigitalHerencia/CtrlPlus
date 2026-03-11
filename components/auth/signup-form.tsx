@@ -1,6 +1,6 @@
 "use client";
 
-import { LogoMark } from "@/components/nav/logo-mark";
+import { LogoMark } from "@/components/shared/logo-mark";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";

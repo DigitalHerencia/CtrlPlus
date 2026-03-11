@@ -1,6 +1,6 @@
 import { BookingCard } from "@/components/scheduling/booking-card";
 import { CalendarClient } from "@/components/scheduling/calendar-client";
-import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
+import { WorkspaceMetricCard, WorkspacePageIntro } from "@/components/shared/tenant-elements";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
@@ -94,7 +94,7 @@ export default async function SchedulingPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+          <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
             <CardHeader>
               <CardTitle className="text-neutral-100">Availability Calendar</CardTitle>
               <CardDescription className="text-neutral-400">
@@ -108,7 +108,7 @@ export default async function SchedulingPage() {
         </div>
 
         <div className="space-y-4">
-          <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+          <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
             <CardHeader>
               <CardTitle className="text-base text-neutral-100">Open Days</CardTitle>
             </CardHeader>
@@ -135,7 +135,7 @@ export default async function SchedulingPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+          <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
             <CardHeader>
               <CardTitle className="text-base text-neutral-100">Upcoming Bookings</CardTitle>
             </CardHeader>

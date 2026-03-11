@@ -1,7 +1,7 @@
 import { CatalogPagination } from "@/components/catalog/CatalogPagination";
 import { WrapFilter } from "@/components/catalog/WrapFilter";
 import { WrapGrid } from "@/components/catalog/WrapGrid";
-import { WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
+import { WorkspacePageIntro } from "@/components/shared/tenant-elements";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
 import { hasCapability } from "@/lib/authz/policy";
@@ -69,7 +69,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         description="Explore premium wrap packages, compare finishes, and jump into detail views with a single consistent storefront system."
         detail={
           data ? (
-            <div className="border border-neutral-800 bg-neutral-900/80 px-5 py-4 text-right">
+            <div className="border border-neutral-700 bg-neutral-900 px-5 py-4 text-right">
               <p className="text-[11px] tracking-[0.18em] text-neutral-400 uppercase">Results</p>
               <p className="text-3xl font-black text-neutral-100 tabular-nums">{data.total}</p>
             </div>
@@ -77,7 +77,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         }
       />
 
-      <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+      <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
         <CardContent className="pt-6">
           <WrapFilter categories={categories} />
         </CardContent>
