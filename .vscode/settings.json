@@ -1,27 +1,13 @@
 {
-  "github.copilot.chat.codeGeneration.instructions": [
-    {
-      "file": ".github/copilot-instructions.md"
-    }
-  ],
-  "github.copilot.chat.mcpServers": {
-    "shadcn": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-shadcn"]
-    }
-  },
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "explicit"
   },
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true,
-  "typescript.preferences.includePackageJsonAutoImports": "on",
-  "typescript.updateImportsOnFileMove.enabled": "always",
-  "typescript.suggest.autoImports": true,
+  "js/ts.preferences.includePackageJsonAutoImports": "on",
+  "js/ts.updateImportsOnFileMove.enabled": "always",
+  "js/ts.suggest.autoImports": true,
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
@@ -34,13 +20,25 @@
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
   "files.eol": "\n",
   "search.exclude": {
     "**/.next": true,
     "**/node_modules": true,
     "**/lib/generated/prisma": true
   },
-  "[prisma]": {
-    "editor.defaultFormatter": "Prisma.prisma"
-  }
+  "chatgpt.followUpQueueMode": "steer",
+  "chatgpt.openOnStartup": true,
+  "chatgpt.composerEnterBehavior": "cmdIfMultiline",
+  "inlineChat.defaultModel": "GPT-5.3-Codex (copilotcli)",
+  "chat.planAgent.defaultModel": "GPT-5.3-Codex (copilotcli)",
+  "chat.exploreAgent.defaultModel": "GPT-5.3-Codex (copilotcli)"
 }

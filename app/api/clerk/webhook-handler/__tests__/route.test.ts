@@ -15,7 +15,7 @@ import {
   claimClerkWebhookEvent,
   isClerkSubscriptionSyncEnabled,
   shouldSkipWebhookEventInCurrentEnv,
-} from "./route";
+} from "../route";
 
 describe("clerk webhook env gating", () => {
   beforeEach(() => {

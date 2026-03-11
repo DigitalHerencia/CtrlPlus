@@ -1,12 +1,12 @@
+import { WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   clearStuckWebhookProcessingEvents,
   resetFailedWebhookLocks,
 } from "@/lib/platform/actions/manage-webhook-events";
-import { getWebhookOperationsOverview } from "@/lib/platform/fetchers/get-webhook-operations-overview";
 import { getPlatformStatusOverview } from "@/lib/platform/fetchers/get-platform-status-overview";
-import { WorkspacePageIntro } from "@/components/nav/workspace-page-elements";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getWebhookOperationsOverview } from "@/lib/platform/fetchers/get-webhook-operations-overview";
 
 function serializeFailureIds(ids: string[]): string {
   return ids.join(",");
@@ -60,7 +60,7 @@ export default async function PlatformPage() {
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <p>Generated: {new Date(platformStatus.generatedAt).toLocaleString()}</p>
-            <p className="break-words">Database: {platformStatus.databaseVersion}</p>
+            <p className="wrap-break-word">Database: {platformStatus.databaseVersion}</p>
             <p>Environment: {process.env.NODE_ENV}</p>
           </CardContent>
         </Card>

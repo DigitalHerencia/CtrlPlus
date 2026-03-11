@@ -1,4 +1,4 @@
-import { WorkspaceSidebarLayout } from "@/components/nav/workspace-sidebar-layout";
+import { TenantSidebar } from "@/components/nav/tenant-sidebar";
 import { getSession } from "@/lib/auth/session";
 import { hasCapability } from "@/lib/authz/policy";
 import { redirect } from "next/navigation";
@@ -15,11 +15,11 @@ export default async function TenantLayout({ children }: { children: ReactNode }
   const canAccessAdminConsole = hasCapability(session.authz, "dashboard.platform");
 
   return (
-    <WorkspaceSidebarLayout
-      canAccessOwnerDashboard={canAccessOwnerDashboard}
+    <TenantSidebar
       canAccessAdminConsole={canAccessAdminConsole}
+      canAccessOwnerDashboard={canAccessOwnerDashboard}
     >
       {children}
-    </WorkspaceSidebarLayout>
+    </TenantSidebar>
   );
 }

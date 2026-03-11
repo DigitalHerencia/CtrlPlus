@@ -136,7 +136,7 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
           </div>
         )}
         {error && (
-          <div className="border border-neutral-700 bg-neutral-900 p-3 text-sm text-neutral-100 animate-in fade-in">
+          <div className="animate-in fade-in border border-neutral-700 bg-neutral-900 p-3 text-sm text-neutral-100">
             {error}
           </div>
         )}
