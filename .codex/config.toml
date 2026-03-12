@@ -1,14 +1,15 @@
 # CtrlPlus project-scoped Codex configuration.
-# Keep repo-specific agent roles and model defaults here rather than in ~/.codex/config.toml.
+# Agent-facing workflow material belongs in .codex/.
 
-model = "gpt-5.3-codex"
+model = "gpt-5.4"
 review_model = "gpt-5.3-codex"
 model_provider = "openai"
 model_reasoning_effort = "high"
 personality = "pragmatic"
-approval_policy = "on-request"
-sandbox_mode = "workspace-write"
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
 web_search = "cached"
+project_doc_max_bytes = 32768
 
 project_doc_fallback_filenames = [
     "AGENTS.md",
@@ -20,7 +21,30 @@ project_root_markers = [
 ]
 
 [sandbox_workspace_write]
-    network_access = false
+    network_access = true
+
+[shell_environment_policy]
+    exclude = []
+    experimental_use_profile = true
+    ignore_default_excludes = true
+    include_only = []
+    inherit = "all"
+    set = { CODEX_USE_DEDICATED_PROFILE = "1", CODEX_PS_PROFILE_PATH = "D:/CtrlPlus/.codex/setup/codex.powershell_profile.ps1" }
+
+[features]
+    apply_patch_freeform = true
+    apps = true
+    apps_mcp_gateway = true
+    child_agents_md = true
+    collaboration_modes = true
+    multi_agent = true
+    personality = true
+    powershell_utf8 = true
+    remote_models = true
+    request_rule = true
+    shell_snapshot = true
+    shell_tool = true
+    unified_exec = true
 
 [agents]
     max_threads = 4
@@ -53,3 +77,121 @@ project_root_markers = [
         startup_timeout_sec = 20.0
         tool_timeout_sec    = 120.0
         url                 = "https://developers.openai.com/mcp"
+
+    [mcp_servers.microsoft_docs]
+        enabled             = true
+        required            = false
+        startup_timeout_sec = 20.0
+        tool_timeout_sec    = 120.0
+        url                 = "https://learn.microsoft.com/api/mcp"
+
+    [mcp_servers.chrome_devtools]
+        command             = "npx"
+        args                = ["chrome-devtools-mcp@latest"]
+        enabled             = true
+        required            = false
+        startup_timeout_sec = 20.0
+        tool_timeout_sec    = 120.0
+
+    [mcp_servers.playwright]
+        command             = "npx"
+        args                = ["@playwright/mcp@latest"]
+        enabled             = true
+        required            = false
+        startup_timeout_sec = 20.0
+        tool_timeout_sec    = 120.0
+
+    [mcp_servers.next-devtools]
+        command             = "npx"
+        args                = ["-y", "next-devtools-mcp@latest"]
+        enabled             = true
+        required            = false
+        startup_timeout_sec = 20.0
+        tool_timeout_sec    = 120.0
+        env                 = { SystemRoot = "C:\\Windows", PROGRAMFILES = "C:\\Program Files" }
+
+    [mcp_servers.github]
+        bearer_token_env_var = "GITHUB_TOKEN"
+        enabled              = true
+        required             = false
+        startup_timeout_sec  = 20.0
+        tool_timeout_sec     = 120.0
+        url                  = "https://api.githubcopilot.com/mcp/"
+
+    [mcp_servers.vercel]
+        bearer_token_env_var = "VERCEL_TOKEN"
+        enabled              = true
+        required             = false
+        startup_timeout_sec  = 20.0
+        tool_timeout_sec     = 120.0
+        url                  = "https://mcp.vercel.com"
+
+    [mcp_servers.neon]
+        bearer_token_env_var = "NEON_API_KEY"
+        enabled              = true
+        required             = false
+        startup_timeout_sec  = 20.0
+        tool_timeout_sec     = 120.0
+        url                  = "https://mcp.neon.tech/mcp"
+
+    [mcp_servers.clerk]
+        bearer_token_env_var = "AUTH_CLERK_SECRET_KEY"
+        enabled              = true
+        required             = false
+        startup_timeout_sec  = 20.0
+        tool_timeout_sec     = 120.0
+        url                  = "https://mcp.clerk.com/mcp"
+
+    [mcp_servers.shadcn]
+        command             = "npx"
+        args                = ["shadcn@latest", "mcp"]
+        enabled             = true
+        required            = false
+        startup_timeout_sec = 20.0
+        tool_timeout_sec    = 120.0
+
+    [mcp_servers.context7]
+        bearer_token_env_var = "CONTEXT7_API_KEY"
+        enabled              = true
+        required             = false
+        startup_timeout_sec  = 20.0
+        tool_timeout_sec     = 120.0
+        url                  = "https://mcp.context7.com/mcp"
+
+    [mcp_servers.notion]
+        enabled             = true
+        required            = false
+        startup_timeout_sec = 20.0
+        tool_timeout_sec    = 120.0
+        url                 = "https://mcp.notion.com/mcp"
+
+[apps]
+
+    [apps.github]
+        enabled = true
+
+    [apps.notion]
+        enabled = true
+
+    [apps.vercel]
+        enabled = true
+
+    [apps.huggingface]
+        enabled = true
+
+    [apps.adobe_acrobat]
+        enabled = true
+
+    [apps.adobe_photoshop]
+        enabled = true
+
+    [apps.canva]
+        enabled = true
+
+[projects]
+
+    [projects."D:/CtrlPlus"]
+        trust_level = "trusted"
+
+[windows]
+    sandbox = "elevated"

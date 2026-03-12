@@ -37,6 +37,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.eslintcache
 
 # env files
 .env*
@@ -53,3 +54,5 @@ yarn-error.log*
 next-env.d.ts
 
 /lib/generated/prisma
+.codex/runtime/
+.codex/logs/
