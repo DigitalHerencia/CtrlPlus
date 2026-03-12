@@ -24,3 +24,8 @@ Run before handoff when relevant:
 ## Pull Requests
 
 Reference `.codex/templates/pull-request-template.md` for the current PR checklist.
+
+## Documentation Rules
+
+- Put end-user docs only in `/docs`.
+- Put all internal developer and Codex docs in `.codex/`.

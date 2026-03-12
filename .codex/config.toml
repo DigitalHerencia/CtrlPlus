@@ -135,7 +135,7 @@ project_root_markers = [
         url                  = "https://mcp.neon.tech/mcp"
 
     [mcp_servers.clerk]
-        bearer_token_env_var = "AUTH_CLERK_SECRET_KEY"
+        bearer_token_env_var = "CLERK_SECRET_KEY"
         enabled              = true
         required             = false
         startup_timeout_sec  = 20.0

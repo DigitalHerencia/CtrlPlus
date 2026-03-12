@@ -32,6 +32,14 @@ Set-Location $repoRoot
 Set-EnvFileValue -Path (Join-Path $repoRoot ".env.local")
 Set-EnvFileValue -Path (Join-Path $repoRoot ".env")
 
+# Keep Clerk env names synchronized for runtime SDKs and MCP server auth.
+if (-not $env:CLERK_SECRET_KEY -and $env:AUTH_CLERK_SECRET_KEY) {
+  [Environment]::SetEnvironmentVariable("CLERK_SECRET_KEY", $env:AUTH_CLERK_SECRET_KEY, "Process")
+}
+if (-not $env:AUTH_CLERK_SECRET_KEY -and $env:CLERK_SECRET_KEY) {
+  [Environment]::SetEnvironmentVariable("AUTH_CLERK_SECRET_KEY", $env:CLERK_SECRET_KEY, "Process")
+}
+
 $localBin = Join-Path $repoRoot "node_modules\.bin"
 if (Test-Path $localBin -and -not ($env:PATH -split ';' | Where-Object { $_ -eq $localBin })) {
   $env:PATH = "$localBin;$env:PATH"

@@ -1,6 +1,7 @@
 "use server";
 
 import { getSession } from "@/lib/auth/session";
+import { requireCapability } from "@/lib/authz/policy";
 import { prisma } from "@/lib/prisma";
 import { visualizerConfig } from "@/lib/visualizer/config";
 import { generateCompositePreview } from "@/lib/visualizer/preview-pipeline";
@@ -39,6 +40,7 @@ export async function generatePreview(input: GeneratePreviewInput): Promise<Visu
   const session = await getSession();
   const userId = session.userId;
   if (!session.isAuthenticated || !userId) throw new Error("Unauthorized: not authenticated");
+  requireCapability(session.authz, "visualizer.use");
 
   const parsed = generatePreviewSchema.parse(input);
 

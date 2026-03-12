@@ -13,6 +13,11 @@
 
 ## Runbooks
 
-- `docs/operations/ship-readiness.md`
-- `docs/operations/billing-runbook.md`
-- `docs/operations/scheduling-reservations.md`
+- `.codex/docs/operations/ship-readiness.md`
+- `.codex/docs/operations/billing-runbook.md`
+- `.codex/docs/operations/scheduling-reservations.md`
+
+## Documentation Boundary
+
+- `/docs` is end-user docs only.
+- All internal developer instructions and runbooks live in `.codex/`.

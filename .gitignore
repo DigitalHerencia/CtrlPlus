@@ -56,3 +56,5 @@ next-env.d.ts
 /lib/generated/prisma
 .codex/runtime/
 .codex/logs/
+
+.vercel

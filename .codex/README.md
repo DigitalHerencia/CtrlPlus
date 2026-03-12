@@ -10,6 +10,7 @@ This directory is the single source of truth for agent-facing workflow, environm
 - `instructions/contributing.md`: branch, commit, validation, and review expectations.
 - `instructions/operations.md`: local setup and operational runbooks for developers.
 - `instructions/product.md`: concise product and authorization model.
+- `instructions/visualizer.md`: visualizer-domain guardrails and asset direction.
 - `templates/pull-request-template.md`: PR checklist mirror for agent workflows.
 - `setup/bootstrap-windows.ps1`: local bootstrap for Windows/Codex/VS Code/CLI setup.
 - `setup/doctor.ps1`: repeatable health check for repo, env, auth, and toolchain state.
@@ -19,5 +20,6 @@ This directory is the single source of truth for agent-facing workflow, environm
 ## Principles
 
 - Keep agent workflow material in `.codex/`, not `.github/` or `docs/`.
-- Keep end-user documentation in `docs/`.
+- Keep end-user documentation in `docs/` only.
+- Keep all internal developer docs, runbooks, implementation notes, and Codex instructions in `.codex/` only.
 - Keep secrets in local environment files or OS/user environment variables only.

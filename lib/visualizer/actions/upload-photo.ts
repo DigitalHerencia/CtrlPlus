@@ -1,6 +1,7 @@
 "use server";
 
 import { getSession } from "@/lib/auth/session";
+import { requireCapability } from "@/lib/authz/policy";
 import { prisma } from "@/lib/prisma";
 import { buildVisualizerCacheKey } from "@/lib/visualizer/cache-key";
 import { visualizerConfig } from "@/lib/visualizer/config";
@@ -32,6 +33,7 @@ export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<Visua
   const session = await getSession();
   const userId = session.userId;
   if (!session.isAuthenticated || !userId) throw new Error("Unauthorized: not authenticated");
+  requireCapability(session.authz, "visualizer.use");
 
   const parsed = uploadPhotoSchema.parse(input);
   validatePhotoInput(parsed.customerPhotoUrl);

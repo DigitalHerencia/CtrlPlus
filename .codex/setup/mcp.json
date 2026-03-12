@@ -52,7 +52,7 @@
       "type": "http",
       "url": "https://mcp.clerk.com/mcp",
       "headers": {
-        "Authorization": "Bearer ${input:AUTH_CLERK_SECRET_KEY}"
+        "Authorization": "Bearer ${input:CLERK_SECRET_KEY}"
       }
     },
     "notion": {
@@ -66,7 +66,7 @@
   },
   "inputs": [
     {
-      "id": "AUTH_CLERK_SECRET_KEY",
+      "id": "CLERK_SECRET_KEY",
       "type": "promptString",
       "description": "Clerk secret key",
       "password": true
