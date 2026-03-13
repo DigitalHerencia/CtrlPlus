@@ -18,7 +18,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "type-check": "pnpm typecheck",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm prisma:validate && pnpm build",
+    "check": "pnpm format:check && pnpm exec prisma generate && pnpm lint && pnpm typecheck && pnpm test && pnpm prisma:validate && pnpm build",
     "ci:quality": "pnpm check",
     "fix": "pnpm format && pnpm lint:fix",
     "test": "pnpm test:unit",
