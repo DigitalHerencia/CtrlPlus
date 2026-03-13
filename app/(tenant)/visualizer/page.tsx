@@ -10,8 +10,10 @@ export default async function VisualizerPage() {
   if (!session.isAuthenticated) {
     redirect("/sign-in");
   }
+
+  const canManageCatalog = hasCapability(session.authz, "catalog.manage");
   const wraps = await getWraps({
-    includeHidden: hasCapability(session.authz, "catalog.manage"),
+    includeHidden: canManageCatalog,
   });
 
   return (
@@ -40,7 +42,7 @@ export default async function VisualizerPage() {
         />
       </div>
 
-      <VisualizerClient wraps={wraps} />
+      <VisualizerClient wraps={wraps} canManageCatalog={canManageCatalog} />
     </div>
   );
 }

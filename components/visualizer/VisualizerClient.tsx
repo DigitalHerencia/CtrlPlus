@@ -18,11 +18,12 @@ import { WrapSelector } from "./WrapSelector";
 
 interface VisualizerClientProps {
   wraps: WrapDTO[];
+  canManageCatalog?: boolean;
 }
 
 type PreviewMode = "upload" | "template";
 
-export function VisualizerClient({ wraps }: VisualizerClientProps) {
+export function VisualizerClient({ wraps, canManageCatalog = false }: VisualizerClientProps) {
   const [selectedWrapId, setSelectedWrapId] = useState<string | null>(wraps[0]?.id ?? null);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateVehicleOption>(
     templateVehicleOptions[0],
@@ -67,13 +68,18 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
             </span>
             Choose a Wrap
           </h2>
-          <WrapSelector wraps={wraps} selectedWrapId={selectedWrapId} onSelect={handleWrapSelect} />
+          <WrapSelector
+            wraps={wraps}
+            selectedWrapId={selectedWrapId}
+            onSelect={handleWrapSelect}
+            canManageCatalog={canManageCatalog}
+          />
         </section>
 
         <section className="border border-neutral-700 bg-neutral-950/80 p-6 text-neutral-100">
           <Tabs
             value={mode}
-            onValueChange={(value) => setMode(value as PreviewMode)}
+            onValueChange={(value: string) => setMode(value as PreviewMode)}
             className="space-y-4"
           >
             <div className="flex items-center justify-between gap-3">
@@ -175,7 +181,7 @@ export function VisualizerClient({ wraps }: VisualizerClientProps) {
 
           <div className="mt-4 flex items-center justify-between gap-3 border-t border-neutral-700 pt-4">
             <p className="text-xs text-neutral-400">
-              Preview issues won’t block your booking flow.
+              Preview issues won&apos;t block your booking flow.
             </p>
             <Button
               asChild

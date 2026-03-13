@@ -1,5 +1,8 @@
 "use client";
 
+import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
 import type { WrapDTO } from "@/lib/catalog/types";
 import { cn } from "@/lib/utils";
 
@@ -7,19 +10,31 @@ interface WrapSelectorProps {
   wraps: WrapDTO[];
   selectedWrapId: string | null;
   onSelect: (wrapId: string) => void;
+  canManageCatalog?: boolean;
   className?: string;
 }
 
-export function WrapSelector({ wraps, selectedWrapId, onSelect, className }: WrapSelectorProps) {
+export function WrapSelector({
+  wraps,
+  selectedWrapId,
+  onSelect,
+  canManageCatalog = false,
+  className,
+}: WrapSelectorProps) {
   if (wraps.length === 0) {
     return (
       <div
         className={cn(
-          "border border-dashed border-neutral-700 bg-neutral-900 p-8 text-center text-sm text-neutral-100",
+          "space-y-3 border border-dashed border-neutral-700 bg-neutral-900 p-8 text-center text-sm text-neutral-100",
           className,
         )}
       >
-        No wraps available. Add wraps in the Catalog to get started.
+        <p>No wraps available. Add wraps in the Catalog to get started.</p>
+        {canManageCatalog ? (
+          <Button asChild size="sm">
+            <Link href="/catalog/manage">Open Catalog Manager</Link>
+          </Button>
+        ) : null}
       </div>
     );
   }
