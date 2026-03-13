@@ -1,5 +1,0 @@
-version = 1
-name = "CtrlPlus"
-
-[setup]
-script = "pnpm install && pnpm prisma generate && pnpm typecheck && pnpm exec playwright install chrome && pnpm codex:doctor"
