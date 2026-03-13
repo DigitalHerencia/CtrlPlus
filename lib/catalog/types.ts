@@ -19,11 +19,31 @@ export const WrapCategory = {
 
 export type WrapCategory = (typeof WrapCategory)[keyof typeof WrapCategory];
 
+export const WrapImageKind = {
+  HERO: "hero",
+  VISUALIZER_TEXTURE: "visualizer_texture",
+  VISUALIZER_MASK_HINT: "visualizer_mask_hint",
+  GALLERY: "gallery",
+} as const;
+
+export type WrapImageKind = (typeof WrapImageKind)[keyof typeof WrapImageKind];
+
+const wrapImageKindValues: [WrapImageKind, ...WrapImageKind[]] = [
+  WrapImageKind.HERO,
+  WrapImageKind.VISUALIZER_TEXTURE,
+  WrapImageKind.VISUALIZER_MASK_HINT,
+  WrapImageKind.GALLERY,
+];
+
 // ─── DTOs ─────────────────────────────────────────────────────────────────────
 
 export interface WrapImageDTO {
   id: string;
   url: string;
+  kind: WrapImageKind;
+  isActive: boolean;
+  version: number;
+  contentHash: string;
   displayOrder: number;
 }
 
@@ -73,6 +93,10 @@ export const wrapDTOFields = {
     select: {
       id: true,
       url: true,
+      kind: true,
+      isActive: true,
+      version: true,
+      contentHash: true,
       displayOrder: true,
     },
     orderBy: { displayOrder: "asc" },
@@ -142,10 +166,21 @@ export type SetWrapCategoryMappingsInput = z.infer<typeof setWrapCategoryMapping
 
 export const wrapImageUploadSchema = z.object({
   wrapId: z.string().min(1),
+  kind: z.enum(wrapImageKindValues).default(WrapImageKind.GALLERY),
+  isActive: z.boolean().default(true),
   file: z.instanceof(File),
 });
 
 export type WrapImageUploadInput = z.infer<typeof wrapImageUploadSchema>;
+
+export const updateWrapImageMetadataSchema = z.object({
+  wrapId: z.string().min(1),
+  imageId: z.string().min(1),
+  kind: z.enum(wrapImageKindValues).optional(),
+  isActive: z.boolean().optional(),
+});
+
+export type UpdateWrapImageMetadataInput = z.infer<typeof updateWrapImageMetadataSchema>;
 
 export const WRAP_SORT_BY_VALUES = {
   name: "name",

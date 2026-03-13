@@ -1,6 +1,6 @@
 # Project Model
 
-CTRL+ is a multi-tenant vehicle wrap platform.
+CTRL+ is a single-store vehicle wrap platform.
 
 ## Stack
 
@@ -13,11 +13,11 @@ CTRL+ is a multi-tenant vehicle wrap platform.
 
 ## Roles
 
-- `customer`: tenant-scoped browsing, visualizer, bookings, invoices, settings.
-- `owner`: tenant-scoped catalog, scheduling, billing, and customer management.
-- `admin`: owner capabilities plus tenant administration and platform diagnostics.
+- `customer`: catalog browsing, visualizer, bookings, invoices, and personal settings.
+- `owner`: catalog/scheduling/billing management for the store.
+- `admin`: owner capabilities plus platform diagnostics and webhook/database operations.
 
-Role resolution and tenant scope must always be server-side.
+Role resolution and scope checks must always be server-side.
 
 ## Domain Structure
 
@@ -34,6 +34,6 @@ Role resolution and tenant scope must always be server-side.
 - Prefer RSC by default.
 - Keep Prisma out of `app/**` except webhook handlers.
 - Keep DTO boundaries at the data layer.
-- Enforce tenant scoping on every domain query and mutation.
+- Enforce role and ownership checks on every domain query and mutation.
 - Keep all non-end-user docs under `.codex/`.
 - Avoid moving agent workflow material outside `.codex/`.

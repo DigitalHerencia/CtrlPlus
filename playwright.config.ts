@@ -24,6 +24,7 @@ const webServer = process.env.BASE_URL
 
 export default defineConfig({
   testDir: "./e2e",
+  testIgnore: ["**/fixtures/**"],
   /* Maximum time one test can run */
   timeout: 30_000,
   /* Fail CI fast on first failure */

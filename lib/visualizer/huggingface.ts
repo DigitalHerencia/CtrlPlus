@@ -9,6 +9,18 @@ interface HfSegmentationResult {
 
 const VEHICLE_LABELS = new Set(["car", "truck", "bus", "vehicle"]);
 
+function buildHfInferenceUrl(): string {
+  const encodedModel = encodeURIComponent(visualizerConfig.maskModel);
+  const base = `${visualizerConfig.huggingFaceApiBase}/${encodedModel}`;
+  const revision = visualizerConfig.huggingFaceModelRevision?.trim();
+
+  if (!revision || revision === "main") {
+    return base;
+  }
+
+  return `${base}?revision=${encodeURIComponent(revision)}`;
+}
+
 async function callHf(imageBuffer: Buffer): Promise<HfSegmentationResult[]> {
   if (!visualizerConfig.huggingFaceToken) {
     throw new Error("HUGGINGFACE_API_TOKEN is required for segmentation");
@@ -18,18 +30,15 @@ async function callHf(imageBuffer: Buffer): Promise<HfSegmentationResult[]> {
   const timeout = setTimeout(() => controller.abort(), visualizerConfig.huggingFaceTimeoutMs);
 
   try {
-    const response = await fetch(
-      `${visualizerConfig.huggingFaceApiBase}/${encodeURIComponent(visualizerConfig.maskModel)}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${visualizerConfig.huggingFaceToken}`,
-          "Content-Type": "application/octet-stream",
-        },
-        body: new Uint8Array(imageBuffer),
-        signal: controller.signal,
+    const response = await fetch(buildHfInferenceUrl(), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${visualizerConfig.huggingFaceToken}`,
+        "Content-Type": "application/octet-stream",
       },
-    );
+      body: new Uint8Array(imageBuffer),
+      signal: controller.signal,
+    });
 
     if (!response.ok) {
       throw new Error(`HF inference failed: ${response.status}`);

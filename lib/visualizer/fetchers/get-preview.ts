@@ -1,3 +1,5 @@
+import { getSession } from "@/lib/auth/session";
+import { requireCapability } from "@/lib/authz/policy";
 import { prisma } from "@/lib/prisma";
 import {
   type VisualizerPreviewDTO,
@@ -30,9 +32,17 @@ function toPreviewDTO(record: {
 }
 
 export async function getPreviewById(previewId: string): Promise<VisualizerPreviewDTO | null> {
+  const session = await getSession();
+  const userId = session.userId;
+  if (!session.isAuthenticated || !userId) {
+    return null;
+  }
+  requireCapability(session.authz, "visualizer.use");
+
   const preview = await prisma.visualizerPreview.findFirst({
     where: {
       id: previewId,
+      ownerClerkUserId: userId,
       deletedAt: null,
     },
     select: visualizerPreviewDTOFields,
@@ -42,9 +52,17 @@ export async function getPreviewById(previewId: string): Promise<VisualizerPrevi
 }
 
 export async function getPreviewsByWrap(wrapId: string): Promise<VisualizerPreviewDTO[]> {
+  const session = await getSession();
+  const userId = session.userId;
+  if (!session.isAuthenticated || !userId) {
+    return [];
+  }
+  requireCapability(session.authz, "visualizer.use");
+
   const previews = await prisma.visualizerPreview.findMany({
     where: {
       wrapId,
+      ownerClerkUserId: userId,
       deletedAt: null,
       expiresAt: {
         gt: new Date(),

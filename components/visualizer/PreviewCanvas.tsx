@@ -78,6 +78,7 @@ export function PreviewCanvas({
   }
 
   const imageUrl = preview.processedImageUrl ?? preview.customerPhotoUrl;
+  const showOverlay = Boolean(wrapOverlayUrl && !preview.processedImageUrl);
 
   return (
     <div className={cn("overflow-hidden border border-neutral-700 bg-neutral-900", className)}>
@@ -88,10 +89,10 @@ export function PreviewCanvas({
           alt="Wrap preview on your vehicle"
           className="h-full w-full object-contain"
         />
-        {wrapOverlayUrl && (
+        {showOverlay && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={wrapOverlayUrl}
+            src={wrapOverlayUrl ?? undefined}
             alt="Selected wrap overlay"
             className="pointer-events-none absolute inset-[12%] h-[76%] w-[76%] object-contain opacity-35 mix-blend-screen"
           />

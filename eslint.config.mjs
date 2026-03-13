@@ -134,6 +134,8 @@ export default defineConfig([
 
   globalIgnores([
     ".next/**",
+    ".codex/**",
+    ".codex-global-edit/**",
     "out/**",
     "build/**",
     "next-env.d.ts",

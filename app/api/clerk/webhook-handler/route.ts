@@ -304,7 +304,7 @@ async function handleUserEvent(eventType: string, data: unknown): Promise<void> 
   const firstName = getFirstStringPath(data, [["first_name"]]) ?? null;
   const lastName = getFirstStringPath(data, [["last_name"]]) ?? null;
   const imageUrl = getFirstStringPath(data, [["image_url"]]) ?? null;
-  const globalRole = resolveGlobalRoleForClerkUserId(clerkUserId);
+  const globalRole = await resolveGlobalRoleForClerkUserId(clerkUserId);
 
   if (eventType === "user.deleted") {
     const deletedAt = new Date();

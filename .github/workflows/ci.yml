@@ -15,7 +15,7 @@ permissions:
   contents: read
 
 jobs:
-  quality:
+  fast-quality:
     runs-on: ubuntu-latest
 
     env:
@@ -51,5 +51,48 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Validate Quality Gates
+      - name: Validate quality gates
         run: pnpm ci:quality
+
+  domain-e2e:
+    runs-on: ubuntu-latest
+    needs: fast-quality
+
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      DATABASE_URL: postgresql://test:test@localhost:5432/test
+      DATABASE_URL_UNPOOLED: postgresql://test:test@localhost:5432/test
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_TENANT_DOMAIN_SUFFIX: .ctrlplus.local
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
+      CLERK_SECRET_KEY: sk_test_placeholder
+      CLERK_WEBHOOK_SIGNING_SECRET: whsec_placeholder
+      CLERK_WEBHOOK_SECRET: whsec_placeholder
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder
+      STRIPE_SECRET_KEY: sk_test_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_placeholder
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.24.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run domain smoke e2e (chromium)
+        run: pnpm test:e2e --project=chromium --reporter=line

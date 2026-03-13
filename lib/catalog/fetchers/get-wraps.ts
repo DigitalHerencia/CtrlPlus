@@ -3,6 +3,7 @@ import {
   searchWrapsSchema,
   type SearchWrapsInput,
   type WrapDTO,
+  type WrapImageKind,
   wrapDTOFields,
   type WrapListDTO,
 } from "../types";
@@ -24,7 +25,15 @@ function toWrapDTO(prismaWrap: {
   installationMinutes: number | null;
   createdAt: Date;
   updatedAt: Date;
-  images: Array<{ id: string; url: string; displayOrder: number }>;
+  images: Array<{
+    id: string;
+    url: string;
+    kind: string;
+    isActive: boolean;
+    version: number;
+    contentHash: string;
+    displayOrder: number;
+  }>;
   categoryMappings: Array<{
     category: { id: string; name: string; slug: string; deletedAt: Date | null };
   }>;
@@ -36,7 +45,13 @@ function toWrapDTO(prismaWrap: {
     price: normalizePriceInCents(prismaWrap.price),
     isHidden: prismaWrap.isHidden,
     installationMinutes: prismaWrap.installationMinutes,
-    images: prismaWrap.images,
+    images: prismaWrap.images.map((image, index) => ({
+      ...image,
+      kind: (image.kind as WrapImageKind) ?? (index === 0 ? "hero" : "gallery"),
+      isActive: image.isActive,
+      version: image.version,
+      contentHash: image.contentHash,
+    })),
     categories: prismaWrap.categoryMappings
       .map((mapping) => mapping.category)
       .filter((category) => category.deletedAt === null)

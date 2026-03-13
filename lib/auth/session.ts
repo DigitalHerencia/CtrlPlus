@@ -50,7 +50,7 @@ export const getSession = cache(async (): Promise<SessionContext> => {
   const resolvedClerkUserId = clerkUserId ?? null;
   const role =
     resolvedClerkUserId && isAuthenticated
-      ? resolveGlobalRoleForClerkUserId(resolvedClerkUserId)
+      ? await resolveGlobalRoleForClerkUserId(resolvedClerkUserId)
       : "customer";
 
   const authz: AuthzContext = {

@@ -10,16 +10,24 @@ import { WrapImageManager } from "./WrapImageManager";
 
 interface WrapDetailProps {
   wrap: WrapDTO;
+  canManageCatalog: boolean;
 }
 
-export function WrapDetail({ wrap }: WrapDetailProps) {
+export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
   const installationTime = formatInstallationTime(wrap.installationMinutes);
 
   return (
     <div className="max-w-4xl space-y-5">
-      <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit">
-        <Link href="/catalog">Back to Catalog</Link>
-      </Button>
+      <div className="flex items-center justify-between gap-3">
+        <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit">
+          <Link href="/catalog">Back to Catalog</Link>
+        </Button>
+        {canManageCatalog ? (
+          <Button asChild variant="outline" size="sm">
+            <Link href="/catalog/manage">Manage Catalog</Link>
+          </Button>
+        ) : null}
+      </div>
 
       <Card className="overflow-hidden border-neutral-700 bg-neutral-900 text-neutral-100">
         {wrap.images[0] && (
@@ -69,7 +77,29 @@ export function WrapDetail({ wrap }: WrapDetailProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <WrapImageManager wrapId={wrap.id} images={wrap.images} />
+          {canManageCatalog ? (
+            <WrapImageManager wrapId={wrap.id} images={wrap.images} />
+          ) : wrap.images.length > 0 ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {wrap.images.map((image) => (
+                <div
+                  key={image.id}
+                  className="overflow-hidden border border-neutral-700 bg-neutral-900"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={image.url}
+                    alt={`${wrap.name} image`}
+                    className="h-40 w-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-neutral-400">
+              No gallery images are available for this wrap yet.
+            </p>
+          )}
         </CardContent>
       </Card>
 

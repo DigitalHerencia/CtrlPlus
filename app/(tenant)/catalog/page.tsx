@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { CatalogPagination } from "@/components/catalog/CatalogPagination";
 import { WrapFilter } from "@/components/catalog/WrapFilter";
 import { WrapGrid } from "@/components/catalog/WrapGrid";
 import { WorkspacePageIntro } from "@/components/shared/tenant-elements";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getSession } from "@/lib/auth/session";
 import { hasCapability } from "@/lib/authz/policy";
@@ -67,6 +69,13 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         label="Catalog"
         title="Vehicle Wrap Collection"
         description="Explore premium wrap packages, compare finishes, and jump into detail views with a single consistent storefront system."
+        actions={
+          canManageCatalog ? (
+            <Button asChild>
+              <Link href="/catalog/manage">Manage Catalog</Link>
+            </Button>
+          ) : null
+        }
         detail={
           data ? (
             <div className="border border-neutral-700 bg-neutral-900 px-5 py-4 text-right">
@@ -88,7 +97,7 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
           Showing filtered results for your catalog search.
         </p>
       )}
-      <WrapGrid wraps={data.wraps} />
+      <WrapGrid wraps={data.wraps} canManageCatalog={canManageCatalog} />
       <CatalogPagination
         page={data.page}
         totalPages={data.totalPages}

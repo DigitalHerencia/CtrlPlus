@@ -34,3 +34,7 @@ public/**/*.map
 # env files
 .env
 .env.*
+
+# codex artifacts
+.codex/**
+.codex-global-edit/**

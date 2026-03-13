@@ -4,13 +4,13 @@
 
 - Upload flow writes `VisualizerPreview` records and caches by deterministic `cacheKey`.
 - Segmentation uses Hugging Face first, then falls back to a simple center mask.
-- Compositing currently uses generated textures, not catalog-specific visualizer assets.
+- Compositing now resolves catalog visualizer assets first and falls back to generated textures only when needed.
 
 ## Required Guardrails
 
 - Actions must enforce: `auth -> authorize -> validate -> mutate -> audit`.
 - Enforce `visualizer.use` capability before preview creation or generation.
-- Resolve and enforce tenant scope server-side for every visualizer query and mutation.
+- Resolve and enforce preview ownership scope server-side for every visualizer query and mutation.
 - Keep hidden-wrap restrictions for non-owner/admin users.
 
 ## Catalog Asset Direction

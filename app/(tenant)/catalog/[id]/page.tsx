@@ -26,7 +26,7 @@ export default async function WrapDetailPage({ params }: WrapDetailPageProps) {
 
   return (
     <div className="space-y-6">
-      <WrapDetail wrap={wrap} />
+      <WrapDetail wrap={wrap} canManageCatalog={canManageCatalog} />
     </div>
   );
 }

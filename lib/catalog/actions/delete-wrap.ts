@@ -2,7 +2,7 @@
 
 import { requireOwnerOrPlatformAdmin } from "@/lib/authz/guards";
 import { prisma } from "@/lib/prisma";
-import type { WrapDTO } from "../types";
+import type { WrapDTO, WrapImageDTO } from "../types";
 
 export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
   const session = await requireOwnerOrPlatformAdmin();
@@ -12,7 +12,15 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
     include: {
       images: {
         where: { deletedAt: null },
-        select: { id: true, url: true, displayOrder: true },
+        select: {
+          id: true,
+          url: true,
+          kind: true,
+          isActive: true,
+          version: true,
+          contentHash: true,
+          displayOrder: true,
+        },
         orderBy: { displayOrder: "asc" },
       },
       categoryMappings: {
@@ -52,7 +60,17 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
     price: Number.isInteger(existing.price) ? existing.price : Math.round(existing.price),
     isHidden: existing.isHidden,
     installationMinutes: existing.installationMinutes,
-    images: existing.images,
+    images: existing.images.map(
+      (image): WrapImageDTO => ({
+        id: image.id,
+        url: image.url,
+        kind: image.kind as WrapImageDTO["kind"],
+        isActive: image.isActive,
+        version: image.version,
+        contentHash: image.contentHash,
+        displayOrder: image.displayOrder,
+      }),
+    ),
     categories: existing.categoryMappings
       .map((mapping) => mapping.category)
       .filter((category) => category.deletedAt === null)

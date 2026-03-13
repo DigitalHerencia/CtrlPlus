@@ -184,7 +184,7 @@ model Wrap {
 model WrapCategory {
   id        String    @id @default(cuid())
   name      String
-  slug      String    @unique
+  slug      String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
@@ -192,6 +192,7 @@ model WrapCategory {
   wraps WrapCategoryMapping[]
 
   @@index([deletedAt, createdAt])
+  @@index([slug])
 }
 
 /// Junction table: many wraps to many categories
@@ -210,6 +211,10 @@ model WrapImage {
   id           String    @id @default(cuid())
   wrapId       String
   url          String
+  kind         String    @default("gallery")
+  isActive     Boolean   @default(true)
+  version      Int       @default(1)
+  contentHash  String    @default("")
   displayOrder Int       @default(0)
   createdAt    DateTime  @default(now())
   deletedAt    DateTime?
@@ -217,6 +222,7 @@ model WrapImage {
   wrap Wrap @relation(fields: [wrapId], references: [id], onDelete: Cascade)
 
   @@index([wrapId, deletedAt, displayOrder])
+  @@index([wrapId, kind, isActive, deletedAt])
 }
 
 // ============================================================================
@@ -278,21 +284,25 @@ model BookingReservation {
 
 /// Preview generation results (cached for 24h)
 model VisualizerPreview {
-  id                String    @id @default(cuid())
-  wrapId            String
-  customerPhotoUrl  String
-  processedImageUrl String? // Filled after processing
-  status            String    @default("pending") // "pending" | "processing" | "complete" | "failed"
-  cacheKey          String    @unique // Deterministic hash for caching
-  expiresAt         DateTime
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  deletedAt         DateTime?
+  id                     String    @id @default(cuid())
+  wrapId                 String
+  ownerClerkUserId       String
+  customerPhotoUrl       String
+  processedImageUrl      String? // Filled after processing
+  status                 String    @default("pending") // "pending" | "processing" | "complete" | "failed"
+  cacheKey               String    @unique // Deterministic hash for caching
+  sourceWrapImageId      String?
+  sourceWrapImageVersion Int?
+  expiresAt              DateTime
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  deletedAt              DateTime?
 
   wrap Wrap @relation(fields: [wrapId], references: [id], onDelete: Cascade)
 
   @@index([wrapId, deletedAt, expiresAt, createdAt])
   @@index([status, expiresAt])
+  @@index([ownerClerkUserId, deletedAt, expiresAt])
 }
 
 // ============================================================================
@@ -400,3 +410,6 @@ model AuditLog {
   @@index([action])
   @@index([deletedAt])
 }
+
+
+

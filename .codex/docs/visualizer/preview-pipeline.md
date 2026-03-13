@@ -3,25 +3,25 @@
 ## Current Runtime Flow
 
 1. Customer selects a wrap and uploads a vehicle photo (or picks a template image).
-2. `uploadVehiclePhoto` validates image type and size, then creates or reuses a `VisualizerPreview` by deterministic `cacheKey`.
-3. `generatePreview` marks the preview as `processing`.
+2. `uploadVehiclePhoto` validates image source/type/size, resolves the active visualizer texture candidate from catalog assets, then creates or reuses a `VisualizerPreview` by deterministic `cacheKey`.
+3. `generatePreview` enforces ownership (`ownerClerkUserId`) and marks the preview as `processing`.
 4. Server pipeline tries Hugging Face segmentation first; if it fails, it falls back to a center-ellipse mask.
-5. A generated texture is composited with the vehicle mask and blended onto the customer photo.
+5. Server compositing resolves catalog texture assets first (`visualizer_texture`/`hero` precedence), and falls back to generated synthetic textures only when no valid asset is available.
 6. The processed result is stored at `visualizer/previews/{previewId}.png` (Blob when configured, `data:` URL fallback otherwise).
-7. Preview status is updated to `complete` or `failed`, and action events are logged to `AuditLog`.
+7. Preview status is updated to `complete` or `failed`; success actions are logged to `AuditLog`.
 
 ## Current Asset Behavior
 
-- Catalog wrap images are used in the UI (`WrapSelector` thumbnails and a client overlay hint in `PreviewCanvas`).
-- Server-side compositing currently does **not** consume a catalog-managed visualizer texture asset.
-- Result: visualizer output is deterministic but synthetic (texture chosen from a code-side texture library).
+- Catalog wrap images drive selector/UI surfaces.
+- Server-side compositing consumes catalog-managed texture assets as the authoritative source when available.
+- Synthetic texture generation is retained only as explicit fallback for wraps missing visualizer-ready assets.
 
 ## Security and Authorization
 
 - Input validation is server-side.
-- Wrap visibility is enforced (`isHidden` restricted for non-owner/admin).
-- No client-provided ownership scope is trusted.
-- Visualizer actions must enforce `visualizer.use` capability before mutation.
+- Wrap visibility is enforced (`isHidden` restricted for non-owner/admin users).
+- Preview read/generate paths enforce ownership via `ownerClerkUserId`.
+- Visualizer actions enforce `visualizer.use` capability before mutation.
 
 ## Operational Checks
 
@@ -32,4 +32,4 @@
 
 ## Next Upgrade
 
-Use the catalog asset workflow in `.codex/docs/visualizer/catalog-asset-workflow.md` to shift from synthetic textures to explicit catalog-owned visualizer assets.
+Add explicit instrumentation and failure audit events so runtime monitoring aligns with the operational checks above.

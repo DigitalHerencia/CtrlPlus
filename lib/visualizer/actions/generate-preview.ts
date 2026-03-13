@@ -45,10 +45,16 @@ export async function generatePreview(input: GeneratePreviewInput): Promise<Visu
   const parsed = generatePreviewSchema.parse(input);
 
   const existing = await prisma.visualizerPreview.findFirst({
-    where: { id: parsed.previewId, deletedAt: null },
+    where: {
+      id: parsed.previewId,
+      ownerClerkUserId: userId,
+      deletedAt: null,
+    },
   });
 
-  if (!existing) throw new Error("Preview not found");
+  if (!existing) {
+    throw new Error("Preview not found");
+  }
 
   if (
     existing.status === "complete" &&
@@ -68,6 +74,7 @@ export async function generatePreview(input: GeneratePreviewInput): Promise<Visu
       wrapId: existing.wrapId,
       previewId: existing.id,
       customerPhotoUrl: existing.customerPhotoUrl,
+      sourceWrapImageId: existing.sourceWrapImageId,
     });
 
     const completed = await prisma.visualizerPreview.update({
@@ -85,7 +92,11 @@ export async function generatePreview(input: GeneratePreviewInput): Promise<Visu
         action: "GENERATE_PREVIEW",
         resourceType: "VisualizerPreview",
         resourceId: completed.id,
-        details: JSON.stringify({ wrapId: completed.wrapId }),
+        details: JSON.stringify({
+          wrapId: completed.wrapId,
+          sourceWrapImageId: existing.sourceWrapImageId,
+          sourceWrapImageVersion: existing.sourceWrapImageVersion,
+        }),
         timestamp: new Date(),
       },
     });
@@ -98,6 +109,23 @@ export async function generatePreview(input: GeneratePreviewInput): Promise<Visu
     });
 
     const message = error instanceof Error ? error.message : "Preview generation failed";
+
+    await prisma.auditLog.create({
+      data: {
+        userId,
+        action: "GENERATE_PREVIEW_FAILED",
+        resourceType: "VisualizerPreview",
+        resourceId: existing.id,
+        details: JSON.stringify({
+          wrapId: existing.wrapId,
+          sourceWrapImageId: existing.sourceWrapImageId,
+          sourceWrapImageVersion: existing.sourceWrapImageVersion,
+          error: message,
+        }),
+        timestamp: new Date(),
+      },
+    });
+
     throw new Error(message);
   }
 }

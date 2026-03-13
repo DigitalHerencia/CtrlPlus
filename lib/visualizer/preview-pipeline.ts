@@ -1,5 +1,10 @@
+import { readFile } from "fs/promises";
+import path from "path";
+
+import { prisma } from "@/lib/prisma";
 import sharp from "sharp";
-import { visualizerConfig } from "@/lib/visualizer/config";
+
+import { isAllowedRemotePhotoHost, visualizerConfig } from "@/lib/visualizer/config";
 import { compositeVehicleWrap } from "@/lib/visualizer/compositor";
 import { createVehicleMask, fallbackCenterMask } from "@/lib/visualizer/huggingface";
 import { storePreviewImage } from "@/lib/visualizer/storage";
@@ -45,28 +50,39 @@ async function generateTexture(wrapId: string, width: number, height: number): P
     .toBuffer();
 }
 
-export async function readPhotoBuffer(
-  customerPhotoUrl: string,
-): Promise<{ buffer: Buffer; contentType: string }> {
-  if (customerPhotoUrl.startsWith("data:")) {
-    const match = customerPhotoUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
-    if (!match) throw new Error("Invalid data URL");
+function parseDataUrl(customerPhotoUrl: string): { buffer: Buffer; contentType: string } {
+  const match = customerPhotoUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+  if (!match) throw new Error("Invalid data URL");
 
-    const contentType = match[1].toLowerCase();
-    if (!visualizerConfig.supportedMimeTypes.includes(contentType)) {
-      throw new Error("Unsupported image type");
-    }
-
-    const buffer = Buffer.from(match[2], "base64");
-    if (buffer.length > visualizerConfig.maxUploadSizeBytes) {
-      throw new Error("Uploaded image exceeds max size");
-    }
-
-    return { buffer, contentType };
+  const contentType = match[1].toLowerCase();
+  if (!visualizerConfig.supportedMimeTypes.includes(contentType)) {
+    throw new Error("Unsupported image type");
   }
 
-  const response = await fetch(customerPhotoUrl);
-  if (!response.ok) throw new Error("Unable to fetch customer image");
+  const buffer = Buffer.from(match[2], "base64");
+  if (buffer.length > visualizerConfig.maxUploadSizeBytes) {
+    throw new Error("Uploaded image exceeds max size");
+  }
+
+  return { buffer, contentType };
+}
+
+function assertApprovedRemoteHost(url: URL): void {
+  const host = url.hostname.toLowerCase();
+  if (!isAllowedRemotePhotoHost(host)) {
+    throw new Error("Image host is not allowed");
+  }
+}
+
+async function readRemoteImage(url: URL): Promise<{ buffer: Buffer; contentType: string }> {
+  if (url.protocol !== "https:") {
+    throw new Error("Only HTTPS image URLs are allowed");
+  }
+
+  assertApprovedRemoteHost(url);
+
+  const response = await fetch(url.toString());
+  if (!response.ok) throw new Error("Unable to fetch image");
 
   const contentType = response.headers.get("content-type")?.split(";")[0].toLowerCase() ?? "";
   if (!visualizerConfig.supportedMimeTypes.includes(contentType)) {
@@ -83,10 +99,152 @@ export async function readPhotoBuffer(
   return { buffer, contentType };
 }
 
+async function readLocalWrapImage(
+  urlPath: string,
+): Promise<{ buffer: Buffer; contentType: string }> {
+  if (!urlPath.startsWith("/uploads/wraps/")) {
+    throw new Error("Unsupported local texture path");
+  }
+
+  const normalized = path.normalize(urlPath).replaceAll("\\", "/");
+  if (!normalized.startsWith("/uploads/wraps/")) {
+    throw new Error("Invalid local texture path");
+  }
+
+  const absolute = path.join(process.cwd(), "public", ...normalized.split("/").filter(Boolean));
+  const extension = path.extname(absolute).toLowerCase();
+  const contentType =
+    extension === ".png"
+      ? "image/png"
+      : extension === ".jpg" || extension === ".jpeg"
+        ? "image/jpeg"
+        : extension === ".webp"
+          ? "image/webp"
+          : "";
+
+  if (!visualizerConfig.supportedMimeTypes.includes(contentType)) {
+    throw new Error("Unsupported image type");
+  }
+
+  const buffer = await readFile(absolute);
+  if (buffer.length > visualizerConfig.maxUploadSizeBytes) {
+    throw new Error("Uploaded image exceeds max size");
+  }
+
+  return { buffer, contentType };
+}
+
+export async function readPhotoBuffer(
+  customerPhotoUrl: string,
+): Promise<{ buffer: Buffer; contentType: string }> {
+  if (customerPhotoUrl.startsWith("data:")) {
+    return parseDataUrl(customerPhotoUrl);
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(customerPhotoUrl);
+  } catch {
+    throw new Error("Only data URLs or approved HTTPS image URLs are allowed");
+  }
+
+  return readRemoteImage(parsed);
+}
+
+type TextureCandidate = {
+  id: string;
+  url: string;
+  kind: string;
+  isActive: boolean;
+  displayOrder: number;
+};
+
+function texturePriority(image: TextureCandidate): number {
+  if (image.kind === "visualizer_texture" && image.isActive) return 0;
+  if (image.kind === "visualizer_texture") return 1;
+  if (image.kind === "hero" && image.isActive) return 2;
+  if (image.kind === "hero") return 3;
+  if (image.kind === "gallery" && image.isActive) return 4;
+  return 5;
+}
+
+async function resolveCatalogTextureUrl(
+  wrapId: string,
+  sourceWrapImageId?: string,
+): Promise<string | null> {
+  if (sourceWrapImageId) {
+    const sourceImage = await prisma.wrapImage.findFirst({
+      where: {
+        id: sourceWrapImageId,
+        wrapId,
+        deletedAt: null,
+      },
+      select: { url: true },
+    });
+
+    if (sourceImage) {
+      return sourceImage.url;
+    }
+  }
+
+  const wrapImages = await prisma.wrapImage.findMany({
+    where: {
+      wrapId,
+      deletedAt: null,
+    },
+    select: {
+      id: true,
+      url: true,
+      kind: true,
+      isActive: true,
+      displayOrder: true,
+    },
+    orderBy: {
+      displayOrder: "asc",
+    },
+  });
+
+  if (wrapImages.length === 0) {
+    return null;
+  }
+
+  const selected = [...wrapImages].sort((left, right) => {
+    const priorityDelta = texturePriority(left) - texturePriority(right);
+    if (priorityDelta !== 0) {
+      return priorityDelta;
+    }
+    return left.displayOrder - right.displayOrder;
+  })[0];
+
+  return selected?.url ?? null;
+}
+
+async function readCatalogTextureBuffer(
+  wrapId: string,
+  sourceWrapImageId?: string,
+): Promise<Buffer | null> {
+  const textureUrl = await resolveCatalogTextureUrl(wrapId, sourceWrapImageId);
+  if (!textureUrl) {
+    return null;
+  }
+
+  if (textureUrl.startsWith("data:")) {
+    return parseDataUrl(textureUrl).buffer;
+  }
+
+  if (textureUrl.startsWith("/")) {
+    return readLocalWrapImage(textureUrl).then((result) => result.buffer);
+  }
+
+  const parsedUrl = new URL(textureUrl);
+  return readRemoteImage(parsedUrl).then((result) => result.buffer);
+}
+
 export async function generateCompositePreview(params: {
   wrapId: string;
   previewId: string;
   customerPhotoUrl: string;
+  sourceWrapImageId?: string | null;
 }): Promise<string> {
   const { buffer: photoBuffer } = await readPhotoBuffer(params.customerPhotoUrl);
 
@@ -104,7 +262,19 @@ export async function generateCompositePreview(params: {
     .resize(metadata.width, metadata.height)
     .png()
     .toBuffer();
-  const textureBuffer = await generateTexture(params.wrapId, metadata.width, metadata.height);
+
+  let textureBuffer: Buffer;
+  try {
+    const catalogTexture = await readCatalogTextureBuffer(
+      params.wrapId,
+      params.sourceWrapImageId ?? undefined,
+    );
+    textureBuffer = catalogTexture
+      ? await sharp(catalogTexture).resize(metadata.width, metadata.height).png().toBuffer()
+      : await generateTexture(params.wrapId, metadata.width, metadata.height);
+  } catch {
+    textureBuffer = await generateTexture(params.wrapId, metadata.width, metadata.height);
+  }
 
   const composited = await compositeVehicleWrap({
     photoBuffer,
