@@ -34,6 +34,9 @@ SET "ownerClerkUserId" = COALESCE("ownerClerkUserId", 'legacy')
 WHERE "ownerClerkUserId" IS NULL;
 
 ALTER TABLE "VisualizerPreview"
+  ALTER COLUMN "ownerClerkUserId" SET DEFAULT 'legacy';
+
+ALTER TABLE "VisualizerPreview"
   ALTER COLUMN "ownerClerkUserId" SET NOT NULL;
 
 CREATE INDEX IF NOT EXISTS "VisualizerPreview_ownerClerkUserId_deletedAt_expiresAt_idx"
@@ -45,3 +48,4 @@ DROP INDEX IF EXISTS "WrapCategory_slug_key";
 CREATE UNIQUE INDEX IF NOT EXISTS "WrapCategory_slug_active_key"
   ON "WrapCategory"("slug")
   WHERE "deletedAt" IS NULL;
+

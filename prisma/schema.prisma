@@ -286,7 +286,7 @@ model BookingReservation {
 model VisualizerPreview {
   id                     String    @id @default(cuid())
   wrapId                 String
-  ownerClerkUserId       String
+  ownerClerkUserId       String    @default("legacy")
   customerPhotoUrl       String
   processedImageUrl      String? // Filled after processing
   status                 String    @default("pending") // "pending" | "processing" | "complete" | "failed"
@@ -410,6 +410,3 @@ model AuditLog {
   @@index([action])
   @@index([deletedAt])
 }
-
-
-
