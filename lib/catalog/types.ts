@@ -35,6 +35,13 @@ const wrapImageKindValues: [WrapImageKind, ...WrapImageKind[]] = [
   WrapImageKind.GALLERY,
 ];
 
+export const PUBLISH_REQUIRED_WRAP_IMAGE_KINDS = [
+  WrapImageKind.HERO,
+  WrapImageKind.VISUALIZER_TEXTURE,
+] as const;
+
+export type PublishRequiredWrapImageKind = (typeof PUBLISH_REQUIRED_WRAP_IMAGE_KINDS)[number];
+
 // ─── DTOs ─────────────────────────────────────────────────────────────────────
 
 export interface WrapImageDTO {
