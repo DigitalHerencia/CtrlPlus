@@ -24,6 +24,7 @@
     "test": "pnpm test:unit",
     "test:unit": "vitest run --passWithNoTests",
     "test:watch": "vitest",
+    "pretest:e2e": "playwright install chromium",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
