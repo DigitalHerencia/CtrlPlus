@@ -13,9 +13,10 @@ const isRemoteBaseUrl =
  * Only boot a local Next.js server when BASE_URL is not pointing at a remote URL.
  * When BASE_URL is provided (e.g. for Vercel preview runs), skip the webServer.
  */
-const webServer = isRemoteBaseUrl
-  ? undefined
-  : {
+const shouldStartWebServer = process.env.CI === "true" || !isRemoteBaseUrl;
+
+const webServer = shouldStartWebServer
+  ? {
       command: "pnpm dev",
       url: "http://localhost:3000",
       reuseExistingServer: !process.env.CI,
@@ -23,7 +24,8 @@ const webServer = isRemoteBaseUrl
       env: {
         NODE_ENV: "test",
       },
-    };
+    }
+  : undefined;
 
 export default defineConfig({
   testDir: "./e2e",
