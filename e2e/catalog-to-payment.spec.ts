@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { expectAuthRedirectWithContext } from "./helpers/auth-redirect";
 
 test.describe("Domain Journey Smoke", () => {
   test("public homepage renders", async ({ page }) => {
@@ -9,10 +10,7 @@ test.describe("Domain Journey Smoke", () => {
   for (const route of ["/catalog", "/visualizer", "/scheduling", "/billing"]) {
     test(`${route} redirects anonymous users to sign-in`, async ({ page }) => {
       await page.goto(route);
-      await page.waitForURL(
-        (url) => url.pathname.startsWith("/sign-in") || url.hostname.includes("clerk"),
-      );
-      expect(page.url().includes("sign-in") || page.url().includes("clerk")).toBeTruthy();
+      await expectAuthRedirectWithContext(page, route);
     });
   }
 

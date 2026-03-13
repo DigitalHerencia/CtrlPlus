@@ -8,6 +8,7 @@
  */
 
 import { expect, test } from "@playwright/test";
+import { expectAuthRedirectWithContext } from "./helpers/auth-redirect";
 
 // ─── Public page accessibility ────────────────────────────────────────────────
 
@@ -64,16 +65,13 @@ test.describe("Protected routes", () => {
   for (const route of protectedRoutes) {
     test(`${route} redirects unauthenticated users to sign-in`, async ({ page }) => {
       await page.goto(route);
-      await page.waitForURL(
-        (url) =>
-          url.pathname.startsWith("/sign-in") ||
-          url.pathname === "/sign-in" ||
-          // Clerk sometimes uses its own hosted pages
-          url.hostname.includes("clerk"),
-      );
-      // Should end up on a sign-in page (Clerk hosted or local)
-      const currentUrl = page.url();
-      expect(currentUrl.includes("sign-in") || currentUrl.includes("clerk")).toBeTruthy();
+      await expectAuthRedirectWithContext(page, route);
     });
   }
+
+  test("preserves requested route context for redirects with query strings", async ({ page }) => {
+    const routeWithQuery = "/catalog?source=e2e&branch_context=1";
+    await page.goto(routeWithQuery);
+    await expectAuthRedirectWithContext(page, routeWithQuery);
+  });
 });
