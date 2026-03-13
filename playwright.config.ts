@@ -6,17 +6,16 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const explicitBaseUrl = process.env.BASE_URL?.trim();
 const BASE_URL = explicitBaseUrl || "http://localhost:3000";
-const isRemoteBaseUrl =
-  !!explicitBaseUrl && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(explicitBaseUrl);
 
 /**
- * Only boot a local Next.js server when BASE_URL is not pointing at a remote URL.
- * When BASE_URL is provided (e.g. for Vercel preview runs), skip the webServer.
+ * By default we boot a local Next.js server for E2E runs.
+ * Set PLAYWRIGHT_SKIP_WEBSERVER=true only when targeting a pre-existing remote deployment.
  */
-const shouldStartWebServer = process.env.CI === "true" || !isRemoteBaseUrl;
+const shouldSkipWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === "true";
 
-const webServer = shouldStartWebServer
-  ? {
+const webServer = shouldSkipWebServer
+  ? undefined
+  : {
       command: "pnpm dev",
       url: "http://localhost:3000",
       reuseExistingServer: !process.env.CI,
@@ -24,8 +23,7 @@ const webServer = shouldStartWebServer
       env: {
         NODE_ENV: "test",
       },
-    }
-  : undefined;
+    };
 
 export default defineConfig({
   testDir: "./e2e",
