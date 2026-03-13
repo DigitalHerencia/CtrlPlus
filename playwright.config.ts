@@ -4,13 +4,16 @@ import { defineConfig, devices } from "@playwright/test";
  * BASE_URL allows overriding the target server (e.g. a Vercel preview deployment).
  * When not set, playwright.config.ts will start a local Next.js dev server instead.
  */
-const BASE_URL = process.env.BASE_URL ?? "http://localhost:3000";
+const explicitBaseUrl = process.env.BASE_URL?.trim();
+const BASE_URL = explicitBaseUrl || "http://localhost:3000";
+const isRemoteBaseUrl =
+  !!explicitBaseUrl && !/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(explicitBaseUrl);
 
 /**
  * Only boot a local Next.js server when BASE_URL is not pointing at a remote URL.
  * When BASE_URL is provided (e.g. for Vercel preview runs), skip the webServer.
  */
-const webServer = process.env.BASE_URL
+const webServer = isRemoteBaseUrl
   ? undefined
   : {
       command: "pnpm dev",
