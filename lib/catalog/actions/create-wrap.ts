@@ -15,6 +15,7 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
       description: parsed.description ?? null,
       price: parsed.price,
       installationMinutes: parsed.installationMinutes ?? null,
+      isHidden: true,
     },
     select: { id: true },
   });
@@ -25,7 +26,7 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
       action: "wrap.created",
       resourceType: "Wrap",
       resourceId: created.id,
-      details: JSON.stringify({ name: parsed.name, priceInCents: parsed.price }),
+      details: JSON.stringify({ name: parsed.name, priceInCents: parsed.price, isHidden: true }),
       timestamp: new Date(),
     },
   });
