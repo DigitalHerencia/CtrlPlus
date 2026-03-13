@@ -27,7 +27,6 @@ const webServer = shouldSkipWebServer
 
 export default defineConfig({
   testDir: "./e2e",
-  testIgnore: ["**/fixtures/**"],
   /* Maximum time one test can run */
   timeout: 30_000,
   /* Fail CI fast on first failure */
