@@ -24,8 +24,8 @@ jobs:
       DATABASE_URL_UNPOOLED: postgresql://test:test@localhost:5432/test
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NEXT_PUBLIC_TENANT_DOMAIN_SUFFIX: .ctrlplus.local
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
-      CLERK_SECRET_KEY: sk_test_placeholder
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+      CLERK_SECRET_KEY: clerk_secret_placeholder
       CLERK_WEBHOOK_SIGNING_SECRET: whsec_placeholder
       CLERK_WEBHOOK_SECRET: whsec_placeholder
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder
@@ -64,8 +64,8 @@ jobs:
       DATABASE_URL_UNPOOLED: postgresql://test:test@localhost:5432/test
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NEXT_PUBLIC_TENANT_DOMAIN_SUFFIX: .ctrlplus.local
-      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_placeholder
-      CLERK_SECRET_KEY: sk_test_placeholder
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
+      CLERK_SECRET_KEY: clerk_secret_placeholder
       CLERK_WEBHOOK_SIGNING_SECRET: whsec_placeholder
       CLERK_WEBHOOK_SECRET: whsec_placeholder
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder
