@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,13 +36,48 @@ export function CatalogManager({ wraps, categories }: CatalogManagerProps) {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
-  const [newWrapName, setNewWrapName] = useState("");
-  const [newWrapPrice, setNewWrapPrice] = useState("0");
-  const [newWrapInstallMinutes, setNewWrapInstallMinutes] = useState("");
-  const [newWrapDescription, setNewWrapDescription] = useState("");
+  // Zod schemas for validation
+  const wrapSchema = z.object({
+    name: z.string().min(1, "Name is required"),
+    price: z.string().min(1, "Price is required"),
+    installationMinutes: z.string().optional(),
+    description: z.string().optional(),
+  });
 
-  const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategorySlug, setNewCategorySlug] = useState("");
+  const categorySchema = z.object({
+    name: z.string().min(1, "Category name is required"),
+    slug: z.string().min(1, "Slug is required"),
+  });
+
+  // React Hook Form for Wrap creation
+  const {
+    control: wrapControl,
+    handleSubmit: handleWrapSubmit,
+    reset: resetWrap,
+    formState: { errors: wrapErrors },
+  } = useForm({
+    resolver: zodResolver(wrapSchema),
+    defaultValues: {
+      name: "",
+      price: "0",
+      installationMinutes: "",
+      description: "",
+    },
+  });
+
+  // React Hook Form for Category creation
+  const {
+    control: categoryControl,
+    handleSubmit: handleCategorySubmit,
+    reset: resetCategory,
+    formState: { errors: categoryErrors },
+  } = useForm({
+    resolver: zodResolver(categorySchema),
+    defaultValues: {
+      name: "",
+      slug: "",
+    },
+  });
 
   const initialCategoryMap = useMemo(() => {
     return Object.fromEntries(
@@ -69,35 +107,27 @@ export function CatalogManager({ wraps, categories }: CatalogManagerProps) {
     });
   }
 
-  function handleCreateWrap(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  function onCreateWrap(data: z.infer<typeof wrapSchema>) {
     runMutation(async () => {
       await createWrap({
-        name: newWrapName,
-        price: Number(newWrapPrice),
-        installationMinutes: newWrapInstallMinutes ? Number(newWrapInstallMinutes) : undefined,
-        description: newWrapDescription || undefined,
+        name: data.name,
+        price: Number(data.price),
+        installationMinutes: data.installationMinutes
+          ? Number(data.installationMinutes)
+          : undefined,
+        description: data.description || undefined,
       });
-
-      setNewWrapName("");
-      setNewWrapPrice("0");
-      setNewWrapInstallMinutes("");
-      setNewWrapDescription("");
+      resetWrap();
     });
   }
 
-  function handleCreateCategory(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  function onCreateCategory(data: z.infer<typeof categorySchema>) {
     runMutation(async () => {
       await createWrapCategory({
-        name: newCategoryName,
-        slug: newCategorySlug,
+        name: data.name,
+        slug: data.slug,
       });
-
-      setNewCategoryName("");
-      setNewCategorySlug("");
+      resetCategory();
     });
   }
 
@@ -175,36 +205,63 @@ export function CatalogManager({ wraps, categories }: CatalogManagerProps) {
           <CardTitle>Create Wrap</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-3 md:grid-cols-2" onSubmit={handleCreateWrap}>
-            <Input
-              name="name"
-              value={newWrapName}
-              onChange={(event) => setNewWrapName(event.target.value)}
-              placeholder="Wrap name"
-              required
-            />
-            <Input
+          <form className="flex flex-col gap-3" onSubmit={handleWrapSubmit(onCreateWrap)}>
+            <div className="flex gap-3">
+              <label className="text-sm text-neutral-300 md:col-span-2">Name</label>
+              <Controller
+                name="name"
+                control={wrapControl}
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    className="border border-neutral-700 bg-neutral-100 px-2 py-1 text-neutral-900 placeholder:text-neutral-900"
+                    placeholder="Wrap name"
+                  />
+                )}
+              />
+              {wrapErrors.name && (
+                <span className="text-xs text-red-500">{wrapErrors.name.message}</span>
+              )}
+            </div>
+            <Controller
               name="price"
-              type="number"
-              min={1}
-              value={newWrapPrice}
-              onChange={(event) => setNewWrapPrice(event.target.value)}
-              placeholder="Price in cents"
-              required
+              control={wrapControl}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  type="number"
+                  min={1}
+                  className="border border-neutral-700 bg-neutral-100 px-2 py-1 text-neutral-900 placeholder:text-neutral-900"
+                  placeholder="Price in cents"
+                />
+              )}
             />
-            <Input
+            {wrapErrors.price && (
+              <span className="text-xs text-red-500">{wrapErrors.price.message}</span>
+            )}
+            <Controller
               name="installationMinutes"
-              type="number"
-              min={1}
-              value={newWrapInstallMinutes}
-              onChange={(event) => setNewWrapInstallMinutes(event.target.value)}
-              placeholder="Installation minutes"
+              control={wrapControl}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  type="number"
+                  min={1}
+                  className="border border-neutral-700 bg-neutral-100 px-2 py-1 text-neutral-900 placeholder:text-neutral-900"
+                  placeholder="Installation minutes"
+                />
+              )}
             />
-            <Input
+            <Controller
               name="description"
-              value={newWrapDescription}
-              onChange={(event) => setNewWrapDescription(event.target.value)}
-              placeholder="Description"
+              control={wrapControl}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  className="border border-neutral-700 bg-neutral-100 px-2 py-1 text-neutral-900 placeholder:text-neutral-900"
+                  placeholder="Description"
+                />
+              )}
             />
             <div className="md:col-span-2">
               <Button type="submit" disabled={isPending}>
@@ -217,24 +274,41 @@ export function CatalogManager({ wraps, categories }: CatalogManagerProps) {
 
       <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
         <CardHeader>
-          <CardTitle>Categories</CardTitle>
+          <CardTitle>Create Categories</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <form className="grid gap-3 md:grid-cols-[1fr_1fr_auto]" onSubmit={handleCreateCategory}>
-            <Input
+          <form
+            className="grid gap-3 md:grid-cols-[1fr_1fr_auto]"
+            onSubmit={handleCategorySubmit(onCreateCategory)}
+          >
+            <Controller
               name="name"
-              value={newCategoryName}
-              onChange={(event) => setNewCategoryName(event.target.value)}
-              placeholder="Category name"
-              required
+              control={categoryControl}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  className="border border-neutral-700 bg-neutral-100 px-2 py-1 text-neutral-900 placeholder:text-neutral-900"
+                  placeholder="Category name"
+                />
+              )}
             />
-            <Input
+            {categoryErrors.name && (
+              <span className="text-xs text-red-500">{categoryErrors.name.message}</span>
+            )}
+            <Controller
               name="slug"
-              value={newCategorySlug}
-              onChange={(event) => setNewCategorySlug(event.target.value)}
-              placeholder="category-slug"
-              required
+              control={categoryControl}
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  className="border border-neutral-700 bg-neutral-100 px-2 py-1 text-neutral-900 placeholder:text-neutral-900"
+                  placeholder="category-slug"
+                />
+              )}
             />
+            {categoryErrors.slug && (
+              <span className="text-xs text-red-500">{categoryErrors.slug.message}</span>
+            )}
             <Button type="submit" disabled={isPending}>
               Add Category
             </Button>

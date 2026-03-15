@@ -4,7 +4,11 @@ export const websiteSettingsSchema = z.object({
   preferredContact: z.enum(["email", "sms"]).default("email"),
   appointmentReminders: z.boolean().default(true),
   marketingOptIn: z.boolean().default(false),
-  timezone: z.string().min(1).max(100),
+  timezone: z
+    .string()
+    .trim()
+    .min(1, "Timezone is required.")
+    .max(100, "Timezone must be 100 characters or fewer."),
 });
 
 export type WebsiteSettingsInput = z.infer<typeof websiteSettingsSchema>;

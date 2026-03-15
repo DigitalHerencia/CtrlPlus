@@ -6,7 +6,12 @@
   },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.inlineSuggest.enabled": true,
-  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
   "js/ts.preferences.includePackageJsonAutoImports": "on",
   "js/ts.updateImportsOnFileMove.enabled": "always",
   "js/ts.suggest.autoImports": true,
@@ -55,5 +60,10 @@
   "tailwindCSS.includeLanguages": {
     "typescript": "javascript",
     "typescriptreact": "javascript"
-  }
+  },
+  "chat.includeApplyingInstructions": false,
+  "chat.includeReferencedInstructions": true,
+  "github.copilot.chat.organizationInstructions.enabled": false,
+  "chat.useClaudeMdFile": false,
+  "chat.useNestedAgentsMdFiles": true
 }

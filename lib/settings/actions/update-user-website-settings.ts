@@ -2,6 +2,7 @@
 
 import { getSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 import {
   websiteSettingsSchema,
   type WebsiteSettingsDTO,
@@ -52,6 +53,8 @@ export async function updateUserWebsiteSettings(
       timestamp: new Date(),
     },
   });
+
+  revalidatePath("/settings");
 
   return {
     preferredContact: updated.preferredContact as "email" | "sms",

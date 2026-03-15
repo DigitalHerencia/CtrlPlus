@@ -1,206 +1,315 @@
 "use client";
 
+import { useSignUp } from "@clerk/nextjs";
+import { LoaderCircle, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
 import { LogoMark } from "@/components/shared/logo-mark";
 import { Button } from "@/components/ui/button";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { sanitizePostAuthRedirect } from "@/lib/auth/redirect";
 import { cn } from "@/lib/utils";
-import { useSignUp } from "@clerk/nextjs";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+
+const signupSchema = z.object({
+  email: z.string().trim().email("Enter a valid email address."),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters.")
+    .max(128, "Password is too long."),
+});
+
+const verificationSchema = z.object({
+  verificationCode: z
+    .string()
+    .trim()
+    .min(4, "Enter the verification code.")
+    .max(12, "Verification code is too long."),
+});
+
+type SignupFormValues = {
+  email: string;
+  password: string;
+  verificationCode: string;
+};
 
 interface SignupFormProps extends React.ComponentProps<"form"> {
   redirectUrl?: string;
 }
 
-export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps) {
-  const { signUp } = useSignUp();
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [awaitingVerification, setAwaitingVerification] = useState(false);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const nextUrl = sanitizePostAuthRedirect(redirectUrl);
+function getErrorMessage(error: unknown, fallback: string): string {
+  const clerkError = error as { errors?: Array<{ message?: string }> };
+  const firstMessage = clerkError.errors?.[0]?.message;
 
-  const finalizeAndRedirect = async () => {
+  return typeof firstMessage === "string" && firstMessage.trim().length > 0
+    ? firstMessage
+    : fallback;
+}
+
+export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps) {
+  const { fetchStatus, signUp } = useSignUp();
+  const router = useRouter();
+  const [awaitingVerification, setAwaitingVerification] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [isResending, startResending] = useTransition();
+  const [isResetting, startResetting] = useTransition();
+  const form = useForm<SignupFormValues>({
+    mode: "onBlur",
+    defaultValues: {
+      email: "",
+      password: "",
+      verificationCode: "",
+    },
+  });
+  const nextUrl = sanitizePostAuthRedirect(redirectUrl);
+  const isBusy = form.formState.isSubmitting || isResending || isResetting || !fetchStatus;
+
+  async function finalizeAndRedirect(): Promise<boolean> {
     const finalizeResult = await signUp.finalize();
 
     if (finalizeResult.error) {
-      setError(finalizeResult.error.message || "Unable to finalize sign-up");
+      form.setError("root", {
+        message: finalizeResult.error.message || "Unable to finalize sign-up.",
+      });
       return false;
     }
 
     router.push(nextUrl);
     return true;
-  };
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isLoading) return;
+  async function sendVerificationCode(): Promise<boolean> {
+    const sendResult = await signUp.verifications.sendEmailCode();
 
-    setError("");
-    setIsLoading(true);
+    if (sendResult.error) {
+      form.setError("root", {
+        message: sendResult.error.message || "Could not send the verification code.",
+      });
+      return false;
+    }
+
+    setNotice("We sent a verification code to your email address.");
+    return true;
+  }
+
+  const handleSubmit = form.handleSubmit(async (values) => {
+    if (!fetchStatus) {
+      return;
+    }
+
+    form.clearErrors();
+    setNotice(null);
 
     try {
       if (awaitingVerification) {
-        if (!verificationCode.trim()) {
-          setError("Please enter the verification code.");
+        const parsedVerification = verificationSchema.safeParse({
+          verificationCode: values.verificationCode,
+        });
+
+        if (!parsedVerification.success) {
+          form.setError("verificationCode", {
+            message: parsedVerification.error.issues[0]?.message || "Enter the verification code.",
+          });
           return;
         }
 
         const verifyResult = await signUp.verifications.verifyEmailCode({
-          code: verificationCode.trim(),
+          code: parsedVerification.data.verificationCode,
         });
 
         if (verifyResult.error) {
-          setError(verifyResult.error.message || "Invalid verification code");
+          form.setError("root", {
+            message: verifyResult.error.message || "Invalid verification code.",
+          });
           return;
         }
 
         if (signUp.status === "complete" || !!signUp.createdSessionId) {
-          const finalized = await finalizeAndRedirect();
-          if (finalized) return;
+          await finalizeAndRedirect();
+          return;
         }
 
-        setError(`Verification is not complete yet (status: ${signUp.status}).`);
+        form.setError("root", {
+          message: `Verification is not complete yet (status: ${signUp.status}).`,
+        });
         return;
       }
 
-      if (password.length < 8) {
-        setError("Password must be at least 8 characters long");
+      const parsedSignup = signupSchema.safeParse(values);
+      if (!parsedSignup.success) {
+        for (const issue of parsedSignup.error.issues) {
+          const field = issue.path[0];
+          if (typeof field === "string" && (field === "email" || field === "password")) {
+            form.setError(field, { message: issue.message });
+          }
+        }
         return;
       }
 
       const passwordResult = await signUp.password({
-        emailAddress: email,
-        password,
+        emailAddress: parsedSignup.data.email,
+        password: parsedSignup.data.password,
       });
 
       if (passwordResult.error) {
-        setError(passwordResult.error.message || "Sign up failed. Please try again.");
+        form.setError("root", {
+          message: passwordResult.error.message || "Sign up failed. Please try again.",
+        });
         return;
       }
 
       if (signUp.status === "complete" || !!signUp.createdSessionId) {
-        const finalized = await finalizeAndRedirect();
-        if (finalized) return;
-      }
-
-      // Check if email verification is needed
-      if (
-        signUp.status === "missing_requirements" &&
-        signUp.unverifiedFields?.includes("email_address")
-      ) {
-        const sendResult = await signUp.verifications.sendEmailCode();
-
-        if (sendResult.error) {
-          setError(sendResult.error.message || "Could not send verification code");
-          return;
-        }
-
-        setAwaitingVerification(true);
-        setError("");
+        await finalizeAndRedirect();
         return;
       }
 
-      setError("Sign-up requires additional verification steps in Clerk.");
-    } catch (err: unknown) {
-      const error = err as { errors?: Array<{ message: string }> };
-      setError(error.errors?.[0]?.message || "Sign up failed. Please try again.");
-    } finally {
-      setIsLoading(false);
+      if (
+        !fetchStatus &&
+        signUp.status === "missing_requirements" &&
+        signUp.unverifiedFields?.includes("email_address")
+      ) {
+        const sent = await sendVerificationCode();
+        if (sent) {
+          setAwaitingVerification(true);
+          form.resetField("verificationCode");
+        }
+        return;
+      }
+
+      form.setError("root", {
+        message: "Sign-up requires additional verification in Clerk.",
+      });
+    } catch (error) {
+      form.setError("root", {
+        message: getErrorMessage(error, "Sign up failed. Please try again."),
+      });
     }
-  };
+  });
 
   return (
-    <form className={cn("flex flex-col gap-6", className)} onSubmit={handleSubmit} {...props}>
-      <FieldGroup>
+    <form
+      className={cn("flex flex-col gap-6", className)}
+      onSubmit={handleSubmit}
+      noValidate
+      {...props}
+    >
+      <FieldGroup className="gap-6 border border-neutral-800 bg-neutral-950/90 p-6 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.9)] sm:p-8">
         <div className="flex flex-col items-center text-center">
-          <Link href="/" className="mb-10 inline-flex items-center">
+          <Link href="/" className="mb-8 inline-flex items-center">
             <LogoMark className="scale-150" />
           </Link>
-          <h1 className="mb-1 text-4xl font-bold tracking-tight text-blue-600 uppercase">
-            Get Started Today
+          <div className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900 px-3 py-1 text-xs tracking-[0.24em] text-neutral-300 uppercase">
+            <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+            New Account
+          </div>
+          <h1 className="mt-4 text-3xl font-semibold tracking-tight text-neutral-50 sm:text-4xl">
+            Create your account
           </h1>
-          <p className="text-sm text-balance text-neutral-100">
-            Create and manage your projects online.
+          <p className="mt-2 max-w-sm text-sm text-neutral-400">
+            Launch your platform workspace with secure authentication and guided verification.
           </p>
         </div>
-        {awaitingVerification && (
-          <div className="border border-blue-800/50 bg-blue-950/40 p-3 text-sm text-neutral-100">
-            We sent a verification code to your email. Enter it below to complete sign-up.
+
+        {notice ? (
+          <div className="rounded-2xl border border-blue-900/60 bg-blue-950/40 px-4 py-3 text-sm text-blue-100">
+            {notice}
           </div>
-        )}
-        {error && (
-          <div className="animate-in fade-in border border-neutral-700 bg-neutral-900 p-3 text-sm text-neutral-100">
-            {error}
+        ) : null}
+
+        {form.formState.errors.root?.message ? (
+          <div className="rounded-2xl border border-red-950/60 bg-red-950/30 px-4 py-3 text-sm text-red-100">
+            {form.formState.errors.root.message}
           </div>
-        )}
+        ) : null}
+
         {awaitingVerification ? (
-          <div className="space-y-4">
-            <div className="flex flex-col items-start gap-3">
-              <Field>
-                <Input
-                  id="verificationCode"
-                  type="text"
-                  className="1g-neutral-neutral-100900utral-100 placehol9er px-1:2ext-neutral-100 border border-neutral-700 py-2"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  placeholder="Verification code"
-                  required
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value)}
-                  disabled={isLoading}
-                />
-              </Field>
-              <button
-                type="button"
-                className="text-sm font-semibold text-neutral-100 underline-offset-4 transition-all hover:text-blue-600 hover:underline"
-                onClick={async () => {
-                  if (isLoading) return;
-                  setIsLoading(true);
-                  setError("");
-                  const sendResult = await signUp.verifications.sendEmailCode();
-                  if (sendResult.error) {
-                    setError(sendResult.error.message || "Could not resend code");
-                  }
-                  setIsLoading(false);
-                }}
-                disabled={isLoading}
-              >
-                Resend code
-              </button>
-            </div>
-            <div className="flex flex-col items-start gap-3">
+          <div className="space-y-5">
+            <Field>
+              <FieldLabel className="text-neutral-100" htmlFor="verificationCode">
+                Verification code
+              </FieldLabel>
+              <Input
+                id="verificationCode"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="Enter the code you received"
+                className="h-12 border-neutral-800 bg-neutral-900 text-neutral-50 placeholder:text-neutral-500"
+                disabled={isBusy}
+                {...form.register("verificationCode", {
+                  setValueAs: (value) =>
+                    typeof value === "string" ? value.replace(/\s+/g, "").trim() : value,
+                })}
+              />
+              <FieldDescription className="text-neutral-400">
+                Confirm your email to activate the account and create the first session.
+              </FieldDescription>
+              <FieldError
+                errors={
+                  form.formState.errors.verificationCode?.message
+                    ? [{ message: form.formState.errors.verificationCode.message }]
+                    : undefined
+                }
+              />
+            </Field>
+
+            <div className="grid gap-3 sm:grid-cols-2">
               <Button
-                className="w-full bg-blue-600 py-2.5 font-semibold text-neutral-100 transition-all hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600"
                 type="submit"
-                disabled={isLoading}
+                disabled={isBusy}
+                className="h-12 bg-neutral-100 font-medium text-neutral-950 hover:bg-white"
               >
-                {isLoading ? "Verifying..." : "Verify code"}
+                {form.formState.isSubmitting ? (
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Verify code
               </Button>
-              <button
+              <Button
                 type="button"
-                className="text-sm text-neutral-100 underline-offset-4 hover:text-blue-600 hover:underline"
-                onClick={async () => {
+                variant="outline"
+                disabled={isBusy}
+                className="h-12 border-neutral-800 bg-neutral-950 text-neutral-100 hover:border-blue-600 hover:bg-neutral-900"
+                onClick={() => {
+                  startResending(async () => {
+                    form.clearErrors("root");
+                    setNotice(null);
+                    await sendVerificationCode();
+                  });
+                }}
+              >
+                {isResending ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Resend code
+              </Button>
+            </div>
+
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={isBusy}
+              className="w-full text-neutral-300 hover:bg-neutral-900 hover:text-neutral-50"
+              onClick={() => {
+                startResetting(async () => {
                   await signUp.reset();
                   setAwaitingVerification(false);
-                  setVerificationCode("");
-                  setPassword("");
-                  setError("");
-                }}
-                disabled={isLoading}
-              >
-                Start over
-              </button>
-            </div>
+                  setNotice(null);
+                  form.reset({
+                    email: form.getValues("email"),
+                    password: "",
+                    verificationCode: "",
+                  });
+                });
+              }}
+            >
+              {isResetting ? <LoaderCircle className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Start over
+            </Button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <Field>
               <FieldLabel className="text-neutral-100" htmlFor="email">
                 Email
@@ -208,14 +317,24 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
               <Input
                 id="email"
                 type="email"
-                className="border border-neutral-700 bg-neutral-100 px-2 py-1 text-neutral-900 placeholder:text-neutral-900"
+                autoComplete="email"
                 placeholder="m@example.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                className="h-12 border-neutral-800 bg-neutral-900 text-neutral-50 placeholder:text-neutral-500"
+                disabled={isBusy}
+                {...form.register("email", {
+                  setValueAs: (value) =>
+                    typeof value === "string" ? value.trim().toLowerCase() : value,
+                })}
+              />
+              <FieldError
+                errors={
+                  form.formState.errors.email?.message
+                    ? [{ message: form.formState.errors.email.message }]
+                    : undefined
+                }
               />
             </Field>
+
             <Field>
               <FieldLabel className="text-neutral-100" htmlFor="password">
                 Password
@@ -223,22 +342,36 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
               <Input
                 id="password"
                 type="password"
-                className="border border-neutral-700 bg-neutral-100 px-2 py-1 text-neutral-900 placeholder:text-neutral-900"
-                placeholder="Must be at least 8 characters long."
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                autoComplete="new-password"
+                placeholder="At least 8 characters"
+                className="h-12 border-neutral-800 bg-neutral-900 text-neutral-50 placeholder:text-neutral-500"
+                disabled={isBusy}
+                {...form.register("password")}
+              />
+              <FieldDescription className="text-neutral-400">
+                Use a strong password you haven&apos;t used elsewhere.
+              </FieldDescription>
+              <FieldError
+                errors={
+                  form.formState.errors.password?.message
+                    ? [{ message: form.formState.errors.password.message }]
+                    : undefined
+                }
               />
             </Field>
+
             <Button
-              className="mt-6 w-full bg-blue-600 py-2.5 font-semibold text-neutral-100 transition-all hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600"
               type="submit"
-              disabled={isLoading}
+              disabled={isBusy}
+              className="h-12 w-full bg-neutral-100 font-medium text-neutral-950 hover:bg-white"
             >
-              {isLoading ? "Creating account..." : "Create Account"}
+              {form.formState.isSubmitting ? (
+                <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Create account
             </Button>
-            <div className="flex items-center justify-center gap-1 text-sm text-neutral-100">
+
+            <div className="flex items-center justify-center gap-1 text-sm text-neutral-400">
               <span>Already have an account?</span>
               <Link
                 href={
@@ -246,7 +379,7 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
                     ? `/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`
                     : "/sign-in"
                 }
-                className="font-semibold text-blue-600 underline-offset-4 transition-all hover:underline"
+                className="font-medium text-blue-400 transition hover:text-blue-300"
               >
                 Sign in
               </Link>
