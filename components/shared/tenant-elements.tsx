@@ -26,7 +26,7 @@ export function WorkspacePageIntro({
     <section className={cn("border border-neutral-700 bg-neutral-950/80 px-6 py-7", className)}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-2">
-          <p className="text-xs font-semibold tracking-[0.24em] text-blue-600 uppercase">{label}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">{label}</p>
           <div className="space-y-1">
             <h1 className="text-3xl font-black tracking-tight text-neutral-100 sm:text-4xl">
               {title}
@@ -67,7 +67,7 @@ export function WorkspaceMetricCard({
       <CardHeader className="gap-3 pb-2">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-2">
-            <CardDescription className="text-xs tracking-[0.18em] text-neutral-100 uppercase">
+            <CardDescription className="text-xs uppercase tracking-[0.18em] text-neutral-100">
               {label}
             </CardDescription>
             <CardTitle className="text-3xl font-black tracking-tight text-neutral-100">
@@ -117,7 +117,7 @@ export function WorkspaceEmptyState({
     >
       <CardContent className="flex flex-col items-center gap-4 py-14">
         <div className="space-y-2">
-          <p className="text-xs font-semibold tracking-[0.24em] text-blue-600 uppercase">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">
             No Results
           </p>
           <h2 className="text-xl font-bold text-neutral-100">{title}</h2>

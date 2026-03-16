@@ -35,7 +35,7 @@ export function WrapCard({ wrap }: WrapCardProps) {
           <CardTitle className="line-clamp-2 text-lg leading-tight text-neutral-100">
             {wrap.name}
           </CardTitle>
-          <span className="border border-blue-600/20 bg-blue-600/10 px-2 py-1 text-[10px] font-semibold tracking-[0.16em] text-blue-200 uppercase">
+          <span className="border border-blue-600/20 bg-blue-600/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-200">
             Wrap
           </span>
         </div>
@@ -55,7 +55,7 @@ export function WrapCard({ wrap }: WrapCardProps) {
       </CardContent>
 
       <CardFooter className="flex items-center justify-between border-t border-neutral-800 pt-3">
-        <span className="text-xl font-black text-neutral-100 tabular-nums">
+        <span className="text-xl font-black tabular-nums text-neutral-100">
           {formatPrice(wrap.price)}
         </span>
         <Button asChild size="sm" className="transition-transform group-hover:translate-x-0.5">

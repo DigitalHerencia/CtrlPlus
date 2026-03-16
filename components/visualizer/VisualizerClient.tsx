@@ -167,7 +167,7 @@ export function VisualizerClient({ wraps, canManageCatalog = false }: Visualizer
             Preview
           </h2>
           {selectedWrap && (
-            <p className="mb-3 text-xs tracking-wide text-neutral-400 uppercase">
+            <p className="mb-3 text-xs uppercase tracking-wide text-neutral-400">
               Currently previewing:{" "}
               <span className="font-semibold text-neutral-200">{selectedWrap.name}</span>
             </p>

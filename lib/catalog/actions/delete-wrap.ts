@@ -74,7 +74,7 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
     categories: existing.categoryMappings
       .map((mapping) => mapping.category)
       .filter((category) => category.deletedAt === null)
-      .map(({ deletedAt: _deletedAt, ...category }) => category),
+      .map(({ ...category }) => category),
     createdAt: existing.createdAt,
     updatedAt: existing.updatedAt,
   };

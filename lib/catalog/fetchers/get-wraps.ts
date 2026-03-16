@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import {
   searchWrapsSchema,
+  wrapDTOFields,
   type SearchWrapsInput,
   type WrapDTO,
   type WrapImageKind,
-  wrapDTOFields,
   type WrapListDTO,
 } from "../types";
 
@@ -55,7 +55,7 @@ function toWrapDTO(prismaWrap: {
     categories: prismaWrap.categoryMappings
       .map((mapping) => mapping.category)
       .filter((category) => category.deletedAt === null)
-      .map(({ deletedAt: _deletedAt, ...category }) => category),
+      .map(({ ...category }) => category),
     createdAt: prismaWrap.createdAt,
     updatedAt: prismaWrap.updatedAt,
   };

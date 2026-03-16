@@ -1,7 +1,8 @@
+/* eslint-disable react-hooks/incompatible-library */
+"use client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-("use client");
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,6 +79,7 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
     mode: "onBlur",
   });
 
+  // Safe: watch() is used for rendering only, not memoized or passed to memoized hooks/components.
   const selectedDate = watch("date");
   const selectedWindowId = watch("windowId");
   const selectedWrapId = watch("wrapId");

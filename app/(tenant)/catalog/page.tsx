@@ -79,8 +79,8 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
         detail={
           data ? (
             <div className="border border-neutral-700 bg-neutral-900 px-5 py-4 text-right">
-              <p className="text-[11px] tracking-[0.18em] text-neutral-400 uppercase">Results</p>
-              <p className="text-3xl font-black text-neutral-100 tabular-nums">{data.total}</p>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-neutral-400">Results</p>
+              <p className="text-3xl font-black tabular-nums text-neutral-100">{data.total}</p>
             </div>
           ) : null
         }

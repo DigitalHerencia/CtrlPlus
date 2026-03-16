@@ -126,16 +126,16 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
             <Table>
               <TableHeader className="bg-neutral-900/80">
                 <TableRow className="border-neutral-800 hover:bg-neutral-900/80">
-                  <TableHead className="px-6 text-[11px] tracking-[0.18em] uppercase">
+                  <TableHead className="px-6 text-[11px] uppercase tracking-[0.18em]">
                     Description
                   </TableHead>
-                  <TableHead className="text-right text-[11px] tracking-[0.18em] uppercase">
+                  <TableHead className="text-right text-[11px] uppercase tracking-[0.18em]">
                     Qty
                   </TableHead>
-                  <TableHead className="text-right text-[11px] tracking-[0.18em] uppercase">
+                  <TableHead className="text-right text-[11px] uppercase tracking-[0.18em]">
                     Unit Price
                   </TableHead>
-                  <TableHead className="text-right text-[11px] tracking-[0.18em] uppercase">
+                  <TableHead className="text-right text-[11px] uppercase tracking-[0.18em]">
                     Total
                   </TableHead>
                 </TableRow>
@@ -144,13 +144,13 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
                 {invoice.lineItems.map((item) => (
                   <TableRow key={item.id} className="border-neutral-800 hover:bg-neutral-900/60">
                     <TableCell className="px-6 py-4 text-neutral-100">{item.description}</TableCell>
-                    <TableCell className="py-4 text-right text-neutral-300 tabular-nums">
+                    <TableCell className="py-4 text-right tabular-nums text-neutral-300">
                       {item.quantity}
                     </TableCell>
-                    <TableCell className="py-4 text-right text-neutral-300 tabular-nums">
+                    <TableCell className="py-4 text-right tabular-nums text-neutral-300">
                       {currencyFormatter.format(item.unitPrice / 100)}
                     </TableCell>
-                    <TableCell className="py-4 text-right font-semibold text-neutral-100 tabular-nums">
+                    <TableCell className="py-4 text-right font-semibold tabular-nums text-neutral-100">
                       {currencyFormatter.format(item.totalPrice / 100)}
                     </TableCell>
                   </TableRow>
@@ -187,7 +187,7 @@ export default async function InvoiceDetailPage({ params, searchParams }: Invoic
                   <p className="font-semibold text-neutral-100">
                     {currencyFormatter.format(paymentItem.amount / 100)}
                   </p>
-                  <span className="text-xs font-medium text-neutral-400 capitalize">
+                  <span className="text-xs font-medium capitalize text-neutral-400">
                     {paymentItem.status}
                   </span>
                 </div>

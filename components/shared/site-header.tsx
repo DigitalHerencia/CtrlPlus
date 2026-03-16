@@ -13,7 +13,7 @@ export function SiteHeader() {
           <Link href="/" className="inline-flex items-center">
             <LogoMark />
           </Link>
-          <p className="text-sm font-semibold tracking-[0.24em] text-neutral-100 uppercase sm:text-base">
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-neutral-100 sm:text-base">
             Tint | Wraps | Signage
           </p>
         </div>

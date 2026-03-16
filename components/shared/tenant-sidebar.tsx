@@ -77,13 +77,13 @@ export function TenantSidebar({
     >
       <Sidebar
         collapsible="icon"
-        className="border-r border-neutral-700 bg-neutral-950/90 text-neutral-100 backdrop-blur supports-backdrop-filter:bg-neutral-950/80"
+        className="supports-backdrop-filter:bg-neutral-950/80 border-r border-neutral-700 bg-neutral-950/90 text-neutral-100 backdrop-blur"
       >
         <SidebarRail />
         <SidebarHeader className="border-b border-neutral-700 px-3 py-4">
           <Link href="/catalog" className="mx-auto flex items-center">
-            <LogoMark className="my-4 scale-150 transition-all duration-250 group-data-[collapsible=icon]:hidden" />
-            <LogoIcon className="hidden scale-75 transition-all duration-250 group-data-[collapsible=icon]:inline-flex" />
+            <LogoMark className="duration-250 my-4 scale-150 transition-all group-data-[collapsible=icon]:hidden" />
+            <LogoIcon className="duration-250 hidden scale-75 transition-all group-data-[collapsible=icon]:inline-flex" />
           </Link>
         </SidebarHeader>
 
@@ -98,7 +98,7 @@ export function TenantSidebar({
                     asChild
                     isActive={active}
                     className={cn(
-                      "h-11 border border-transparent px-3 text-neutral-200 transition-all duration-250 ease-out hover:border-neutral-700 hover:bg-neutral-900 hover:text-neutral-100",
+                      "duration-250 h-11 border border-transparent px-3 text-neutral-200 transition-all ease-out hover:border-neutral-700 hover:bg-neutral-900 hover:text-neutral-100",
                       "data-[active=true]:border-blue-600 data-[active=true]:bg-blue-600/15 data-[active=true]:text-neutral-100",
                       "group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",
                     )}
@@ -118,7 +118,7 @@ export function TenantSidebar({
           <div className="mx-auto flex items-center gap-3 py-2">
             <UserMenu />
             <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-              <p className="truncate text-sm leading-tight font-semibold text-blue-600">
+              <p className="truncate text-sm font-semibold leading-tight text-blue-600">
                 User Menu
               </p>
             </div>

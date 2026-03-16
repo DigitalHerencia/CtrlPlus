@@ -20,8 +20,12 @@ jobs:
 
     env:
       NEXT_TELEMETRY_DISABLED: "1"
+      HUSKY: "0"
+
+      # Local CI DB (optional for fast-quality; kept for consistency)
       DATABASE_URL: postgresql://test:test@localhost:5432/test
       DATABASE_URL_UNPOOLED: postgresql://test:test@localhost:5432/test
+
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NEXT_PUBLIC_TENANT_DOMAIN_SUFFIX: .ctrlplus.local
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
@@ -36,15 +40,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      # Keep pnpm version in sync with packageManager in package.json.
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.24.0
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Align with package.json engines.node (24.14.0)
+          node-version: 24.14.0
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
@@ -58,10 +62,28 @@ jobs:
     runs-on: ubuntu-latest
     needs: fast-quality
 
+    services:
+      postgres:
+        image: postgres:16
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd "pg_isready -U test -d test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
       NEXT_TELEMETRY_DISABLED: "1"
+      HUSKY: "0"
+
       DATABASE_URL: postgresql://test:test@localhost:5432/test
       DATABASE_URL_UNPOOLED: postgresql://test:test@localhost:5432/test
+
       NEXT_PUBLIC_APP_URL: http://localhost:3000
       NEXT_PUBLIC_TENANT_DOMAIN_SUFFIX: .ctrlplus.local
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_Y2xlcmsuZXhhbXBsZS5jb20k
@@ -78,18 +100,22 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.24.0
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24.14.0
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+
+      - name: Run migrations (deploy)
+        run: pnpm db:migrate:deploy
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium

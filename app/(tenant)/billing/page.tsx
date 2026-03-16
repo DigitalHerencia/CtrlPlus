@@ -85,15 +85,15 @@ export default async function BillingPage() {
             <Table>
               <TableHeader className="bg-neutral-900/80">
                 <TableRow className="border-neutral-800 hover:bg-neutral-900/80">
-                  <TableHead className="px-4 text-[11px] tracking-[0.18em] uppercase">
+                  <TableHead className="px-4 text-[11px] uppercase tracking-[0.18em]">
                     Invoice
                   </TableHead>
-                  <TableHead className="text-[11px] tracking-[0.18em] uppercase">Status</TableHead>
-                  <TableHead className="text-right text-[11px] tracking-[0.18em] uppercase">
+                  <TableHead className="text-[11px] uppercase tracking-[0.18em]">Status</TableHead>
+                  <TableHead className="text-right text-[11px] uppercase tracking-[0.18em]">
                     Amount
                   </TableHead>
-                  <TableHead className="text-[11px] tracking-[0.18em] uppercase">Created</TableHead>
-                  <TableHead className="text-right text-[11px] tracking-[0.18em] uppercase">
+                  <TableHead className="text-[11px] uppercase tracking-[0.18em]">Created</TableHead>
+                  <TableHead className="text-right text-[11px] uppercase tracking-[0.18em]">
                     Action
                   </TableHead>
                 </TableRow>
@@ -107,7 +107,7 @@ export default async function BillingPage() {
                     <TableCell className="py-4">
                       <InvoiceStatusBadge status={invoice.status} />
                     </TableCell>
-                    <TableCell className="py-4 text-right font-semibold text-neutral-100 tabular-nums">
+                    <TableCell className="py-4 text-right font-semibold tabular-nums text-neutral-100">
                       {currencyFormatter.format(invoice.totalAmount / 100)}
                     </TableCell>
                     <TableCell className="py-4 text-neutral-400">

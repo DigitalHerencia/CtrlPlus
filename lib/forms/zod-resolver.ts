@@ -38,7 +38,7 @@ function setNestedError(
 export function zodResolver<TFieldValues extends FieldValues>(
   schema: z.ZodType<TFieldValues>,
 ): Resolver<TFieldValues> {
-  return async (values, _context, _options) => {
+  return async (values) => {
     const parsed = await schema.safeParseAsync(values);
 
     if (parsed.success) {

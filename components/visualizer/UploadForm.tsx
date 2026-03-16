@@ -158,7 +158,7 @@ export function UploadForm({
                       />
                       <button
                         type="button"
-                        className="absolute top-4 right-4 rounded-full border border-neutral-700 bg-neutral-950 p-2 text-neutral-100 transition hover:border-blue-600 hover:text-blue-300"
+                        className="absolute right-4 top-4 rounded-full border border-neutral-700 bg-neutral-950 p-2 text-neutral-100 transition hover:border-blue-600 hover:text-blue-300"
                         aria-label="Remove photo"
                         onClick={(event) => {
                           event.preventDefault();

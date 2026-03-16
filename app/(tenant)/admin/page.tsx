@@ -26,7 +26,7 @@ export default async function AdminDashboardPage() {
         title="Store Operations"
         description="Manage the shared catalog, scheduling flow, and customer billing operations from one place."
         detail={
-          <div className="inline-flex items-center gap-2 border border-blue-600 bg-neutral-900 px-4 py-2 text-xs font-semibold tracking-[0.18em] text-neutral-100 uppercase">
+          <div className="inline-flex items-center gap-2 border border-blue-600 bg-neutral-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-100">
             Role {session.role}
           </div>
         }
@@ -76,27 +76,27 @@ export default async function AdminDashboardPage() {
         <CardContent className="grid gap-3 sm:grid-cols-3">
           <Link
             href="/catalog"
-            className="group border border-neutral-700 bg-neutral-900 p-5 transition-all hover:scale-103 hover:border-blue-600"
+            className="hover:scale-103 group border border-neutral-700 bg-neutral-900 p-5 transition-all hover:border-blue-600"
           >
-            <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.16em] text-neutral-100 uppercase">
+            <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-neutral-100">
               <Grid3x3 className="h-4 w-4 text-blue-600" /> Catalog
             </p>
             <p className="mt-2 text-sm text-neutral-400">Add, hide, or remove catalog items.</p>
           </Link>
           <Link
             href="/scheduling/bookings"
-            className="group border border-neutral-700 bg-neutral-900 p-5 transition-all hover:scale-103 hover:border-blue-600"
+            className="hover:scale-103 group border border-neutral-700 bg-neutral-900 p-5 transition-all hover:border-blue-600"
           >
-            <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.16em] text-neutral-100 uppercase">
+            <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-neutral-100">
               <ClipboardList className="h-4 w-4 text-blue-600" /> Scheduling
             </p>
             <p className="mt-2 text-sm text-neutral-400">Review all customer appointments.</p>
           </Link>
           <Link
             href="/billing"
-            className="group border border-neutral-700 bg-neutral-900 p-5 transition-all hover:scale-103 hover:border-blue-600"
+            className="hover:scale-103 group border border-neutral-700 bg-neutral-900 p-5 transition-all hover:border-blue-600"
           >
-            <p className="flex items-center gap-2 text-sm font-semibold tracking-[0.16em] text-neutral-100 uppercase">
+            <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-neutral-100">
               <Layers className="h-4 w-4 text-blue-600" /> Billing
             </p>
             <p className="mt-2 text-sm text-neutral-400">Track invoices and payment status.</p>

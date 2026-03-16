@@ -35,14 +35,14 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
           <img src={wrap.images[0].url} alt={wrap.name} className="h-72 w-full object-cover" />
         )}
         <CardHeader className="gap-3">
-          <p className="text-xs font-semibold tracking-[0.24em] text-blue-600 uppercase">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">
             Wrap Detail
           </p>
           <CardTitle className="text-4xl font-black tracking-tight text-neutral-100">
             {wrap.name}
           </CardTitle>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-3xl font-black text-blue-300 tabular-nums">
+            <span className="text-3xl font-black tabular-nums text-blue-300">
               {formatPrice(wrap.price)}
             </span>
             {installationTime ? (
@@ -60,7 +60,7 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
       {wrap.description ? (
         <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
           <CardHeader>
-            <CardTitle className="text-sm font-semibold tracking-wide text-neutral-100 uppercase">
+            <CardTitle className="text-sm font-semibold uppercase tracking-wide text-neutral-100">
               Description
             </CardTitle>
           </CardHeader>
@@ -72,7 +72,7 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
 
       <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
         <CardHeader>
-          <CardTitle className="text-sm font-semibold tracking-wide text-neutral-100 uppercase">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-neutral-100">
             Wrap Images
           </CardTitle>
         </CardHeader>

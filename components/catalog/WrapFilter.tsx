@@ -279,7 +279,7 @@ export function WrapFilter({ categories = [] }: WrapFilterProps) {
       </FieldGroup>
 
       <div className="flex flex-col gap-3 border-t border-neutral-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-xs tracking-[0.18em] text-neutral-500 uppercase">
+        <div className="text-xs uppercase tracking-[0.18em] text-neutral-500">
           {isPending
             ? "Refreshing catalog results"
             : "Filters sync with the URL and server search."}

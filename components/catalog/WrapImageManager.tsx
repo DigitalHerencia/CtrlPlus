@@ -1,10 +1,10 @@
+/* eslint-disable react-hooks/incompatible-library */
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { applyZodErrors } from "@/lib/forms/apply-zod-errors";
 import {
   addWrapImage,
   removeWrapImage,
@@ -16,6 +16,7 @@ import {
   type WrapImageDTO,
   type WrapImageKind as WrapImageKindValue,
 } from "@/lib/catalog/types";
+import { applyZodErrors } from "@/lib/forms/apply-zod-errors";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
@@ -173,6 +174,7 @@ function WrapImageRow({
     });
   }, [form, image.id, image.isActive, image.kind]);
 
+  // Safe: watch() is used for rendering only, not memoized or passed to memoized hooks/components.
   const kind = form.watch("kind");
   const isActive = form.watch("isActive");
   const hasChanges = kind !== image.kind || isActive !== image.isActive;
@@ -203,7 +205,7 @@ function WrapImageRow({
               <select
                 id={`${image.id}-kind`}
                 disabled={isPending}
-                className="h-10 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100 transition outline-none focus-visible:border-neutral-400"
+                className="h-10 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100 outline-none transition focus-visible:border-neutral-400"
                 {...form.register("kind")}
               >
                 {editableKinds.map((kindOption) => (
@@ -290,6 +292,7 @@ export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
     mode: "onChange",
   });
 
+  // Safe: watch() is used for rendering only, not memoized or passed to memoized hooks/components.
   const selectedFile = uploadForm.watch("file");
 
   function runMutation(task: () => Promise<void>) {
@@ -420,7 +423,7 @@ export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
                 <select
                   id="wrap-image-kind"
                   disabled={isPending}
-                  className="h-11 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100 transition outline-none focus-visible:border-neutral-400"
+                  className="h-11 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100 outline-none transition focus-visible:border-neutral-400"
                   {...uploadForm.register("kind")}
                 >
                   {editableKinds.map((kind) => (

@@ -27,7 +27,7 @@ function AffectedCountNotice({ count }: { count: number | null }) {
   }
 
   return (
-    <p className="text-xs tracking-[0.14em] text-neutral-500 uppercase">Affected rows: {count}</p>
+    <p className="text-xs uppercase tracking-[0.14em] text-neutral-500">Affected rows: {count}</p>
   );
 }
 
@@ -135,7 +135,7 @@ export function PlatformMaintenanceActions({
                 Reopens failed Clerk webhook locks for the current failure set.
               </p>
             </div>
-            <p className="text-xs tracking-[0.14em] text-neutral-500 uppercase">
+            <p className="text-xs uppercase tracking-[0.14em] text-neutral-500">
               Events selected: {clerkFailureIds.length}
             </p>
             <AffectedCountNotice count={clerkResetCount} />
@@ -159,7 +159,7 @@ export function PlatformMaintenanceActions({
                 Reopens failed Stripe webhook locks for the current failure set.
               </p>
             </div>
-            <p className="text-xs tracking-[0.14em] text-neutral-500 uppercase">
+            <p className="text-xs uppercase tracking-[0.14em] text-neutral-500">
               Events selected: {stripeFailureIds.length}
             </p>
             <AffectedCountNotice count={stripeResetCount} />

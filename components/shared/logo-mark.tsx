@@ -8,7 +8,7 @@ export function LogoMark({ className }: LogoMarkProps) {
   return (
     <span
       className={cn(
-        "inline-flex border-2 border-white px-3 py-1.5 text-lg leading-none font-black tracking-tight text-neutral-100 sm:text-xl",
+        "inline-flex border-2 border-white px-3 py-1.5 text-lg font-black leading-none tracking-tight text-neutral-100 sm:text-xl",
         className,
       )}
     >

@@ -228,7 +228,7 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
           <Link href="/" className="mb-8 inline-flex items-center">
             <LogoMark className="scale-150" />
           </Link>
-          <div className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900 px-3 py-1 text-xs tracking-[0.24em] text-neutral-300 uppercase">
+          <div className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900 px-3 py-1 text-xs uppercase tracking-[0.24em] text-neutral-300">
             <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
             Secure Access
           </div>

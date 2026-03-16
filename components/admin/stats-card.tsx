@@ -10,7 +10,7 @@ export function StatsCard({ title, value, description }: StatsCardProps) {
   return (
     <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium tracking-[0.16em] text-neutral-100 uppercase">
+        <CardTitle className="text-sm font-medium uppercase tracking-[0.16em] text-neutral-100">
           {title}
         </CardTitle>
       </CardHeader>

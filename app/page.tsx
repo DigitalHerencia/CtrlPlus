@@ -137,10 +137,10 @@ export default function HomePage() {
           {/* Hero Content - Left aligned */}
           <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-start px-6 pt-8 text-left sm:px-8 lg:px-12 lg:pt-12">
             <div className="max-w-2xl">
-              <h1 className="mb-4 max-w-4xl text-4xl leading-tight font-black tracking-tight whitespace-nowrap uppercase sm:text-5xl lg:text-6xl">
+              <h1 className="mb-4 max-w-4xl whitespace-nowrap text-4xl font-black uppercase leading-tight tracking-tight sm:text-5xl lg:text-6xl">
                 Command Your <span className="text-blue-600">Brand</span>
               </h1>
-              <p className="mb-8 text-xl leading-tight font-semibold text-neutral-100 sm:text-2xl">
+              <p className="mb-8 text-xl font-semibold leading-tight text-neutral-100 sm:text-2xl">
                 Transform your ride with premium vehicle wraps. Visualize designs on your car, book
                 your appointment, and drive in style.
               </p>
@@ -162,7 +162,7 @@ export default function HomePage() {
         <section className="bg-neutral-900 px-6 py-20 sm:px-8 lg:px-12 lg:py-24">
           <div className="mx-auto max-w-7xl pb-10">
             <div className="mb-14 py-10 text-center lg:mb-16">
-              <h2 className="mb-4 text-4xl font-black tracking-tight text-neutral-100 uppercase sm:text-5xl lg:text-6xl">
+              <h2 className="mb-4 text-4xl font-black uppercase tracking-tight text-neutral-100 sm:text-5xl lg:text-6xl">
                 Built for El Paso Drivers Who Want to{" "}
                 <span className="text-blue-600">Stand Out</span>
               </h2>
@@ -209,7 +209,7 @@ export default function HomePage() {
 
           <div className="relative z-10 mx-auto max-w-7xl">
             <div className="mb-14 py-10 text-center lg:mb-16">
-              <h2 className="mb-4 text-4xl font-black tracking-tight uppercase sm:text-5xl lg:text-6xl">
+              <h2 className="mb-4 text-4xl font-black uppercase tracking-tight sm:text-5xl lg:text-6xl">
                 Fair and <span className="text-blue-600">Transparent</span> Pricing
               </h2>
             </div>
@@ -221,11 +221,11 @@ export default function HomePage() {
                   key={idx}
                   className={`relative flex flex-col ${
                     tier.popular
-                      ? "scale-[1.03] border-blue-600 bg-neutral-900/95 shadow-xl ring-2 shadow-blue-600/20 ring-blue-600 hover:scale-[1.05]"
+                      ? "scale-[1.03] border-blue-600 bg-neutral-900/95 shadow-xl shadow-blue-600/20 ring-2 ring-blue-600 hover:scale-[1.05]"
                       : "border-neutral-700 bg-neutral-900/90 hover:scale-[1.02]"
                   } backdrop-blur-sm transition-all duration-300 hover:shadow-2xl`}
                 >
-                  <CardHeader className="pt-8 pb-8">
+                  <CardHeader className="pb-8 pt-8">
                     <CardTitle className="text-2xl font-bold text-neutral-100">
                       {tier.name}
                     </CardTitle>

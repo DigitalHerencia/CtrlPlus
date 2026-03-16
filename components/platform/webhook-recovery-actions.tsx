@@ -246,13 +246,13 @@ export function WebhookRecoveryActions({
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="border border-neutral-800 bg-neutral-900/70 p-3">
-              <p className="text-xs tracking-[0.18em] text-neutral-400 uppercase">Clerk stale</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-neutral-400">Clerk stale</p>
               <p className="mt-2 text-2xl font-semibold text-neutral-100">
                 {staleProcessingCounts.clerk}
               </p>
             </div>
             <div className="border border-neutral-800 bg-neutral-900/70 p-3">
-              <p className="text-xs tracking-[0.18em] text-neutral-400 uppercase">Stripe stale</p>
+              <p className="text-xs uppercase tracking-[0.18em] text-neutral-400">Stripe stale</p>
               <p className="mt-2 text-2xl font-semibold text-neutral-100">
                 {staleProcessingCounts.stripe}
               </p>

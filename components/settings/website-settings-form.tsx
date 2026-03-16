@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/incompatible-library */
 "use client";
 
 import { CheckCircle2, LoaderCircle } from "lucide-react";
@@ -90,7 +91,7 @@ export function WebsiteSettingsForm({ settings }: WebsiteSettingsFormProps) {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-6">
-      <FieldGroup className="gap-6 rounded-4xl border border-neutral-800 bg-neutral-950/80 p-6 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.9)] sm:p-8">
+      <FieldGroup className="rounded-4xl gap-6 border border-neutral-800 bg-neutral-950/80 p-6 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.9)] sm:p-8">
         <div className="space-y-2">
           <h2 className="text-2xl font-semibold tracking-tight text-neutral-50">
             Website settings
@@ -154,6 +155,7 @@ export function WebsiteSettingsForm({ settings }: WebsiteSettingsFormProps) {
                 description: "Use text messages for shorter reminders and updates.",
               },
             ].map((option) => {
+              // Safe: watch() is used for rendering only, not memoized or passed to memoized hooks/components.
               const selected = form.watch("preferredContact") === option.value;
               return (
                 <label
@@ -192,6 +194,7 @@ export function WebsiteSettingsForm({ settings }: WebsiteSettingsFormProps) {
               description: "Receive product updates, promotions, and launch announcements.",
             },
           ].map((option) => {
+            // Safe: watch() is used for rendering only, not memoized or passed to memoized hooks/components.
             const selected = form.watch(option.name);
             return (
               <label

@@ -50,7 +50,7 @@ export function WrapSelector({
             type="button"
             onClick={() => onSelect(wrap.id)}
             className={cn(
-              "flex flex-col gap-2 border p-4 text-left transition-all focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none",
+              "flex flex-col gap-2 border p-4 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600",
               isSelected
                 ? "border-blue-600 bg-neutral-900 text-neutral-100 shadow-sm"
                 : "border-neutral-700 bg-neutral-900 text-neutral-100 hover:border-blue-600/50 hover:bg-neutral-900",
@@ -61,7 +61,7 @@ export function WrapSelector({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={wrap.images[0].url} alt={wrap.name} className="h-24 w-full object-cover" />
             )}
-            <span className="text-sm leading-tight font-semibold">{wrap.name}</span>
+            <span className="text-sm font-semibold leading-tight">{wrap.name}</span>
             {wrap.description && (
               <span
                 className={cn(
