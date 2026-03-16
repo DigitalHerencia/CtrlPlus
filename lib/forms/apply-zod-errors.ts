@@ -1,10 +1,5 @@
-import {
-  type FieldPath,
-  type FieldValues,
-  type UseFormClearErrors,
-  type UseFormSetError,
-} from "react-hook-form";
-import { z } from "zod";
+import type { FieldPath, FieldValues, UseFormClearErrors, UseFormSetError } from "react-hook-form";
+import { type z } from "zod";
 
 export function applyZodErrors<TFieldValues extends FieldValues>(
   error: z.ZodError,

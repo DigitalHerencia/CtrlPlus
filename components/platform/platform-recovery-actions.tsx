@@ -82,10 +82,7 @@ export function PlatformRecoveryActions({
     });
   });
 
-  const handleResetLocks = (
-    form: UseFormReturn<ResetWebhookFormValues>,
-    label: string,
-  ) =>
+  const handleResetLocks = (form: UseFormReturn<ResetWebhookFormValues>, label: string) =>
     form.handleSubmit((values) => {
       if (values.eventIds.length === 0) {
         form.setError("root.server", {
@@ -114,7 +111,8 @@ export function PlatformRecoveryActions({
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-neutral-400">
-              Currently tracking <span className="text-neutral-100">{staleProcessingCount}</span> stale processing lock{staleProcessingCount === 1 ? "" : "s"}.
+              Currently tracking <span className="text-neutral-100">{staleProcessingCount}</span>{" "}
+              stale processing lock{staleProcessingCount === 1 ? "" : "s"}.
             </p>
             <form onSubmit={handleClearLocks}>
               <Button type="submit" disabled={isPending || staleProcessingCount === 0}>
@@ -133,7 +131,8 @@ export function PlatformRecoveryActions({
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-neutral-400">
-              <span className="text-neutral-100">{clerkFailureCount}</span> failed Clerk webhook event{clerkFailureCount === 1 ? "" : "s"} in the current snapshot.
+              <span className="text-neutral-100">{clerkFailureCount}</span> failed Clerk webhook
+              event{clerkFailureCount === 1 ? "" : "s"} in the current snapshot.
             </p>
             <form onSubmit={handleResetLocks(clerkResetForm, "Clerk")}>
               <Button type="submit" disabled={isPending || clerkFailureIds.length === 0}>
@@ -153,7 +152,8 @@ export function PlatformRecoveryActions({
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-neutral-400">
-              <span className="text-neutral-100">{stripeFailureCount}</span> failed Stripe webhook event{stripeFailureCount === 1 ? "" : "s"} in the current snapshot.
+              <span className="text-neutral-100">{stripeFailureCount}</span> failed Stripe webhook
+              event{stripeFailureCount === 1 ? "" : "s"} in the current snapshot.
             </p>
             <form onSubmit={handleResetLocks(stripeResetForm, "Stripe")}>
               <Button type="submit" disabled={isPending || stripeFailureIds.length === 0}>

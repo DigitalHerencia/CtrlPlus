@@ -1,4 +1,8 @@
 const config = {
+  parserOptions: {
+    ecmaVersion: 2015,
+    sourceType: "module",
+  },
   extends: ["@commitlint/config-conventional"],
   rules: {
     "type-enum": [2, "always", ["feat", "fix", "security", "refactor", "test", "docs", "chore"]],

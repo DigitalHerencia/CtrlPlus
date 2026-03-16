@@ -124,7 +124,7 @@ export function WebsiteSettingsForm({ settings }: WebsiteSettingsFormProps) {
             className="h-12 border-neutral-800 bg-neutral-900 text-neutral-50 placeholder:text-neutral-500"
             disabled={form.formState.isSubmitting}
             {...form.register("timezone", {
-              setValueAs: (value) => (typeof value === "string" ? value.trim() : value),
+              setValueAs: (value: string) => (typeof value === "string" ? value.trim() : ""),
             })}
           />
           <FieldDescription className="text-neutral-400">

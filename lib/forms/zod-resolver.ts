@@ -1,4 +1,4 @@
-import type { FieldValues, Resolver } from "react-hook-form";
+import type { FieldErrors, FieldValues, Resolver } from "react-hook-form";
 import { type z } from "zod";
 
 type ResolverError = {
@@ -48,7 +48,7 @@ export function zodResolver<TFieldValues extends FieldValues>(
       };
     }
 
-    const errors: Record<string, any> = {};
+    const errors: FieldErrors<TFieldValues> = {};
 
     for (const issue of parsed.error.issues) {
       setNestedError(

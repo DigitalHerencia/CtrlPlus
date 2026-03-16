@@ -48,7 +48,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
 }
 
 export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) {
-  const { errors, fetchStatus, signIn } = useSignIn();
+  const { fetchStatus, signIn } = useSignIn();
   const router = useRouter();
   const [awaitingSecondFactor, setAwaitingSecondFactor] = useState(false);
   const [secondFactorMethod, setSecondFactorMethod] = useState<"email_code" | "phone_code" | null>(
@@ -267,8 +267,8 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
                 className="h-12 border-neutral-800 bg-neutral-900 text-neutral-50 placeholder:text-neutral-500"
                 disabled={isBusy}
                 {...form.register("verificationCode", {
-                  setValueAs: (value) =>
-                    typeof value === "string" ? value.replace(/\s+/g, "").trim() : value,
+                  setValueAs: (value: string) =>
+                    typeof value === "string" ? value.replace(/\s+/g, "").trim() : "",
                 })}
               />
               <FieldDescription className="text-neutral-400">
@@ -350,8 +350,8 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
                 className="h-12 border-neutral-800 bg-neutral-900 text-neutral-50 placeholder:text-neutral-500"
                 disabled={isBusy}
                 {...form.register("email", {
-                  setValueAs: (value) =>
-                    typeof value === "string" ? value.trim().toLowerCase() : value,
+                  setValueAs: (value: string) =>
+                    typeof value === "string" ? value.trim().toLowerCase() : "",
                 })}
               />
               <FieldError

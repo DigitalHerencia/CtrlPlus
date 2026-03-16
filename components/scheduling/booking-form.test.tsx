@@ -28,13 +28,13 @@ describe("BookingForm", () => {
     expect(screen.getByText(/Select a Wrap/i)).toBeInTheDocument();
   });
 
-  it("shows error if no time slot selected", async () => {
+  it("shows error if no time slot selected", () => {
     render(<BookingForm availabilityWindows={mockAvailabilityWindows} wraps={mockWraps} />);
     fireEvent.submit(screen.getByRole("button", { name: /Confirm Booking/i }));
-    expect(await screen.findByText(/Select a time slot/i)).toBeInTheDocument();
+    expect(screen.getByText(/Select a time slot/i)).toBeInTheDocument();
   });
 
-  it("shows error if no wrap selected", async () => {
+  it("shows error if no wrap selected", () => {
     render(<BookingForm availabilityWindows={mockAvailabilityWindows} wraps={[]} />);
     expect(screen.getByText(/No wrap services are available/i)).toBeInTheDocument();
   });

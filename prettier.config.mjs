@@ -1,5 +1,9 @@
 /** @type {import('prettier').Config} */
 const config = {
+  parserOptions: {
+    ecmaVersion: 2015,
+    sourceType: "module",
+  },
   semi: true,
   singleQuote: false,
   trailingComma: "all",

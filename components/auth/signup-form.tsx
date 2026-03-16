@@ -241,8 +241,8 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
                 className="h-12 border-neutral-800 bg-neutral-900 text-neutral-50 placeholder:text-neutral-500"
                 disabled={isBusy}
                 {...form.register("verificationCode", {
-                  setValueAs: (value) =>
-                    typeof value === "string" ? value.replace(/\s+/g, "").trim() : value,
+                  setValueAs: (value: string) =>
+                    typeof value === "string" ? value.replace(/\s+/g, "").trim() : "",
                 })}
               />
               <FieldDescription className="text-neutral-400">
@@ -322,8 +322,8 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
                 className="h-12 border-neutral-800 bg-neutral-900 text-neutral-50 placeholder:text-neutral-500"
                 disabled={isBusy}
                 {...form.register("email", {
-                  setValueAs: (value) =>
-                    typeof value === "string" ? value.trim().toLowerCase() : value,
+                  setValueAs: (value: string) =>
+                    typeof value === "string" ? value.trim().toLowerCase() : "",
                 })}
               />
               <FieldError

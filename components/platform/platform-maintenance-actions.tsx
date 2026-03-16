@@ -71,7 +71,11 @@ export function PlatformMaintenanceActions({
       setClearCount(result.affectedCount);
       router.refresh();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Unable to clear stale processing locks.");
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : "Unable to clear stale processing locks.",
+      );
     }
   }
 
@@ -87,7 +91,11 @@ export function PlatformMaintenanceActions({
       }
       router.refresh();
     } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : "Unable to reset failed webhook locks.");
+      setError(
+        actionError instanceof Error
+          ? actionError.message
+          : "Unable to reset failed webhook locks.",
+      );
     }
   }
 
@@ -101,7 +109,10 @@ export function PlatformMaintenanceActions({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4 lg:grid-cols-3">
-          <form onSubmit={clearForm.handleSubmit(handleClear)} className="space-y-3 border border-neutral-800 bg-neutral-900/70 p-4">
+          <form
+            onSubmit={clearForm.handleSubmit(handleClear)}
+            className="space-y-3 border border-neutral-800 bg-neutral-900/70 p-4"
+          >
             <div className="space-y-1">
               <h3 className="text-sm font-semibold text-neutral-100">Stale Processing Locks</h3>
               <p className="text-sm text-neutral-400">
@@ -124,7 +135,9 @@ export function PlatformMaintenanceActions({
                 Reopens failed Clerk webhook locks for the current failure set.
               </p>
             </div>
-            <p className="text-xs tracking-[0.14em] text-neutral-500 uppercase">Events selected: {clerkFailureIds.length}</p>
+            <p className="text-xs tracking-[0.14em] text-neutral-500 uppercase">
+              Events selected: {clerkFailureIds.length}
+            </p>
             <AffectedCountNotice count={clerkResetCount} />
             <Button
               type="submit"
@@ -146,7 +159,9 @@ export function PlatformMaintenanceActions({
                 Reopens failed Stripe webhook locks for the current failure set.
               </p>
             </div>
-            <p className="text-xs tracking-[0.14em] text-neutral-500 uppercase">Events selected: {stripeFailureIds.length}</p>
+            <p className="text-xs tracking-[0.14em] text-neutral-500 uppercase">
+              Events selected: {stripeFailureIds.length}
+            </p>
             <AffectedCountNotice count={stripeResetCount} />
             <Button
               type="submit"
@@ -154,13 +169,18 @@ export function PlatformMaintenanceActions({
               disabled={stripeResetForm.formState.isSubmitting || stripeFailureIds.length === 0}
               className="w-full"
             >
-              {stripeResetForm.formState.isSubmitting ? "Resetting..." : "Reset Stripe Failed Locks"}
+              {stripeResetForm.formState.isSubmitting
+                ? "Resetting..."
+                : "Reset Stripe Failed Locks"}
             </Button>
           </form>
         </div>
 
         {error && (
-          <div className="border border-neutral-700 bg-neutral-900 px-4 py-3 text-sm text-neutral-100" role="alert">
+          <div
+            className="border border-neutral-700 bg-neutral-900 px-4 py-3 text-sm text-neutral-100"
+            role="alert"
+          >
             {error}
           </div>
         )}

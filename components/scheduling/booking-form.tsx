@@ -100,7 +100,7 @@ export function BookingForm({ availabilityWindows, wraps }: BookingFormProps) {
   }
 
   // Form submit handler
-  const onSubmit = async (values: BookingFormValues) => {
+  const onSubmit = (values: BookingFormValues) => {
     setError(null);
     const window = availabilityWindows.find((w) => w.id === values.windowId);
     if (!window) {

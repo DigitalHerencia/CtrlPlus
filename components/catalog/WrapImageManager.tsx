@@ -2,13 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { applyZodErrors } from "@/lib/forms/apply-zod-errors";
 import {
@@ -102,7 +96,10 @@ function sortImages(images: WrapImageDTO[]): WrapImageDTO[] {
   return [...images].sort((a, b) => a.displayOrder - b.displayOrder);
 }
 
-function applyOptimisticMutation(images: WrapImageDTO[], mutation: OptimisticMutation): WrapImageDTO[] {
+function applyOptimisticMutation(
+  images: WrapImageDTO[],
+  mutation: OptimisticMutation,
+): WrapImageDTO[] {
   switch (mutation.type) {
     case "remove":
       return images.filter((image) => image.id !== mutation.imageId);
@@ -152,7 +149,15 @@ interface WrapImageRowProps {
   onSave: (image: WrapImageDTO, values: WrapImageMetadataValues) => void;
 }
 
-function WrapImageRow({ image, index, totalImages, isPending, onMove, onRemove, onSave }: WrapImageRowProps) {
+function WrapImageRow({
+  image,
+  index,
+  totalImages,
+  isPending,
+  onMove,
+  onRemove,
+  onSave,
+}: WrapImageRowProps) {
   const form = useForm<WrapImageMetadataValues>({
     defaultValues: {
       kind: image.kind,
@@ -198,7 +203,7 @@ function WrapImageRow({ image, index, totalImages, isPending, onMove, onRemove, 
               <select
                 id={`${image.id}-kind`}
                 disabled={isPending}
-                className="h-10 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100 outline-none transition focus-visible:border-neutral-400"
+                className="h-10 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100 transition outline-none focus-visible:border-neutral-400"
                 {...form.register("kind")}
               >
                 {editableKinds.map((kindOption) => (
@@ -212,14 +217,20 @@ function WrapImageRow({ image, index, totalImages, isPending, onMove, onRemove, 
             <Field className="justify-end">
               <FieldLabel htmlFor={`${image.id}-active`}>Active</FieldLabel>
               <label className="flex h-10 items-center gap-2 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100">
-                <input id={`${image.id}-active`} type="checkbox" disabled={isPending} {...form.register("isActive")} />
+                <input
+                  id={`${image.id}-active`}
+                  type="checkbox"
+                  disabled={isPending}
+                  {...form.register("isActive")}
+                />
                 Visible to workflows
               </label>
             </Field>
           </FieldGroup>
 
           <FieldDescription>
-            Version {image.version} · currently {labelKind(image.kind)} · {image.isActive ? "active" : "inactive"}
+            Version {image.version} · currently {labelKind(image.kind)} ·{" "}
+            {image.isActive ? "active" : "inactive"}
           </FieldDescription>
           <FieldError>{form.formState.errors.root?.server?.message}</FieldError>
 
@@ -409,7 +420,7 @@ export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
                 <select
                   id="wrap-image-kind"
                   disabled={isPending}
-                  className="h-11 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100 outline-none transition focus-visible:border-neutral-400"
+                  className="h-11 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100 transition outline-none focus-visible:border-neutral-400"
                   {...uploadForm.register("kind")}
                 >
                   {editableKinds.map((kind) => (
@@ -423,7 +434,12 @@ export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
               <Field>
                 <FieldLabel htmlFor="wrap-image-active">Visibility</FieldLabel>
                 <label className="flex h-11 items-center gap-2 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100">
-                  <input id="wrap-image-active" type="checkbox" disabled={isPending} {...uploadForm.register("isActive")} />
+                  <input
+                    id="wrap-image-active"
+                    type="checkbox"
+                    disabled={isPending}
+                    {...uploadForm.register("isActive")}
+                  />
                   Active
                 </label>
               </Field>
@@ -433,7 +449,9 @@ export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
               <Button type="submit" disabled={isPending || !selectedFile}>
                 {isPending ? "Uploading..." : "Upload image"}
               </Button>
-              {selectedFile ? <span className="text-xs text-neutral-500">{selectedFile.name}</span> : null}
+              {selectedFile ? (
+                <span className="text-xs text-neutral-500">{selectedFile.name}</span>
+              ) : null}
             </div>
             <FieldError>{uploadForm.formState.errors.root?.server?.message}</FieldError>
           </form>
