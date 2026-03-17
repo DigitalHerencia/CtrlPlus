@@ -42,6 +42,22 @@ export async function generatePreview(input: GeneratePreviewInput): Promise<Visu
   if (!session.isAuthenticated || !userId) throw new Error("Unauthorized: not authenticated");
   requireCapability(session.authz, "visualizer.use");
 
+  // Ownership hardening: Only owner or platform admin can generate preview for hidden wraps
+  const preview = await prisma.visualizerPreview.findFirst({
+    where: { id: input.previewId, deletedAt: null },
+    select: { id: true, ownerClerkUserId: true, wrapId: true },
+  });
+  if (!preview) throw new Error("Preview not found");
+  const wrap = await prisma.wrap.findFirst({
+    where: { id: preview.wrapId, deletedAt: null },
+    select: { id: true, isHidden: true },
+  });
+  if (wrap?.isHidden && !session.isOwner && !session.isPlatformAdmin) {
+    throw new Error(
+      "Forbidden: only owner or platform admin can generate preview for hidden wraps",
+    );
+  }
+
   const parsed = generatePreviewSchema.parse(input);
 
   const existing = await prisma.visualizerPreview.findFirst({
@@ -70,6 +86,7 @@ export async function generatePreview(input: GeneratePreviewInput): Promise<Visu
   });
 
   try {
+    // Generate and store preview image in Cloudinary, get URL
     const processedImageUrl = await generateCompositePreview({
       wrapId: existing.wrapId,
       previewId: existing.id,

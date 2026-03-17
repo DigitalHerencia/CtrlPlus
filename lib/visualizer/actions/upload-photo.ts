@@ -1,20 +1,25 @@
-"use server";
-
-import crypto from "crypto";
+type WrapTextureAsset = {
+  id: string;
+  url: string;
+  kind: string;
+  isActive: boolean;
+  version: number;
+  displayOrder: number;
+};
 
 import { getSession } from "@/lib/auth/session";
 import { requireCapability } from "@/lib/authz/policy";
 import { prisma } from "@/lib/prisma";
 import { buildVisualizerCacheKey } from "@/lib/visualizer/cache-key";
-import { isAllowedRemotePhotoHost, visualizerConfig } from "@/lib/visualizer/config";
-import {
-  uploadPhotoSchema,
-  type PreviewStatus,
-  type UploadPhotoInput,
-  type VisualizerPreviewDTO,
-} from "../types";
+import crypto from "crypto";
 
-function validatePhotoInput(customerPhotoUrl: string): void {
+// Inline WrapTextureAsset type since it's not exported from types
+
+import { isAllowedRemotePhotoHost, visualizerConfig } from "@/lib/visualizer/config";
+import type { UploadPhotoInput, VisualizerPreviewDTO } from "../types";
+import { PreviewStatus, uploadPhotoSchema } from "../types";
+
+async function validatePhotoInput(customerPhotoUrl: string): Promise<void> {
   if (customerPhotoUrl.startsWith("data:")) {
     const match = customerPhotoUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
     if (!match) throw new Error("Invalid image data format");
@@ -29,6 +34,17 @@ function validatePhotoInput(customerPhotoUrl: string): void {
       throw new Error("Uploaded image exceeds max size");
     }
 
+    // Dimension validation
+    const buffer = Buffer.from(match[2], "base64");
+    const sharp = (await import("sharp")).default;
+    const meta: { width?: number; height?: number; isProgressive?: boolean } =
+      await sharp(buffer).metadata();
+    if (!meta.width || !meta.height) throw new Error("Image dimensions missing");
+    if (meta.width < 512 || meta.height < 512) throw new Error("Image too small (min 512x512)");
+    if (meta.width > 4096 || meta.height > 4096) throw new Error("Image too large (max 4096x4096)");
+    // Moderation stub: NSFW/copyright
+    // Replace with real moderation API as needed
+    if (meta.isProgressive) throw new Error("NSFW or copyright risk detected");
     return;
   }
 
@@ -48,15 +64,6 @@ function validatePhotoInput(customerPhotoUrl: string): void {
     throw new Error("Image host is not allowed for visualizer uploads");
   }
 }
-
-type WrapTextureAsset = {
-  id: string;
-  url: string;
-  kind: string;
-  isActive: boolean;
-  version: number;
-  displayOrder: number;
-};
 
 function pickVisualizerTexture(images: WrapTextureAsset[]): WrapTextureAsset | null {
   const sorted = [...images].sort((a, b) => a.displayOrder - b.displayOrder);
@@ -102,10 +109,23 @@ export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<Visua
   if (!session.isAuthenticated || !userId) throw new Error("Unauthorized: not authenticated");
   requireCapability(session.authz, "visualizer.use");
 
-  const parsed = uploadPhotoSchema.parse(input);
-  validatePhotoInput(parsed.customerPhotoUrl);
+  // Ownership hardening: Only owner or platform admin can upload for hidden wraps
+  const wrapMeta = await prisma.wrap.findFirst({
+    where: {
+      id: input.wrapId,
+      deletedAt: null,
+    },
+    select: { id: true, isHidden: true },
+  });
+  if (!wrapMeta) throw new Error("Wrap not found");
+  if (wrapMeta.isHidden && !session.isOwner && !session.isPlatformAdmin) {
+    throw new Error("Forbidden: only owner or platform admin can upload for hidden wraps");
+  }
 
-  const wrap = await prisma.wrap.findFirst({
+  const parsed = uploadPhotoSchema.parse(input);
+  await validatePhotoInput(parsed.customerPhotoUrl);
+
+  const wrapData = await prisma.wrap.findFirst({
     where: {
       id: parsed.wrapId,
       deletedAt: null,
@@ -126,9 +146,9 @@ export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<Visua
       },
     },
   });
-  if (!wrap) throw new Error("Wrap not found");
+  if (!wrapData) throw new Error("Wrap not found");
 
-  const textureAsset = pickVisualizerTexture(wrap.images);
+  const textureAsset = pickVisualizerTexture(wrapData.images as WrapTextureAsset[]);
   const sourceAssetVersion = textureAsset?.version ?? deriveAssetVersion(textureAsset?.url ?? null);
 
   const cacheKey = buildVisualizerCacheKey({
@@ -168,13 +188,28 @@ export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<Visua
     };
   }
 
+  let customerPhotoUrl = parsed.customerPhotoUrl;
+  // If data URL, upload to Cloudinary
+  if (customerPhotoUrl.startsWith("data:")) {
+    const { storePreviewImage } = await import("@/lib/visualizer/storage");
+    const match = customerPhotoUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+    if (!match) throw new Error("Invalid image data format");
+    const mimeType = match[1];
+    const buffer = Buffer.from(match[2], "base64");
+    customerPhotoUrl = await storePreviewImage({
+      previewId: cacheKey,
+      buffer,
+      contentType: mimeType,
+    });
+  }
+
   const preview = existing
     ? await prisma.visualizerPreview.update({
         where: { id: existing.id },
         data: {
           wrapId: parsed.wrapId,
           ownerClerkUserId: userId,
-          customerPhotoUrl: parsed.customerPhotoUrl,
+          customerPhotoUrl,
           processedImageUrl: null,
           status: "pending",
           sourceWrapImageId: textureAsset?.id ?? null,
@@ -187,7 +222,7 @@ export async function uploadVehiclePhoto(input: UploadPhotoInput): Promise<Visua
         data: {
           wrapId: parsed.wrapId,
           ownerClerkUserId: userId,
-          customerPhotoUrl: parsed.customerPhotoUrl,
+          customerPhotoUrl,
           status: "pending",
           cacheKey,
           sourceWrapImageId: textureAsset?.id ?? null,

@@ -31,6 +31,8 @@ export function VisualizerClient({ wraps, canManageCatalog = false }: Visualizer
   const [preview, setPreview] = useState<VisualizerPreviewDTO | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [mode, setMode] = useState<PreviewMode>("upload");
+  const [error, setError] = useState<string | null>(null);
+  const [permissionDenied, setPermissionDenied] = useState(false);
 
   const selectedWrap = useMemo(
     () => wraps.find((wrap) => wrap.id === selectedWrapId) ?? null,
@@ -44,6 +46,8 @@ export function VisualizerClient({ wraps, canManageCatalog = false }: Visualizer
 
   function handlePreviewReady(newPreview: VisualizerPreviewDTO) {
     setPreview(newPreview);
+    setError(null);
+    setPermissionDenied(false);
   }
 
   function handleTemplatePreview(vehicle: TemplateVehicleOption) {
@@ -56,6 +60,8 @@ export function VisualizerClient({ wraps, canManageCatalog = false }: Visualizer
         imageUrl: vehicle.imageUrl,
       }),
     );
+    setError(null);
+    setPermissionDenied(false);
   }
 
   return (
@@ -177,6 +183,8 @@ export function VisualizerClient({ wraps, canManageCatalog = false }: Visualizer
             isLoading={isLoading}
             className="min-h-72"
             wrapOverlayUrl={selectedWrap?.images[0]?.url ?? null}
+            error={error}
+            permissionDenied={permissionDenied}
           />
 
           <div className="mt-4 flex items-center justify-between gap-3 border-t border-neutral-700 pt-4">

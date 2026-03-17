@@ -1,11 +1,13 @@
+// Export generatePreview for test mocking convenience
+export { generatePreview } from "./actions/generate-preview";
 import { readFile } from "fs/promises";
 import path from "path";
 
 import { prisma } from "@/lib/prisma";
 import sharp from "sharp";
 
-import { isAllowedRemotePhotoHost, visualizerConfig } from "@/lib/visualizer/config";
 import { compositeVehicleWrap } from "@/lib/visualizer/compositor";
+import { isAllowedRemotePhotoHost, visualizerConfig } from "@/lib/visualizer/config";
 import { createVehicleMask, fallbackCenterMask } from "@/lib/visualizer/huggingface";
 import { storePreviewImage } from "@/lib/visualizer/storage";
 

@@ -9,6 +9,8 @@ interface PreviewCanvasProps {
   isLoading?: boolean;
   className?: string;
   wrapOverlayUrl?: string | null;
+  error?: string | null;
+  permissionDenied?: boolean;
 }
 
 export function PreviewCanvas({
@@ -16,6 +18,8 @@ export function PreviewCanvas({
   isLoading = false,
   className,
   wrapOverlayUrl,
+  error,
+  permissionDenied,
 }: PreviewCanvasProps) {
   if (isLoading) {
     return (
@@ -27,6 +31,34 @@ export function PreviewCanvas({
       >
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         <p className="text-sm text-neutral-300">Generating your preview…</p>
+      </div>
+    );
+  }
+
+  if (permissionDenied) {
+    return (
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center gap-3 border border-dashed border-red-700 bg-red-900 p-12 text-center",
+          className,
+        )}
+      >
+        <ImageOff className="h-10 w-10 text-red-500" />
+        <p className="text-sm text-red-400">You do not have permission to view this preview.</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center gap-3 border border-dashed border-red-700 bg-red-900 p-12 text-center",
+          className,
+        )}
+      >
+        <ImageOff className="h-10 w-10 text-red-500" />
+        <p className="text-sm text-red-400">{error}</p>
       </div>
     );
   }

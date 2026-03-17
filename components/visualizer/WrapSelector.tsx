@@ -12,6 +12,7 @@ interface WrapSelectorProps {
   onSelect: (wrapId: string) => void;
   canManageCatalog?: boolean;
   className?: string;
+  permissionDenied?: boolean;
 }
 
 export function WrapSelector({
@@ -20,7 +21,20 @@ export function WrapSelector({
   onSelect,
   canManageCatalog = false,
   className,
+  permissionDenied,
 }: WrapSelectorProps) {
+  if (permissionDenied) {
+    return (
+      <div
+        className={cn(
+          "space-y-3 border border-dashed border-red-700 bg-red-900 p-8 text-center text-sm text-red-100",
+          className,
+        )}
+      >
+        <p>You do not have permission to view wraps.</p>
+      </div>
+    );
+  }
   if (wraps.length === 0) {
     return (
       <div
