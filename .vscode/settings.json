@@ -58,5 +58,9 @@
   "chat.includeReferencedInstructions": true,
   "github.copilot.chat.organizationInstructions.enabled": false,
   "chat.useClaudeMdFile": false,
-  "chat.useNestedAgentsMdFiles": true
+  "chat.useNestedAgentsMdFiles": true,
+  "chat.experimental.useSkillAdherencePrompt": true,
+  "chat.promptFilesLocations": {
+    ".copilot/prompts": true
+  }
 }
