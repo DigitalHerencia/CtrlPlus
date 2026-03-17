@@ -31,7 +31,7 @@ describe("BookingForm", () => {
   it("shows error if no time slot selected", () => {
     render(<BookingForm availabilityWindows={mockAvailabilityWindows} wraps={mockWraps} />);
     fireEvent.submit(screen.getByRole("button", { name: /Confirm Booking/i }));
-    expect(screen.getByText(/Select a time slot/i)).toBeInTheDocument();
+    return expect(screen.findByText(/Select a time slot/i)).resolves.toBeInTheDocument();
   });
 
   it("shows error if no wrap selected", () => {
