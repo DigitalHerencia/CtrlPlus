@@ -27,8 +27,6 @@
         "test:e2e": "playwright test",
         "test:e2e:ui": "playwright test --ui",
         "test:e2e:report": "playwright show-report",
-        "codex:bootstrap": "powershell -ExecutionPolicy Bypass -File .codex/setup/bootstrap-windows.ps1",
-        "codex:doctor": "powershell -ExecutionPolicy Bypass -File .codex/setup/doctor.ps1",
         "prisma:validate": "prisma validate",
         "db:migrate": "prisma migrate dev",
         "db:migrate:deploy": "prisma migrate deploy"
