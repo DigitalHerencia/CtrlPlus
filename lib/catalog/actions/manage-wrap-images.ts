@@ -2,8 +2,8 @@
 
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/prisma'
-import { revalidatePath } from 'next/cache'
 import { deletePersistedWrapImage, persistWrapImage, validateWrapImageFile } from '../image-storage'
+import { revalidateCatalogAndVisualizerPaths } from '../revalidation'
 import {
     updateWrapImageMetadataSchema,
     wrapImageUploadSchema,
@@ -34,13 +34,6 @@ function toWrapImageDTO(image: WrapImageRecord): WrapImageDTO {
         contentHash: image.contentHash,
         displayOrder: image.displayOrder,
     }
-}
-
-function revalidateWrapPaths(wrapId: string): void {
-    revalidatePath('/catalog')
-    revalidatePath('/catalog/manage')
-    revalidatePath(`/catalog/${wrapId}`)
-    revalidatePath('/visualizer')
 }
 
 async function assertWrapExists(wrapId: string): Promise<void> {
@@ -134,7 +127,7 @@ export async function addWrapImage(input: WrapImageUploadInput): Promise<WrapIma
         },
     })
 
-    revalidateWrapPaths(parsed.wrapId)
+    revalidateCatalogAndVisualizerPaths(parsed.wrapId)
 
     return toWrapImageDTO(image)
 }
@@ -208,7 +201,7 @@ export async function updateWrapImageMetadata(
         },
     })
 
-    revalidateWrapPaths(parsed.wrapId)
+    revalidateCatalogAndVisualizerPaths(parsed.wrapId)
 
     return toWrapImageDTO(updated)
 }
@@ -248,7 +241,7 @@ export async function removeWrapImage(wrapId: string, imageId: string): Promise<
         },
     })
 
-    revalidateWrapPaths(wrapId)
+    revalidateCatalogAndVisualizerPaths(wrapId)
 }
 
 export async function reorderWrapImages(wrapId: string, imageIdsInOrder: string[]): Promise<void> {
@@ -294,5 +287,5 @@ export async function reorderWrapImages(wrapId: string, imageIdsInOrder: string[
         },
     })
 
-    revalidateWrapPaths(wrapId)
+    revalidateCatalogAndVisualizerPaths(wrapId)
 }

@@ -18,20 +18,23 @@ interface PersistedWrapImage {
 
 interface CloudinaryConfig {
     cloudName: string
-    apiKey: string | null
-    apiSecret: string | null
+    apiKey: string
+    apiSecret: string
     uploadPreset: string | null
     folder: string
 }
 
 function getCloudinaryConfig(): CloudinaryConfig | null {
     const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim() ?? ''
-    if (!cloudName) return null
+    const apiKey = process.env.CLOUDINARY_API_KEY?.trim() ?? ''
+    const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim() ?? ''
+
+    if (!cloudName || !apiKey || !apiSecret) return null
 
     return {
         cloudName,
-        apiKey: process.env.CLOUDINARY_API_KEY?.trim() ?? null,
-        apiSecret: process.env.CLOUDINARY_API_SECRET?.trim() ?? null,
+        apiKey,
+        apiSecret,
         uploadPreset: process.env.CLOUDINARY_WRAP_UPLOAD_PRESET?.trim() ?? null,
         folder: process.env.CLOUDINARY_WRAP_FOLDER?.trim() || 'ctrlplus/wraps',
     }
@@ -96,12 +99,6 @@ async function uploadToCloudinary(params: {
         formData.set('upload_preset', params.config.uploadPreset)
         formData.set('public_id', publicId)
     } else {
-        if (!params.config.apiKey || !params.config.apiSecret) {
-            throw new Error(
-                'Cloudinary upload requires CLOUDINARY_WRAP_UPLOAD_PRESET or CLOUDINARY_API_KEY/CLOUDINARY_API_SECRET.'
-            )
-        }
-
         const timestamp = Math.floor(Date.now() / 1000).toString()
         const signature = buildCloudinarySignature(
             { public_id: publicId, timestamp },
@@ -196,12 +193,7 @@ export async function deletePersistedWrapImage(url: string): Promise<void> {
     const cloudinaryConfig = getCloudinaryConfig()
     const cloudinaryPublicId = extractCloudinaryPublicId(url)
 
-    if (
-        cloudinaryConfig &&
-        cloudinaryPublicId &&
-        cloudinaryConfig.apiKey &&
-        cloudinaryConfig.apiSecret
-    ) {
+    if (cloudinaryConfig && cloudinaryPublicId) {
         try {
             const timestamp = Math.floor(Date.now() / 1000).toString()
             const signature = buildCloudinarySignature(

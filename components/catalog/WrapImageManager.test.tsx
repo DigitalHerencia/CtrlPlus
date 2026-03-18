@@ -1,68 +1,96 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+
 import { WrapImageManager } from './WrapImageManager'
 
-const mockImages: Array<{
-    id: string
-    url: string
-    kind: 'hero' // Use valid WrapImageKind
-    isActive: boolean
-    version: number
-    contentHash: string
-    displayOrder: number
-    metadata: object
-}> = [
+const mockImages = [
     {
         id: 'img1',
         url: 'https://example.com/img1.jpg',
-        kind: 'hero',
+        kind: 'hero' as const,
         isActive: true,
         version: 1,
         contentHash: 'hash1',
         displayOrder: 0,
-        metadata: {},
+    },
+    {
+        id: 'img2',
+        url: 'https://example.com/img2.jpg',
+        kind: 'gallery' as const,
+        isActive: true,
+        version: 1,
+        contentHash: 'hash2',
+        displayOrder: 1,
     },
 ]
-const mockCallbacks = {
-    onAddImage: jest.fn(),
-    onRemoveImage: jest.fn(),
-    onReorderImages: jest.fn(),
-    onUpdateImageMetadata: jest.fn(),
-}
-
-const renderManager = (props = {}) =>
-    render(<WrapImageManager wrapId="wrap1" images={mockImages} {...mockCallbacks} {...props} />)
 
 describe('WrapImageManager', () => {
-    it('renders empty state when no images', () => {
-        renderManager({ images: [] })
-        expect(screen.getByText(/no images found/i)).toBeInTheDocument()
+    it('renders readiness and current catalog assets', () => {
+        render(
+            <WrapImageManager
+                wrapId="wrap1"
+                images={mockImages}
+                readiness={{
+                    canPublish: false,
+                    missingRequiredAssetRoles: ['visualizer_texture'],
+                    requiredAssetRoles: ['hero', 'visualizer_texture'],
+                    activeAssetKinds: ['hero', 'gallery'],
+                    hasDisplayAsset: true,
+                }}
+                onAddImage={vi.fn()}
+                onRemoveImage={vi.fn()}
+                onReorderImages={vi.fn()}
+                onUpdateImageMetadata={vi.fn()}
+            />
+        )
+
+        expect(screen.getByText('Catalog Assets')).toBeInTheDocument()
+        expect(screen.getByText(/missing required roles/i)).toBeInTheDocument()
+        expect(screen.getAllByRole('img').length).toBeGreaterThan(0)
     })
 
-    it('renders loading state', () => {
-        renderManager({ loading: true })
-        expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    it('submits an uploaded asset through the provided callback', async () => {
+        const onAddImage = vi.fn()
+
+        render(
+            <WrapImageManager
+                wrapId="wrap1"
+                images={mockImages}
+                onAddImage={onAddImage}
+                onRemoveImage={vi.fn()}
+                onReorderImages={vi.fn()}
+                onUpdateImageMetadata={vi.fn()}
+            />
+        )
+
+        const file = new File(['asset'], 'gallery.png', { type: 'image/png' })
+        fireEvent.change(screen.getByLabelText('Upload asset'), {
+            target: { files: [file] },
+        })
+        fireEvent.click(screen.getByRole('button', { name: 'Add Asset' }))
+
+        await waitFor(() => expect(onAddImage).toHaveBeenCalledWith(file, 'gallery', true))
     })
 
-    it('renders error state', () => {
-        renderManager({ error: 'Image error' })
-        expect(screen.getByText(/image error/i)).toBeInTheDocument()
-    })
+    it('supports reordering and removing assets', () => {
+        const onRemoveImage = vi.fn()
+        const onReorderImages = vi.fn()
 
-    it('renders permission denied state', () => {
-        renderManager({ permissionDenied: true })
-        expect(screen.getByText(/permission denied/i)).toBeInTheDocument()
-    })
+        render(
+            <WrapImageManager
+                wrapId="wrap1"
+                images={mockImages}
+                onAddImage={vi.fn()}
+                onRemoveImage={onRemoveImage}
+                onReorderImages={onReorderImages}
+                onUpdateImageMetadata={vi.fn()}
+            />
+        )
 
-    it('calls mutation callbacks', () => {
-        renderManager()
-        fireEvent.click(screen.getByRole('button', { name: /add image/i }))
-        expect(mockCallbacks.onAddImage).toHaveBeenCalled()
-    })
+        fireEvent.click(screen.getAllByRole('button', { name: 'Move Down' })[0])
+        expect(onReorderImages).toHaveBeenCalledWith(['img2', 'img1'])
 
-    it('renders image details and shadcn/ui blocks', () => {
-        renderManager()
-        expect(screen.getByAltText(/img1/i)).toBeInTheDocument()
-        // Check for shadcn/ui card
-        expect(screen.getByRole('region', { name: /image card/i })).toBeInTheDocument()
+        fireEvent.click(screen.getAllByRole('button', { name: 'Remove' })[0])
+        expect(onRemoveImage).toHaveBeenCalledWith('img1')
     })
 })

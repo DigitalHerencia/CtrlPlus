@@ -1,390 +1,305 @@
-/* eslint-disable react-hooks/incompatible-library */
 'use client'
 
+import { useMemo, useState } from 'react'
+
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import { toCatalogAssetImage } from '@/lib/catalog/assets'
 import {
     WrapImageKind,
+    type CatalogAssetReadinessDTO,
     type WrapImageDTO,
     type WrapImageKind as WrapImageKindValue,
 } from '@/lib/catalog/types'
-import { applyZodErrors } from '@/lib/forms/apply-zod-errors'
-import { useEffect, useMemo, useRef } from 'react'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
 
 interface WrapImageManagerProps {
     wrapId: string
     images: WrapImageDTO[]
-    onAddImage: (file: File, kind: WrapImageKindValue, isActive: boolean) => void
-    onRemoveImage: (imageId: string) => void
-    onReorderImages: (orderedIds: string[]) => void
-    onUpdateImageMetadata: (imageId: string, kind: WrapImageKindValue, isActive: boolean) => void
+    readiness?: CatalogAssetReadinessDTO
+    isPending?: boolean
+    onAddImage: (file: File, kind: WrapImageKindValue, isActive: boolean) => Promise<void> | void
+    onRemoveImage: (imageId: string) => Promise<void> | void
+    onReorderImages: (orderedIds: string[]) => Promise<void> | void
+    onUpdateImageMetadata: (
+        imageId: string,
+        kind: WrapImageKindValue,
+        isActive: boolean
+    ) => Promise<void> | void
 }
 
-const editableKinds = [
-    WrapImageKind.HERO,
-    WrapImageKind.VISUALIZER_TEXTURE,
-    WrapImageKind.VISUALIZER_MASK_HINT,
-    WrapImageKind.GALLERY,
+const kindOptions: Array<{ value: WrapImageKindValue; label: string }> = [
+    { value: WrapImageKind.HERO, label: 'Hero / display' },
+    { value: WrapImageKind.GALLERY, label: 'Gallery' },
+    { value: WrapImageKind.VISUALIZER_TEXTURE, label: 'Visualizer texture' },
+    { value: WrapImageKind.VISUALIZER_MASK_HINT, label: 'Mask hint' },
 ]
-const ACCEPTED_WRAP_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
-const MAX_WRAP_IMAGE_BYTES = 5 * 1024 * 1024
-
-const wrapImageUploadFormSchema = z.object({
-    kind: z.enum(editableKinds),
-    isActive: z.boolean(),
-    file: z
-        .instanceof(File, { message: 'Choose an image to upload.' })
-        .refine(
-            (file) => ACCEPTED_WRAP_IMAGE_TYPES.includes(file.type),
-            'Use a JPEG, PNG, or WEBP image.'
-        )
-        .refine(
-            (file) => file.size > 0 && file.size <= MAX_WRAP_IMAGE_BYTES,
-            'Image must be smaller than 5 MB.'
-        ),
-})
-
-const wrapImageMetadataSchema = z.object({
-    kind: z.enum(editableKinds),
-    isActive: z.boolean(),
-})
-
-type WrapImageUploadValues = {
-    kind: WrapImageKindValue
-    isActive: boolean
-    file: File | null
-}
-
-type WrapImageMetadataValues = z.input<typeof wrapImageMetadataSchema>
-
-function labelKind(kind: WrapImageKindValue): string {
-    switch (kind) {
-        case WrapImageKind.HERO:
-            return 'Hero'
-        case WrapImageKind.VISUALIZER_TEXTURE:
-            return 'Visualizer texture'
-        case WrapImageKind.VISUALIZER_MASK_HINT:
-            return 'Mask hint'
-        case WrapImageKind.GALLERY:
-            return 'Gallery'
-    }
-}
-
-function sortImages(images: WrapImageDTO[]): WrapImageDTO[] {
-    return [...images].sort((a, b) => a.displayOrder - b.displayOrder)
-}
-
-interface WrapImageRowProps {
-    image: WrapImageDTO
-    index: number
-    totalImages: number
-    isPending: boolean
-    onMove: (index: number, direction: -1 | 1) => void
-    onRemove: (imageId: string) => void
-    onSave: (image: WrapImageDTO, values: WrapImageMetadataValues) => void
-}
-
-function WrapImageRow({
-    image,
-    index,
-    totalImages,
-    isPending,
-    onMove,
-    onRemove,
-    onSave,
-}: WrapImageRowProps) {
-    const form = useForm<WrapImageMetadataValues>({
-        defaultValues: {
-            kind: image.kind,
-            isActive: image.isActive,
-        },
-        mode: 'onChange',
-    })
-
-    useEffect(() => {
-        form.reset({
-            kind: image.kind,
-            isActive: image.isActive,
-        })
-    }, [form, image.id, image.isActive, image.kind])
-
-    // Safe: watch() is used for rendering only, not memoized or passed to memoized hooks/components.
-    const kind = form.watch('kind')
-    const isActive = form.watch('isActive')
-    const hasChanges = kind !== image.kind || isActive !== image.isActive
-
-    const submitRow = form.handleSubmit((values) => {
-        const parsed = wrapImageMetadataSchema.safeParse(values)
-        if (!parsed.success) {
-            applyZodErrors(parsed.error, form.setError, form.clearErrors)
-            return
-        }
-
-        form.clearErrors()
-        onSave(image, parsed.data)
-    })
-
-    return (
-        <Card className="border-neutral-800 bg-neutral-950/70 text-neutral-100">
-            <CardContent className="grid gap-4 p-4 lg:grid-cols-[auto_1fr_auto]">
-                <div className="overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={image.url} alt="Wrap asset" className="h-28 w-36 object-cover" />
-                </div>
-
-                <form onSubmit={submitRow} className="space-y-4">
-                    <FieldGroup className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
-                        <Field>
-                            <FieldLabel htmlFor={`${image.id}-kind`}>Asset role</FieldLabel>
-                            <select
-                                id={`${image.id}-kind`}
-                                disabled={isPending}
-                                className="h-10 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100 outline-none transition focus-visible:border-neutral-400"
-                                {...form.register('kind')}
-                            >
-                                {editableKinds.map((kindOption) => (
-                                    <option key={kindOption} value={kindOption}>
-                                        {labelKind(kindOption)}
-                                    </option>
-                                ))}
-                            </select>
-                        </Field>
-
-                        <Field className="justify-end">
-                            <FieldLabel htmlFor={`${image.id}-active`}>Active</FieldLabel>
-                            <label className="flex h-10 items-center gap-2 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100">
-                                <input
-                                    id={`${image.id}-active`}
-                                    type="checkbox"
-                                    disabled={isPending}
-                                    {...form.register('isActive')}
-                                />
-                                Visible to workflows
-                            </label>
-                        </Field>
-                    </FieldGroup>
-
-                    <FieldDescription>
-                        Version {image.version} · currently {labelKind(image.kind)} ·{' '}
-                        {image.isActive ? 'active' : 'inactive'}
-                    </FieldDescription>
-                    <FieldError>{form.formState.errors.root?.server?.message}</FieldError>
-
-                    <div className="flex flex-wrap gap-2">
-                        <Button type="submit" size="sm" disabled={isPending || !hasChanges}>
-                            Save changes
-                        </Button>
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={isPending || index === 0}
-                            onClick={() => onMove(index, -1)}
-                        >
-                            Move up
-                        </Button>
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={isPending || index === totalImages - 1}
-                            onClick={() => onMove(index, 1)}
-                        >
-                            Move down
-                        </Button>
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="outline"
-                            disabled={isPending}
-                            onClick={() => onRemove(image.id)}
-                        >
-                            Remove
-                        </Button>
-                    </div>
-                </form>
-            </CardContent>
-        </Card>
-    )
-}
 
 export function WrapImageManager({
+    wrapId,
     images,
+    readiness,
+    isPending = false,
     onAddImage,
     onRemoveImage,
     onReorderImages,
     onUpdateImageMetadata,
 }: WrapImageManagerProps) {
-    const orderedImages = useMemo(() => sortImages(images), [images])
-    const uploadForm = useForm<WrapImageUploadValues>({
-        defaultValues: {
-            kind: WrapImageKind.GALLERY,
-            isActive: true,
-            file: null,
-        },
-        mode: 'onChange',
-    })
-    const fileInputRef = useRef<HTMLInputElement>(null)
-    const selectedFile = uploadForm.watch('file')
+    const orderedImages = useMemo(
+        () => [...images].sort((left, right) => left.displayOrder - right.displayOrder),
+        [images]
+    )
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
+    const [uploadKind, setUploadKind] = useState<WrapImageKindValue>(WrapImageKind.GALLERY)
+    const [uploadIsActive, setUploadIsActive] = useState(true)
+    const [drafts, setDrafts] = useState<Record<string, { kind: WrapImageKindValue; isActive: boolean }>>(
+        () =>
+            Object.fromEntries(
+                orderedImages.map((image) => [image.id, { kind: image.kind, isActive: image.isActive }])
+            )
+    )
 
-    function submitUpload(values: WrapImageUploadValues) {
-        const parsed = wrapImageUploadFormSchema.safeParse(values)
-        if (!parsed.success) {
-            applyZodErrors(parsed.error, uploadForm.setError, uploadForm.clearErrors)
+    function handleUploadSubmit(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+
+        if (!selectedFile) {
             return
         }
-        uploadForm.clearErrors()
-        onAddImage(parsed.data.file, parsed.data.kind, parsed.data.isActive)
-        uploadForm.reset({
-            kind: parsed.data.kind,
-            isActive: parsed.data.isActive,
-            file: null,
-        })
-        if (fileInputRef.current) {
-            fileInputRef.current.value = ''
-        }
+
+        void onAddImage(selectedFile, uploadKind, uploadIsActive)
+        setSelectedFile(null)
+        setUploadKind(WrapImageKind.GALLERY)
+        setUploadIsActive(true)
+        event.currentTarget.reset()
     }
 
-    function handleMove(index: number, direction: -1 | 1) {
-        const target = index + direction
-        if (target < 0 || target >= orderedImages.length) {
+    function handleMove(imageId: string, direction: -1 | 1) {
+        const currentIndex = orderedImages.findIndex((image) => image.id === imageId)
+        const targetIndex = currentIndex + direction
+
+        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= orderedImages.length) {
             return
         }
+
         const reordered = [...orderedImages]
-        const [moved] = reordered.splice(index, 1)
-        reordered.splice(target, 0, moved)
-        const orderedIds = reordered.map((image) => image.id)
-        onReorderImages(orderedIds)
-    }
-
-    function handleRemove(imageId: string) {
-        onRemoveImage(imageId)
-    }
-
-    function handleSave(image: WrapImageDTO, values: WrapImageMetadataValues) {
-        if (values.kind === image.kind && values.isActive === image.isActive) {
-            return
-        }
-        onUpdateImageMetadata(image.id, values.kind, values.isActive)
-    }
-
-    // Loading and permission-denied states (simulate with props/context in real app)
-    const loading = false
-    const permissionDenied = false
-
-    if (loading) {
-        return (
-            <div className="flex h-48 items-center justify-center">
-                <span className="mr-3 h-8 w-8 animate-spin rounded-full border-4 border-neutral-700 border-t-blue-500"></span>
-                <span className="text-base text-neutral-300">Loading wrap assets...</span>
-            </div>
-        )
-    }
-
-    if (permissionDenied) {
-        return (
-            <div className="flex h-48 items-center justify-center">
-                <Card className="border-red-700 bg-neutral-950/90 text-red-300">
-                    <CardContent className="p-4 text-center">
-                        <h2 className="mb-2 text-lg font-bold">Permission Denied</h2>
-                        <p>
-                            You do not have access to manage wrap assets. Please contact your
-                            platform admin.
-                        </p>
-                    </CardContent>
-                </Card>
-            </div>
-        )
+        const [movedImage] = reordered.splice(currentIndex, 1)
+        reordered.splice(targetIndex, 0, movedImage)
+        void onReorderImages(reordered.map((image) => image.id))
     }
 
     return (
         <div className="space-y-4">
-            <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
-                <CardHeader>
-                    <CardTitle className="text-lg">Add a wrap asset</CardTitle>
+            <Card className="border-neutral-800 bg-neutral-950/70 text-neutral-100">
+                <CardHeader className="gap-3">
+                    <CardTitle className="text-lg">Catalog Assets</CardTitle>
+                    {readiness ? (
+                        <div className="flex flex-wrap gap-2">
+                            <Badge
+                                variant={readiness.canPublish ? 'secondary' : 'outline'}
+                                className={
+                                    readiness.canPublish
+                                        ? 'bg-emerald-500/15 text-emerald-200'
+                                        : 'border-red-500/40 text-red-200'
+                                }
+                            >
+                                {readiness.canPublish ? 'Publish-ready' : 'Missing required roles'}
+                            </Badge>
+                            {readiness.missingRequiredAssetRoles.map((role) => (
+                                <Badge
+                                    key={role}
+                                    variant="outline"
+                                    className="border-red-500/30 bg-red-500/10 text-red-200"
+                                >
+                                    {role}
+                                </Badge>
+                            ))}
+                        </div>
+                    ) : null}
                 </CardHeader>
                 <CardContent>
-                    <form className="space-y-4" onSubmit={uploadForm.handleSubmit(submitUpload)}>
-                        <FieldGroup className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.75fr)_auto] lg:items-end">
-                            <Field
-                                data-invalid={uploadForm.formState.errors.file ? true : undefined}
+                    <form onSubmit={handleUploadSubmit} className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_0.8fr_0.5fr_auto]">
+                        <label className="space-y-2 text-sm text-neutral-300">
+                            <span className="block">Upload asset</span>
+                            <input
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                disabled={isPending}
+                                onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+                                className="block w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-100"
+                            />
+                        </label>
+                        <label className="space-y-2 text-sm text-neutral-300">
+                            <span className="block">Asset role</span>
+                            <select
+                                value={uploadKind}
+                                disabled={isPending}
+                                onChange={(event) => setUploadKind(event.target.value as WrapImageKindValue)}
+                                className="h-11 w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100"
                             >
-                                <FieldLabel htmlFor="wrap-image-upload">Image file</FieldLabel>
-                                <Input
-                                    id="wrap-image-upload"
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept={ACCEPTED_WRAP_IMAGE_TYPES.join(',')}
-                                    className="border-neutral-700 bg-neutral-950 text-neutral-100 file:mr-3 file:rounded-md file:border-0 file:bg-neutral-100 file:px-3 file:py-2 file:text-neutral-950"
-                                    onChange={(event) => {
-                                        const file = event.target.files?.[0] ?? null
-                                        uploadForm.setValue('file', file, {
-                                            shouldDirty: true,
-                                            shouldTouch: true,
-                                            shouldValidate: true,
-                                        })
-                                        uploadForm.clearErrors('root')
-                                    }}
-                                />
-                                <FieldDescription>
-                                    Use high-resolution assets for hero and visualizer texture
-                                    roles.
-                                </FieldDescription>
-                                <FieldError errors={[uploadForm.formState.errors.file]} />
-                            </Field>
-
-                            <Field>
-                                <FieldLabel htmlFor="wrap-image-kind">Asset role</FieldLabel>
-                                <select
-                                    id="wrap-image-kind"
-                                    className="h-11 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100 outline-none transition focus-visible:border-neutral-400"
-                                    {...uploadForm.register('kind')}
-                                >
-                                    {editableKinds.map((kind) => (
-                                        <option key={kind} value={kind}>
-                                            {labelKind(kind)}
-                                        </option>
-                                    ))}
-                                </select>
-                            </Field>
-                        </FieldGroup>
-                        <Button
-                            type="submit"
-                            size="sm"
-                            disabled={uploadForm.formState.isSubmitting || !selectedFile}
-                        >
-                            Upload Image
-                        </Button>
+                                {kindOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="flex items-end gap-2 rounded-md border border-neutral-800 bg-neutral-900 px-3 py-3 text-sm text-neutral-200">
+                            <input
+                                type="checkbox"
+                                checked={uploadIsActive}
+                                disabled={isPending}
+                                onChange={(event) => setUploadIsActive(event.target.checked)}
+                            />
+                            Active
+                        </label>
+                        <div className="flex items-end">
+                            <Button type="submit" disabled={isPending || !selectedFile}>
+                                Add Asset
+                            </Button>
+                        </div>
                     </form>
                 </CardContent>
             </Card>
 
-            <div className="space-y-3">
-                {orderedImages.length === 0 ? (
-                    <Card className="border-neutral-800 bg-neutral-950/70 text-neutral-400">
-                        <CardContent className="p-6 text-sm">
-                            No images uploaded for this wrap yet.
-                        </CardContent>
-                    </Card>
-                ) : (
-                    orderedImages.map((image, index) => (
-                        <WrapImageRow
-                            key={image.id}
-                            image={image}
-                            index={index}
-                            totalImages={orderedImages.length}
-                            isPending={false}
-                            onMove={handleMove}
-                            onRemove={handleRemove}
-                            onSave={handleSave}
-                        />
-                    ))
-                )}
-            </div>
+            {orderedImages.length === 0 ? (
+                <Card className="border-neutral-800 bg-neutral-950/70 text-neutral-300">
+                    <CardContent className="py-8 text-sm">
+                        No assets uploaded for wrap <span className="font-semibold">{wrapId}</span> yet.
+                    </CardContent>
+                </Card>
+            ) : (
+                <div className="space-y-3">
+                    {orderedImages.map((image, index) => {
+                        const asset = toCatalogAssetImage(image)
+                        const draft = drafts[image.id] ?? { kind: image.kind, isActive: image.isActive }
+                        const hasChanges = draft.kind !== image.kind || draft.isActive !== image.isActive
+
+                        return (
+                            <Card
+                                key={image.id}
+                                className="border-neutral-800 bg-neutral-950/70 text-neutral-100"
+                            >
+                                <CardContent className="grid gap-4 p-4 xl:grid-cols-[180px_minmax(0,1fr)_auto]">
+                                    <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={asset.thumbnailUrl}
+                                            alt={`Catalog asset ${image.id}`}
+                                            className="h-32 w-full object-cover"
+                                        />
+                                    </div>
+
+                                    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+                                        <label className="space-y-2 text-sm text-neutral-300">
+                                            <span className="block">Asset role</span>
+                                            <select
+                                                value={draft.kind}
+                                                disabled={isPending}
+                                                onChange={(event) =>
+                                                    setDrafts((current) => ({
+                                                        ...current,
+                                                        [image.id]: {
+                                                            ...draft,
+                                                            kind: event.target.value as WrapImageKindValue,
+                                                        },
+                                                    }))
+                                                }
+                                                className="h-11 w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100"
+                                            >
+                                                {kindOptions.map((option) => (
+                                                    <option key={option.value} value={option.value}>
+                                                        {option.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </label>
+
+                                        <label className="flex items-end gap-2 rounded-md border border-neutral-800 bg-neutral-900 px-3 py-3 text-sm text-neutral-200">
+                                            <input
+                                                type="checkbox"
+                                                checked={draft.isActive}
+                                                disabled={isPending}
+                                                onChange={(event) =>
+                                                    setDrafts((current) => ({
+                                                        ...current,
+                                                        [image.id]: {
+                                                            ...draft,
+                                                            isActive: event.target.checked,
+                                                        },
+                                                    }))
+                                                }
+                                            />
+                                            Active
+                                        </label>
+
+                                        <div className="flex flex-wrap items-end gap-2">
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                disabled={isPending || index === 0}
+                                                onClick={() => handleMove(image.id, -1)}
+                                            >
+                                                Move Up
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                disabled={isPending || index === orderedImages.length - 1}
+                                                onClick={() => handleMove(image.id, 1)}
+                                            >
+                                                Move Down
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                disabled={isPending || !hasChanges}
+                                                onClick={() =>
+                                                    void onUpdateImageMetadata(
+                                                        image.id,
+                                                        draft.kind,
+                                                        draft.isActive
+                                                    )
+                                                }
+                                            >
+                                                Save
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                disabled={isPending}
+                                                onClick={() => void onRemoveImage(image.id)}
+                                            >
+                                                Remove
+                                            </Button>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2 text-right text-xs uppercase tracking-[0.18em] text-neutral-500">
+                                        <p>Order #{index + 1}</p>
+                                        <p>v{image.version}</p>
+                                        <div className="flex flex-wrap justify-end gap-2">
+                                            <Badge variant="outline" className="border-neutral-700 text-neutral-200">
+                                                {image.kind}
+                                            </Badge>
+                                            {!image.isActive ? (
+                                                <Badge
+                                                    variant="outline"
+                                                    className="border-neutral-700 text-neutral-400"
+                                                >
+                                                    Inactive
+                                                </Badge>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )
+                    })}
+                </div>
+            )}
         </div>
     )
 }

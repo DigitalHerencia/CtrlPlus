@@ -1,11 +1,13 @@
 import Link from 'next/link'
+
 import { WorkspaceEmptyState } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
-import { type WrapDTO } from '@/lib/catalog/types'
+import { type CatalogBrowseCardDTO } from '@/lib/catalog/types'
+
 import { WrapCard } from './WrapCard'
 
 interface WrapGridProps {
-    wraps: WrapDTO[]
+    wraps: CatalogBrowseCardDTO[]
     canManageCatalog?: boolean
 }
 
@@ -13,11 +15,11 @@ export function WrapGrid({ wraps, canManageCatalog = false }: WrapGridProps) {
     if (wraps.length === 0) {
         return (
             <WorkspaceEmptyState
-                title="No wraps found"
+                title="No wraps match this view"
                 description={
                     canManageCatalog
-                        ? 'Your catalog is empty. Add your first wrap to power catalog and visualizer flows.'
-                        : 'Try adjusting your search or filter criteria to find the wrap package you need.'
+                        ? 'Refine your search or create a new wrap to keep the catalog moving.'
+                        : 'Try a different search, category, or price range.'
                 }
                 action={
                     canManageCatalog ? (
@@ -31,19 +33,9 @@ export function WrapGrid({ wraps, canManageCatalog = false }: WrapGridProps) {
     }
 
     return (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {wraps.map((wrap) => (
-                <WrapCard
-                    key={wrap.id}
-                    wrap={{
-                        id: wrap.id,
-                        name: wrap.name,
-                        description: wrap.description,
-                        price: wrap.price,
-                        installationMinutes: wrap.installationMinutes,
-                        images: wrap.images,
-                    }}
-                />
+                <WrapCard key={wrap.id} wrap={wrap} />
             ))}
         </div>
     )

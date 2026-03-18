@@ -2,6 +2,7 @@
 
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/prisma'
+import { revalidateCatalogPaths } from '../revalidation'
 import type { WrapDTO, WrapImageDTO } from '../types'
 
 export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
@@ -52,6 +53,8 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
             timestamp: new Date(),
         },
     })
+
+    revalidateCatalogPaths(wrapId)
 
     return {
         id: existing.id,

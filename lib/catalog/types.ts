@@ -1,7 +1,5 @@
 import { z } from 'zod'
 
-// ─── Enums ────────────────────────────────────────────────────────────────────
-
 export const WrapStatus = {
     ACTIVE: 'ACTIVE',
     INACTIVE: 'INACTIVE',
@@ -42,8 +40,6 @@ export const PUBLISH_REQUIRED_WRAP_IMAGE_KINDS = [
 
 export type PublishRequiredWrapImageKind = (typeof PUBLISH_REQUIRED_WRAP_IMAGE_KINDS)[number]
 
-// ─── DTOs ─────────────────────────────────────────────────────────────────────
-
 export interface WrapImageDTO {
     id: string
     url: string
@@ -54,18 +50,30 @@ export interface WrapImageDTO {
     displayOrder: number
 }
 
+export interface CatalogAssetImageDTO extends WrapImageDTO {
+    thumbnailUrl: string
+    cardUrl: string
+    detailUrl: string
+}
+
 export interface WrapCategoryDTO {
     id: string
     name: string
     slug: string
 }
 
-/** Read model returned by catalog fetchers. Never exposes raw Prisma model. */
+export interface CatalogAssetReadinessDTO {
+    canPublish: boolean
+    missingRequiredAssetRoles: PublishRequiredWrapImageKind[]
+    requiredAssetRoles: PublishRequiredWrapImageKind[]
+    activeAssetKinds: WrapImageKind[]
+    hasDisplayAsset: boolean
+}
+
 export interface WrapDTO {
     id: string
     name: string
     description: string | null
-    /** Price in cents as an integer number */
     price: number
     isHidden: boolean
     installationMinutes: number | null
@@ -73,6 +81,30 @@ export interface WrapDTO {
     categories: WrapCategoryDTO[]
     createdAt: Date
     updatedAt: Date
+}
+
+export interface CatalogBrowseCardDTO {
+    id: string
+    name: string
+    description: string | null
+    price: number
+    isHidden: boolean
+    installationMinutes: number | null
+    categories: WrapCategoryDTO[]
+    displayImage: CatalogAssetImageDTO | null
+    readiness: CatalogAssetReadinessDTO
+}
+
+export interface CatalogDetailDTO extends WrapDTO {
+    displayImage: CatalogAssetImageDTO | null
+    galleryImages: CatalogAssetImageDTO[]
+    visualizerTextureImage: CatalogAssetImageDTO | null
+    readiness: CatalogAssetReadinessDTO
+}
+
+export interface CatalogManagerItemDTO extends CatalogDetailDTO {
+    imageCount: number
+    activeImageCount: number
 }
 
 export interface WrapListDTO {
@@ -83,9 +115,22 @@ export interface WrapListDTO {
     totalPages: number
 }
 
-// ─── Prisma Select Helpers ────────────────────────────────────────────────────
+export interface CatalogBrowseResultDTO {
+    wraps: CatalogBrowseCardDTO[]
+    total: number
+    page: number
+    pageSize: number
+    totalPages: number
+}
 
-/** Explicit Prisma `select` object for WrapDTO fields. */
+export interface CatalogManagerResultDTO {
+    wraps: CatalogManagerItemDTO[]
+    total: number
+    page: number
+    pageSize: number
+    totalPages: number
+}
+
 export const wrapDTOFields = {
     id: true,
     name: true,
@@ -121,8 +166,6 @@ export const wrapDTOFields = {
         },
     },
 } as const
-
-// ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
 const priceInCentsSchema = z.coerce
     .number()

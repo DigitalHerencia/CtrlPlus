@@ -2,6 +2,7 @@
 
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/prisma'
+import { revalidateCatalogPaths } from '../revalidation'
 import {
     PUBLISH_REQUIRED_WRAP_IMAGE_KINDS,
     updateWrapSchema,
@@ -81,6 +82,8 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
     if (!wrap) {
         throw new Error('Forbidden: resource not found')
     }
+
+    revalidateCatalogPaths(wrapId)
 
     return wrap
 }

@@ -2,6 +2,7 @@
 
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/prisma'
+import { revalidateCatalogPaths } from '../revalidation'
 import {
     createWrapCategorySchema,
     setWrapCategoryMappingsSchema,
@@ -34,6 +35,8 @@ export async function createWrapCategory(input: CreateWrapCategoryInput): Promis
             timestamp: new Date(),
         },
     })
+
+    revalidateCatalogPaths()
 
     return category
 }
@@ -77,6 +80,8 @@ export async function updateWrapCategory(
         },
     })
 
+    revalidateCatalogPaths()
+
     return category
 }
 
@@ -112,6 +117,8 @@ export async function deleteWrapCategory(categoryId: string): Promise<void> {
             timestamp: new Date(),
         },
     })
+
+    revalidateCatalogPaths()
 }
 
 export async function setWrapCategoryMappings(input: SetWrapCategoryMappingsInput): Promise<void> {
@@ -169,4 +176,6 @@ export async function setWrapCategoryMappings(input: SetWrapCategoryMappingsInpu
             timestamp: new Date(),
         },
     })
+
+    revalidateCatalogPaths(parsed.wrapId)
 }

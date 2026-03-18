@@ -4,160 +4,170 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatInstallationTime, formatPrice } from '@/lib/catalog/formatters'
-import { type WrapDTO } from '@/lib/catalog/types'
-
-import { WrapImageManager } from './WrapImageManager'
+import { type CatalogDetailDTO } from '@/lib/catalog/types'
 
 interface WrapDetailProps {
-    wrap: WrapDTO
+    wrap: CatalogDetailDTO
     canManageCatalog: boolean
 }
 
 export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
     const installationTime = formatInstallationTime(wrap.installationMinutes)
 
-    // Handler functions for WrapImageManager
-    async function handleAddImage(
-        file: File,
-        kind: import('@/lib/catalog/types').WrapImageKind,
-        isActive: boolean
-    ) {
-        await import('@/lib/catalog/actions/manage-wrap-images').then(({ addWrapImage }) =>
-            addWrapImage({ wrapId: wrap.id, file, kind, isActive })
-        )
-    }
-
-    async function handleRemoveImage(imageId: string) {
-        await import('@/lib/catalog/actions/manage-wrap-images').then(({ removeWrapImage }) =>
-            removeWrapImage(wrap.id, imageId)
-        )
-    }
-
-    async function handleReorderImages(orderedIds: string[]) {
-        await import('@/lib/catalog/actions/manage-wrap-images').then(({ reorderWrapImages }) =>
-            reorderWrapImages(wrap.id, orderedIds)
-        )
-    }
-
-    async function handleUpdateImageMetadata(
-        imageId: string,
-        kind: import('@/lib/catalog/types').WrapImageKind,
-        isActive: boolean
-    ) {
-        await import('@/lib/catalog/actions/manage-wrap-images').then(
-            ({ updateWrapImageMetadata }) =>
-                updateWrapImageMetadata({ wrapId: wrap.id, imageId, kind, isActive })
-        )
-    }
-
     return (
-        <div className="max-w-4xl space-y-5">
-            <div className="flex items-center justify-between gap-3">
-                <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit">
+        <div className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+                <Button asChild variant="ghost" size="sm" className="-ml-2">
                     <Link href="/catalog">Back to Catalog</Link>
                 </Button>
                 {canManageCatalog ? (
                     <Button asChild variant="outline" size="sm">
-                        <Link href="/catalog/manage">Manage Catalog</Link>
+                        <Link href="/catalog/manage">Open Manager</Link>
                     </Button>
                 ) : null}
             </div>
 
-            <Card className="overflow-hidden border-neutral-700 bg-neutral-900 text-neutral-100">
-                {wrap.images[0] && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                        src={wrap.images[0].url}
-                        alt={wrap.name}
-                        className="h-72 w-full object-cover"
-                    />
-                )}
-                <CardHeader className="gap-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">
-                        Wrap Detail
-                    </p>
-                    <CardTitle className="text-4xl font-black tracking-tight text-neutral-100">
-                        {wrap.name}
-                    </CardTitle>
-                    <div className="flex flex-wrap items-center gap-3">
-                        <span className="text-3xl font-black tabular-nums text-blue-300">
-                            {formatPrice(wrap.price)}
-                        </span>
-                        {installationTime ? (
-                            <Badge variant="secondary">{installationTime} installation</Badge>
-                        ) : null}
-                        {wrap.categories.map((category) => (
-                            <Badge key={category.id} variant="outline">
-                                {category.name}
-                            </Badge>
-                        ))}
+            <section className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)]">
+                <Card className="overflow-hidden border-neutral-800 bg-neutral-950/80 text-neutral-100">
+                    <div className="border-b border-neutral-800 bg-neutral-900">
+                        {wrap.displayImage ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                                src={wrap.displayImage.detailUrl}
+                                alt={wrap.name}
+                                className="h-[26rem] w-full object-cover"
+                            />
+                        ) : (
+                            <div className="flex h-[26rem] items-center justify-center text-sm text-neutral-500">
+                                No display asset available
+                            </div>
+                        )}
                     </div>
-                </CardHeader>
-            </Card>
-
-            {wrap.description ? (
-                <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
-                    <CardHeader>
-                        <CardTitle className="text-sm font-semibold uppercase tracking-wide text-neutral-100">
-                            Description
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm leading-relaxed text-neutral-300">
-                            {wrap.description}
+                    <CardHeader className="gap-4">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                            <div className="space-y-3">
+                                <div className="flex flex-wrap gap-2">
+                                    {wrap.categories.map((category) => (
+                                        <Badge
+                                            key={category.id}
+                                            variant="outline"
+                                            className="border-neutral-700 bg-neutral-900/70 text-neutral-200"
+                                        >
+                                            {category.name}
+                                        </Badge>
+                                    ))}
+                                </div>
+                                <CardTitle className="text-4xl font-black tracking-tight">
+                                    {wrap.name}
+                                </CardTitle>
+                            </div>
+                            <div className="space-y-2 text-right">
+                                <p className="text-xs uppercase tracking-[0.24em] text-neutral-500">
+                                    Package Price
+                                </p>
+                                <p className="text-4xl font-black tabular-nums text-neutral-100">
+                                    {formatPrice(wrap.price)}
+                                </p>
+                            </div>
+                        </div>
+                        <p className="max-w-3xl text-sm leading-relaxed text-neutral-300">
+                            {wrap.description ??
+                                'This wrap package is ready for vehicle previewing, scheduling, and catalog operations.'}
                         </p>
-                    </CardContent>
+                    </CardHeader>
                 </Card>
-            ) : null}
 
-            <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+                <div className="space-y-4">
+                    <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
+                        <CardHeader>
+                            <CardTitle className="text-lg">Availability & Readiness</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="flex flex-wrap gap-2">
+                                <Badge
+                                    variant={wrap.readiness.canPublish ? 'secondary' : 'outline'}
+                                    className={
+                                        wrap.readiness.canPublish
+                                            ? 'bg-emerald-500/15 text-emerald-200'
+                                            : 'border-red-500/40 text-red-200'
+                                    }
+                                >
+                                    {wrap.readiness.canPublish ? 'Publish-ready' : 'Needs asset attention'}
+                                </Badge>
+                                {wrap.isHidden ? (
+                                    <Badge variant="outline" className="border-amber-500/40 text-amber-200">
+                                        Hidden from customers
+                                    </Badge>
+                                ) : (
+                                    <Badge variant="secondary" className="bg-blue-500/15 text-blue-200">
+                                        Visible in catalog
+                                    </Badge>
+                                )}
+                            </div>
+
+                            <dl className="grid gap-3 text-sm text-neutral-300">
+                                <div className="flex items-center justify-between gap-3">
+                                    <dt>Install time</dt>
+                                    <dd>{installationTime ?? 'Configured later'}</dd>
+                                </div>
+                                <div className="flex items-center justify-between gap-3">
+                                    <dt>Gallery assets</dt>
+                                    <dd>{wrap.galleryImages.length}</dd>
+                                </div>
+                                <div className="flex items-center justify-between gap-3">
+                                    <dt>Visualizer texture</dt>
+                                    <dd>{wrap.visualizerTextureImage ? 'Available' : 'Missing'}</dd>
+                                </div>
+                            </dl>
+
+                            {wrap.readiness.missingRequiredAssetRoles.length > 0 ? (
+                                <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-100">
+                                    Missing required roles:{' '}
+                                    {wrap.readiness.missingRequiredAssetRoles.join(', ')}
+                                </div>
+                            ) : null}
+                        </CardContent>
+                    </Card>
+
+                    <div className="flex flex-wrap gap-3">
+                        <Button asChild size="lg">
+                            <Link href="/scheduling">Book Installation</Link>
+                        </Button>
+                        <Button asChild variant="outline" size="lg">
+                            <Link href="/visualizer">Preview on Vehicle</Link>
+                        </Button>
+                    </div>
+                </div>
+            </section>
+
+            <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
                 <CardHeader>
-                    <CardTitle className="text-sm font-semibold uppercase tracking-wide text-neutral-100">
-                        Wrap Images
-                    </CardTitle>
+                    <CardTitle className="text-lg">Gallery</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {canManageCatalog ? (
-                        <WrapImageManager
-                            wrapId={wrap.id}
-                            images={wrap.images}
-                            onAddImage={handleAddImage}
-                            onRemoveImage={handleRemoveImage}
-                            onReorderImages={handleReorderImages}
-                            onUpdateImageMetadata={handleUpdateImageMetadata}
-                        />
-                    ) : wrap.images.length > 0 ? (
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            {wrap.images.map((image) => (
+                    {wrap.galleryImages.length > 0 ? (
+                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                            {wrap.galleryImages.map((image) => (
                                 <div
                                     key={image.id}
-                                    className="overflow-hidden border border-neutral-700 bg-neutral-900"
+                                    className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900"
                                 >
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
-                                        src={image.url}
-                                        alt={`${wrap.name} image`}
-                                        className="h-40 w-full object-cover"
+                                        src={image.detailUrl}
+                                        alt={`${wrap.name} gallery asset`}
+                                        className="h-56 w-full object-cover"
                                     />
                                 </div>
                             ))}
                         </div>
                     ) : (
                         <p className="text-sm text-neutral-400">
-                            No gallery images are available for this wrap yet.
+                            No gallery-ready catalog imagery is available for this wrap yet.
                         </p>
                     )}
                 </CardContent>
             </Card>
-
-            <div className="flex flex-wrap gap-3">
-                <Button asChild size="lg">
-                    <Link href="/scheduling">Book Installation</Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                    <Link href="/visualizer">Preview on Vehicle</Link>
-                </Button>
-            </div>
         </div>
     )
 }

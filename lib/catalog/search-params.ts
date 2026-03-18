@@ -14,12 +14,50 @@ function toNumber(value: string | null): number | undefined {
     return Number.isFinite(parsed) ? parsed : undefined
 }
 
+function first(value: string | string[] | undefined): string | undefined {
+    return Array.isArray(value) ? value[0] : value
+}
+
+export function createCatalogQueryString(filters: SearchWrapsInput): string {
+    const params = new URLSearchParams()
+
+    if (filters.query) {
+        params.set('query', filters.query)
+    }
+    if (filters.maxPrice !== undefined) {
+        params.set('maxPrice', String(filters.maxPrice))
+    }
+    if (filters.categoryId) {
+        params.set('categoryId', filters.categoryId)
+    }
+    if (filters.sortBy && filters.sortBy !== 'createdAt') {
+        params.set('sortBy', filters.sortBy)
+    }
+    if (filters.sortOrder && filters.sortOrder !== 'desc') {
+        params.set('sortOrder', filters.sortOrder)
+    }
+    if (filters.pageSize !== undefined && filters.pageSize !== 20) {
+        params.set('pageSize', String(filters.pageSize))
+    }
+    if (filters.page !== undefined && filters.page !== 1) {
+        params.set('page', String(filters.page))
+    }
+
+    return params.toString()
+}
+
+export function createCatalogPageHref(filters: SearchWrapsInput, page: number): string {
+    const query = createCatalogQueryString({
+        ...filters,
+        page,
+    })
+
+    return query ? `/catalog?${query}` : '/catalog'
+}
+
 export function parseCatalogSearchParams(
     searchParams: Record<string, string | string[] | undefined>
 ): CatalogSearchParamsResult {
-    const first = (value: string | string[] | undefined) =>
-        Array.isArray(value) ? value[0] : value
-
     const candidate = {
         query: first(searchParams.query),
         maxPrice: toNumber(first(searchParams.maxPrice) ?? null),
@@ -48,6 +86,13 @@ export function parseCatalogSearchParams(
 
     return {
         filters,
-        hasActiveFilters: Boolean(filters.query || filters.maxPrice || filters.categoryId),
+        hasActiveFilters: Boolean(
+            filters.query ||
+                filters.maxPrice !== undefined ||
+                filters.categoryId ||
+                filters.sortBy !== 'createdAt' ||
+                filters.sortOrder !== 'desc' ||
+                filters.pageSize !== 20
+        ),
     }
 }
