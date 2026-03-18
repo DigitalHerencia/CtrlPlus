@@ -1,73 +1,68 @@
 {
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit",
-    "source.organizeImports": "explicit"
-  },
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
-  "files.eol": "\n",
-  "npm.packageManager": "pnpm",
-  "js/ts.preferences.includePackageJsonAutoImports": "on",
-  "js/ts.updateImportsOnFileMove.enabled": "always",
-  "js/ts.suggest.autoImports": true,
-  "js/ts.tsserver.experimental.enableProjectDiagnostics": true,
-  "[json]": {
-    "editor.defaultFormatter": "vscode.json-language-features"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "vscode.json-language-features"
-  },
-  "[prisma]": {
-    "editor.defaultFormatter": "Prisma.prisma"
-  },
-  "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[toml]": {
-    "editor.defaultFormatter": "tamasfe.even-better-toml",
-    "editor.formatOnSave": true
-  },
-  "files.associations": {
-    ".env.example": "dotenv",
-    ".env.local": "dotenv"
-  },
-  "search.exclude": {
-    "**/.next": true,
-    "**/node_modules": true,
-    "**/lib/generated/prisma": true,
-    "**/.codex/runtime": true
-  },
-  "npm.enableRunFromFolder": true,
-  "prisma.scriptRunner": "pnpm",
-  "tailwindCSS.includeLanguages": {
-    "typescript": "javascript",
-    "typescriptreact": "javascript"
-  },
-  "chat.includeApplyingInstructions": false,
-  "chat.includeReferencedInstructions": true,
-  "github.copilot.chat.organizationInstructions.enabled": false,
-  "chat.useClaudeMdFile": false,
-  "chat.useNestedAgentsMdFiles": true,
-  "chat.experimental.useSkillAdherencePrompt": true,
-  "chat.promptFilesLocations": {
-    ".copilot/prompts": true
-  },
-  "[sql]": {
-    "editor.defaultFormatter": "ms-ossdata.vscode-pgsql"
-  }
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+        "source.fixAll.eslint": "explicit",
+        "source.organizeImports": "explicit"
+    },
+    "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+    "files.eol": "\n",
+    "npm.packageManager": "pnpm",
+    "js/ts.preferences.includePackageJsonAutoImports": "on",
+    "js/ts.updateImportsOnFileMove.enabled": "always",
+    "js/ts.suggest.autoImports": true,
+    "js/ts.tsserver.experimental.enableProjectDiagnostics": true,
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[prisma]": {
+        "editor.defaultFormatter": "Prisma.prisma"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[toml]": {
+        "editor.defaultFormatter": "tamasfe.even-better-toml",
+        "editor.formatOnSave": true
+    },
+    "files.associations": {
+        ".env.example": "dotenv",
+        ".env.local": "dotenv"
+    },
+    "search.exclude": {
+        "**/.next": true,
+        "**/node_modules": true,
+        "**/lib/generated/prisma": true,
+        "**/.codex/runtime": true
+    },
+    "npm.enableRunFromFolder": true,
+    "prisma.scriptRunner": "pnpm",
+    "tailwindCSS.includeLanguages": {
+        "typescript": "javascript",
+        "typescriptreact": "javascript"
+    },
+    "chat.includeApplyingInstructions": false,
+    "chat.includeReferencedInstructions": true,
+    "github.copilot.chat.organizationInstructions.enabled": false,
+    "chat.useClaudeMdFile": false,
+    "chat.useNestedAgentsMdFiles": true,
+    "chat.experimental.useSkillAdherencePrompt": true,
+    "chat.promptFilesLocations": {
+        ".copilot/prompts": true
+    },
+    "[sql]": {
+        "editor.defaultFormatter": "ms-ossdata.vscode-pgsql"
+    }
 }

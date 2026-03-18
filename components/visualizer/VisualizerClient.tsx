@@ -103,9 +103,8 @@ export function VisualizerClient({ wraps, canManageCatalog = false }: Visualizer
                                 onClick={() => {
                                     // Use preview.url or preview.resultUrl depending on DTO
                                     const url =
-                                        (preview as any).url ||
-                                        (preview as any).resultUrl ||
-                                        (preview as any).image ||
+                                        preview.processedImageUrl ||
+                                        preview.customerPhotoUrl ||
                                         undefined
                                     if (url) {
                                         const link = document.createElement('a')

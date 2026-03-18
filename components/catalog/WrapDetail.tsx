@@ -16,6 +16,40 @@ interface WrapDetailProps {
 export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
     const installationTime = formatInstallationTime(wrap.installationMinutes)
 
+    // Handler functions for WrapImageManager
+    async function handleAddImage(
+        file: File,
+        kind: import('@/lib/catalog/types').WrapImageKind,
+        isActive: boolean
+    ) {
+        await import('@/lib/catalog/actions/manage-wrap-images').then(({ addWrapImage }) =>
+            addWrapImage({ wrapId: wrap.id, file, kind, isActive })
+        )
+    }
+
+    async function handleRemoveImage(imageId: string) {
+        await import('@/lib/catalog/actions/manage-wrap-images').then(({ removeWrapImage }) =>
+            removeWrapImage(wrap.id, imageId)
+        )
+    }
+
+    async function handleReorderImages(orderedIds: string[]) {
+        await import('@/lib/catalog/actions/manage-wrap-images').then(({ reorderWrapImages }) =>
+            reorderWrapImages(wrap.id, orderedIds)
+        )
+    }
+
+    async function handleUpdateImageMetadata(
+        imageId: string,
+        kind: import('@/lib/catalog/types').WrapImageKind,
+        isActive: boolean
+    ) {
+        await import('@/lib/catalog/actions/manage-wrap-images').then(
+            ({ updateWrapImageMetadata }) =>
+                updateWrapImageMetadata({ wrapId: wrap.id, imageId, kind, isActive })
+        )
+    }
+
     return (
         <div className="max-w-4xl space-y-5">
             <div className="flex items-center justify-between gap-3">
@@ -84,7 +118,14 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
                 </CardHeader>
                 <CardContent>
                     {canManageCatalog ? (
-                        <WrapImageManager wrapId={wrap.id} images={wrap.images} />
+                        <WrapImageManager
+                            wrapId={wrap.id}
+                            images={wrap.images}
+                            onAddImage={handleAddImage}
+                            onRemoveImage={handleRemoveImage}
+                            onReorderImages={handleReorderImages}
+                            onUpdateImageMetadata={handleUpdateImageMetadata}
+                        />
                     ) : wrap.images.length > 0 ? (
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             {wrap.images.map((image) => (

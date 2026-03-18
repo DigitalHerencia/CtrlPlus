@@ -6,25 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import {
-    addWrapImage,
-    removeWrapImage,
-    reorderWrapImages,
-    updateWrapImageMetadata,
-} from '@/lib/catalog/actions/manage-wrap-images'
-import {
     WrapImageKind,
     type WrapImageDTO,
     type WrapImageKind as WrapImageKindValue,
 } from '@/lib/catalog/types'
 import { applyZodErrors } from '@/lib/forms/apply-zod-errors'
-import { useRouter } from 'next/navigation'
-import { useEffect, useMemo, useOptimistic, useRef, useState, useTransition } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 interface WrapImageManagerProps {
     wrapId: string
     images: WrapImageDTO[]
+    onAddImage: (file: File, kind: WrapImageKindValue, isActive: boolean) => void
+    onRemoveImage: (imageId: string) => void
+    onReorderImages: (orderedIds: string[]) => void
+    onUpdateImageMetadata: (imageId: string, kind: WrapImageKindValue, isActive: boolean) => void
 }
 
 const editableKinds = [
@@ -32,7 +29,7 @@ const editableKinds = [
     WrapImageKind.VISUALIZER_TEXTURE,
     WrapImageKind.VISUALIZER_MASK_HINT,
     WrapImageKind.GALLERY,
-] as const satisfies ReadonlyArray<WrapImageKindValue>
+]
 const ACCEPTED_WRAP_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_WRAP_IMAGE_BYTES = 5 * 1024 * 1024
 
@@ -64,22 +61,6 @@ type WrapImageUploadValues = {
 
 type WrapImageMetadataValues = z.input<typeof wrapImageMetadataSchema>
 
-type OptimisticMutation =
-    | {
-          type: 'remove'
-          imageId: string
-      }
-    | {
-          type: 'reorder'
-          orderedIds: string[]
-      }
-    | {
-          type: 'update'
-          imageId: string
-          kind: WrapImageKindValue
-          isActive: boolean
-      }
-
 function labelKind(kind: WrapImageKindValue): string {
     switch (kind) {
         case WrapImageKind.HERO:
@@ -95,49 +76,6 @@ function labelKind(kind: WrapImageKindValue): string {
 
 function sortImages(images: WrapImageDTO[]): WrapImageDTO[] {
     return [...images].sort((a, b) => a.displayOrder - b.displayOrder)
-}
-
-function applyOptimisticMutation(
-    images: WrapImageDTO[],
-    mutation: OptimisticMutation
-): WrapImageDTO[] {
-    switch (mutation.type) {
-        case 'remove':
-            return images.filter((image) => image.id !== mutation.imageId)
-        case 'reorder': {
-            const imageMap = new Map(images.map((image) => [image.id, image]))
-            return mutation.orderedIds.map((imageId, index) => ({
-                ...(imageMap.get(imageId) as WrapImageDTO),
-                displayOrder: index,
-            }))
-        }
-        case 'update': {
-            return images.map((image) => {
-                if (image.id === mutation.imageId) {
-                    return {
-                        ...image,
-                        kind: mutation.kind,
-                        isActive: mutation.isActive,
-                        version: image.version + 1,
-                    }
-                }
-
-                if (
-                    mutation.isActive &&
-                    (mutation.kind === WrapImageKind.HERO ||
-                        mutation.kind === WrapImageKind.VISUALIZER_TEXTURE) &&
-                    image.kind === mutation.kind
-                ) {
-                    return {
-                        ...image,
-                        isActive: false,
-                    }
-                }
-
-                return image
-            })
-        }
-    }
 }
 
 interface WrapImageRowProps {
@@ -274,15 +212,14 @@ function WrapImageRow({
     )
 }
 
-export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
-    const router = useRouter()
-    const [isPending, startTransition] = useTransition()
-    const [error, setError] = useState<string | null>(null)
-    const [statusMessage, setStatusMessage] = useState<string | null>(null)
-    const fileInputRef = useRef<HTMLInputElement>(null)
-
+export function WrapImageManager({
+    images,
+    onAddImage,
+    onRemoveImage,
+    onReorderImages,
+    onUpdateImageMetadata,
+}: WrapImageManagerProps) {
     const orderedImages = useMemo(() => sortImages(images), [images])
-    const [optimisticImages, applyMutation] = useOptimistic(orderedImages, applyOptimisticMutation)
     const uploadForm = useForm<WrapImageUploadValues>({
         defaultValues: {
             kind: WrapImageKind.GALLERY,
@@ -291,99 +228,77 @@ export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
         },
         mode: 'onChange',
     })
-
-    // Safe: watch() is used for rendering only, not memoized or passed to memoized hooks/components.
+    const fileInputRef = useRef<HTMLInputElement>(null)
     const selectedFile = uploadForm.watch('file')
 
-    function runMutation(task: () => Promise<void>) {
-        setError(null)
-        setStatusMessage(null)
-
-        startTransition(async () => {
-            try {
-                await task()
-                router.refresh()
-            } catch (mutationError) {
-                setError(
-                    mutationError instanceof Error ? mutationError.message : 'Mutation failed.'
-                )
-            }
-        })
-    }
-
-    const submitUpload = uploadForm.handleSubmit((values) => {
+    function submitUpload(values: WrapImageUploadValues) {
         const parsed = wrapImageUploadFormSchema.safeParse(values)
         if (!parsed.success) {
             applyZodErrors(parsed.error, uploadForm.setError, uploadForm.clearErrors)
             return
         }
-
         uploadForm.clearErrors()
-        runMutation(async () => {
-            await addWrapImage({
-                wrapId,
-                file: parsed.data.file,
-                kind: parsed.data.kind,
-                isActive: parsed.data.isActive,
-            })
-            uploadForm.reset({
-                kind: parsed.data.kind,
-                isActive: parsed.data.isActive,
-                file: null,
-            })
-            if (fileInputRef.current) {
-                fileInputRef.current.value = ''
-            }
-            setStatusMessage('Image uploaded.')
+        onAddImage(parsed.data.file, parsed.data.kind, parsed.data.isActive)
+        uploadForm.reset({
+            kind: parsed.data.kind,
+            isActive: parsed.data.isActive,
+            file: null,
         })
-    })
-
-    function handleRemove(imageId: string) {
-        applyMutation({ type: 'remove', imageId })
-        runMutation(async () => {
-            await removeWrapImage(wrapId, imageId)
-            setStatusMessage('Image removed.')
-        })
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ''
+        }
     }
 
     function handleMove(index: number, direction: -1 | 1) {
         const target = index + direction
-        if (target < 0 || target >= optimisticImages.length) {
+        if (target < 0 || target >= orderedImages.length) {
             return
         }
-
-        const reordered = [...optimisticImages]
+        const reordered = [...orderedImages]
         const [moved] = reordered.splice(index, 1)
         reordered.splice(target, 0, moved)
-
         const orderedIds = reordered.map((image) => image.id)
-        applyMutation({ type: 'reorder', orderedIds })
-        runMutation(async () => {
-            await reorderWrapImages(wrapId, orderedIds)
-            setStatusMessage('Image order updated.')
-        })
+        onReorderImages(orderedIds)
+    }
+
+    function handleRemove(imageId: string) {
+        onRemoveImage(imageId)
     }
 
     function handleSave(image: WrapImageDTO, values: WrapImageMetadataValues) {
         if (values.kind === image.kind && values.isActive === image.isActive) {
             return
         }
+        onUpdateImageMetadata(image.id, values.kind, values.isActive)
+    }
 
-        applyMutation({
-            type: 'update',
-            imageId: image.id,
-            kind: values.kind,
-            isActive: values.isActive,
-        })
-        runMutation(async () => {
-            await updateWrapImageMetadata({
-                wrapId,
-                imageId: image.id,
-                kind: values.kind,
-                isActive: values.isActive,
-            })
-            setStatusMessage('Image metadata saved.')
-        })
+    // Loading and permission-denied states (simulate with props/context in real app)
+    const loading = false
+    const permissionDenied = false
+
+    if (loading) {
+        return (
+            <div className="flex h-48 items-center justify-center">
+                <span className="mr-3 h-8 w-8 animate-spin rounded-full border-4 border-neutral-700 border-t-blue-500"></span>
+                <span className="text-base text-neutral-300">Loading wrap assets...</span>
+            </div>
+        )
+    }
+
+    if (permissionDenied) {
+        return (
+            <div className="flex h-48 items-center justify-center">
+                <Card className="border-red-700 bg-neutral-950/90 text-red-300">
+                    <CardContent className="p-4 text-center">
+                        <h2 className="mb-2 text-lg font-bold">Permission Denied</h2>
+                        <p>
+                            You do not have access to manage wrap assets. Please contact your
+                            platform admin.
+                        </p>
+                    </CardContent>
+                </Card>
+            </div>
+        )
     }
 
     return (
@@ -393,7 +308,7 @@ export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
                     <CardTitle className="text-lg">Add a wrap asset</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <form className="space-y-4" onSubmit={submitUpload}>
+                    <form className="space-y-4" onSubmit={uploadForm.handleSubmit(submitUpload)}>
                         <FieldGroup className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.75fr)_auto] lg:items-end">
                             <Field
                                 data-invalid={uploadForm.formState.errors.file ? true : undefined}
@@ -404,7 +319,6 @@ export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
                                     ref={fileInputRef}
                                     type="file"
                                     accept={ACCEPTED_WRAP_IMAGE_TYPES.join(',')}
-                                    disabled={isPending}
                                     className="border-neutral-700 bg-neutral-950 text-neutral-100 file:mr-3 file:rounded-md file:border-0 file:bg-neutral-100 file:px-3 file:py-2 file:text-neutral-950"
                                     onChange={(event) => {
                                         const file = event.target.files?.[0] ?? null
@@ -427,7 +341,6 @@ export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
                                 <FieldLabel htmlFor="wrap-image-kind">Asset role</FieldLabel>
                                 <select
                                     id="wrap-image-kind"
-                                    disabled={isPending}
                                     className="h-11 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100 outline-none transition focus-visible:border-neutral-400"
                                     {...uploadForm.register('kind')}
                                 >
@@ -438,54 +351,33 @@ export function WrapImageManager({ wrapId, images }: WrapImageManagerProps) {
                                     ))}
                                 </select>
                             </Field>
-
-                            <Field>
-                                <FieldLabel htmlFor="wrap-image-active">Visibility</FieldLabel>
-                                <label className="flex h-11 items-center gap-2 rounded-md border border-neutral-700 bg-neutral-950 px-3 text-sm text-neutral-100">
-                                    <input
-                                        id="wrap-image-active"
-                                        type="checkbox"
-                                        disabled={isPending}
-                                        {...uploadForm.register('isActive')}
-                                    />
-                                    Active
-                                </label>
-                            </Field>
                         </FieldGroup>
-
-                        <div className="flex flex-wrap items-center gap-3">
-                            <Button type="submit" disabled={isPending || !selectedFile}>
-                                {isPending ? 'Uploading...' : 'Upload image'}
-                            </Button>
-                            {selectedFile ? (
-                                <span className="text-xs text-neutral-500">
-                                    {selectedFile.name}
-                                </span>
-                            ) : null}
-                        </div>
-                        <FieldError>{uploadForm.formState.errors.root?.server?.message}</FieldError>
+                        <Button
+                            type="submit"
+                            size="sm"
+                            disabled={uploadForm.formState.isSubmitting || !selectedFile}
+                        >
+                            Upload Image
+                        </Button>
                     </form>
                 </CardContent>
             </Card>
 
-            {statusMessage ? <p className="text-sm text-blue-400">{statusMessage}</p> : null}
-            {error ? <p className="text-sm text-neutral-100">{error}</p> : null}
-
             <div className="space-y-3">
-                {optimisticImages.length === 0 ? (
+                {orderedImages.length === 0 ? (
                     <Card className="border-neutral-800 bg-neutral-950/70 text-neutral-400">
                         <CardContent className="p-6 text-sm">
                             No images uploaded for this wrap yet.
                         </CardContent>
                     </Card>
                 ) : (
-                    optimisticImages.map((image, index) => (
+                    orderedImages.map((image, index) => (
                         <WrapImageRow
                             key={image.id}
                             image={image}
                             index={index}
-                            totalImages={optimisticImages.length}
-                            isPending={isPending}
+                            totalImages={orderedImages.length}
+                            isPending={false}
                             onMove={handleMove}
                             onRemove={handleRemove}
                             onSave={handleSave}
