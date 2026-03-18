@@ -1,22 +1,22 @@
-import * as React from "react";
+import * as React from 'react'
 
-import { cn } from "@/lib/utils";
+import { cn } from '@/lib/utils'
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
-    return (
-      <input
-        type={type}
-        className={cn(
-          "app-input file:text-foreground text-base file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-neutral-500 md:text-sm",
-          className,
-        )}
-        ref={ref}
-        {...props}
-      />
-    );
-  },
-);
-Input.displayName = "Input";
+const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<'input'>>(
+    ({ className, type, ...props }, ref) => {
+        return (
+            <input
+                type={type}
+                className={cn(
+                    'app-input file:text-foreground text-base file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-neutral-500 md:text-sm',
+                    className
+                )}
+                ref={ref}
+                {...props}
+            />
+        )
+    }
+)
+Input.displayName = 'Input'
 
-export { Input };
+export { Input }

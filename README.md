@@ -32,7 +32,6 @@ Project-facing engineering workflow docs now live under `.codex/`:
 ## Commands
 
 ```bash
-pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build

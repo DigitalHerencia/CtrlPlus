@@ -5,7 +5,12 @@
     "source.fixAll.eslint": "explicit",
     "source.organizeImports": "explicit"
   },
-  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
   "files.eol": "\n",
   "npm.packageManager": "pnpm",
   "js/ts.preferences.includePackageJsonAutoImports": "on",
@@ -47,7 +52,6 @@
     "**/lib/generated/prisma": true,
     "**/.codex/runtime": true
   },
-  "eslint.lintTask.enable": true,
   "npm.enableRunFromFolder": true,
   "prisma.scriptRunner": "pnpm",
   "tailwindCSS.includeLanguages": {
@@ -62,5 +66,8 @@
   "chat.experimental.useSkillAdherencePrompt": true,
   "chat.promptFilesLocations": {
     ".copilot/prompts": true
+  },
+  "[sql]": {
+    "editor.defaultFormatter": "ms-ossdata.vscode-pgsql"
   }
 }

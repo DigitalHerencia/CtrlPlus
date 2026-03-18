@@ -6,5 +6,5 @@
  * format, so "09:00" < "10:00" < "17:00" sorts correctly as strings).
  */
 export function toHHmm(date: Date): string {
-  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`;
+    return `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}`
 }

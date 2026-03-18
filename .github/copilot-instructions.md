@@ -1,6 +1,6 @@
 ---
-description: "Repo-specific Copilot instructions for CtrlPlus"
-applyTo: "**/*"
+description: 'Repo-specific Copilot instructions for CtrlPlus'
+applyTo: '**/*'
 ---
 
 # CtrlPlus Copilot Instructions

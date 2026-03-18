@@ -1,79 +1,73 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock("@/lib/prisma", () => ({
-  prisma: {
-    clerkWebhookEvent: {
-      create: vi.fn(),
-      findUnique: vi.fn(),
-      updateMany: vi.fn(),
+vi.mock('@/lib/prisma', () => ({
+    prisma: {
+        clerkWebhookEvent: {
+            create: vi.fn(),
+            findUnique: vi.fn(),
+            updateMany: vi.fn(),
+        },
     },
-  },
-}));
+}))
 
-import { prisma } from "@/lib/prisma";
+import { prisma } from '@/lib/prisma'
 import {
-  claimClerkWebhookEvent,
-  isClerkSubscriptionSyncEnabled,
-  shouldSkipWebhookEventInCurrentEnv,
-} from "../route";
+    claimClerkWebhookEvent,
+    isClerkSubscriptionSyncEnabled,
+    shouldSkipWebhookEventInCurrentEnv,
+} from '../route'
 
-describe("clerk webhook env gating", () => {
-  beforeEach(() => {
-    vi.unstubAllEnvs();
-    delete process.env.ENABLE_CLERK_SUBSCRIPTION_SYNC;
-  });
+describe('clerk webhook env gating', () => {
+    beforeEach(() => {
+        vi.unstubAllEnvs()
+        delete process.env.ENABLE_CLERK_SUBSCRIPTION_SYNC
+    })
 
-  it("disables subscription sync in production", () => {
-    vi.stubEnv("NODE_ENV", "production");
+    it('disables subscription sync in production', () => {
+        vi.stubEnv('NODE_ENV', 'production')
 
-    expect(isClerkSubscriptionSyncEnabled()).toBe(false);
-    expect(shouldSkipWebhookEventInCurrentEnv("subscription.created")).toBe(true);
-  });
+        expect(isClerkSubscriptionSyncEnabled()).toBe(false)
+        expect(shouldSkipWebhookEventInCurrentEnv('subscription.created')).toBe(true)
+    })
 
-  it("allows subscription sync in development unless explicitly disabled", () => {
-    vi.stubEnv("NODE_ENV", "development");
-    process.env.ENABLE_CLERK_SUBSCRIPTION_SYNC = "true";
+    it('allows subscription sync in development unless explicitly disabled', () => {
+        vi.stubEnv('NODE_ENV', 'development')
+        process.env.ENABLE_CLERK_SUBSCRIPTION_SYNC = 'true'
 
-    expect(isClerkSubscriptionSyncEnabled()).toBe(true);
-    expect(shouldSkipWebhookEventInCurrentEnv("subscription.created")).toBe(false);
-  });
+        expect(isClerkSubscriptionSyncEnabled()).toBe(true)
+        expect(shouldSkipWebhookEventInCurrentEnv('subscription.created')).toBe(false)
+    })
 
-  it("skips dev-only events when sync disabled", () => {
-    vi.stubEnv("NODE_ENV", "development");
-    process.env.ENABLE_CLERK_SUBSCRIPTION_SYNC = "false";
+    it('skips dev-only events when sync disabled', () => {
+        vi.stubEnv('NODE_ENV', 'development')
+        process.env.ENABLE_CLERK_SUBSCRIPTION_SYNC = 'false'
 
-    expect(shouldSkipWebhookEventInCurrentEnv("paymentAttempt.created")).toBe(true);
-    expect(shouldSkipWebhookEventInCurrentEnv("user.created")).toBe(false);
-  });
-});
+        expect(shouldSkipWebhookEventInCurrentEnv('paymentAttempt.created')).toBe(true)
+        expect(shouldSkipWebhookEventInCurrentEnv('user.created')).toBe(false)
+    })
+})
 
-describe("clerk webhook idempotency", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+describe('clerk webhook idempotency', () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+    })
 
-  it("claims unseen events for processing", async () => {
-    vi.mocked(prisma.clerkWebhookEvent.create.bind(prisma.clerkWebhookEvent)).mockResolvedValue(
-      {} as never,
-    );
+    it('claims unseen events for processing', async () => {
+        vi.spyOn(prisma.clerkWebhookEvent, 'create').mockResolvedValue({} as never)
 
-    const state = await claimClerkWebhookEvent("evt_1", "user.created");
+        const state = await claimClerkWebhookEvent('evt_1', 'user.created')
 
-    expect(state).toBe("process");
-  });
+        expect(state).toBe('process')
+    })
 
-  it("returns processed for previously processed events", async () => {
-    vi.mocked(prisma.clerkWebhookEvent.create.bind(prisma.clerkWebhookEvent)).mockRejectedValue({
-      code: "P2002",
-    });
-    vi.mocked(prisma.clerkWebhookEvent.findUnique.bind(prisma.clerkWebhookEvent)).mockResolvedValue(
-      {
-        status: "processed",
-      } as never,
-    );
+    it('returns processed for previously processed events', async () => {
+        vi.spyOn(prisma.clerkWebhookEvent, 'create').mockRejectedValue({ code: 'P2002' })
+        vi.spyOn(prisma.clerkWebhookEvent, 'findUnique').mockResolvedValue({
+            status: 'processed',
+        } as never)
 
-    const state = await claimClerkWebhookEvent("evt_2", "user.updated");
+        const state = await claimClerkWebhookEvent('evt_2', 'user.updated')
 
-    expect(state).toBe("processed");
-  });
-});
+        expect(state).toBe('processed')
+    })
+})

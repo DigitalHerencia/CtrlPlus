@@ -15,7 +15,6 @@
 Run before handoff when relevant:
 
 - `pnpm format:check`
-- `pnpm lint`
 - `pnpm typecheck`
 - `pnpm test`
 - `pnpm prisma:validate`

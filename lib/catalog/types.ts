@@ -1,210 +1,210 @@
-import { z } from "zod";
+import { z } from 'zod'
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
 export const WrapStatus = {
-  ACTIVE: "ACTIVE",
-  INACTIVE: "INACTIVE",
-  DRAFT: "DRAFT",
-} as const;
+    ACTIVE: 'ACTIVE',
+    INACTIVE: 'INACTIVE',
+    DRAFT: 'DRAFT',
+} as const
 
-export type WrapStatus = (typeof WrapStatus)[keyof typeof WrapStatus];
+export type WrapStatus = (typeof WrapStatus)[keyof typeof WrapStatus]
 
 export const WrapCategory = {
-  FULL_WRAP: "FULL_WRAP",
-  PARTIAL_WRAP: "PARTIAL_WRAP",
-  ACCENT: "ACCENT",
-  PAINT_PROTECTION_FILM: "PAINT_PROTECTION_FILM",
-} as const;
+    FULL_WRAP: 'FULL_WRAP',
+    PARTIAL_WRAP: 'PARTIAL_WRAP',
+    ACCENT: 'ACCENT',
+    PAINT_PROTECTION_FILM: 'PAINT_PROTECTION_FILM',
+} as const
 
-export type WrapCategory = (typeof WrapCategory)[keyof typeof WrapCategory];
+export type WrapCategory = (typeof WrapCategory)[keyof typeof WrapCategory]
 
 export const WrapImageKind = {
-  HERO: "hero",
-  VISUALIZER_TEXTURE: "visualizer_texture",
-  VISUALIZER_MASK_HINT: "visualizer_mask_hint",
-  GALLERY: "gallery",
-} as const;
+    HERO: 'hero',
+    VISUALIZER_TEXTURE: 'visualizer_texture',
+    VISUALIZER_MASK_HINT: 'visualizer_mask_hint',
+    GALLERY: 'gallery',
+} as const
 
-export type WrapImageKind = (typeof WrapImageKind)[keyof typeof WrapImageKind];
+export type WrapImageKind = (typeof WrapImageKind)[keyof typeof WrapImageKind]
 
 const wrapImageKindValues: [WrapImageKind, ...WrapImageKind[]] = [
-  WrapImageKind.HERO,
-  WrapImageKind.VISUALIZER_TEXTURE,
-  WrapImageKind.VISUALIZER_MASK_HINT,
-  WrapImageKind.GALLERY,
-];
+    WrapImageKind.HERO,
+    WrapImageKind.VISUALIZER_TEXTURE,
+    WrapImageKind.VISUALIZER_MASK_HINT,
+    WrapImageKind.GALLERY,
+]
 
 export const PUBLISH_REQUIRED_WRAP_IMAGE_KINDS = [
-  WrapImageKind.HERO,
-  WrapImageKind.VISUALIZER_TEXTURE,
-] as const;
+    WrapImageKind.HERO,
+    WrapImageKind.VISUALIZER_TEXTURE,
+] as const
 
-export type PublishRequiredWrapImageKind = (typeof PUBLISH_REQUIRED_WRAP_IMAGE_KINDS)[number];
+export type PublishRequiredWrapImageKind = (typeof PUBLISH_REQUIRED_WRAP_IMAGE_KINDS)[number]
 
 // ─── DTOs ─────────────────────────────────────────────────────────────────────
 
 export interface WrapImageDTO {
-  id: string;
-  url: string;
-  kind: WrapImageKind;
-  isActive: boolean;
-  version: number;
-  contentHash: string;
-  displayOrder: number;
+    id: string
+    url: string
+    kind: WrapImageKind
+    isActive: boolean
+    version: number
+    contentHash: string
+    displayOrder: number
 }
 
 export interface WrapCategoryDTO {
-  id: string;
-  name: string;
-  slug: string;
+    id: string
+    name: string
+    slug: string
 }
 
 /** Read model returned by catalog fetchers. Never exposes raw Prisma model. */
 export interface WrapDTO {
-  id: string;
-  name: string;
-  description: string | null;
-  /** Price in cents as an integer number */
-  price: number;
-  isHidden: boolean;
-  installationMinutes: number | null;
-  images: WrapImageDTO[];
-  categories: WrapCategoryDTO[];
-  createdAt: Date;
-  updatedAt: Date;
+    id: string
+    name: string
+    description: string | null
+    /** Price in cents as an integer number */
+    price: number
+    isHidden: boolean
+    installationMinutes: number | null
+    images: WrapImageDTO[]
+    categories: WrapCategoryDTO[]
+    createdAt: Date
+    updatedAt: Date
 }
 
 export interface WrapListDTO {
-  wraps: WrapDTO[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
+    wraps: WrapDTO[]
+    total: number
+    page: number
+    pageSize: number
+    totalPages: number
 }
 
 // ─── Prisma Select Helpers ────────────────────────────────────────────────────
 
 /** Explicit Prisma `select` object for WrapDTO fields. */
 export const wrapDTOFields = {
-  id: true,
-  name: true,
-  description: true,
-  price: true,
-  isHidden: true,
-  installationMinutes: true,
-  createdAt: true,
-  updatedAt: true,
-  images: {
-    where: { deletedAt: null },
-    select: {
-      id: true,
-      url: true,
-      kind: true,
-      isActive: true,
-      version: true,
-      contentHash: true,
-      displayOrder: true,
-    },
-    orderBy: { displayOrder: "asc" },
-  },
-  categoryMappings: {
-    select: {
-      category: {
+    id: true,
+    name: true,
+    description: true,
+    price: true,
+    isHidden: true,
+    installationMinutes: true,
+    createdAt: true,
+    updatedAt: true,
+    images: {
+        where: { deletedAt: null },
         select: {
-          id: true,
-          name: true,
-          slug: true,
-          deletedAt: true,
+            id: true,
+            url: true,
+            kind: true,
+            isActive: true,
+            version: true,
+            contentHash: true,
+            displayOrder: true,
         },
-      },
+        orderBy: { displayOrder: 'asc' },
     },
-  },
-} as const;
+    categoryMappings: {
+        select: {
+            category: {
+                select: {
+                    id: true,
+                    name: true,
+                    slug: true,
+                    deletedAt: true,
+                },
+            },
+        },
+    },
+} as const
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
 const priceInCentsSchema = z.coerce
-  .number()
-  .int("Price must be an integer number of cents")
-  .positive("Price must be positive")
-  .max(10_000_000_00, "Price exceeds supported maximum");
+    .number()
+    .int('Price must be an integer number of cents')
+    .positive('Price must be positive')
+    .max(10_000_000_00, 'Price exceeds supported maximum')
 
 export const createWrapSchema = z.object({
-  name: z.string().min(1, "Name is required").max(120),
-  description: z.string().max(500).optional(),
-  price: priceInCentsSchema,
-  installationMinutes: z.coerce
-    .number()
-    .int()
-    .positive("Installation minutes must be a positive integer")
-    .optional(),
-});
+    name: z.string().min(1, 'Name is required').max(120),
+    description: z.string().max(500).optional(),
+    price: priceInCentsSchema,
+    installationMinutes: z.coerce
+        .number()
+        .int()
+        .positive('Installation minutes must be a positive integer')
+        .optional(),
+})
 
-export type CreateWrapInput = z.infer<typeof createWrapSchema>;
+export type CreateWrapInput = z.infer<typeof createWrapSchema>
 
 export const updateWrapSchema = createWrapSchema.partial().extend({
-  isHidden: z.boolean().optional(),
-});
+    isHidden: z.boolean().optional(),
+})
 
-export type UpdateWrapInput = z.infer<typeof updateWrapSchema>;
+export type UpdateWrapInput = z.infer<typeof updateWrapSchema>
 
 export const createWrapCategorySchema = z.object({
-  name: z.string().min(1).max(80),
-  slug: z
-    .string()
-    .min(1)
-    .max(80)
-    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase letters, numbers, or dashes"),
-});
+    name: z.string().min(1).max(80),
+    slug: z
+        .string()
+        .min(1)
+        .max(80)
+        .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase letters, numbers, or dashes'),
+})
 
-export type CreateWrapCategoryInput = z.infer<typeof createWrapCategorySchema>;
+export type CreateWrapCategoryInput = z.infer<typeof createWrapCategorySchema>
 
-export const updateWrapCategorySchema = createWrapCategorySchema.partial();
+export const updateWrapCategorySchema = createWrapCategorySchema.partial()
 
-export type UpdateWrapCategoryInput = z.infer<typeof updateWrapCategorySchema>;
+export type UpdateWrapCategoryInput = z.infer<typeof updateWrapCategorySchema>
 
 export const setWrapCategoryMappingsSchema = z.object({
-  wrapId: z.string().min(1),
-  categoryIds: z.array(z.string().min(1)).max(50),
-});
+    wrapId: z.string().min(1),
+    categoryIds: z.array(z.string().min(1)).max(50),
+})
 
-export type SetWrapCategoryMappingsInput = z.infer<typeof setWrapCategoryMappingsSchema>;
+export type SetWrapCategoryMappingsInput = z.infer<typeof setWrapCategoryMappingsSchema>
 
 export const wrapImageUploadSchema = z.object({
-  wrapId: z.string().min(1),
-  kind: z.enum(wrapImageKindValues).default(WrapImageKind.GALLERY),
-  isActive: z.boolean().default(true),
-  file: z.instanceof(File),
-});
+    wrapId: z.string().min(1),
+    kind: z.enum(wrapImageKindValues).default(WrapImageKind.GALLERY),
+    isActive: z.boolean().default(true),
+    file: z.instanceof(File),
+})
 
-export type WrapImageUploadInput = z.infer<typeof wrapImageUploadSchema>;
+export type WrapImageUploadInput = z.infer<typeof wrapImageUploadSchema>
 
 export const updateWrapImageMetadataSchema = z.object({
-  wrapId: z.string().min(1),
-  imageId: z.string().min(1),
-  kind: z.enum(wrapImageKindValues).optional(),
-  isActive: z.boolean().optional(),
-});
+    wrapId: z.string().min(1),
+    imageId: z.string().min(1),
+    kind: z.enum(wrapImageKindValues).optional(),
+    isActive: z.boolean().optional(),
+})
 
-export type UpdateWrapImageMetadataInput = z.infer<typeof updateWrapImageMetadataSchema>;
+export type UpdateWrapImageMetadataInput = z.infer<typeof updateWrapImageMetadataSchema>
 
 export const WRAP_SORT_BY_VALUES = {
-  name: "name",
-  price: "price",
-  createdAt: "createdAt",
-} as const;
+    name: 'name',
+    price: 'price',
+    createdAt: 'createdAt',
+} as const
 
-export type WrapSortBy = (typeof WRAP_SORT_BY_VALUES)[keyof typeof WRAP_SORT_BY_VALUES];
+export type WrapSortBy = (typeof WRAP_SORT_BY_VALUES)[keyof typeof WRAP_SORT_BY_VALUES]
 
 export const searchWrapsSchema = z.object({
-  query: z.string().max(200).optional(),
-  maxPrice: priceInCentsSchema.optional(),
-  sortBy: z.enum(["name", "price", "createdAt"]).optional(),
-  sortOrder: z.enum(["asc", "desc"]).optional(),
-  page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).default(20),
-  categoryId: z.string().min(1).optional(),
-});
+    query: z.string().max(200).optional(),
+    maxPrice: priceInCentsSchema.optional(),
+    sortBy: z.enum(['name', 'price', 'createdAt']).optional(),
+    sortOrder: z.enum(['asc', 'desc']).optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(20),
+    categoryId: z.string().min(1).optional(),
+})
 
-export type SearchWrapsInput = z.infer<typeof searchWrapsSchema>;
+export type SearchWrapsInput = z.infer<typeof searchWrapsSchema>

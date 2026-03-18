@@ -1,25 +1,25 @@
-import { ClerkProvider } from "@clerk/nextjs";
-import type { Metadata } from "next";
-import "./globals.css";
+import { ClerkProvider } from '@clerk/nextjs'
+import type { Metadata } from 'next'
+import './globals.css'
 
 export const metadata: Metadata = {
-  title: "CTRL+ | Vehicle Wrap Management Platform",
-  description:
-    "Single-store vehicle wrap platform for catalog browsing, visualizer previews, scheduling, billing, and role-based management.",
-};
+    title: 'CTRL+ | Vehicle Wrap Management Platform',
+    description:
+        'Single-store vehicle wrap platform for catalog browsing, visualizer previews, scheduling, billing, and role-based management.',
+}
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{
-  children: React.ReactNode;
+    children: React.ReactNode
 }>) {
-  return (
-    <html lang="en">
-      <body>
-        <ClerkProvider>
-          <main className="bg-neutral-900">{children}</main>
-        </ClerkProvider>
-      </body>
-    </html>
-  );
+    return (
+        <html lang="en">
+            <body>
+                <ClerkProvider>
+                    <main className="bg-neutral-900">{children}</main>
+                </ClerkProvider>
+            </body>
+        </html>
+    )
 }

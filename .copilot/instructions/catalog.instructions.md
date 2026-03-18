@@ -1,6 +1,6 @@
 ---
-description: "Domain instructions for catalog and wrap management"
-applyTo: "app/(tenant)/catalog/**,components/catalog/**,lib/catalog/**"
+description: 'Domain instructions for catalog and wrap management'
+applyTo: 'app/(tenant)/catalog/**,components/catalog/**,lib/catalog/**'
 ---
 
 # Catalog Domain Instructions

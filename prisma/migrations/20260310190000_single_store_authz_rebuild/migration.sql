@@ -32,10 +32,6 @@ FROM ranked_owners r
 WHERE m."id" = r."id"
   AND r.owner_rank > 1;
 
-CREATE UNIQUE INDEX IF NOT EXISTS "TenantUserMembership_single_owner_per_tenant_active_key"
-ON "TenantUserMembership" ("tenantId")
-WHERE "deletedAt" IS NULL
-  AND "role" = 'owner';
 
 CREATE UNIQUE INDEX IF NOT EXISTS "User_single_platform_admin_active_key"
 ON "User" ("globalRole")

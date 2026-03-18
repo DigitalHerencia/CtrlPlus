@@ -1,207 +1,185 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState } from 'react'
 
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { WrapDTO } from "@/lib/catalog/types";
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import type { WrapDTO } from '@/lib/catalog/types'
 import {
-  buildTemplatePreview,
-  templateVehicleOptions,
-  type TemplateVehicleOption,
-} from "@/lib/visualizer/templates";
-import type { VisualizerPreviewDTO } from "@/lib/visualizer/types";
-import { PreviewCanvas } from "./PreviewCanvas";
-import { UploadForm } from "./UploadForm";
-import { WrapSelector } from "./WrapSelector";
+    buildTemplatePreview,
+    templateVehicleOptions,
+    type TemplateVehicleOption,
+} from '@/lib/visualizer/templates'
+import type { VisualizerPreviewDTO } from '@/lib/visualizer/types'
+import { PreviewCanvas } from './PreviewCanvas'
+import { UploadForm } from './UploadForm'
+import { WrapSelector } from './WrapSelector'
 
 interface VisualizerClientProps {
-  wraps: WrapDTO[];
-  canManageCatalog?: boolean;
+    wraps: WrapDTO[]
+    canManageCatalog?: boolean
 }
 
-type PreviewMode = "upload" | "template";
+type PreviewMode = 'upload' | 'template'
 
 export function VisualizerClient({ wraps, canManageCatalog = false }: VisualizerClientProps) {
-  const [selectedWrapId, setSelectedWrapId] = useState<string | null>(wraps[0]?.id ?? null);
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateVehicleOption>(
-    templateVehicleOptions[0],
-  );
-  const [preview, setPreview] = useState<VisualizerPreviewDTO | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [mode, setMode] = useState<PreviewMode>("upload");
-  const [error, setError] = useState<string | null>(null);
-  const [permissionDenied, setPermissionDenied] = useState(false);
+    // State
+    const [selectedWrapId, setSelectedWrapId] = useState<string | null>(wraps[0]?.id ?? null)
+    const [selectedTemplate, setSelectedTemplate] = useState<TemplateVehicleOption>(
+        templateVehicleOptions[0]
+    )
+    const [preview, setPreview] = useState<VisualizerPreviewDTO | null>(null)
+    const [isLoading, setIsLoading] = useState(false)
+    const [mode, setMode] = useState<PreviewMode>('upload')
+    const [error, setError] = useState<string | null>(null)
+    const [permissionDenied, setPermissionDenied] = useState(false)
 
-  const selectedWrap = useMemo(
-    () => wraps.find((wrap) => wrap.id === selectedWrapId) ?? null,
-    [selectedWrapId, wraps],
-  );
+    // Memo
+    const selectedWrap = useMemo(
+        () => wraps.find((wrap) => wrap.id === selectedWrapId) ?? null,
+        [selectedWrapId, wraps]
+    )
 
-  function handleWrapSelect(wrapId: string) {
-    setSelectedWrapId(wrapId);
-    setPreview(null);
-  }
+    // Handlers
+    function handleWrapSelect(wrapId: string) {
+        setSelectedWrapId(wrapId)
+        setPreview(null)
+    }
+    function handlePreviewReady(newPreview: VisualizerPreviewDTO) {
+        setPreview(newPreview)
+        setError(null)
+        setPermissionDenied(false)
+    }
+    function handleTemplatePreview(vehicle: TemplateVehicleOption) {
+        if (!selectedWrapId) return
+        setSelectedTemplate(vehicle)
+        setPreview(buildTemplatePreview({ wrapId: selectedWrapId, imageUrl: vehicle.imageUrl }))
+        setError(null)
+        setPermissionDenied(false)
+    }
 
-  function handlePreviewReady(newPreview: VisualizerPreviewDTO) {
-    setPreview(newPreview);
-    setError(null);
-    setPermissionDenied(false);
-  }
+    // Modern layout
+    return (
+        <div className="flex h-[70vh] w-full overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950 shadow-lg">
+            {/* Sidebar */}
+            <aside className="min-w-55 flex w-64 flex-col gap-6 border-r border-neutral-800 bg-neutral-900/90 p-4">
+                <div className="flex flex-col gap-4">
+                    <h2 className="text-lg font-bold text-neutral-100">Wraps</h2>
+                    <WrapSelector
+                        wraps={wraps}
+                        selectedWrapId={selectedWrapId}
+                        onSelect={handleWrapSelect}
+                        canManageCatalog={canManageCatalog}
+                        className="max-h-60 overflow-y-auto"
+                    />
+                </div>
+                <div className="mt-auto">
+                    <Tabs
+                        value={mode}
+                        onValueChange={(value: string) => setMode(value as PreviewMode)}
+                        className="w-full"
+                    >
+                        <TabsList className="w-full">
+                            <TabsTrigger value="upload">Upload Photo</TabsTrigger>
+                            <TabsTrigger value="template">Template Preview</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                </div>
+            </aside>
 
-  function handleTemplatePreview(vehicle: TemplateVehicleOption) {
-    if (!selectedWrapId) return;
-
-    setSelectedTemplate(vehicle);
-    setPreview(
-      buildTemplatePreview({
-        wrapId: selectedWrapId,
-        imageUrl: vehicle.imageUrl,
-      }),
-    );
-    setError(null);
-    setPermissionDenied(false);
-  }
-
-  return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_1fr]">
-      <div className="space-y-6">
-        <section className="border border-neutral-700 bg-neutral-950/80 p-6 text-neutral-100">
-          <h2 className="mb-4 text-base font-semibold text-neutral-100">
-            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center bg-blue-600 text-xs text-neutral-100">
-              1
-            </span>
-            Choose a Wrap
-          </h2>
-          <WrapSelector
-            wraps={wraps}
-            selectedWrapId={selectedWrapId}
-            onSelect={handleWrapSelect}
-            canManageCatalog={canManageCatalog}
-          />
-        </section>
-
-        <section className="border border-neutral-700 bg-neutral-950/80 p-6 text-neutral-100">
-          <Tabs
-            value={mode}
-            onValueChange={(value: string) => setMode(value as PreviewMode)}
-            className="space-y-4"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-base font-semibold text-neutral-100">
-                <span className="mr-2 inline-flex h-6 w-6 items-center justify-center bg-blue-600 text-xs text-neutral-100">
-                  2
-                </span>
-                Select Preview Mode
-              </h2>
-              <TabsList className="border border-neutral-700 bg-neutral-900 p-1">
-                <TabsTrigger
-                  value="upload"
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-neutral-100"
-                >
-                  Upload
-                </TabsTrigger>
-                <TabsTrigger
-                  value="template"
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-neutral-100"
-                >
-                  Template
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            {selectedWrapId ? (
-              <>
-                <TabsContent value="upload" className="mt-0">
-                  <UploadForm
-                    wrapId={selectedWrapId}
-                    onPreviewReady={handlePreviewReady}
-                    onUploadingChange={setIsLoading}
-                  />
-                </TabsContent>
-                <TabsContent value="template" className="mt-0">
-                  <div className="space-y-3">
-                    <p className="text-sm text-neutral-300">
-                      Instant fallback preview using curated stock vehicle images.
-                    </p>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      {templateVehicleOptions.map((vehicle) => {
-                        const selected = vehicle.id === selectedTemplate.id;
-                        return (
-                          <button
-                            key={vehicle.id}
-                            type="button"
-                            onClick={() => handleTemplatePreview(vehicle)}
-                            className={`overflow-hidden border text-left transition ${
-                              selected
-                                ? "border-blue-600 ring-1 ring-blue-600"
-                                : "border-neutral-700 hover:border-blue-600/50"
-                            }`}
-                          >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={vehicle.imageUrl}
-                              alt={vehicle.label}
-                              className="h-28 w-full object-cover"
-                            />
-                            <p className="px-3 py-2 text-xs font-medium text-neutral-200">
-                              {vehicle.label}
-                            </p>
-                          </button>
-                        );
-                      })}
+            {/* Main canvas area */}
+            <main className="relative flex flex-1 flex-col items-center justify-center bg-neutral-950 p-8">
+                {/* Top bar */}
+                <div className="absolute left-0 top-0 z-10 flex w-full items-center justify-between p-4">
+                    <span className="text-sm text-neutral-400">
+                        {selectedWrap?.name ?? 'Select a wrap'}
+                    </span>
+                    <div className="flex gap-2">
+                        {/* Download/share actions */}
+                        {preview && !isLoading && !error && !permissionDenied && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    // Use preview.url or preview.resultUrl depending on DTO
+                                    const url =
+                                        (preview as any).url ||
+                                        (preview as any).resultUrl ||
+                                        (preview as any).image ||
+                                        undefined
+                                    if (url) {
+                                        const link = document.createElement('a')
+                                        link.href = url
+                                        link.download = 'visualizer-preview.png'
+                                        link.click()
+                                    }
+                                }}
+                            >
+                                Download
+                            </Button>
+                        )}
+                        {/* TODO: Add share action */}
                     </div>
-                  </div>
-                </TabsContent>
-              </>
-            ) : (
-              <p className="text-sm text-neutral-400">
-                Select a wrap above to unlock preview generation.
-              </p>
-            )}
-          </Tabs>
-        </section>
-      </div>
+                </div>
 
-      <div className="space-y-4">
-        <section className="border border-neutral-700 bg-neutral-950/80 p-6 text-neutral-100">
-          <h2 className="mb-4 text-base font-semibold text-neutral-100">
-            <span className="mr-2 inline-flex h-6 w-6 items-center justify-center bg-blue-600 text-xs text-neutral-100">
-              3
-            </span>
-            Preview
-          </h2>
-          {selectedWrap && (
-            <p className="mb-3 text-xs uppercase tracking-wide text-neutral-400">
-              Currently previewing:{" "}
-              <span className="font-semibold text-neutral-200">{selectedWrap.name}</span>
-            </p>
-          )}
-          <PreviewCanvas
-            preview={preview}
-            isLoading={isLoading}
-            className="min-h-72"
-            wrapOverlayUrl={selectedWrap?.images[0]?.url ?? null}
-            error={error}
-            permissionDenied={permissionDenied}
-          />
+                {/* Canvas and controls */}
+                <div className="flex h-full w-full flex-col items-center justify-center gap-6">
+                    {/* Mode controls */}
+                    <div className="w-full max-w-md">
+                        <Tabs
+                            value={mode}
+                            onValueChange={(value: string) => setMode(value as PreviewMode)}
+                            className="w-full"
+                        >
+                            <TabsList className="w-full">
+                                <TabsTrigger value="upload">Upload Photo</TabsTrigger>
+                                <TabsTrigger value="template">Template Preview</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="upload">
+                                {selectedWrap && (
+                                    <UploadForm
+                                        wrapId={selectedWrap.id}
+                                        onPreviewReady={handlePreviewReady}
+                                        onUploadingChange={setIsLoading}
+                                        className="mt-4"
+                                    />
+                                )}
+                            </TabsContent>
+                            <TabsContent value="template">
+                                {selectedWrap && (
+                                    <div className="mt-4 space-y-4">
+                                        <div className="flex gap-2">
+                                            {templateVehicleOptions.map((vehicle) => (
+                                                <Button
+                                                    key={vehicle.id}
+                                                    variant={
+                                                        selectedTemplate.id === vehicle.id
+                                                            ? 'default'
+                                                            : 'outline'
+                                                    }
+                                                    onClick={() => handleTemplatePreview(vehicle)}
+                                                >
+                                                    {vehicle.label}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </TabsContent>
+                        </Tabs>
+                    </div>
 
-          <div className="mt-4 flex items-center justify-between gap-3 border-t border-neutral-700 pt-4">
-            <p className="text-xs text-neutral-400">
-              Preview issues won&apos;t block your booking flow.
-            </p>
-            <Button
-              asChild
-              size="sm"
-              variant="outline"
-              className="bg-blue-600 text-neutral-100 transition-all hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600"
-            >
-              <Link href="/scheduling/book">Continue to scheduling</Link>
-            </Button>
-          </div>
-        </section>
-      </div>
-    </div>
-  );
+                    {/* Preview canvas */}
+                    <div className="h-105 flex w-full max-w-2xl items-center justify-center">
+                        <PreviewCanvas
+                            preview={preview}
+                            isLoading={isLoading}
+                            error={error}
+                            permissionDenied={permissionDenied}
+                        />
+                    </div>
+                </div>
+            </main>
+        </div>
+    )
 }

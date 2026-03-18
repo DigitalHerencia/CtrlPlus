@@ -1,6 +1,6 @@
 ---
-description: "Domain instructions for the vehicle visualizer"
-applyTo: "app/(tenant)/visualizer/**,components/visualizer/**,lib/visualizer/**"
+description: 'Domain instructions for the vehicle visualizer'
+applyTo: 'app/(tenant)/visualizer/**,components/visualizer/**,lib/visualizer/**'
 ---
 
 # Visualizer Domain Instructions

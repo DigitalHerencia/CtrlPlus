@@ -1,153 +1,153 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from '@/lib/prisma'
 import {
-  searchWrapsSchema,
-  wrapDTOFields,
-  type SearchWrapsInput,
-  type WrapDTO,
-  type WrapImageKind,
-  type WrapListDTO,
-} from "../types";
+    searchWrapsSchema,
+    wrapDTOFields,
+    type SearchWrapsInput,
+    type WrapDTO,
+    type WrapImageKind,
+    type WrapListDTO,
+} from '../types'
 
 export interface WrapVisibilityScope {
-  includeHidden?: boolean;
+    includeHidden?: boolean
 }
 
 function normalizePriceInCents(value: number): number {
-  return Number.isInteger(value) ? value : Math.round(value);
+    return Number.isInteger(value) ? value : Math.round(value)
 }
 
 function toWrapDTO(prismaWrap: {
-  id: string;
-  name: string;
-  description: string | null;
-  price: number;
-  isHidden: boolean;
-  installationMinutes: number | null;
-  createdAt: Date;
-  updatedAt: Date;
-  images: Array<{
-    id: string;
-    url: string;
-    kind: string;
-    isActive: boolean;
-    version: number;
-    contentHash: string;
-    displayOrder: number;
-  }>;
-  categoryMappings: Array<{
-    category: { id: string; name: string; slug: string; deletedAt: Date | null };
-  }>;
+    id: string
+    name: string
+    description: string | null
+    price: number
+    isHidden: boolean
+    installationMinutes: number | null
+    createdAt: Date
+    updatedAt: Date
+    images: Array<{
+        id: string
+        url: string
+        kind: string
+        isActive: boolean
+        version: number
+        contentHash: string
+        displayOrder: number
+    }>
+    categoryMappings: Array<{
+        category: { id: string; name: string; slug: string; deletedAt: Date | null }
+    }>
 }): WrapDTO {
-  return {
-    id: prismaWrap.id,
-    name: prismaWrap.name,
-    description: prismaWrap.description,
-    price: normalizePriceInCents(prismaWrap.price),
-    isHidden: prismaWrap.isHidden,
-    installationMinutes: prismaWrap.installationMinutes,
-    images: prismaWrap.images.map((image, index) => ({
-      ...image,
-      kind: (image.kind as WrapImageKind) ?? (index === 0 ? "hero" : "gallery"),
-      isActive: image.isActive,
-      version: image.version,
-      contentHash: image.contentHash,
-    })),
-    categories: prismaWrap.categoryMappings
-      .map((mapping) => mapping.category)
-      .filter((category) => category.deletedAt === null)
-      .map(({ ...category }) => category),
-    createdAt: prismaWrap.createdAt,
-    updatedAt: prismaWrap.updatedAt,
-  };
+    return {
+        id: prismaWrap.id,
+        name: prismaWrap.name,
+        description: prismaWrap.description,
+        price: normalizePriceInCents(prismaWrap.price),
+        isHidden: prismaWrap.isHidden,
+        installationMinutes: prismaWrap.installationMinutes,
+        images: prismaWrap.images.map((image, index) => ({
+            ...image,
+            kind: (image.kind as WrapImageKind) ?? (index === 0 ? 'hero' : 'gallery'),
+            isActive: image.isActive,
+            version: image.version,
+            contentHash: image.contentHash,
+        })),
+        categories: prismaWrap.categoryMappings
+            .map((mapping) => mapping.category)
+            .filter((category) => category.deletedAt === null)
+            .map(({ ...category }) => category),
+        createdAt: prismaWrap.createdAt,
+        updatedAt: prismaWrap.updatedAt,
+    }
 }
 
 function getVisibilityFilter(scope: WrapVisibilityScope) {
-  return scope.includeHidden ? {} : { isHidden: false };
+    return scope.includeHidden ? {} : { isHidden: false }
 }
 
 export async function getWraps(scope: WrapVisibilityScope = {}): Promise<WrapDTO[]> {
-  const wraps = await prisma.wrap.findMany({
-    where: {
-      deletedAt: null,
-      ...getVisibilityFilter(scope),
-    },
-    orderBy: { createdAt: "desc" },
-    select: wrapDTOFields,
-  });
+    const wraps = await prisma.wrap.findMany({
+        where: {
+            deletedAt: null,
+            ...getVisibilityFilter(scope),
+        },
+        orderBy: { createdAt: 'desc' },
+        select: wrapDTOFields,
+    })
 
-  return wraps.map(toWrapDTO);
+    return wraps.map(toWrapDTO)
 }
 
 export async function getWrapById(
-  wrapId: string,
-  scope: WrapVisibilityScope = {},
+    wrapId: string,
+    scope: WrapVisibilityScope = {}
 ): Promise<WrapDTO | null> {
-  const wrap = await prisma.wrap.findFirst({
-    where: {
-      id: wrapId,
-      deletedAt: null,
-      ...getVisibilityFilter(scope),
-    },
-    select: wrapDTOFields,
-  });
+    const wrap = await prisma.wrap.findFirst({
+        where: {
+            id: wrapId,
+            deletedAt: null,
+            ...getVisibilityFilter(scope),
+        },
+        select: wrapDTOFields,
+    })
 
-  return wrap ? toWrapDTO(wrap) : null;
+    return wrap ? toWrapDTO(wrap) : null
 }
 
 export async function searchWraps(
-  filters: SearchWrapsInput = { page: 1, pageSize: 20 },
-  scope: WrapVisibilityScope = {},
+    filters: SearchWrapsInput = { page: 1, pageSize: 20 },
+    scope: WrapVisibilityScope = {}
 ): Promise<WrapListDTO> {
-  const parsedFilters = searchWrapsSchema.parse(filters);
-  const {
-    query,
-    maxPrice,
-    sortBy = "createdAt",
-    sortOrder = "desc",
-    page,
-    pageSize,
-    categoryId,
-  } = parsedFilters;
-  const skip = (page - 1) * pageSize;
+    const parsedFilters = searchWrapsSchema.parse(filters)
+    const {
+        query,
+        maxPrice,
+        sortBy = 'createdAt',
+        sortOrder = 'desc',
+        page,
+        pageSize,
+        categoryId,
+    } = parsedFilters
+    const skip = (page - 1) * pageSize
 
-  const where = {
-    deletedAt: null,
-    ...getVisibilityFilter(scope),
-    ...(query && {
-      OR: [
-        { name: { contains: query, mode: "insensitive" as const } },
-        { description: { contains: query, mode: "insensitive" as const } },
-      ],
-    }),
-    ...(maxPrice !== undefined && { price: { lte: maxPrice } }),
-    ...(categoryId && {
-      categoryMappings: {
-        some: {
-          categoryId,
-          category: {
-            deletedAt: null,
-          },
-        },
-      },
-    }),
-  };
+    const where = {
+        deletedAt: null,
+        ...getVisibilityFilter(scope),
+        ...(query && {
+            OR: [
+                { name: { contains: query, mode: 'insensitive' as const } },
+                { description: { contains: query, mode: 'insensitive' as const } },
+            ],
+        }),
+        ...(maxPrice !== undefined && { price: { lte: maxPrice } }),
+        ...(categoryId && {
+            categoryMappings: {
+                some: {
+                    categoryId,
+                    category: {
+                        deletedAt: null,
+                    },
+                },
+            },
+        }),
+    }
 
-  const [wraps, total] = await Promise.all([
-    prisma.wrap.findMany({
-      where,
-      orderBy: { [sortBy]: sortOrder },
-      select: wrapDTOFields,
-      skip,
-      take: pageSize,
-    }),
-    prisma.wrap.count({ where }),
-  ]);
+    const [wraps, total] = await Promise.all([
+        prisma.wrap.findMany({
+            where,
+            orderBy: { [sortBy]: sortOrder },
+            select: wrapDTOFields,
+            skip,
+            take: pageSize,
+        }),
+        prisma.wrap.count({ where }),
+    ])
 
-  return {
-    wraps: wraps.map(toWrapDTO),
-    total,
-    page,
-    pageSize,
-    totalPages: Math.ceil(total / pageSize),
-  };
+    return {
+        wraps: wraps.map(toWrapDTO),
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+    }
 }

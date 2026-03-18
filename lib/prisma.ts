@@ -23,41 +23,41 @@
  * @see https://neon.tech/docs/serverless/serverless-driver
  */
 
-import { neonConfig } from "@neondatabase/serverless";
-import { PrismaNeon } from "@prisma/adapter-neon";
-import { PrismaClient } from "@prisma/client";
-import ws from "ws";
+import { neonConfig } from '@neondatabase/serverless'
+import { PrismaNeon } from '@prisma/adapter-neon'
+import { PrismaClient } from '@prisma/client'
+import ws from 'ws'
 
 // Configure WebSocket for transactions (required in Node.js environments)
 // In Edge runtime (Vercel Edge Functions), the global WebSocket is used
-if (typeof WebSocket === "undefined") {
-  neonConfig.webSocketConstructor = ws;
+if (typeof WebSocket === 'undefined') {
+    neonConfig.webSocketConstructor = ws
 }
 
 // Optional: Configure connection pooling and caching behavior
 // Global type declaration for singleton pattern (prevents multiple instances in dev)
 const globalForPrisma = globalThis as unknown as {
-  prisma?: PrismaClient;
-  prismaSignalHandlersAttached?: boolean;
-};
+    prisma?: PrismaClient
+    prismaSignalHandlersAttached?: boolean
+}
 
 function assertNeonPooledRuntimeUrl(connectionString: string): void {
-  let hostname: string;
+    let hostname: string
 
-  try {
-    hostname = new URL(connectionString).hostname.toLowerCase();
-  } catch {
-    throw new Error("DATABASE_URL must be a valid PostgreSQL connection string.");
-  }
+    try {
+        hostname = new URL(connectionString).hostname.toLowerCase()
+    } catch {
+        throw new Error('DATABASE_URL must be a valid PostgreSQL connection string.')
+    }
 
-  const isNeonHost = hostname.includes("neon.tech");
+    const isNeonHost = hostname.includes('neon.tech')
 
-  if (isNeonHost && !hostname.includes("-pooler")) {
-    throw new Error(
-      "DATABASE_URL must use Neon's pooled hostname (-pooler) for application traffic. " +
-        "Use the direct connection only for Prisma CLI operations in prisma.config.ts.",
-    );
-  }
+    if (isNeonHost && !hostname.includes('-pooler')) {
+        throw new Error(
+            "DATABASE_URL must use Neon's pooled hostname (-pooler) for application traffic. " +
+                'Use the direct connection only for Prisma CLI operations in prisma.config.ts.'
+        )
+    }
 }
 
 /**
@@ -67,42 +67,42 @@ function assertNeonPooledRuntimeUrl(connectionString: string): void {
  * Migrations use DATABASE_URL_UNPOOLED from prisma.config.ts.
  */
 export const prisma =
-  globalForPrisma.prisma ||
-  (() => {
-    const connectionString = process.env.DATABASE_URL;
+    globalForPrisma.prisma ||
+    (() => {
+        const connectionString = process.env.DATABASE_URL
 
-    if (!connectionString) {
-      throw new Error(
-        "DATABASE_URL is not defined. Please set it in your .env.local file.\n" +
-          "Get connection string from: https://console.neon.tech/\n" +
-          "Use the POOLED connection (with -pooler suffix) for optimal performance.",
-      );
-    }
+        if (!connectionString) {
+            throw new Error(
+                'DATABASE_URL is not defined. Please set it in your .env.local file.\n' +
+                    'Get connection string from: https://console.neon.tech/\n' +
+                    'Use the POOLED connection (with -pooler suffix) for optimal performance.'
+            )
+        }
 
-    assertNeonPooledRuntimeUrl(connectionString);
+        assertNeonPooledRuntimeUrl(connectionString)
 
-    const adapter = new PrismaNeon({ connectionString });
+        const adapter = new PrismaNeon({ connectionString })
 
-    return new PrismaClient({
-      adapter,
-      log:
-        process.env.DEBUG_PRISMA_QUERIES === "true"
-          ? ["query", "warn", "error"]
-          : ["warn", "error"],
-    });
-  })();
+        return new PrismaClient({
+            adapter,
+            log:
+                process.env.DEBUG_PRISMA_QUERIES === 'true'
+                    ? ['query', 'warn', 'error']
+                    : ['warn', 'error'],
+        })
+    })()
 
 // Prevent multiple client instances in development (singleton pattern)
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV !== 'production') {
+    globalForPrisma.prisma = prisma
 }
 
 function disconnectPrisma(): void {
-  void prisma.$disconnect();
+    void prisma.$disconnect()
 }
 
 if (!globalForPrisma.prismaSignalHandlersAttached) {
-  process.on("SIGTERM", disconnectPrisma);
-  process.on("SIGINT", disconnectPrisma);
-  globalForPrisma.prismaSignalHandlersAttached = true;
+    process.on('SIGTERM', disconnectPrisma)
+    process.on('SIGINT', disconnectPrisma)
+    globalForPrisma.prismaSignalHandlersAttached = true
 }

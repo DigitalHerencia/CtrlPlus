@@ -1,6 +1,6 @@
 ---
-description: "Domain instructions for scheduling and bookings"
-applyTo: "app/(tenant)/scheduling/**,components/scheduling/**,lib/scheduling/**"
+description: 'Domain instructions for scheduling and bookings'
+applyTo: 'app/(tenant)/scheduling/**,components/scheduling/**,lib/scheduling/**'
 ---
 
 # Scheduling Domain Instructions

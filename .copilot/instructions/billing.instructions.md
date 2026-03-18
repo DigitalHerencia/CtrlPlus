@@ -1,6 +1,6 @@
 ---
-description: "Domain instructions for billing, invoices, and Stripe flows"
-applyTo: "app/(tenant)/billing/**,app/api/stripe/**,components/billing/**,lib/billing/**"
+description: 'Domain instructions for billing, invoices, and Stripe flows'
+applyTo: 'app/(tenant)/billing/**,app/api/stripe/**,components/billing/**,lib/billing/**'
 ---
 
 # Billing Domain Instructions

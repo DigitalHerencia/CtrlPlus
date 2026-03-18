@@ -1,5 +1,4 @@
 -- DropIndex
-DROP INDEX "TenantUserMembership_single_owner_per_tenant_active_key";
 
 -- DropIndex
 DROP INDEX "User_single_platform_admin_active_key";

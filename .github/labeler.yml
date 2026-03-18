@@ -1,69 +1,69 @@
 domain:catalog:
-  - changed-files:
-      - any-glob-to-any-file:
-          - "app/(tenant)/catalog/**"
-          - "components/catalog/**"
-          - "lib/catalog/**"
+    - changed-files:
+          - any-glob-to-any-file:
+                - 'app/(tenant)/catalog/**'
+                - 'components/catalog/**'
+                - 'lib/catalog/**'
 
 domain:visualizer:
-  - changed-files:
-      - any-glob-to-any-file:
-          - "app/(tenant)/visualizer/**"
-          - "components/visualizer/**"
-          - "lib/visualizer/**"
+    - changed-files:
+          - any-glob-to-any-file:
+                - 'app/(tenant)/visualizer/**'
+                - 'components/visualizer/**'
+                - 'lib/visualizer/**'
 
 domain:scheduling:
-  - changed-files:
-      - any-glob-to-any-file:
-          - "app/(tenant)/scheduling/**"
-          - "components/scheduling/**"
-          - "lib/scheduling/**"
+    - changed-files:
+          - any-glob-to-any-file:
+                - 'app/(tenant)/scheduling/**'
+                - 'components/scheduling/**'
+                - 'lib/scheduling/**'
 
 domain:billing:
-  - changed-files:
-      - any-glob-to-any-file:
-          - "app/(tenant)/billing/**"
-          - "app/api/stripe/**"
-          - "components/billing/**"
-          - "lib/billing/**"
+    - changed-files:
+          - any-glob-to-any-file:
+                - 'app/(tenant)/billing/**'
+                - 'app/api/stripe/**'
+                - 'components/billing/**'
+                - 'lib/billing/**'
 
 domain:admin:
-  - changed-files:
-      - any-glob-to-any-file:
-          - "app/(tenant)/admin/**"
-          - "components/admin/**"
-          - "lib/admin/**"
+    - changed-files:
+          - any-glob-to-any-file:
+                - 'app/(tenant)/admin/**'
+                - 'components/admin/**'
+                - 'lib/admin/**'
 
 domain:auth:
-  - changed-files:
-      - any-glob-to-any-file:
-          - "app/(auth)/**"
-          - "app/api/clerk/**"
-          - "components/auth/**"
-          - "lib/auth/**"
+    - changed-files:
+          - any-glob-to-any-file:
+                - 'app/(auth)/**'
+                - 'app/api/clerk/**'
+                - 'components/auth/**'
+                - 'lib/auth/**'
 
 domain:settings:
-  - changed-files:
-      - any-glob-to-any-file:
-          - "app/(tenant)/settings/**"
-          - "components/settings/**"
-          - "lib/settings/**"
+    - changed-files:
+          - any-glob-to-any-file:
+                - 'app/(tenant)/settings/**'
+                - 'components/settings/**'
+                - 'lib/settings/**'
 
 domain:platform:
-  - changed-files:
-      - any-glob-to-any-file:
-          - "app/(tenant)/platform/**"
-          - "lib/platform/**"
+    - changed-files:
+          - any-glob-to-any-file:
+                - 'app/(tenant)/platform/**'
+                - 'lib/platform/**'
 
 domain:ci:
-  - changed-files:
-      - any-glob-to-any-file:
-          - ".github/workflows/**"
-          - ".github/labeler.yml"
-          - ".husky/**"
-          - "commitlint.config.mjs"
-          - "eslint.config.mjs"
-          - "package.json"
-          - "prettier.config.mjs"
-          - "pnpm-lock.yaml"
-          - "vitest.config.ts"
+    - changed-files:
+          - any-glob-to-any-file:
+                - '.github/workflows/**'
+                - '.github/labeler.yml'
+                - '.husky/**'
+                - 'commitlint.config.mjs'
+                - 'eslint.config.mjs'
+                - 'package.json'
+                - 'prettier.config.mjs'
+                - 'pnpm-lock.yaml'
+                - 'vitest.config.ts'

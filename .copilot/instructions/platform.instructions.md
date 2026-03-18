@@ -1,6 +1,6 @@
 ---
-description: "Domain instructions for platform admin and recovery operations"
-applyTo: "app/(tenant)/platform/**,components/platform/**,lib/platform/**,app/api/clerk/**,app/api/stripe/**"
+description: 'Domain instructions for platform admin and recovery operations'
+applyTo: 'app/(tenant)/platform/**,components/platform/**,lib/platform/**,app/api/clerk/**,app/api/stripe/**'
 ---
 
 # Admin Platform Domain Instructions
