@@ -2,7 +2,7 @@
 
 # Project-scoped Codex config for CtrlPlus.
 # Keep this file focused on repo-specific behavior. Leave account, auth,
-# and machine-wide preferences in your user-level ~/.codex/config.toml.
+# machine trust, and machine-wide preferences in your user-level config.
 
 # Core model defaults for day-to-day coding in this repo.
 model = "gpt-5.4"
@@ -24,215 +24,194 @@ web_search = "live"
 file_opener = "vscode"
 
 # Help Codex anchor itself to the real repo root and pick up AGENTS.md.
-project_doc_fallback_filenames = [ "AGENTS.md" ]
+project_doc_fallback_filenames = ["AGENTS.md"]
 project_doc_max_bytes = 32768
-project_root_markers = [ ".git", "pnpm-lock.yaml", "package.json" ]
+project_root_markers = [".git", "pnpm-lock.yaml", "package.json"]
 
 [sandbox_workspace_write]
-  # Keep writes scoped to this repository instead of the whole D: drive.
-  network_access = true
-  writable_roots = [ "D:/CtrlPlus" ]
+# Keep writes scoped to this repository instead of the whole D: drive.
+network_access = true
+writable_roots = ["D:/CtrlPlus"]
 
 [shell_environment_policy]
-  # Inherit the normal environment, but do not force secret-like variables
-  # through shell commands unless they are explicitly set or needed.
-  inherit = "all"
-  experimental_use_profile = true
+# Inherit the normal environment, but do not hardcode secrets here.
+inherit = "all"
+experimental_use_profile = true
 
 [shell_environment_policy.set]
-  CODEX_USE_DEDICATED_PROFILE = "1"
-  CODEX_PS_PROFILE_PATH = "D:/CtrlPlus/.codex/profiles/Microsoft.PowerShell_profile.ps1"
+CODEX_USE_DEDICATED_PROFILE = "1"
+CODEX_PS_PROFILE_PATH = "D:/CtrlPlus/.codex/profiles/Microsoft.PowerShell_profile.ps1"
 
 [history]
-  # Persist session history so long-running repo work can be resumed cleanly.
-  persistence = "save-all"
+# Persist session history so long-running repo work can be resumed cleanly.
+persistence = "save-all"
 
 [tui]
-  animations = true
-  notifications = false
-  show_tooltips = true
+animations = true
+notifications = false
+show_tooltips = true
 
 [feedback]
-  enabled = true
+enabled = true
 
 [tools]
-  # Useful for UI-heavy work in a Next.js application.
-  view_image = true
+# Useful for UI-heavy work in a Next.js application.
+view_image = true
 
-# Keep only features that materially help in this repo.
 [features]
-  apply_patch_freeform = true
-  apps = true
-  child_agents_md = true
-  collaboration_modes = true
-  multi_agent = true
-  personality = true
-  powershell_utf8 = true
-  remote_models = true
-  request_rule = true
-  runtime_metrics = false
-  shell_snapshot = true
-  shell_tool = true
-  unified_exec = true
-  use_linux_sandbox_bwrap = false
+# Keep only the feature flags that materially help here.
+apps = true
+powershell_utf8 = true
+shell_snapshot = true
+shell_tool = true
 
 # MCP servers used by this project.
 [mcp_servers]
 
 [mcp_servers.next-devtools]
-  # Primary runtime diagnostics for the Next.js 16 app router workflow.
-  command = "npx"
-  args = [ "-y", "next-devtools-mcp@0.3.6" ]
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# Primary runtime diagnostics for the Next.js 16 app router workflow.
+command = "npx"
+args = ["-y", "next-devtools-mcp@0.3.6"]
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
 [mcp_servers.chrome_devtools]
-  # Browser-level verification when a real rendered page matters.
-  command = "npx"
-  args = [ "chrome-devtools-mcp@latest" ]
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# Browser-level verification when a real rendered page matters.
+command = "npx"
+args = ["chrome-devtools-mcp@latest"]
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
 [mcp_servers.playwright]
-  # End-to-end UI checks and scripted browser flows.
-  command = "npx"
-  args = [ "@playwright/mcp@latest" ]
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# End-to-end UI checks and scripted browser flows.
+command = "npx"
+args = ["@playwright/mcp@latest"]
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
 [mcp_servers.github]
-  # Repo, PR, and issue operations. Reads GITHUB_TOKEN from the environment.
-  url = "https://api.githubcopilot.com/mcp/"
-  bearer_token_env_var = "GITHUB_TOKEN"
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# Repo, PR, and issue operations. Reads GITHUB_TOKEN from the environment.
+url = "https://api.githubcopilot.com/mcp/"
+bearer_token_env_var = "GITHUB_TOKEN"
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
 [mcp_servers.vercel]
-  # Preview deployments, logs, and project metadata.
-  url = "https://mcp.vercel.com"
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# Preview deployments, logs, and project metadata.
+url = "https://mcp.vercel.com"
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
 [mcp_servers.neon]
-  # Neon project and database operations. Reads NEON_API_KEY from the environment.
-  url = "https://mcp.neon.tech/mcp"
-  bearer_token_env_var = "NEON_API_KEY"
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# Neon project and database operations. Reads NEON_API_KEY from the environment.
+url = "https://mcp.neon.tech/mcp"
+bearer_token_env_var = "NEON_API_KEY"
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
 [mcp_servers.clerk]
-  # Clerk auth and organization management. Reads CLERK_SECRET_KEY from the environment.
-  url = "https://mcp.clerk.com/mcp"
-  bearer_token_env_var = "CLERK_SECRET_KEY"
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# Clerk auth and organization management. Reads CLERK_SECRET_KEY from the environment.
+url = "https://mcp.clerk.com/mcp"
+bearer_token_env_var = "CLERK_SECRET_KEY"
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
 [mcp_servers."com.stripe/mcp"]
-  # Stripe dashboard and API context. Reads STRIPE_API_KEY from the environment.
-  url = "https://mcp.stripe.com"
-  bearer_token_env_var = "STRIPE_API_KEY"
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# Stripe MCP uses the repo-local ctrl_plus_STRIPE_MCP_KEY variable.
+url = "https://mcp.stripe.com"
+bearer_token_env_var = "ctrl_plus_STRIPE_MCP_KEY"
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
 [mcp_servers.notion]
-  # Useful when repo tasks are driven by product specs or docs in Notion.
-  url = "https://mcp.notion.com/mcp"
-  bearer_token_env_var = "NOTION_TOKEN"
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# Useful when repo tasks are driven by product specs or docs in Notion.
+url = "https://mcp.notion.com/mcp"
+bearer_token_env_var = "NOTION_TOKEN"
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
 [mcp_servers.context7]
-  # Official and library docs lookup during implementation.
-  url = "https://mcp.context7.com/mcp"
-  bearer_token_env_var = "CONTEXT7_API_KEY"
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# Official and library docs lookup during implementation.
+url = "https://mcp.context7.com/mcp"
+bearer_token_env_var = "CONTEXT7_API_KEY"
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
 [mcp_servers.shadcn]
-  # Component registry lookup for this shadcn-based UI stack.
-  command = "npx"
-  args = [ "shadcn@latest", "mcp" ]
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# Component registry lookup for this shadcn-based UI stack.
+command = "npx"
+args = ["shadcn@latest", "mcp"]
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
 [mcp_servers.openaiDeveloperDocs]
-  # Up-to-date OpenAI and Codex docs for API and config questions.
-  url = "https://developers.openai.com/mcp"
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# Up-to-date OpenAI and Codex docs for API and config questions.
+url = "https://developers.openai.com/mcp"
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
 [mcp_servers.microsoft_docs]
-  # Helpful when Azure or Microsoft platform integration work appears.
-  url = "https://learn.microsoft.com/api/mcp"
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# Helpful when Azure or Microsoft platform integration work appears.
+url = "https://learn.microsoft.com/api/mcp"
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
 [mcp_servers."huggingface/hf-mcp-server"]
-  # Keep enabled because the app already depends on Hugging Face tooling.
-  url = "https://huggingface.co/mcp?login"
-  enabled = true
-  required = false
-  startup_timeout_sec = 20.0
-  tool_timeout_sec = 120.0
+# Keep enabled because the app already depends on Hugging Face tooling.
+url = "https://huggingface.co/mcp?login"
+enabled = true
+required = false
+startup_timeout_sec = 20.0
+tool_timeout_sec = 120.0
 
-  # Cloudinary note:
-  # The original config used legacy /sse endpoints. Codex documents streamable
-  # HTTP MCP servers via `url`, so leave Cloudinary out here until you have
-  # confirmed a compatible endpoint that works with current Codex builds.
+# Cloudinary note:
+# The original config used legacy /sse endpoints. Codex documents streamable
+# HTTP MCP servers via `url`, so leave Cloudinary out here until you have
+# confirmed a compatible endpoint that works with current Codex builds.
 
 [apps]
 
 [apps.github]
-  enabled = true
+enabled = true
 
 [apps.notion]
-  enabled = true
+enabled = true
 
 [apps.vercel]
-  enabled = true
+enabled = true
 
 [apps.huggingface]
-  enabled = true
+enabled = true
 
 [otel]
-  # Keep telemetry disabled unless you are actively debugging Codex itself.
-  environment = "dev"
-  exporter = "none"
-  log_user_prompt = false
-  trace_exporter = "none"
-
-# Project trust levels
-[projects]
-
-[projects."D:/CtrlPlus"]
-  trust_level = "trusted"
-
-[windows]
-  # Match your current Windows-native setup.
-  sandbox = "elevated"
+# Keep telemetry disabled unless you are actively debugging Codex itself.
+environment = "dev"
+exporter = "none"
+log_user_prompt = false
+trace_exporter = "none"
