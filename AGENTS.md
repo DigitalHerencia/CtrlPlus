@@ -1,9 +1,9 @@
 ---
-description: 'Repo-specific Copilot instructions for CtrlPlus'
+description: 'Repo-specific Codex instructions for CtrlPlus'
 applyTo: '**/*'
 ---
 
-# CtrlPlus Copilot Instructions
+# CtrlPlus Codex Instructions
 
 ## Project intent
 
@@ -34,16 +34,16 @@ CtrlPlus is a single-store, tenant-scoped operations platform built on Next.js A
 - `lib/auth/**`, `lib/authz/**`: identity and authorization
 - `prisma/schema.prisma`: canonical data model
 
-## Copilot Domain Resources
+## Codex Domain Resources
 
-The `.copilot` directory contains domain-specific resources to guide Copilot agents and automate workflows:
+The `.codex` directory contains domain-specific resources to guide codex agents and automate workflows:
 
-- `.copilot/docs/`: Domain specs and requirements. See README for details.
-- `.copilot/instructions/`: Domain-specific instructions and architectural notes. See README for usage.
-- `.copilot/issues/`: Issue templates for Copilot-driven work. See README for automation guidance.
-- `.copilot/prompts/`: Copilot prompt files for agent orchestration. See README for workflow details.
+- `.codex/docs/`: Domain specs and requirements. See README for details.
+- `.codex/instructions/`: Domain-specific instructions and architectural notes. See README for usage.
+- `.codex/issues/`: Issue templates for codex-driven work. See README for automation guidance.
+- `.codex/prompts/`: codex prompt files for agent orchestration. See README for workflow details.
 
-Copilot agents should consult these files for domain boundaries, implementation standards, issue creation, and prompt-driven task orchestration. Refer to each subfolder's README for specifics.
+codex agents should consult these files for domain boundaries, implementation standards, issue creation, and prompt-driven task orchestration. Refer to each subfolder's README for specifics.
 
 ## Implementation standards
 
@@ -103,7 +103,7 @@ Use existing labels and template style:
 - Bugs should align with `bug` style.
 - PRs must satisfy security and code quality checklists already used in repo.
 
-## Copilot operating mode
+## Codex operating mode
 
 When implementing or refactoring:
 
