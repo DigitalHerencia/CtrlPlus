@@ -63,6 +63,8 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
         price: Number.isInteger(existing.price) ? existing.price : Math.round(existing.price),
         isHidden: existing.isHidden,
         installationMinutes: existing.installationMinutes,
+        aiPromptTemplate: existing.aiPromptTemplate,
+        aiNegativePrompt: existing.aiNegativePrompt,
         images: existing.images.map(
             (image): WrapImageDTO => ({
                 id: image.id,

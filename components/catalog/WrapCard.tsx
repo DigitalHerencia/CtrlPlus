@@ -82,9 +82,14 @@ export function WrapCard({ wrap }: WrapCardProps) {
                         {formatPrice(wrap.price)}
                     </p>
                 </div>
-                <Button asChild size="sm" className="transition-transform group-hover:translate-x-0.5">
-                    <Link href={`/catalog/${wrap.id}`}>View Details</Link>
-                </Button>
+                <div className="flex items-center gap-2">
+                    <Button asChild size="sm" className="transition-transform group-hover:translate-x-0.5">
+                        <Link href={wrap.previewHref}>Preview on Your Vehicle</Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline">
+                        <Link href={`/catalog/${wrap.id}`}>View Details</Link>
+                    </Button>
+                </div>
             </CardFooter>
         </Card>
     )

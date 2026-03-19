@@ -1,4 +1,8 @@
-import { PUBLISH_REQUIRED_WRAP_IMAGE_KINDS, type PublishRequiredWrapImageKind } from '../types'
+import {
+    PUBLISH_REQUIRED_WRAP_IMAGE_KINDS,
+    type CatalogAssetReadinessDTO,
+    type PublishRequiredWrapImageKind,
+} from '../types'
 
 export interface WrapPublishAssetRoleSnapshot {
     kind: string
@@ -21,4 +25,18 @@ export function assertWrapCanBePublished(images: WrapPublishAssetRoleSnapshot[])
     }
 
     throw new Error(`Cannot publish wrap. Missing active asset roles: ${missingKinds.join(', ')}`)
+}
+
+export function assertWrapIsPublishReady(readiness: CatalogAssetReadinessDTO): void {
+    if (readiness.canPublish) {
+        return
+    }
+
+    const blockingMessages = readiness.issues
+        .filter((issue) => issue.blocking)
+        .map((issue) => issue.message)
+
+    throw new Error(
+        `Cannot publish wrap. ${blockingMessages.length > 0 ? blockingMessages.join(' ') : 'Wrap is not publish-ready.'}`
+    )
 }

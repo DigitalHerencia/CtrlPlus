@@ -10,6 +10,8 @@ function toPreviewDTO(record: {
     processedImageUrl: string | null
     status: string
     cacheKey: string
+    sourceWrapImageId: string | null
+    sourceWrapImageVersion: number | null
     expiresAt: Date
     createdAt: Date
     updatedAt: Date
@@ -21,6 +23,8 @@ function toPreviewDTO(record: {
         processedImageUrl: record.processedImageUrl,
         status: record.status as PreviewStatus,
         cacheKey: record.cacheKey,
+        sourceWrapImageId: record.sourceWrapImageId,
+        sourceWrapImageVersion: record.sourceWrapImageVersion,
         expiresAt: record.expiresAt,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,

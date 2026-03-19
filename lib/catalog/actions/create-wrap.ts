@@ -16,6 +16,8 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
             description: parsed.description ?? null,
             price: parsed.price,
             installationMinutes: parsed.installationMinutes ?? null,
+            aiPromptTemplate: parsed.aiPromptTemplate ?? null,
+            aiNegativePrompt: parsed.aiNegativePrompt ?? null,
             isHidden: true,
         },
         select: { id: true },
@@ -30,6 +32,8 @@ export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {
             details: JSON.stringify({
                 name: parsed.name,
                 priceInCents: parsed.price,
+                aiPromptTemplate: parsed.aiPromptTemplate ?? null,
+                aiNegativePrompt: parsed.aiNegativePrompt ?? null,
                 isHidden: true,
             }),
             timestamp: new Date(),

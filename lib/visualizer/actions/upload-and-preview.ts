@@ -1,12 +1,10 @@
 'use server'
 
 import type { UploadPhotoInput, VisualizerPreviewDTO } from '../types'
-import { generatePreview } from './generate-preview'
-import { uploadVehiclePhoto } from './upload-photo'
+import { createVisualizerPreview } from './create-visualizer-preview'
 
 export async function uploadAndGeneratePreview(
     input: UploadPhotoInput
 ): Promise<VisualizerPreviewDTO> {
-    const uploaded = await uploadVehiclePhoto(input)
-    return await generatePreview({ previewId: uploaded.id })
+    return createVisualizerPreview(input)
 }

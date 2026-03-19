@@ -126,6 +126,15 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
                                     {wrap.readiness.missingRequiredAssetRoles.join(', ')}
                                 </div>
                             ) : null}
+                            {wrap.readiness.issues.length > 0 ? (
+                                <div className="rounded-lg border border-neutral-800 bg-neutral-900/80 p-3 text-sm text-neutral-200">
+                                    <ul className="space-y-2">
+                                        {wrap.readiness.issues.map((issue) => (
+                                            <li key={issue.code}>{issue.message}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ) : null}
                         </CardContent>
                     </Card>
 
@@ -134,7 +143,7 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
                             <Link href="/scheduling">Book Installation</Link>
                         </Button>
                         <Button asChild variant="outline" size="lg">
-                            <Link href="/visualizer">Preview on Vehicle</Link>
+                            <Link href={`/visualizer?wrapId=${wrap.id}`}>Preview on Vehicle</Link>
                         </Button>
                     </div>
                 </div>

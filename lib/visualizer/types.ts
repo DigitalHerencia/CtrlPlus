@@ -11,6 +11,14 @@ export const PreviewStatus = {
 
 export type PreviewStatus = (typeof PreviewStatus)[keyof typeof PreviewStatus]
 
+export const VisualizerGenerationMode = {
+    HUGGING_FACE: 'huggingface',
+    DETERMINISTIC_FALLBACK: 'deterministic_fallback',
+} as const
+
+export type VisualizerGenerationMode =
+    (typeof VisualizerGenerationMode)[keyof typeof VisualizerGenerationMode]
+
 // ─── DTOs ─────────────────────────────────────────────────────────────────────
 
 /** Read model returned by visualizer fetchers. Never exposes raw Prisma model. */
@@ -21,6 +29,8 @@ export interface VisualizerPreviewDTO {
     processedImageUrl: string | null
     status: PreviewStatus
     cacheKey: string
+    sourceWrapImageId: string | null
+    sourceWrapImageVersion: number | null
     expiresAt: Date
     createdAt: Date
     updatedAt: Date
@@ -36,6 +46,8 @@ export const visualizerPreviewDTOFields = {
     processedImageUrl: true,
     status: true,
     cacheKey: true,
+    sourceWrapImageId: true,
+    sourceWrapImageVersion: true,
     expiresAt: true,
     createdAt: true,
     updatedAt: true,
@@ -43,15 +55,21 @@ export const visualizerPreviewDTOFields = {
 
 // ─── Zod Schemas ──────────────────────────────────────────────────────────────
 
-export const uploadPhotoSchema = z.object({
+export const createVisualizerPreviewSchema = z.object({
     wrapId: z.string().min(1, 'Wrap ID is required'),
-    customerPhotoUrl: z.string().min(1, 'Photo URL is required'),
+    file: z.instanceof(File),
 })
 
-export type UploadPhotoInput = z.infer<typeof uploadPhotoSchema>
+export type CreateVisualizerPreviewInput = z.infer<typeof createVisualizerPreviewSchema>
 
-export const generatePreviewSchema = z.object({
+export const regenerateVisualizerPreviewSchema = z.object({
     previewId: z.string().min(1, 'Preview ID is required'),
 })
 
-export type GeneratePreviewInput = z.infer<typeof generatePreviewSchema>
+export type RegenerateVisualizerPreviewInput = z.infer<typeof regenerateVisualizerPreviewSchema>
+
+export const uploadPhotoSchema = createVisualizerPreviewSchema
+export type UploadPhotoInput = CreateVisualizerPreviewInput
+
+export const generatePreviewSchema = regenerateVisualizerPreviewSchema
+export type GeneratePreviewInput = RegenerateVisualizerPreviewInput

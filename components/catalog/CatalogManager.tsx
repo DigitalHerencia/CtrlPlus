@@ -21,6 +21,7 @@ import {
     reorderWrapImages,
     updateWrapImageMetadata,
 } from '@/lib/catalog/actions/manage-wrap-images'
+import { publishWrap, unpublishWrap } from '@/lib/catalog/actions/publish-wrap'
 import { updateWrap } from '@/lib/catalog/actions/update-wrap'
 import { formatPrice } from '@/lib/catalog/formatters'
 import { type CatalogManagerItemDTO, type WrapCategoryDTO, type WrapImageKind } from '@/lib/catalog/types'
@@ -71,6 +72,7 @@ export function CatalogManager({ wraps, categories }: CatalogManagerProps) {
     const visibleWrapCount = wraps.filter((wrap) => !wrap.isHidden).length
     const publishReadyCount = wraps.filter((wrap) => wrap.readiness.canPublish).length
     const totalAssetCount = wraps.reduce((total, wrap) => total + wrap.imageCount, 0)
+    const selectedReadinessIssues = selectedWrap?.readiness.issues ?? []
 
     function runMutation(successMessage: string, action: () => Promise<void>) {
         setError(null)
@@ -98,6 +100,8 @@ export function CatalogManager({ wraps, categories }: CatalogManagerProps) {
                 description: String(formData.get('description') ?? '') || undefined,
                 price: parsePriceInput(String(formData.get('price') ?? '0')),
                 installationMinutes: formData.get('installationMinutes') ? Number(formData.get('installationMinutes')) : undefined,
+                aiPromptTemplate: String(formData.get('aiPromptTemplate') ?? '') || undefined,
+                aiNegativePrompt: String(formData.get('aiNegativePrompt') ?? '') || undefined,
             })
             event.currentTarget.reset()
         })
@@ -113,6 +117,8 @@ export function CatalogManager({ wraps, categories }: CatalogManagerProps) {
                 description: String(formData.get('description') ?? '') || undefined,
                 price: parsePriceInput(String(formData.get('price') ?? '0')),
                 installationMinutes: formData.get('installationMinutes') ? Number(formData.get('installationMinutes')) : undefined,
+                aiPromptTemplate: String(formData.get('aiPromptTemplate') ?? '') || undefined,
+                aiNegativePrompt: String(formData.get('aiNegativePrompt') ?? '') || undefined,
             })
         })
     }
@@ -121,7 +127,12 @@ export function CatalogManager({ wraps, categories }: CatalogManagerProps) {
         if (!selectedWrap) return
         const nextHiddenState = !selectedWrap.isHidden
         runMutation(nextHiddenState ? 'Wrap hidden from the customer catalog.' : 'Wrap published to the catalog.', async () => {
-            await updateWrap(selectedWrap.id, { isHidden: nextHiddenState })
+            if (nextHiddenState) {
+                await unpublishWrap(selectedWrap.id)
+                return
+            }
+
+            await publishWrap(selectedWrap.id)
         })
     }
 
@@ -303,12 +314,29 @@ export function CatalogManager({ wraps, categories }: CatalogManagerProps) {
                                             <label className="space-y-2 text-sm text-neutral-300"><span className="block">Description</span><textarea name="description" rows={4} defaultValue={selectedWrap.description ?? ''} className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-3 text-sm text-neutral-100" /></label>
                                             <label className="space-y-2 text-sm text-neutral-300"><span className="block">Install minutes</span><input name="installationMinutes" type="number" min="1" step="1" defaultValue={selectedWrap.installationMinutes ?? ''} className="h-11 w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100" /></label>
                                         </div>
+                                        <div className="grid gap-4 md:grid-cols-2">
+                                            <label className="space-y-2 text-sm text-neutral-300"><span className="block">AI prompt template</span><textarea name="aiPromptTemplate" rows={4} defaultValue={selectedWrap.aiPromptTemplate ?? ''} className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-3 text-sm text-neutral-100" /></label>
+                                            <label className="space-y-2 text-sm text-neutral-300"><span className="block">AI negative prompt</span><textarea name="aiNegativePrompt" rows={4} defaultValue={selectedWrap.aiNegativePrompt ?? ''} className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-3 text-sm text-neutral-100" /></label>
+                                        </div>
                                         <div className="flex flex-wrap gap-3">
                                             <Button type="submit" disabled={isPending}>Save Metadata</Button>
                                             <Button type="button" variant="outline" disabled={isPending || (!selectedWrap.readiness.canPublish && selectedWrap.isHidden)} onClick={handleToggleVisibility}>{selectedWrap.isHidden ? 'Publish Wrap' : 'Hide Wrap'}</Button>
+                                            <Button type="button" variant="outline" asChild>
+                                                <a href={`/visualizer?wrapId=${selectedWrap.id}`}>Preview Test</a>
+                                            </Button>
                                             <Button type="button" variant="outline" disabled={isPending} onClick={handleDeleteSelectedWrap}>Delete Wrap</Button>
                                         </div>
                                         {selectedWrap.readiness.missingRequiredAssetRoles.length > 0 ? <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-100">Missing required roles: {selectedWrap.readiness.missingRequiredAssetRoles.join(', ')}</div> : null}
+                                        {selectedReadinessIssues.length > 0 ? (
+                                            <div className="rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm text-neutral-200">
+                                                <p className="mb-2 text-xs uppercase tracking-[0.2em] text-neutral-500">Readiness issues</p>
+                                                <ul className="space-y-2">
+                                                    {selectedReadinessIssues.map((issue) => (
+                                                        <li key={issue.code}>{issue.message}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        ) : null}
                                     </form>
                                 </CardContent>
                             </Card>

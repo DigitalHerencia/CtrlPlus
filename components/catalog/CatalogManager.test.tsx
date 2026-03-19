@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
     refresh: vi.fn(),
     createWrap: vi.fn(),
     updateWrap: vi.fn(),
+    publishWrap: vi.fn(),
+    unpublishWrap: vi.fn(),
     deleteWrap: vi.fn(),
     createWrapCategory: vi.fn(),
     deleteWrapCategory: vi.fn(),
@@ -30,6 +32,11 @@ vi.mock('@/lib/catalog/actions/create-wrap', () => ({
 
 vi.mock('@/lib/catalog/actions/update-wrap', () => ({
     updateWrap: mocks.updateWrap,
+}))
+
+vi.mock('@/lib/catalog/actions/publish-wrap', () => ({
+    publishWrap: mocks.publishWrap,
+    unpublishWrap: mocks.unpublishWrap,
 }))
 
 vi.mock('@/lib/catalog/actions/delete-wrap', () => ({
@@ -59,6 +66,8 @@ const mockWraps: CatalogManagerItemDTO[] = [
         price: 325000,
         isHidden: true,
         installationMinutes: 480,
+        aiPromptTemplate: null,
+        aiNegativePrompt: null,
         images: [
             {
                 id: 'img1',
@@ -87,12 +96,38 @@ const mockWraps: CatalogManagerItemDTO[] = [
         },
         galleryImages: [],
         visualizerTextureImage: null,
+        visualizerMaskHintImage: null,
+        displayImages: [],
+        heroImage: {
+            id: 'img1',
+            url: 'https://example.com/hero.jpg',
+            kind: 'hero' as const,
+            isActive: true,
+            version: 1,
+            contentHash: 'hash-1',
+            displayOrder: 0,
+            thumbnailUrl: 'https://example.com/thumb.jpg',
+            cardUrl: 'https://example.com/card.jpg',
+            detailUrl: 'https://example.com/detail.jpg',
+        },
         readiness: {
             canPublish: false,
+            isVisualizerReady: false,
             missingRequiredAssetRoles: ['visualizer_texture' as const],
             requiredAssetRoles: ['hero', 'visualizer_texture'],
             activeAssetKinds: ['hero'],
             hasDisplayAsset: true,
+            activeHeroCount: 1,
+            activeGalleryCount: 0,
+            activeVisualizerTextureCount: 0,
+            activeVisualizerMaskHintCount: 0,
+            issues: [
+                {
+                    code: 'missing_visualizer_texture',
+                    message: 'Add an active visualizer texture before publish.',
+                    blocking: true,
+                },
+            ],
         },
         imageCount: 1,
         activeImageCount: 1,
@@ -143,7 +178,10 @@ describe('CatalogManager', () => {
                         readiness: {
                             ...mockWraps[0].readiness,
                             canPublish: true,
+                            isVisualizerReady: true,
                             missingRequiredAssetRoles: [],
+                            activeVisualizerTextureCount: 1,
+                            issues: [],
                         },
                     },
                 ]}
@@ -153,8 +191,6 @@ describe('CatalogManager', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Publish Wrap' }))
 
-        await waitFor(() =>
-            expect(mocks.updateWrap).toHaveBeenCalledWith('wrap1', { isHidden: false })
-        )
+        await waitFor(() => expect(mocks.publishWrap).toHaveBeenCalledWith('wrap1'))
     })
 })

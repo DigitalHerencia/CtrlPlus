@@ -51,6 +51,11 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma
 /lib/generated/prisma
-.codex/runtime/
-.codex/logs/
+
+# agent
+/.codex/arch/*
+/.codex/examples/*
+/.codex/prompts/*
+/.codex/issues/*

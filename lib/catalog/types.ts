@@ -64,10 +64,27 @@ export interface WrapCategoryDTO {
 
 export interface CatalogAssetReadinessDTO {
     canPublish: boolean
+    isVisualizerReady: boolean
     missingRequiredAssetRoles: PublishRequiredWrapImageKind[]
     requiredAssetRoles: PublishRequiredWrapImageKind[]
     activeAssetKinds: WrapImageKind[]
     hasDisplayAsset: boolean
+    activeHeroCount: number
+    activeGalleryCount: number
+    activeVisualizerTextureCount: number
+    activeVisualizerMaskHintCount: number
+    issues: Array<{
+        code:
+            | 'missing_name'
+            | 'invalid_price'
+            | 'missing_display_asset'
+            | 'missing_hero'
+            | 'missing_visualizer_texture'
+            | 'multiple_active_hero'
+            | 'multiple_active_visualizer_texture'
+        message: string
+        blocking: boolean
+    }>
 }
 
 export interface WrapDTO {
@@ -77,13 +94,15 @@ export interface WrapDTO {
     price: number
     isHidden: boolean
     installationMinutes: number | null
+    aiPromptTemplate: string | null
+    aiNegativePrompt: string | null
     images: WrapImageDTO[]
     categories: WrapCategoryDTO[]
     createdAt: Date
     updatedAt: Date
 }
 
-export interface CatalogBrowseCardDTO {
+export interface WrapCatalogCardDTO {
     id: string
     name: string
     description: string | null
@@ -91,21 +110,44 @@ export interface CatalogBrowseCardDTO {
     isHidden: boolean
     installationMinutes: number | null
     categories: WrapCategoryDTO[]
+    heroImage: CatalogAssetImageDTO | null
     displayImage: CatalogAssetImageDTO | null
+    previewHref: string
     readiness: CatalogAssetReadinessDTO
 }
 
-export interface CatalogDetailDTO extends WrapDTO {
+export interface WrapDetailViewDTO extends WrapDTO {
+    heroImage: CatalogAssetImageDTO | null
     displayImage: CatalogAssetImageDTO | null
+    displayImages: CatalogAssetImageDTO[]
     galleryImages: CatalogAssetImageDTO[]
     visualizerTextureImage: CatalogAssetImageDTO | null
+    visualizerMaskHintImage: CatalogAssetImageDTO | null
     readiness: CatalogAssetReadinessDTO
 }
 
-export interface CatalogManagerItemDTO extends CatalogDetailDTO {
+export interface WrapManagerRowDTO extends WrapDetailViewDTO {
     imageCount: number
     activeImageCount: number
 }
+
+export interface VisualizerWrapSelectionDTO {
+    id: string
+    name: string
+    description: string | null
+    price: number
+    installationMinutes: number | null
+    categories: WrapCategoryDTO[]
+    heroImage: CatalogAssetImageDTO | null
+    visualizerTextureImage: CatalogAssetImageDTO
+    aiPromptTemplate: string | null
+    aiNegativePrompt: string | null
+    readiness: CatalogAssetReadinessDTO
+}
+
+export type CatalogBrowseCardDTO = WrapCatalogCardDTO
+export type CatalogDetailDTO = WrapDetailViewDTO
+export type CatalogManagerItemDTO = WrapManagerRowDTO
 
 export interface WrapListDTO {
     wraps: WrapDTO[]
@@ -116,7 +158,7 @@ export interface WrapListDTO {
 }
 
 export interface CatalogBrowseResultDTO {
-    wraps: CatalogBrowseCardDTO[]
+    wraps: WrapCatalogCardDTO[]
     total: number
     page: number
     pageSize: number
@@ -124,7 +166,7 @@ export interface CatalogBrowseResultDTO {
 }
 
 export interface CatalogManagerResultDTO {
-    wraps: CatalogManagerItemDTO[]
+    wraps: WrapManagerRowDTO[]
     total: number
     page: number
     pageSize: number
@@ -138,6 +180,8 @@ export const wrapDTOFields = {
     price: true,
     isHidden: true,
     installationMinutes: true,
+    aiPromptTemplate: true,
+    aiNegativePrompt: true,
     createdAt: true,
     updatedAt: true,
     images: {
@@ -182,6 +226,8 @@ export const createWrapSchema = z.object({
         .int()
         .positive('Installation minutes must be a positive integer')
         .optional(),
+    aiPromptTemplate: z.string().max(2_000).optional(),
+    aiNegativePrompt: z.string().max(1_000).optional(),
 })
 
 export type CreateWrapInput = z.infer<typeof createWrapSchema>

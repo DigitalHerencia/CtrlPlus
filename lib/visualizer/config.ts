@@ -19,11 +19,13 @@ function extractHostFromUrl(url: string | undefined): string | null {
 
 export const visualizerConfig = {
     maxUploadSizeBytes: Number(process.env.VISUALIZER_MAX_UPLOAD_SIZE_BYTES ?? 10 * 1024 * 1024),
-    supportedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
+    supportedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'],
     previewTtlMs: 24 * 60 * 60 * 1000,
     maskModel: process.env.HUGGINGFACE_VISUALIZER_MODEL ?? 'keras/segformer_b1_cityscapes_1024',
     huggingFaceModelRevision: process.env.HUGGINGFACE_VISUALIZER_REVISION ?? 'main',
     huggingFaceProvider: process.env.HUGGINGFACE_VISUALIZER_PROVIDER ?? 'self-hosted',
+    previewModel: process.env.HUGGINGFACE_VISUALIZER_PREVIEW_MODEL ?? '',
+    previewProvider: process.env.HUGGINGFACE_VISUALIZER_PREVIEW_PROVIDER ?? 'hf-inference',
     huggingFaceApiBase:
         process.env.HUGGINGFACE_INFERENCE_API_BASE ?? 'https://api-inference.huggingface.co/models',
     huggingFaceToken: process.env.HUGGINGFACE_API_TOKEN,

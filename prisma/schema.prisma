@@ -170,6 +170,8 @@ model Wrap {
   description         String?
   price               Int // in cents
   installationMinutes Int?
+  aiPromptTemplate    String?
+  aiNegativePrompt    String?
   isHidden            Boolean   @default(false)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt

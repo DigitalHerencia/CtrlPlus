@@ -1,149 +1,103 @@
 'use client'
 
+import { useState, useTransition } from 'react'
+
 import { Button } from '@/components/ui/button'
-import { FieldGroup } from '@/components/ui/field'
-import { cn } from '@/lib/utils'
+import { createVisualizerPreview } from '@/lib/visualizer/actions/create-visualizer-preview'
 import type { VisualizerPreviewDTO } from '@/lib/visualizer/types'
-import { ImageIcon, LoaderCircle, X } from 'lucide-react'
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
+import { cn } from '@/lib/utils'
+import { Loader2, UploadCloud } from 'lucide-react'
 
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024
-
-const uploadPhotoFormSchema = z.object({
-    file: z
-        .instanceof(File, { message: 'Select an image to continue.' })
-        .refine((file) => file.type.startsWith('image/'), 'Please select an image file.')
-        .refine((file) => file.size <= MAX_UPLOAD_BYTES, 'Image must be smaller than 10 MB.'),
-})
-
-type UploadFormValues = {
-    file: File | null
-}
-
-type UploadFormProps = {
+interface UploadFormProps {
     wrapId: string
     onPreviewReady: (preview: VisualizerPreviewDTO) => void
     onUploadingChange?: (isUploading: boolean) => void
+    onError?: (message: string | null) => void
     className?: string
 }
 
-function readFileAsDataUrl(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => {
-            const result = reader.result
-            if (typeof result === 'string') {
-                resolve(result)
-            } else {
-                reject(new Error('Failed to read file as data URL'))
-            }
+export function UploadForm({
+    wrapId,
+    onPreviewReady,
+    onUploadingChange,
+    onError,
+    className,
+}: UploadFormProps) {
+    const [isPending, startTransition] = useTransition()
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
+    const [selectedFileName, setSelectedFileName] = useState<string>('')
+
+    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault()
+
+        if (!selectedFile) {
+            onError?.('Select an image to continue.')
+            return
         }
-        reader.onerror = () => reject(new Error(reader.error?.toString() || 'FileReader error'))
-        reader.readAsDataURL(file)
-    })
-}
 
-export function UploadForm(props: UploadFormProps) {
-    const { onPreviewReady, onUploadingChange, className } = props
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-    const [uploadState, setUploadState] = useState<'idle' | 'progress' | 'success' | 'failure'>(
-        'idle'
-    )
-    const [errorMsg, setErrorMsg] = useState<string | null>(null)
-    const form = useForm<UploadFormValues>({
-        mode: 'onBlur',
-        defaultValues: { file: null },
-        resolver: (values) => {
-            const result = uploadPhotoFormSchema.safeParse(values)
-            return {
-                values: result.success ? values : {},
-                errors: result.success ? {} : result.error.format(),
-            }
-        },
-    })
+        onError?.(null)
+        onUploadingChange?.(true)
 
-    function getErrorMessage(error: unknown): string {
-        if (error instanceof Error) return error.message
-        return typeof error === 'string' ? error : 'Unknown error'
+        startTransition(() => {
+            void createVisualizerPreview({
+                wrapId,
+                file: selectedFile,
+            })
+                .then((preview) => {
+                    onPreviewReady(preview)
+                })
+                .catch((error) => {
+                    onError?.(
+                        error instanceof Error ? error.message : 'Preview generation failed.'
+                    )
+                })
+                .finally(() => {
+                    onUploadingChange?.(false)
+                })
+        })
     }
 
-    const handleSubmit = form.handleSubmit(async (values) => {
-        setUploadState('progress')
-        setErrorMsg(null)
-        onUploadingChange?.(true)
-        try {
-            // Simulate upload logic
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-            // Example: read file as data URL
-            if (values.file) {
-                const url = await readFileAsDataUrl(values.file)
-                setPreviewUrl(url)
-                setUploadState('success')
-                // Simulate preview DTO with required fields
-                onPreviewReady({
-                    id: 'mock-id',
-                    wrapId: 'mock-wrap-id',
-                    customerPhotoUrl: url,
-                    processedImageUrl: url,
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                    status: 'complete',
-                    cacheKey: 'mock-cache-key',
-                    expiresAt: new Date(),
-                })
-            } else {
-                throw new Error('No file selected')
-            }
-        } catch (error) {
-            setUploadState('failure')
-            setErrorMsg(getErrorMessage(error))
-        } finally {
-            onUploadingChange?.(false)
-        }
-    })
-
     return (
-        <form onSubmit={handleSubmit} noValidate className={cn('space-y-6', className)}>
-            {/* Explicit states */}
-            {uploadState === 'idle' && (
-                <p className="text-sm text-neutral-400">Select an image to upload.</p>
-            )}
-            {uploadState === 'progress' && (
-                <div className="flex items-center gap-2 text-blue-600">
-                    <LoaderCircle className="h-5 w-5 animate-spin" />
-                    <span>Uploading and validating…</span>
-                </div>
-            )}
-            {uploadState === 'failure' && (
-                <div className="flex flex-col gap-2 text-red-600">
-                    <X className="h-5 w-5" />
-                    <span>{errorMsg ?? 'Upload failed. Please try again.'}</span>
-                    <Button type="button" variant="outline" onClick={() => setUploadState('idle')}>
-                        Retry
-                    </Button>
-                </div>
-            )}
-            {uploadState === 'success' && previewUrl && (
-                <div className="flex flex-col gap-2 text-green-600">
-                    <ImageIcon className="h-5 w-5" />
-                    <span>Upload successful!</span>
-                </div>
-            )}
-            {/* ...existing form fields... */}
-            <FieldGroup className="gap-5 border border-neutral-800 bg-neutral-950/80 p-6 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.9)] sm:p-8">
-                <div className="space-y-2">
-                    <h2 className="text-2xl font-semibold tracking-tight text-neutral-50">
-                        Upload your vehicle photo
-                    </h2>
+        <form onSubmit={handleSubmit} className={cn('space-y-4', className)}>
+            <div className="space-y-3 rounded-xl border border-neutral-800 bg-neutral-950/90 p-5">
+                <div className="space-y-1">
+                    <h2 className="text-xl font-semibold text-neutral-50">Upload Your Vehicle</h2>
                     <p className="text-sm text-neutral-400">
-                        Choose a clear side profile so the preview generator can place the wrap
-                        accurately.
+                        Use a clean side profile. JPEG, PNG, WebP, or HEIC up to 10MB.
                     </p>
                 </div>
-                {/* TODO: Add Field, Controller, Button for file input and submit */}
-            </FieldGroup>
+                <label className="flex min-h-56 cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border border-dashed border-neutral-700 bg-neutral-900/80 px-6 py-8 text-center transition hover:border-blue-500/60 hover:bg-neutral-900">
+                    <UploadCloud className="h-12 w-12 text-neutral-500" />
+                    <div className="space-y-1">
+                        <p className="text-base font-medium text-neutral-100">
+                            Drag and drop or click to choose a vehicle image
+                        </p>
+                        <p className="text-sm text-neutral-500">
+                            {selectedFileName || 'No file selected yet'}
+                        </p>
+                    </div>
+                    <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                        className="hidden"
+                        onChange={(event) => {
+                            const file = event.target.files?.[0] ?? null
+                            setSelectedFile(file)
+                            setSelectedFileName(file?.name ?? '')
+                        }}
+                    />
+                </label>
+                <Button type="submit" className="w-full" disabled={isPending || !selectedFile}>
+                    {isPending ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Generating Preview
+                        </>
+                    ) : (
+                        'Generate Preview'
+                    )}
+                </Button>
+            </div>
         </form>
     )
 }

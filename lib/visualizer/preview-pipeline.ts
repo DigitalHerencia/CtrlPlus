@@ -1,56 +1,38 @@
-import { prisma } from '@/lib/prisma'
+import crypto from 'crypto'
+import { readFile } from 'fs/promises'
+import path from 'path'
+
+import sharp from 'sharp'
+
 import { compositeVehicleWrap } from '@/lib/visualizer/compositor'
 import { isAllowedRemotePhotoHost, visualizerConfig } from '@/lib/visualizer/config'
 import { createVehicleMask, fallbackCenterMask } from '@/lib/visualizer/huggingface'
 import { storePreviewImage } from '@/lib/visualizer/storage'
-import { readFile } from 'fs/promises'
-import path from 'path'
-import sharp from 'sharp'
 
-const TEXTURE_LIBRARY = [
-    'carbon-stripe',
-    'neon-grid',
-    'sunset-wave',
-    'matte-diagonal',
-    'hex-tech',
-    'speed-lines',
-] as const
+const MIN_DIMENSION = 512
+const MAX_DIMENSION = 4096
+const NORMALIZED_MAX_DIMENSION = 2048
 
-type TextureId = (typeof TEXTURE_LIBRARY)[number]
-
-function textureFromWrapId(wrapId: string): TextureId {
-    let hash = 0
-    for (let i = 0; i < wrapId.length; i += 1) hash = (hash * 31 + wrapId.charCodeAt(i)) >>> 0
-    return TEXTURE_LIBRARY[hash % TEXTURE_LIBRARY.length]
+export interface NormalizedVehicleUpload {
+    buffer: Buffer
+    contentType: 'image/png'
+    width: number
+    height: number
+    hash: string
 }
 
-function textureSvg(textureId: TextureId, width: number, height: number): string {
-    switch (textureId) {
-        case 'carbon-stripe':
-            return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="transparent"/><pattern id="p" width="48" height="48" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><rect width="48" height="8" fill="rgba(20,20,20,0.35)"/></pattern><rect width="100%" height="100%" fill="url(#p)"/></svg>`
-        case 'neon-grid':
-            return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="transparent"/><pattern id="p" width="96" height="96" patternUnits="userSpaceOnUse"><path d="M0 0H96 M0 0V96" stroke="rgba(0,180,255,0.35)" stroke-width="4"/></pattern><rect width="100%" height="100%" fill="url(#p)"/></svg>`
-        case 'sunset-wave':
-            return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="transparent"/><g stroke="rgba(255,120,30,0.34)" stroke-width="12" fill="none">${Array.from({ length: 7 }, (_, i) => `<path d="M0 ${80 + i * 140} C ${width * 0.2} ${20 + i * 140}, ${width * 0.45} ${180 + i * 140}, ${width * 0.7} ${80 + i * 140} S ${width * 0.95} -20, ${width} ${80 + i * 140}"/>`).join('')}</g></svg>`
-        case 'matte-diagonal':
-            return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="transparent"/><pattern id="p" width="72" height="72" patternUnits="userSpaceOnUse" patternTransform="rotate(-30)"><rect width="72" height="12" fill="rgba(255,255,255,0.22)"/></pattern><rect width="100%" height="100%" fill="url(#p)"/></svg>`
-        case 'hex-tech':
-            return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="transparent"/><pattern id="p" width="78" height="68" patternUnits="userSpaceOnUse"><polygon points="39,2 74,20 74,48 39,66 4,48 4,20" fill="none" stroke="rgba(130,90,255,0.28)" stroke-width="3"/></pattern><rect width="100%" height="100%" fill="url(#p)"/></svg>`
-        case 'speed-lines':
-            return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="transparent"/><g stroke="rgba(255,255,255,0.25)" stroke-width="10">${Array.from({ length: Math.ceil(height / 64) + 2 }, (_, i) => `<line x1="0" y1="${i * 64}" x2="${width}" y2="${i * 64 - 180}"/>`).join('')}</g></svg>`
-    }
-}
-
-async function generateTexture(wrapId: string, width: number, height: number): Promise<Buffer> {
-    const textureId = textureFromWrapId(wrapId)
-    return sharp(Buffer.from(textureSvg(textureId, width, height)))
-        .png()
-        .toBuffer()
+export interface WrapPromptInput {
+    name: string
+    description: string | null
+    aiPromptTemplate: string | null
+    aiNegativePrompt: string | null
 }
 
 function parseDataUrl(customerPhotoUrl: string): { buffer: Buffer; contentType: string } {
-    const match = customerPhotoUrl.match(/^data:(image\/\[a-zA-Z0-9.+-]+);base64,(.+)$/)
-    if (!match) throw new Error('Invalid data URL')
+    const match = customerPhotoUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/)
+    if (!match) {
+        throw new Error('Invalid data URL')
+    }
 
     const contentType = match[1].toLowerCase()
     if (!visualizerConfig.supportedMimeTypes.includes(contentType)) {
@@ -80,7 +62,9 @@ async function readRemoteImage(url: URL): Promise<{ buffer: Buffer; contentType:
     assertApprovedRemoteHost(url)
 
     const response = await fetch(url.toString())
-    if (!response.ok) throw new Error('Unable to fetch image')
+    if (!response.ok) {
+        throw new Error('Unable to fetch image')
+    }
 
     const contentType = response.headers.get('content-type')?.split(';')[0].toLowerCase() ?? ''
     if (!visualizerConfig.supportedMimeTypes.includes(contentType)) {
@@ -97,9 +81,7 @@ async function readRemoteImage(url: URL): Promise<{ buffer: Buffer; contentType:
     return { buffer, contentType }
 }
 
-async function readLocalWrapImage(
-    urlPath: string
-): Promise<{ buffer: Buffer; contentType: string }> {
+async function readLocalWrapImage(urlPath: string): Promise<{ buffer: Buffer; contentType: string }> {
     if (!urlPath.startsWith('/uploads/wraps/')) {
         throw new Error('Unsupported local texture path')
     }
@@ -120,15 +102,11 @@ async function readLocalWrapImage(
                 ? 'image/webp'
                 : ''
 
-    if (!visualizerConfig.supportedMimeTypes.includes(contentType)) {
+    if (!contentType || !visualizerConfig.supportedMimeTypes.includes(contentType)) {
         throw new Error('Unsupported image type')
     }
 
     const buffer = await readFile(absolute)
-    if (buffer.length > visualizerConfig.maxUploadSizeBytes) {
-        throw new Error('Uploaded image exceeds max size')
-    }
-
     return { buffer, contentType }
 }
 
@@ -149,135 +127,190 @@ export async function readPhotoBuffer(
     return readRemoteImage(parsed)
 }
 
-type TextureCandidate = {
-    id: string
-    url: string
-    kind: string
-    isActive: boolean
-    displayOrder: number
-}
-
-function texturePriority(image: TextureCandidate): number {
-    if (image.kind === 'visualizer_texture' && image.isActive) return 0
-    if (image.kind === 'visualizer_texture') return 1
-    if (image.kind === 'hero' && image.isActive) return 2
-    if (image.kind === 'hero') return 3
-    if (image.kind === 'gallery' && image.isActive) return 4
-    return 5
-}
-
-async function resolveCatalogTextureUrl(
-    wrapId: string,
-    sourceWrapImageId?: string
-): Promise<string | null> {
-    if (sourceWrapImageId) {
-        const sourceImage = await prisma.wrapImage.findFirst({
-            where: {
-                id: sourceWrapImageId,
-                wrapId,
-                deletedAt: null,
-            },
-            select: { url: true },
-        })
-
-        if (sourceImage) {
-            return sourceImage.url
-        }
+export async function readImageBufferFromUrl(url: string): Promise<Buffer> {
+    if (url.startsWith('data:')) {
+        return parseDataUrl(url).buffer
     }
 
-    const wrapImages = await prisma.wrapImage.findMany({
-        where: {
-            wrapId,
-            deletedAt: null,
-        },
-        select: {
-            id: true,
-            url: true,
-            kind: true,
-            isActive: true,
-            displayOrder: true,
-        },
-        orderBy: {
-            displayOrder: 'asc',
+    if (url.startsWith('/')) {
+        return readLocalWrapImage(url).then((result) => result.buffer)
+    }
+
+    return readRemoteImage(new URL(url)).then((result) => result.buffer)
+}
+
+export async function normalizeVehicleUpload(file: File): Promise<NormalizedVehicleUpload> {
+    const mimeType = file.type.toLowerCase()
+    if (!visualizerConfig.supportedMimeTypes.includes(mimeType)) {
+        throw new Error('Unsupported image type')
+    }
+
+    if (file.size > visualizerConfig.maxUploadSizeBytes) {
+        throw new Error('Uploaded image exceeds max size')
+    }
+
+    const inputBuffer = Buffer.from(await file.arrayBuffer())
+    const normalizedBuffer = await sharp(inputBuffer)
+        .rotate()
+        .resize(NORMALIZED_MAX_DIMENSION, NORMALIZED_MAX_DIMENSION, {
+            fit: 'inside',
+            withoutEnlargement: true,
+        })
+        .png()
+        .toBuffer()
+
+    const metadata = await sharp(normalizedBuffer).metadata()
+    if (!metadata.width || !metadata.height) {
+        throw new Error('Invalid photo dimensions')
+    }
+
+    if (metadata.width < MIN_DIMENSION || metadata.height < MIN_DIMENSION) {
+        throw new Error('Image too small (min 512x512)')
+    }
+
+    if (metadata.width > MAX_DIMENSION || metadata.height > MAX_DIMENSION) {
+        throw new Error('Image too large (max 4096x4096)')
+    }
+
+    return {
+        buffer: normalizedBuffer,
+        contentType: 'image/png',
+        width: metadata.width,
+        height: metadata.height,
+        hash: crypto.createHash('sha256').update(normalizedBuffer).digest('hex'),
+    }
+}
+
+function applyWrapPromptTemplate(template: string, input: WrapPromptInput): string {
+    return template
+        .replaceAll('{{wrap_name}}', input.name)
+        .replaceAll('{{wrap_description}}', input.description ?? '')
+}
+
+export function buildWrapPreviewPrompt(input: WrapPromptInput): {
+    prompt: string
+    negativePrompt: string
+    promptVersion: string
+} {
+    const prompt = input.aiPromptTemplate?.trim()
+        ? applyWrapPromptTemplate(input.aiPromptTemplate, input)
+        : [
+              `Apply the wrap design "${input.name}" to the supplied vehicle image.`,
+              'Keep the vehicle body shape, wheel position, reflections, windows, background, and camera angle unchanged.',
+              'Use the provided wrap texture as the exterior material reference.',
+              input.description ? `Design notes: ${input.description}` : null,
+              'Produce a professional, realistic commercial vehicle wrap preview.',
+          ]
+              .filter(Boolean)
+              .join(' ')
+
+    const negativePrompt =
+        input.aiNegativePrompt?.trim() ??
+        'Do not change the vehicle model, body panels, mirrors, wheels, windows, lighting, or environment. Avoid distortions, extra vehicles, warped logos, unreadable text, and surreal edits.'
+
+    const promptVersion = crypto
+        .createHash('sha256')
+        .update(`${prompt}\n---\n${negativePrompt}`)
+        .digest('hex')
+
+    return {
+        prompt,
+        negativePrompt,
+        promptVersion,
+    }
+}
+
+export async function buildPreviewConditioningBoard(params: {
+    vehicleBuffer: Buffer
+    textureBuffer: Buffer
+    wrapName: string
+    wrapDescription: string | null
+}): Promise<Buffer> {
+    const canvasWidth = 1536
+    const canvasHeight = 1024
+    const photoWidth = 1040
+    const swatchWidth = 400
+    const gutter = 48
+    const rightPanelX = photoWidth + gutter
+
+    const vehicleImage = await sharp(params.vehicleBuffer)
+        .resize(photoWidth, canvasHeight - 96, { fit: 'contain', background: '#09090b' })
+        .png()
+        .toBuffer()
+
+    const textureTile = await sharp(params.textureBuffer)
+        .resize(swatchWidth, swatchWidth, { fit: 'cover' })
+        .png()
+        .toBuffer()
+
+    const copySvg = Buffer.from(`
+        <svg width="${canvasWidth}" height="${canvasHeight}" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100%" height="100%" fill="#09090b"/>
+          <text x="${rightPanelX}" y="110" fill="#f5f5f5" font-size="56" font-family="Arial, sans-serif" font-weight="700">
+            ${params.wrapName.replaceAll('&', '&amp;')}
+          </text>
+          <text x="${rightPanelX}" y="164" fill="#a3a3a3" font-size="24" font-family="Arial, sans-serif">
+            Wrap texture reference
+          </text>
+          <text x="${rightPanelX}" y="654" fill="#a3a3a3" font-size="26" font-family="Arial, sans-serif">
+            ${(
+                params.wrapDescription ??
+                'Apply this wrap while preserving the original vehicle and background.'
+            )
+                .slice(0, 160)
+                .replaceAll('&', '&amp;')}
+          </text>
+        </svg>
+    `)
+
+    return sharp({
+        create: {
+            width: canvasWidth,
+            height: canvasHeight,
+            channels: 4,
+            background: '#09090b',
         },
     })
-
-    if (wrapImages.length === 0) {
-        return null
-    }
-
-    const selected = [...wrapImages].sort((left, right) => {
-        const priorityDelta = texturePriority(left) - texturePriority(right)
-        if (priorityDelta !== 0) {
-            return priorityDelta
-        }
-        return left.displayOrder - right.displayOrder
-    })[0]
-
-    return selected?.url ?? null
+        .composite([
+            { input: copySvg },
+            { input: vehicleImage, left: 24, top: 48 },
+            { input: textureTile, left: rightPanelX, top: 220 },
+        ])
+        .png()
+        .toBuffer()
 }
 
-async function readCatalogTextureBuffer(
-    wrapId: string,
-    sourceWrapImageId?: string
-): Promise<Buffer | null> {
-    const textureUrl = await resolveCatalogTextureUrl(wrapId, sourceWrapImageId)
-    if (!textureUrl) {
-        return null
-    }
-
-    if (textureUrl.startsWith('data:')) {
-        return parseDataUrl(textureUrl).buffer
-    }
-
-    if (textureUrl.startsWith('/')) {
-        return readLocalWrapImage(textureUrl).then((result) => result.buffer)
-    }
-
-    const parsedUrl = new URL(textureUrl)
-    return readRemoteImage(parsedUrl).then((result) => result.buffer)
-}
-
-export async function generateCompositePreview(params: {
-    wrapId: string
+export async function generateDeterministicCompositePreview(params: {
     previewId: string
-    customerPhotoUrl: string
-    sourceWrapImageId?: string | null
+    photoBuffer: Buffer
+    textureBuffer: Buffer
 }): Promise<string> {
-    const { buffer: photoBuffer } = await readPhotoBuffer(params.customerPhotoUrl)
-
     let maskBuffer: Buffer
     try {
-        maskBuffer = await createVehicleMask(photoBuffer)
+        maskBuffer = await createVehicleMask(params.photoBuffer)
     } catch {
-        maskBuffer = await fallbackCenterMask(photoBuffer)
+        maskBuffer = await fallbackCenterMask(params.photoBuffer)
     }
 
-    const metadata = await sharp(photoBuffer).metadata()
-    if (!metadata.width || !metadata.height) throw new Error('Invalid photo dimensions')
+    const metadata = await sharp(params.photoBuffer).metadata()
+    if (!metadata.width || !metadata.height) {
+        throw new Error('Invalid photo dimensions')
+    }
 
     const normalizedMask = await sharp(maskBuffer)
         .resize(metadata.width, metadata.height)
         .png()
         .toBuffer()
 
-    let textureBuffer: Buffer
-    try {
-        const catalogTexture = await readCatalogTextureBuffer(
-            params.wrapId,
-            params.sourceWrapImageId ?? undefined
-        )
-        textureBuffer = catalogTexture
-            ? await sharp(catalogTexture).resize(metadata.width, metadata.height).png().toBuffer()
-            : await generateTexture(params.wrapId, metadata.width, metadata.height)
-    } catch {
-        textureBuffer = await generateTexture(params.wrapId, metadata.width, metadata.height)
-    }
+    const normalizedTexture = await sharp(params.textureBuffer)
+        .resize(metadata.width, metadata.height)
+        .png()
+        .toBuffer()
 
     const composited = await compositeVehicleWrap({
-        photoBuffer,
+        photoBuffer: params.photoBuffer,
         maskBuffer: normalizedMask,
-        textureBuffer,
+        textureBuffer: normalizedTexture,
         opacity: visualizerConfig.overlayOpacity,
         blend: visualizerConfig.blendMode,
     })

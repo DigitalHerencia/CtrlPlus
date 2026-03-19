@@ -3,14 +3,8 @@
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/prisma'
 import { revalidateCatalogPaths } from '../revalidation'
-import {
-    PUBLISH_REQUIRED_WRAP_IMAGE_KINDS,
-    updateWrapSchema,
-    type UpdateWrapInput,
-    type WrapDTO,
-} from '../types'
+import { updateWrapSchema, type UpdateWrapInput, type WrapDTO } from '../types'
 import { getWrapById } from '../fetchers/get-wraps'
-import { assertWrapCanBePublished } from '../validators/publish-wrap'
 
 export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promise<WrapDTO> {
     const session = await requireOwnerOrPlatformAdmin()
@@ -29,26 +23,6 @@ export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promis
 
     if (!existing) {
         throw new Error('Forbidden: resource not found')
-    }
-
-    const isPublishing = existing.isHidden && parsed.isHidden === false
-
-    if (isPublishing) {
-        const publishAssets = await prisma.wrapImage.findMany({
-            where: {
-                wrapId,
-                deletedAt: null,
-                kind: {
-                    in: [...PUBLISH_REQUIRED_WRAP_IMAGE_KINDS],
-                },
-            },
-            select: {
-                kind: true,
-                isActive: true,
-            },
-        })
-
-        assertWrapCanBePublished(publishAssets)
     }
 
     const data = Object.fromEntries(

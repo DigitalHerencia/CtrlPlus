@@ -6,7 +6,10 @@ import { prisma } from '@/lib/prisma'
 import {
     getCatalogAssetReadiness,
     resolveCatalogGalleryImages,
+    resolveDisplayImages,
+    resolveHeroAsset,
     resolvePrimaryDisplayAsset,
+    resolveVisualizerMaskHintAsset,
     resolveVisualizerTextureAsset,
 } from '../assets'
 import {
@@ -18,6 +21,7 @@ import {
     type CatalogManagerItemDTO,
     type CatalogManagerResultDTO,
     type SearchWrapsInput,
+    type VisualizerWrapSelectionDTO,
     type WrapDTO,
     type WrapImageDTO,
     type WrapImageKind,
@@ -26,6 +30,7 @@ import {
 
 export interface WrapVisibilityScope {
     includeHidden?: boolean
+    requireVisualizerReady?: boolean
 }
 
 type WrapRecord = Prisma.WrapGetPayload<{
@@ -86,6 +91,8 @@ function toWrapDTO(prismaWrap: WrapRecord): WrapDTO {
         price: normalizePriceInCents(prismaWrap.price),
         isHidden: prismaWrap.isHidden,
         installationMinutes: prismaWrap.installationMinutes,
+        aiPromptTemplate: prismaWrap.aiPromptTemplate,
+        aiNegativePrompt: prismaWrap.aiNegativePrompt,
         images: prismaWrap.images.map(mapWrapImage),
         categories: prismaWrap.categoryMappings
             .map((mapping) => mapping.category)
@@ -96,7 +103,17 @@ function toWrapDTO(prismaWrap: WrapRecord): WrapDTO {
     }
 }
 
+function getWrapReadiness(wrap: WrapDTO) {
+    return getCatalogAssetReadiness({
+        name: wrap.name,
+        price: wrap.price,
+        images: wrap.images,
+    })
+}
+
 function toCatalogBrowseCard(wrap: WrapDTO): CatalogBrowseCardDTO {
+    const readiness = getWrapReadiness(wrap)
+    const heroImage = resolveHeroAsset(wrap.images)
     return {
         id: wrap.id,
         name: wrap.name,
@@ -105,18 +122,31 @@ function toCatalogBrowseCard(wrap: WrapDTO): CatalogBrowseCardDTO {
         isHidden: wrap.isHidden,
         installationMinutes: wrap.installationMinutes,
         categories: wrap.categories,
-        displayImage: resolvePrimaryDisplayAsset(wrap.images),
-        readiness: getCatalogAssetReadiness(wrap.images),
+        heroImage,
+        displayImage: heroImage,
+        previewHref: `/visualizer?wrapId=${wrap.id}`,
+        readiness,
     }
 }
 
 function toCatalogDetail(wrap: WrapDTO): CatalogDetailDTO {
+    const heroImage = resolveHeroAsset(wrap.images)
+    const displayImage = resolvePrimaryDisplayAsset(wrap.images)
+    const galleryImages = resolveCatalogGalleryImages(wrap.images)
+    const displayImages = resolveDisplayImages(wrap.images)
+    const visualizerTextureImage = resolveVisualizerTextureAsset(wrap.images)
+    const visualizerMaskHintImage = resolveVisualizerMaskHintAsset(wrap.images)
+    const readiness = getWrapReadiness(wrap)
+
     return {
         ...wrap,
-        displayImage: resolvePrimaryDisplayAsset(wrap.images),
-        galleryImages: resolveCatalogGalleryImages(wrap.images),
-        visualizerTextureImage: resolveVisualizerTextureAsset(wrap.images),
-        readiness: getCatalogAssetReadiness(wrap.images),
+        heroImage,
+        displayImage,
+        displayImages,
+        galleryImages,
+        visualizerTextureImage,
+        visualizerMaskHintImage,
+        readiness,
     }
 }
 
@@ -126,6 +156,28 @@ function toCatalogManagerItem(wrap: WrapDTO): CatalogManagerItemDTO {
         ...detail,
         imageCount: wrap.images.length,
         activeImageCount: wrap.images.filter((image) => image.isActive).length,
+    }
+}
+
+function toVisualizerWrapSelection(wrap: WrapDTO): VisualizerWrapSelectionDTO | null {
+    const detail = toCatalogDetail(wrap)
+
+    if (!detail.heroImage || !detail.visualizerTextureImage || !detail.readiness.isVisualizerReady) {
+        return null
+    }
+
+    return {
+        id: detail.id,
+        name: detail.name,
+        description: detail.description,
+        price: detail.price,
+        installationMinutes: detail.installationMinutes,
+        categories: detail.categories,
+        heroImage: detail.heroImage,
+        visualizerTextureImage: detail.visualizerTextureImage,
+        aiPromptTemplate: detail.aiPromptTemplate,
+        aiNegativePrompt: detail.aiNegativePrompt,
+        readiness: detail.readiness,
     }
 }
 
@@ -218,7 +270,16 @@ export async function getCatalogWrapById(
     scope: WrapVisibilityScope = {}
 ): Promise<CatalogDetailDTO | null> {
     const wrap = await getWrapById(wrapId, scope)
-    return wrap ? toCatalogDetail(wrap) : null
+    if (!wrap) {
+        return null
+    }
+
+    const detail = toCatalogDetail(wrap)
+    if (scope.requireVisualizerReady && !detail.readiness.isVisualizerReady) {
+        return null
+    }
+
+    return detail
 }
 
 export async function searchWraps(
@@ -235,6 +296,97 @@ export async function searchCatalogWraps(
     scope: WrapVisibilityScope = {}
 ): Promise<CatalogBrowseResultDTO> {
     const parsedFilters = searchWrapsSchema.parse(filters)
-    const { wraps, total } = await searchWrapRecords(parsedFilters, scope)
-    return toWrapListResult(wraps, total, parsedFilters, toCatalogBrowseCard)
+    const effectiveScope = { ...scope, requireVisualizerReady: scope.requireVisualizerReady ?? true }
+    const wraps = await getWraps({
+        includeHidden: effectiveScope.includeHidden,
+    })
+    const filteredCatalogWraps = wraps
+        .filter((wrap) => {
+            if (!effectiveScope.requireVisualizerReady) {
+                return true
+            }
+
+            return getWrapReadiness(wrap).isVisualizerReady
+        })
+        .filter((wrap) => {
+            if (parsedFilters.query) {
+                const query = parsedFilters.query.toLowerCase()
+                const haystacks = [
+                    wrap.name,
+                    wrap.description ?? '',
+                    ...wrap.categories.map((category) => category.name),
+                ]
+
+                if (!haystacks.some((value) => value.toLowerCase().includes(query))) {
+                    return false
+                }
+            }
+
+            if (parsedFilters.maxPrice !== undefined && wrap.price > parsedFilters.maxPrice) {
+                return false
+            }
+
+            if (
+                parsedFilters.categoryId &&
+                !wrap.categories.some((category) => category.id === parsedFilters.categoryId)
+            ) {
+                return false
+            }
+
+            return true
+        })
+
+    const sortedCatalogWraps = [...filteredCatalogWraps].sort((left, right) => {
+        const sortBy = parsedFilters.sortBy ?? 'createdAt'
+        const sortOrder = parsedFilters.sortOrder ?? 'desc'
+        const direction = sortOrder === 'asc' ? 1 : -1
+
+        if (sortBy === 'name') {
+            return left.name.localeCompare(right.name) * direction
+        }
+
+        if (sortBy === 'price') {
+            return (left.price - right.price) * direction
+        }
+
+        return (left.createdAt.getTime() - right.createdAt.getTime()) * direction
+    })
+
+    const total = sortedCatalogWraps.length
+    const pageSize = parsedFilters.pageSize ?? 20
+    const page = parsedFilters.page ?? 1
+    const pageWraps = sortedCatalogWraps.slice((page - 1) * pageSize, page * pageSize)
+
+    return {
+        wraps: pageWraps.map((wrap) => toCatalogBrowseCard(wrap)),
+        total,
+        page,
+        pageSize,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+    }
+}
+
+export async function listVisualizerSelectableWraps(
+    scope: WrapVisibilityScope = {}
+): Promise<VisualizerWrapSelectionDTO[]> {
+    const wraps = await getWraps({
+        includeHidden: scope.includeHidden,
+    })
+
+    return wraps
+        .map(toVisualizerWrapSelection)
+        .filter((wrap): wrap is VisualizerWrapSelectionDTO => wrap !== null)
+}
+
+export async function getVisualizerSelectableWrapById(
+    wrapId: string,
+    scope: WrapVisibilityScope = {}
+): Promise<VisualizerWrapSelectionDTO | null> {
+    const wrap = await getWrapById(wrapId, scope)
+
+    if (!wrap) {
+        return null
+    }
+
+    return toVisualizerWrapSelection(wrap)
 }

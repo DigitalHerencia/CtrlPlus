@@ -1,4 +1,5 @@
 import sharp from 'sharp'
+
 import { visualizerConfig } from '@/lib/visualizer/config'
 
 interface HfSegmentationResult {
@@ -63,12 +64,17 @@ export async function createVehicleMask(imageBuffer: Buffer): Promise<Buffer> {
                 )
                 .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0]
 
-            if (!candidate?.mask) throw new Error('No vehicle labels found in segmentation output')
+            if (!candidate?.mask) {
+                throw new Error('No vehicle labels found in segmentation output')
+            }
 
             return Buffer.from(candidate.mask, 'base64')
         } catch (error) {
             lastError = error instanceof Error ? error : new Error('Unknown HF inference error')
-            if (attempt === visualizerConfig.huggingFaceRetries) break
+            if (attempt === visualizerConfig.huggingFaceRetries) {
+                break
+            }
+
             await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)))
         }
     }
@@ -78,7 +84,9 @@ export async function createVehicleMask(imageBuffer: Buffer): Promise<Buffer> {
 
 export async function fallbackCenterMask(imageBuffer: Buffer): Promise<Buffer> {
     const metadata = await sharp(imageBuffer).metadata()
-    if (!metadata.width || !metadata.height) throw new Error('Invalid source image dimensions')
+    if (!metadata.width || !metadata.height) {
+        throw new Error('Invalid source image dimensions')
+    }
 
     const svgMask = `
     <svg width="${metadata.width}" height="${metadata.height}" xmlns="http://www.w3.org/2000/svg">
