@@ -44,9 +44,8 @@ class HuggingFaceWrapPreviewAdapter implements WrapPreviewGeneratorAdapter {
             : input.prompt
 
         const generationPromise = this.client.imageToImage({
-            provider: visualizerConfig.previewProvider,
             model: visualizerConfig.previewModel,
-            inputs: input.boardBuffer,
+            inputs: new Blob([new Uint8Array(input.boardBuffer)], { type: 'image/png' }),
             parameters: {
                 prompt,
             },

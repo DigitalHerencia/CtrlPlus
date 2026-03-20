@@ -77,7 +77,7 @@ export function WrapSelector({
                                     {isSelected ? 'Selected' : 'Choose Wrap'}
                                 </span>
                                 <span className="rounded-md border border-neutral-800 px-3 py-2 text-sm text-neutral-300">
-                                    View Details
+                                    {wrap.visualizerTextureImage ? 'Texture ready' : 'Texture missing'}
                                 </span>
                             </div>
                         </div>

@@ -7,7 +7,7 @@ applyTo: 'app/(tenant)/visualizer/**,components/visualizer/**,lib/visualizer/**'
 
 ## Domain purpose
 
-The visualizer lets a tenant user choose a wrap, upload or select a vehicle image, generate a preview, and view the resulting render.
+The visualizer lets a tenant user choose a visualizer-ready wrap, upload a vehicle image, generate a preview, and view the resulting render.
 
 ## Scope boundaries
 
@@ -17,6 +17,7 @@ This domain owns:
 - upload flow
 - preview creation and retrieval
 - mask generation and compositing pipeline
+- Hugging Face preview generation adapter
 - preview caching and storage
 - visualizer-specific UI state
 
@@ -34,6 +35,7 @@ This domain does not own:
 - Put writes in `lib/visualizer/actions/**`.
 - Keep image processing and provider integrations inside `lib/visualizer/**`.
 - Keep interactive UI in `components/visualizer/**`.
+- Use catalog-backed visualizer selection fetchers rather than reading raw wrap/image lists in the page.
 
 ## Security requirements
 
@@ -43,14 +45,18 @@ This domain does not own:
 - Treat uploaded vehicle images and generated previews as sensitive user content.
 - Avoid exposing raw storage internals to the client.
 - Harden remote image fetch behavior and MIME/size validation.
+- Keep hidden-wrap access restricted to owner/platform admin on the server boundary.
 
 ## Product requirements
 
 - Selecting a wrap must use deterministic asset resolution, not incidental image ordering.
 - Uploaded photos must not bloat DB rows with large inline payloads.
+- Customer-facing selection must exclude wraps that are not visualizer-ready.
 - Preview generation must have clear status handling: pending, processing, completed, failed.
 - UI must show clear validation, progress, failure, retry, and success states.
 - The preview experience must feel fast even if generation is asynchronous.
+- Preview generation should reuse cache hits before recomputing.
+- Hugging Face generation is primary but must fail fast to deterministic compositing.
 
 ## UI requirements
 
@@ -59,6 +65,7 @@ This domain does not own:
 - `UploadForm` should validate file type, size, and intent before submit.
 - `PreviewCanvas` should render final output first and only fall back to temporary preview behavior when necessary.
 - Include explicit empty states and recovery paths.
+- The catalog handoff path is `/visualizer?wrapId=...`, and the selected wrap should load server-side before the client shell renders.
 
 ## Performance requirements
 
@@ -66,6 +73,7 @@ This domain does not own:
 - Reuse preview cache keys deterministically.
 - Avoid duplicate generation for the same effective input set.
 - Prefer storage references over inline base64 strings.
+- Cache keys should include normalized vehicle bytes, source wrap image id/version, generation mode/model, and prompt version.
 
 ## Testing requirements
 

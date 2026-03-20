@@ -38,9 +38,12 @@ This domain does not own:
 ## Product requirements
 
 - Public catalog must only show publishable, allowed wraps.
+- Public catalog browse and preview CTAs must only surface visualizer-ready wraps.
 - Wrap cards must resolve the correct display asset intentionally.
 - Do not rely on `images[0]` semantics.
 - Publishing must be blocked if required asset roles are missing.
+- Publishing must go through explicit `publishWrap` / `unpublishWrap` actions.
+- `hero` and `visualizer_texture` are exclusive-active roles and must be normalized at mutation time.
 - Catalog management must support coherent owner workflows: create, edit, assign categories, manage assets, validate, publish/hide.
 
 ## UI requirements
@@ -50,6 +53,7 @@ This domain does not own:
 - `CatalogManager` and `WrapImageManager` should behave like one coherent admin workflow.
 - Use status badges, confirmations, validation summaries, and clear action labels.
 - Distinguish display assets from visualizer assets clearly.
+- Detail and card surfaces should provide direct preview routing via `/visualizer?wrapId=...`.
 
 ## Security requirements
 
@@ -57,6 +61,7 @@ This domain does not own:
 - Never trust client-provided wrap scope or category scope without validation.
 - Validate uploads, asset roles, and mutation payloads.
 - Keep delete/hide/publish actions explicit and auditable.
+- Keep wrap-level prompt metadata server-side and typed with the rest of catalog DTOs.
 
 ## Performance requirements
 
@@ -64,6 +69,7 @@ This domain does not own:
 - Keep filter/search param handling deterministic.
 - Use targeted revalidation instead of broad invalidation when practical.
 - Prefer small card payloads and avoid over-fetching image metadata when not needed.
+- Use catalog-specific DTOs for browse/detail/manager/visualizer selection instead of reusing raw `WrapDTO` everywhere.
 
 ## Testing requirements
 

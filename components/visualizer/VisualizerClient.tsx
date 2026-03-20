@@ -1,184 +1,258 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { useMemo, useState, useTransition } from 'react'
 
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import type { WrapDTO } from '@/lib/catalog/types'
-import {
-    buildTemplatePreview,
-    templateVehicleOptions,
-    type TemplateVehicleOption,
-} from '@/lib/visualizer/templates'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { regenerateVisualizerPreview } from '@/lib/visualizer/actions/regenerate-visualizer-preview'
+import { formatInstallationTime, formatPrice } from '@/lib/catalog/formatters'
+import type { VisualizerWrapSelectionDTO } from '@/lib/catalog/types'
 import type { VisualizerPreviewDTO } from '@/lib/visualizer/types'
 import { PreviewCanvas } from './PreviewCanvas'
 import { UploadForm } from './UploadForm'
 import { WrapSelector } from './WrapSelector'
 
 interface VisualizerClientProps {
-    wraps: WrapDTO[]
+    wraps: VisualizerWrapSelectionDTO[]
+    initialWrapId?: string | null
     canManageCatalog?: boolean
 }
 
-type PreviewMode = 'upload' | 'template'
-
-export function VisualizerClient({ wraps, canManageCatalog = false }: VisualizerClientProps) {
-    // State
-    const [selectedWrapId, setSelectedWrapId] = useState<string | null>(wraps[0]?.id ?? null)
-    const [selectedTemplate, setSelectedTemplate] = useState<TemplateVehicleOption>(
-        templateVehicleOptions[0]
+export function VisualizerClient({
+    wraps,
+    initialWrapId = null,
+    canManageCatalog = false,
+}: VisualizerClientProps) {
+    const [isPending, startTransition] = useTransition()
+    const [searchQuery, setSearchQuery] = useState('')
+    const [selectedWrapId, setSelectedWrapId] = useState<string | null>(
+        initialWrapId && wraps.some((wrap) => wrap.id === initialWrapId)
+            ? initialWrapId
+            : wraps[0]?.id ?? null
     )
     const [preview, setPreview] = useState<VisualizerPreviewDTO | null>(null)
-    const [isLoading, setIsLoading] = useState(false)
-    const [mode, setMode] = useState<PreviewMode>('upload')
     const [error, setError] = useState<string | null>(null)
-    const [permissionDenied, setPermissionDenied] = useState(false)
 
-    // Memo
+    const filteredWraps = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase()
+        if (!query) {
+            return wraps
+        }
+
+        return wraps.filter((wrap) =>
+            [wrap.name, wrap.description ?? '', ...wrap.categories.map((category) => category.name)]
+                .join(' ')
+                .toLowerCase()
+                .includes(query)
+        )
+    }, [searchQuery, wraps])
+
     const selectedWrap = useMemo(
-        () => wraps.find((wrap) => wrap.id === selectedWrapId) ?? null,
-        [selectedWrapId, wraps]
+        () => filteredWraps.find((wrap) => wrap.id === selectedWrapId) ?? wraps.find((wrap) => wrap.id === selectedWrapId) ?? null,
+        [filteredWraps, selectedWrapId, wraps]
     )
 
-    // Handlers
-    function handleWrapSelect(wrapId: string) {
+    function handleSelectWrap(wrapId: string) {
         setSelectedWrapId(wrapId)
+        setError(null)
         setPreview(null)
     }
-    function handlePreviewReady(newPreview: VisualizerPreviewDTO) {
-        setPreview(newPreview)
+
+    function handleRegenerate() {
+        if (!preview) {
+            return
+        }
+
         setError(null)
-        setPermissionDenied(false)
-    }
-    function handleTemplatePreview(vehicle: TemplateVehicleOption) {
-        if (!selectedWrapId) return
-        setSelectedTemplate(vehicle)
-        setPreview(buildTemplatePreview({ wrapId: selectedWrapId, imageUrl: vehicle.imageUrl }))
-        setError(null)
-        setPermissionDenied(false)
+        startTransition(() => {
+            void regenerateVisualizerPreview({ previewId: preview.id })
+                .then((nextPreview) => {
+                    setPreview(nextPreview)
+                })
+                .catch((previewError) => {
+                    setError(
+                        previewError instanceof Error
+                            ? previewError.message
+                            : 'Preview regeneration failed.'
+                    )
+                })
+        })
     }
 
-    // Modern layout
     return (
-        <div className="flex h-[70vh] w-full overflow-hidden rounded-lg border border-neutral-800 bg-neutral-950 shadow-lg">
-            {/* Sidebar */}
-            <aside className="min-w-55 flex w-64 flex-col gap-6 border-r border-neutral-800 bg-neutral-900/90 p-4">
-                <div className="flex flex-col gap-4">
-                    <h2 className="text-lg font-bold text-neutral-100">Wraps</h2>
-                    <WrapSelector
-                        wraps={wraps}
-                        selectedWrapId={selectedWrapId}
-                        onSelect={handleWrapSelect}
-                        canManageCatalog={canManageCatalog}
-                        className="max-h-60 overflow-y-auto"
-                    />
-                </div>
-                <div className="mt-auto">
-                    <Tabs
-                        value={mode}
-                        onValueChange={(value: string) => setMode(value as PreviewMode)}
-                        className="w-full"
-                    >
-                        <TabsList className="w-full">
-                            <TabsTrigger value="upload">Upload Photo</TabsTrigger>
-                            <TabsTrigger value="template">Template Preview</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-                </div>
-            </aside>
+        <div className="space-y-6">
+            <section className="rounded-2xl border border-neutral-800 bg-neutral-950/90 p-8 text-neutral-100 shadow-[0_24px_80px_-56px_rgba(0,0,0,0.95)]">
+                <p className="text-xs uppercase tracking-[0.32em] text-blue-400">Preview</p>
+                <h1 className="mt-3 text-5xl font-black tracking-tight">Wrap Visualizer</h1>
+                <p className="mt-4 max-w-3xl text-lg leading-8 text-neutral-300">
+                    Upload a vehicle photo, select a visualizer-ready wrap, and generate a preview
+                    with a Hugging Face primary path backed by a deterministic fallback.
+                </p>
+            </section>
 
-            {/* Main canvas area */}
-            <main className="relative flex flex-1 flex-col items-center justify-center bg-neutral-950 p-8">
-                {/* Top bar */}
-                <div className="absolute left-0 top-0 z-10 flex w-full items-center justify-between p-4">
-                    <span className="text-sm text-neutral-400">
-                        {selectedWrap?.name ?? 'Select a wrap'}
-                    </span>
-                    <div className="flex gap-2">
-                        {/* Download/share actions */}
-                        {preview && !isLoading && !error && !permissionDenied && (
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                    // Use preview.url or preview.resultUrl depending on DTO
-                                    const url =
-                                        preview.processedImageUrl ||
-                                        preview.customerPhotoUrl ||
-                                        undefined
-                                    if (url) {
-                                        const link = document.createElement('a')
-                                        link.href = url
-                                        link.download = 'visualizer-preview.png'
-                                        link.click()
-                                    }
-                                }}
-                            >
-                                Download
-                            </Button>
-                        )}
-                        {/* TODO: Add share action */}
-                    </div>
-                </div>
-
-                {/* Canvas and controls */}
-                <div className="flex h-full w-full flex-col items-center justify-center gap-6">
-                    {/* Mode controls */}
-                    <div className="w-full max-w-md">
-                        <Tabs
-                            value={mode}
-                            onValueChange={(value: string) => setMode(value as PreviewMode)}
-                            className="w-full"
-                        >
-                            <TabsList className="w-full">
-                                <TabsTrigger value="upload">Upload Photo</TabsTrigger>
-                                <TabsTrigger value="template">Template Preview</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="upload">
-                                {selectedWrap && (
-                                    <UploadForm
-                                        wrapId={selectedWrap.id}
-                                        onPreviewReady={handlePreviewReady}
-                                        onUploadingChange={setIsLoading}
-                                        className="mt-4"
-                                    />
-                                )}
-                            </TabsContent>
-                            <TabsContent value="template">
-                                {selectedWrap && (
-                                    <div className="mt-4 space-y-4">
-                                        <div className="flex gap-2">
-                                            {templateVehicleOptions.map((vehicle) => (
-                                                <Button
-                                                    key={vehicle.id}
-                                                    variant={
-                                                        selectedTemplate.id === vehicle.id
-                                                            ? 'default'
-                                                            : 'outline'
-                                                    }
-                                                    onClick={() => handleTemplatePreview(vehicle)}
-                                                >
-                                                    {vehicle.label}
-                                                </Button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </TabsContent>
-                        </Tabs>
-                    </div>
-
-                    {/* Preview canvas */}
-                    <div className="h-105 flex w-full max-w-2xl items-center justify-center">
-                        <PreviewCanvas
-                            preview={preview}
-                            isLoading={isLoading}
-                            error={error}
-                            permissionDenied={permissionDenied}
+            <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+                <div className="space-y-6">
+                    {selectedWrap ? (
+                        <UploadForm
+                            wrapId={selectedWrap.id}
+                            onPreviewReady={(nextPreview) => {
+                                setPreview(nextPreview)
+                                setError(null)
+                            }}
+                            onUploadingChange={(isUploading) => {
+                                if (isUploading) {
+                                    setError(null)
+                                }
+                            }}
+                            onError={setError}
                         />
-                    </div>
+                    ) : (
+                        <Card className="border-neutral-800 bg-neutral-950/90 text-neutral-100">
+                            <CardContent className="py-12 text-center text-sm text-neutral-400">
+                                Select a wrap to start generating previews.
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    <Card className="border-neutral-800 bg-neutral-950/90 text-neutral-100">
+                        <CardHeader>
+                            <CardTitle className="text-xl">Preview Workflow</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3 text-sm text-neutral-300">
+                            <div className="flex items-center justify-between gap-4">
+                                <span>Preview source</span>
+                                <span className="text-neutral-100">Visualizer texture</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-4">
+                                <span>Generation path</span>
+                                <span className="text-neutral-100">HF primary / deterministic fallback</span>
+                            </div>
+                            <div className="flex items-center justify-between gap-4">
+                                <span>Accepted uploads</span>
+                                <span className="text-neutral-100">JPG, PNG, WebP, HEIC</span>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {selectedWrap ? (
+                        <Card className="border-neutral-800 bg-neutral-950/90 text-neutral-100">
+                            <CardHeader>
+                                <CardTitle className="text-xl">Selected Wrap</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <div className="flex items-start justify-between gap-4">
+                                        <h2 className="text-3xl font-black">{selectedWrap.name}</h2>
+                                        <p className="text-3xl font-black">{formatPrice(selectedWrap.price)}</p>
+                                    </div>
+                                    <p className="text-sm leading-7 text-neutral-300">
+                                        {selectedWrap.description ?? 'Preview-ready wrap package.'}
+                                    </p>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {selectedWrap.categories.map((category) => (
+                                        <Badge
+                                            key={category.id}
+                                            variant="outline"
+                                            className="border-neutral-700 bg-neutral-900 text-neutral-200"
+                                        >
+                                            {category.name}
+                                        </Badge>
+                                    ))}
+                                    {selectedWrap.installationMinutes ? (
+                                        <Badge
+                                            variant="secondary"
+                                            className="bg-neutral-900 text-neutral-200"
+                                        >
+                                            {formatInstallationTime(selectedWrap.installationMinutes)}
+                                        </Badge>
+                                    ) : null}
+                                </div>
+                                <div className="flex flex-wrap gap-3">
+                                    <Button
+                                        type="button"
+                                        onClick={handleRegenerate}
+                                        disabled={!preview || isPending}
+                                    >
+                                        Regenerate Preview
+                                    </Button>
+                                    <Button asChild variant="outline">
+                                        <Link href={`/catalog/${selectedWrap.id}`}>View Details</Link>
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ) : null}
                 </div>
-            </main>
+
+                <div className="space-y-6">
+                    <Card className="border-neutral-800 bg-neutral-950/90 text-neutral-100">
+                        <CardHeader className="space-y-4">
+                            <div className="flex flex-wrap items-center justify-between gap-4">
+                                <CardTitle className="text-xl">Browse Visualizer-Ready Wraps</CardTitle>
+                                {canManageCatalog ? (
+                                    <Button asChild variant="outline">
+                                        <Link href="/catalog/manage">Open Catalog Manager</Link>
+                                    </Button>
+                                ) : null}
+                            </div>
+                            <input
+                                value={searchQuery}
+                                onChange={(event) => setSearchQuery(event.target.value)}
+                                placeholder="Search wraps, finishes, or categories"
+                                className="h-12 rounded-lg border border-neutral-800 bg-neutral-900 px-4 text-sm text-neutral-100 outline-none transition focus:border-blue-500"
+                            />
+                        </CardHeader>
+                        <CardContent>
+                            <WrapSelector
+                                wraps={filteredWraps}
+                                selectedWrapId={selectedWrapId}
+                                onSelect={handleSelectWrap}
+                                canManageCatalog={canManageCatalog}
+                            />
+                        </CardContent>
+                    </Card>
+
+                    <Card className="border-neutral-800 bg-neutral-950/90 text-neutral-100">
+                        <CardHeader className="space-y-4">
+                            <div className="flex flex-wrap items-start justify-between gap-4">
+                                <div>
+                                    <p className="text-xs uppercase tracking-[0.28em] text-neutral-500">
+                                        Current Preview
+                                    </p>
+                                    <CardTitle className="mt-2 text-3xl font-black">
+                                        {selectedWrap?.name ?? 'Choose a Wrap'}
+                                    </CardTitle>
+                                </div>
+                                {selectedWrap ? (
+                                    <p className="text-3xl font-black">{formatPrice(selectedWrap.price)}</p>
+                                ) : null}
+                            </div>
+                            {selectedWrap ? (
+                                <p className="text-sm leading-7 text-neutral-300">
+                                    {selectedWrap.description ??
+                                        'Generate a customer-facing preview on the selected vehicle image.'}
+                                </p>
+                            ) : null}
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {error ? (
+                                <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                                    {error}
+                                </div>
+                            ) : null}
+                            <PreviewCanvas
+                                preview={preview}
+                                isLoading={isPending}
+                                error={error}
+                                className="min-h-[34rem]"
+                            />
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
         </div>
     )
 }

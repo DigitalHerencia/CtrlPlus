@@ -10,7 +10,6 @@ interface PreviewCanvasProps {
     preview: VisualizerPreviewDTO | null
     isLoading?: boolean
     className?: string
-    wrapOverlayUrl?: string | null
     error?: string | null
     permissionDenied?: boolean
 }
@@ -19,7 +18,6 @@ export function PreviewCanvas({
     preview,
     isLoading = false,
     className,
-    wrapOverlayUrl,
     error,
     permissionDenied,
 }: PreviewCanvasProps) {
@@ -77,7 +75,7 @@ export function PreviewCanvas({
             >
                 <ImageOff className="h-10 w-10 text-neutral-500" />
                 <p className="text-sm text-neutral-400">
-                    Select a wrap and choose upload or template mode to see a preview here.
+                    Upload a vehicle image and generate a preview to see the finished wrap here.
                 </p>
             </div>
         )
@@ -107,14 +105,13 @@ export function PreviewCanvas({
             >
                 <ImageOff className="h-10 w-10 text-blue-600" />
                 <p className="text-sm text-neutral-100">
-                    Preview generation failed. Try template mode or continue to scheduling.
+                    Preview generation failed. Adjust the upload or regenerate the preview.
                 </p>
             </div>
         )
     }
 
     const imageUrl = preview.processedImageUrl ?? preview.customerPhotoUrl
-    const showOverlay = Boolean(wrapOverlayUrl && !preview.processedImageUrl)
 
     const [zoom, setZoom] = useState(1)
     const [pan, setPan] = useState({ x: 0, y: 0 })
@@ -200,14 +197,6 @@ export function PreviewCanvas({
                     }}
                     className="object-contain"
                 />
-                {showOverlay && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                        src={wrapOverlayUrl ?? undefined}
-                        alt="Selected wrap overlay"
-                        className="pointer-events-none absolute inset-[12%] h-[76%] w-[76%] object-contain opacity-35 mix-blend-screen"
-                    />
-                )}
             </div>
             {/* Status badge and expiry info */}
             <div className="flex items-center justify-between border-t border-neutral-700 bg-neutral-900 px-4 py-2">
