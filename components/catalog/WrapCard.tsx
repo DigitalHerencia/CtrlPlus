@@ -12,10 +12,17 @@ interface WrapCardProps {
 
 export function WrapCard({ wrap }: WrapCardProps) {
     const installationTime = formatInstallationTime(wrap.installationMinutes)
+    const detailHref = `/catalog/${wrap.id}`
+    const previewLabel =
+        wrap.previewHref === detailHref ? 'Open Product Page' : 'Preview on Your Vehicle'
 
     return (
         <Card className="group flex h-full flex-col overflow-hidden border-neutral-800 bg-neutral-950/80 text-neutral-100 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-600/70">
-            <div className="relative overflow-hidden border-b border-neutral-800 bg-neutral-900">
+            <Link
+                href={detailHref}
+                aria-label={`View ${wrap.name} product page`}
+                className="relative block overflow-hidden border-b border-neutral-800 bg-neutral-900"
+            >
                 {wrap.displayImage ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -29,16 +36,22 @@ export function WrapCard({ wrap }: WrapCardProps) {
                     </div>
                 )}
                 <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
-                    <Badge variant="secondary" className="border border-neutral-800 bg-black/70 text-neutral-100">
+                    <Badge
+                        variant="secondary"
+                        className="border border-neutral-800 bg-black/70 text-neutral-100"
+                    >
                         {wrap.readiness.canPublish ? 'Ready' : 'Needs assets'}
                     </Badge>
                     {wrap.isHidden ? (
-                        <Badge variant="outline" className="border-amber-500/50 bg-black/60 text-amber-200">
+                        <Badge
+                            variant="outline"
+                            className="border-amber-500/50 bg-black/60 text-amber-200"
+                        >
                             Hidden
                         </Badge>
                     ) : null}
                 </div>
-            </div>
+            </Link>
 
             <CardHeader className="gap-3 pb-3">
                 <div className="space-y-2">
@@ -53,13 +66,16 @@ export function WrapCard({ wrap }: WrapCardProps) {
                             </Badge>
                         ))}
                     </div>
-                    <CardTitle className="line-clamp-2 text-xl leading-tight">{wrap.name}</CardTitle>
+                    <CardTitle className="line-clamp-2 text-xl leading-tight">
+                        {wrap.name}
+                    </CardTitle>
                 </div>
             </CardHeader>
 
             <CardContent className="flex-1 space-y-4 pb-4">
                 <p className="line-clamp-3 text-sm leading-relaxed text-neutral-400">
-                    {wrap.description ?? 'Premium wrap package prepared for browsing, booking, and visualization.'}
+                    {wrap.description ??
+                        'Premium wrap package prepared for browsing, booking, and visualization.'}
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                     {installationTime ? (
@@ -83,11 +99,15 @@ export function WrapCard({ wrap }: WrapCardProps) {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button asChild size="sm" className="transition-transform group-hover:translate-x-0.5">
-                        <Link href={wrap.previewHref}>Preview on Your Vehicle</Link>
+                    <Button
+                        asChild
+                        size="sm"
+                        className="transition-transform group-hover:translate-x-0.5"
+                    >
+                        <Link href={wrap.previewHref}>{previewLabel}</Link>
                     </Button>
                     <Button asChild size="sm" variant="outline">
-                        <Link href={`/catalog/${wrap.id}`}>View Details</Link>
+                        <Link href={detailHref}>View Details</Link>
                     </Button>
                 </div>
             </CardFooter>

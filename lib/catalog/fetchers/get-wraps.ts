@@ -13,6 +13,11 @@ import {
     resolveVisualizerTextureAsset,
 } from '../assets'
 import {
+    getExampleCatalogWrapById,
+    getExampleCatalogWraps,
+    isExampleCatalogWrapId,
+} from './example-wraps'
+import {
     searchWrapsSchema,
     wrapDTOFields,
     type CatalogBrowseCardDTO,
@@ -124,7 +129,9 @@ function toCatalogBrowseCard(wrap: WrapDTO): CatalogBrowseCardDTO {
         categories: wrap.categories,
         heroImage,
         displayImage: heroImage,
-        previewHref: `/visualizer?wrapId=${wrap.id}`,
+        previewHref: isExampleCatalogWrapId(wrap.id)
+            ? `/catalog/${wrap.id}`
+            : `/visualizer?wrapId=${wrap.id}`,
         readiness,
     }
 }
@@ -162,7 +169,11 @@ function toCatalogManagerItem(wrap: WrapDTO): CatalogManagerItemDTO {
 function toVisualizerWrapSelection(wrap: WrapDTO): VisualizerWrapSelectionDTO | null {
     const detail = toCatalogDetail(wrap)
 
-    if (!detail.heroImage || !detail.visualizerTextureImage || !detail.readiness.isVisualizerReady) {
+    if (
+        !detail.heroImage ||
+        !detail.visualizerTextureImage ||
+        !detail.readiness.isVisualizerReady
+    ) {
         return null
     }
 
@@ -237,7 +248,7 @@ export async function getWraps(scope: WrapVisibilityScope = {}): Promise<WrapDTO
         select: wrapDTOFields,
     })
 
-    return wraps.map((wrap) => toWrapDTO(wrap))
+    return [...wraps.map((wrap) => toWrapDTO(wrap)), ...getExampleCatalogWraps()]
 }
 
 export async function getCatalogManagerWraps(
@@ -253,6 +264,12 @@ export async function getWrapById(
     wrapId: string,
     scope: WrapVisibilityScope = {}
 ): Promise<WrapDTO | null> {
+    const exampleWrap = getExampleCatalogWrapById(wrapId)
+
+    if (exampleWrap && (scope.includeHidden || !exampleWrap.isHidden)) {
+        return exampleWrap
+    }
+
     const wrap = await prisma.wrap.findFirst({
         where: {
             id: wrapId,
@@ -296,7 +313,10 @@ export async function searchCatalogWraps(
     scope: WrapVisibilityScope = {}
 ): Promise<CatalogBrowseResultDTO> {
     const parsedFilters = searchWrapsSchema.parse(filters)
-    const effectiveScope = { ...scope, requireVisualizerReady: scope.requireVisualizerReady ?? true }
+    const effectiveScope = {
+        ...scope,
+        requireVisualizerReady: scope.requireVisualizerReady ?? true,
+    }
     const wraps = await getWraps({
         includeHidden: effectiveScope.includeHidden,
     })
@@ -374,6 +394,7 @@ export async function listVisualizerSelectableWraps(
     })
 
     return wraps
+        .filter((wrap) => !isExampleCatalogWrapId(wrap.id))
         .map(toVisualizerWrapSelection)
         .filter((wrap): wrap is VisualizerWrapSelectionDTO => wrap !== null)
 }
@@ -382,6 +403,10 @@ export async function getVisualizerSelectableWrapById(
     wrapId: string,
     scope: WrapVisibilityScope = {}
 ): Promise<VisualizerWrapSelectionDTO | null> {
+    if (isExampleCatalogWrapId(wrapId)) {
+        return null
+    }
+
     const wrap = await getWrapById(wrapId, scope)
 
     if (!wrap) {
