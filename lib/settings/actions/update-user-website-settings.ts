@@ -1,19 +1,25 @@
 'use server'
 
-import { getSession } from '@/lib/auth/session'
+import { requireAuthzCapability } from '@/lib/authz/guards'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { websiteSettingsSchema, type WebsiteSettingsDTO, type WebsiteSettingsInput } from '../types'
+import {
+    createWebsiteSettingsDTO,
+    websiteSettingsSchema,
+    type WebsiteSettingsDTO,
+    type WebsiteSettingsInput,
+} from '../types'
 
 export async function updateUserWebsiteSettings(
     input: WebsiteSettingsInput
 ): Promise<WebsiteSettingsDTO> {
-    const session = await getSession()
-    const userId = session.userId
-    if (!session.isAuthenticated || !userId) {
+    const session = await requireAuthzCapability('settings.manage.own')
+
+    if (!session.userId) {
         throw new Error('Unauthorized: not authenticated')
     }
 
+    const userId = session.userId
     const parsed = websiteSettingsSchema.parse(input)
     const updated = await prisma.websiteSettings.upsert({
         where: { clerkUserId: userId },
@@ -52,11 +58,13 @@ export async function updateUserWebsiteSettings(
 
     revalidatePath('/settings')
 
-    return {
-        preferredContact: updated.preferredContact as 'email' | 'sms',
-        appointmentReminders: updated.appointmentReminders,
-        marketingOptIn: updated.marketingOptIn,
-        timezone: updated.timezone,
-        updatedAt: updated.updatedAt.toISOString(),
-    }
+    return createWebsiteSettingsDTO(
+        {
+            preferredContact: updated.preferredContact as 'email' | 'sms',
+            appointmentReminders: updated.appointmentReminders,
+            marketingOptIn: updated.marketingOptIn,
+            timezone: updated.timezone,
+        },
+        updated.updatedAt
+    )
 }
