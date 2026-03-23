@@ -5,18 +5,13 @@ const mocks = vi.hoisted(() => ({
     requireCapability: vi.fn(),
     getVisualizerWrapSelectionById: vi.fn(),
     normalizeVehicleUpload: vi.fn(),
-    readImageBufferFromUrl: vi.fn(),
-    buildWrapPreviewPrompt: vi.fn(),
-    buildPreviewConditioningBoard: vi.fn(),
-    generateDeterministicCompositePreview: vi.fn(),
-    createWrapPreviewGeneratorAdapter: vi.fn(),
+    buildVisualizerPromptForWrap: vi.fn(),
     storePreviewImage: vi.fn(),
     buildVisualizerCacheKey: vi.fn(),
     prisma: {
         visualizerPreview: {
             findFirst: vi.fn(),
             create: vi.fn(),
-            update: vi.fn(),
         },
         auditLog: {
             create: vi.fn(),
@@ -42,15 +37,10 @@ vi.mock('@/lib/visualizer/fetchers/get-wrap-selections', () => ({
 
 vi.mock('@/lib/visualizer/preview-pipeline', () => ({
     normalizeVehicleUpload: mocks.normalizeVehicleUpload,
-    readImageBufferFromUrl: mocks.readImageBufferFromUrl,
-    buildWrapPreviewPrompt: mocks.buildWrapPreviewPrompt,
-    buildPreviewConditioningBoard: mocks.buildPreviewConditioningBoard,
-    generateDeterministicCompositePreview: mocks.generateDeterministicCompositePreview,
 }))
 
-vi.mock('@/lib/visualizer/huggingface', () => ({
-    createWrapPreviewGeneratorAdapter: mocks.createWrapPreviewGeneratorAdapter,
-    HuggingFacePreviewUnavailableError: class HuggingFacePreviewUnavailableError extends Error {},
+vi.mock('@/lib/visualizer/preview-execution', () => ({
+    buildVisualizerPromptForWrap: mocks.buildVisualizerPromptForWrap,
 }))
 
 vi.mock('@/lib/visualizer/storage', () => ({
@@ -63,13 +53,14 @@ vi.mock('@/lib/visualizer/cache-key', () => ({
 
 import { createVisualizerPreview } from './create-visualizer-preview'
 
-function makeSession() {
+function makeSession(overrides: Partial<Awaited<ReturnType<typeof mocks.getSession>>> = {}) {
     return {
         isAuthenticated: true,
         userId: 'user-1',
         authz: {},
         isOwner: false,
         isPlatformAdmin: false,
+        ...overrides,
     }
 }
 
@@ -112,21 +103,22 @@ function makeWrap() {
     }
 }
 
-function makePreviewRecord() {
+function makePreviewRecord(overrides: Record<string, unknown> = {}) {
     const now = new Date('2026-03-19T00:00:00Z')
 
     return {
         id: 'preview-1',
         wrapId: 'wrap-1',
         customerPhotoUrl: 'https://cloudinary.com/vehicle.png',
-        processedImageUrl: 'https://cloudinary.com/result.png',
-        status: 'complete',
+        processedImageUrl: null,
+        status: 'pending',
         cacheKey: 'cache-key',
         sourceWrapImageId: 'texture-1',
         sourceWrapImageVersion: 4,
         expiresAt: new Date('2026-03-20T00:00:00Z'),
         createdAt: now,
         updatedAt: now,
+        ...overrides,
     }
 }
 
@@ -143,25 +135,26 @@ describe('createVisualizerPreview', () => {
             height: 768,
             hash: 'vehicle-hash',
         })
-        mocks.readImageBufferFromUrl.mockResolvedValue(Buffer.from('texture-bytes'))
-        mocks.buildWrapPreviewPrompt.mockReturnValue({
+        mocks.buildVisualizerPromptForWrap.mockReturnValue({
             prompt: 'Apply Ocean Spectrum wrap',
             negativePrompt: 'No distortion',
             promptVersion: 'prompt-version',
         })
-        mocks.buildPreviewConditioningBoard.mockResolvedValue(Buffer.from('board-bytes'))
-        mocks.generateDeterministicCompositePreview.mockResolvedValue(
-            'https://cloudinary.com/fallback.png'
-        )
-        mocks.createWrapPreviewGeneratorAdapter.mockReturnValue({
-            generate: vi.fn().mockResolvedValue(Buffer.from('generated-bytes')),
-        })
         mocks.storePreviewImage.mockResolvedValue('https://cloudinary.com/generated.png')
         mocks.buildVisualizerCacheKey.mockReturnValue('cache-key')
-        mocks.prisma.visualizerPreview.findFirst.mockResolvedValue(makePreviewRecord())
+        mocks.prisma.visualizerPreview.findFirst.mockResolvedValue(null)
+        mocks.prisma.visualizerPreview.create.mockResolvedValue(makePreviewRecord())
+        mocks.prisma.auditLog.create.mockResolvedValue(undefined)
     })
 
     it('reuses an existing preview for the same normalized File input', async () => {
+        mocks.prisma.visualizerPreview.findFirst.mockResolvedValue(
+            makePreviewRecord({
+                processedImageUrl: 'https://cloudinary.com/result.png',
+                status: 'complete',
+            })
+        )
+
         const result = await createVisualizerPreview({
             wrapId: 'wrap-1',
             file: new File(['vehicle'], 'vehicle.png', { type: 'image/png' }),
@@ -180,17 +173,79 @@ describe('createVisualizerPreview', () => {
                 promptVersion: 'prompt-version',
             })
         )
-        expect(mocks.createWrapPreviewGeneratorAdapter).not.toHaveBeenCalled()
         expect(mocks.storePreviewImage).not.toHaveBeenCalled()
+        expect(mocks.prisma.visualizerPreview.create).not.toHaveBeenCalled()
         expect(result).toEqual(
             expect.objectContaining({
                 id: 'preview-1',
-                wrapId: 'wrap-1',
+                status: 'complete',
                 processedImageUrl: 'https://cloudinary.com/result.png',
-                sourceWrapImageId: 'texture-1',
-                sourceWrapImageVersion: 4,
                 cacheKey: 'cache-key',
             })
         )
+    })
+
+    it('creates a pending preview after storing the vehicle photo durably', async () => {
+        const result = await createVisualizerPreview({
+            wrapId: 'wrap-1',
+            file: new File(['vehicle'], 'vehicle.png', { type: 'image/png' }),
+        })
+
+        expect(mocks.getVisualizerWrapSelectionById).toHaveBeenCalledWith('wrap-1', {
+            includeHidden: false,
+        })
+        expect(mocks.storePreviewImage).toHaveBeenCalledWith(
+            expect.objectContaining({
+                previewId: 'vehicle-cache-key',
+                buffer: Buffer.from('vehicle-bytes'),
+                contentType: 'image/png',
+            })
+        )
+        expect(mocks.prisma.visualizerPreview.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    status: 'pending',
+                    processedImageUrl: null,
+                    customerPhotoUrl: 'https://cloudinary.com/generated.png',
+                }),
+            })
+        )
+        expect(result).toEqual(
+            expect.objectContaining({
+                id: 'preview-1',
+                status: 'pending',
+                processedImageUrl: null,
+            })
+        )
+    })
+
+    it('fails closed when durable storage cannot persist the upload', async () => {
+        mocks.storePreviewImage.mockRejectedValue(new Error('Preview image storage failed.'))
+
+        await expect(
+            createVisualizerPreview({
+                wrapId: 'wrap-1',
+                file: new File(['vehicle'], 'vehicle.png', { type: 'image/png' }),
+            })
+        ).rejects.toThrow('Preview image storage failed.')
+
+        expect(mocks.prisma.visualizerPreview.create).not.toHaveBeenCalled()
+    })
+
+    it('allows owners to resolve hidden wraps server-side', async () => {
+        mocks.getSession.mockResolvedValue(
+            makeSession({
+                isOwner: true,
+            })
+        )
+
+        await createVisualizerPreview({
+            wrapId: 'wrap-1',
+            file: new File(['vehicle'], 'vehicle.png', { type: 'image/png' }),
+        })
+
+        expect(mocks.getVisualizerWrapSelectionById).toHaveBeenCalledWith('wrap-1', {
+            includeHidden: true,
+        })
     })
 })

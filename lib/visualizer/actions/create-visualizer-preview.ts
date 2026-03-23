@@ -4,17 +4,8 @@ import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
 import { prisma } from '@/lib/prisma'
 import { getVisualizerWrapSelectionById } from '@/lib/visualizer/fetchers/get-wrap-selections'
-import {
-    createWrapPreviewGeneratorAdapter,
-    HuggingFacePreviewUnavailableError,
-} from '@/lib/visualizer/huggingface'
-import {
-    buildPreviewConditioningBoard,
-    buildWrapPreviewPrompt,
-    generateDeterministicCompositePreview,
-    normalizeVehicleUpload,
-    readImageBufferFromUrl,
-} from '@/lib/visualizer/preview-pipeline'
+import { buildVisualizerPromptForWrap } from '@/lib/visualizer/preview-execution'
+import { normalizeVehicleUpload } from '@/lib/visualizer/preview-pipeline'
 import { storePreviewImage } from '@/lib/visualizer/storage'
 import { visualizerConfig } from '@/lib/visualizer/config'
 import { buildVisualizerCacheKey } from '@/lib/visualizer/cache-key'
@@ -24,66 +15,6 @@ import {
     type CreateVisualizerPreviewInput,
     type VisualizerPreviewDTO,
 } from '../types'
-
-async function generatePreviewResult(params: {
-    previewId: string
-    vehicleBuffer: Buffer
-    textureBuffer: Buffer
-    wrap: Awaited<ReturnType<typeof getVisualizerWrapSelectionById>>
-}) {
-    if (!params.wrap) {
-        throw new Error('Wrap not found.')
-    }
-
-    const prompt = buildWrapPreviewPrompt({
-        name: params.wrap.name,
-        description: params.wrap.description,
-        aiPromptTemplate: params.wrap.aiPromptTemplate,
-        aiNegativePrompt: params.wrap.aiNegativePrompt,
-    })
-
-    try {
-        const adapter = createWrapPreviewGeneratorAdapter()
-        const boardBuffer = await buildPreviewConditioningBoard({
-            vehicleBuffer: params.vehicleBuffer,
-            textureBuffer: params.textureBuffer,
-            wrapName: params.wrap.name,
-            wrapDescription: params.wrap.description,
-        })
-        const generatedBuffer = await adapter.generate({
-            boardBuffer,
-            prompt: prompt.prompt,
-            negativePrompt: prompt.negativePrompt,
-        })
-
-        return {
-            processedImageUrl: await storePreviewImage({
-                previewId: params.previewId,
-                buffer: generatedBuffer,
-                contentType: 'image/png',
-            }),
-            promptVersion: prompt.promptVersion,
-            generationFallbackReason: null as string | null,
-        }
-    } catch (error) {
-        const fallbackReason =
-            error instanceof HuggingFacePreviewUnavailableError
-                ? error.message
-                : error instanceof Error
-                  ? error.message
-                  : 'Hugging Face preview generation failed.'
-
-        return {
-            processedImageUrl: await generateDeterministicCompositePreview({
-                previewId: params.previewId,
-                photoBuffer: params.vehicleBuffer,
-                textureBuffer: params.textureBuffer,
-            }),
-            promptVersion: prompt.promptVersion,
-            generationFallbackReason: fallbackReason,
-        }
-    }
-}
 
 export async function createVisualizerPreview(
     input: CreateVisualizerPreviewInput
@@ -104,13 +35,7 @@ export async function createVisualizerPreview(
         throw new Error('Wrap not found or is not visualizer-ready.')
     }
 
-    const textureBuffer = await readImageBufferFromUrl(wrap.visualizerTextureImage.url)
-    const prompt = buildWrapPreviewPrompt({
-        name: wrap.name,
-        description: wrap.description,
-        aiPromptTemplate: wrap.aiPromptTemplate,
-        aiNegativePrompt: wrap.aiNegativePrompt,
-    })
+    const prompt = buildVisualizerPromptForWrap(wrap)
 
     const cacheKey = buildVisualizerCacheKey({
         wrapId: wrap.id,
@@ -156,7 +81,7 @@ export async function createVisualizerPreview(
             ownerClerkUserId: userId,
             customerPhotoUrl,
             processedImageUrl: null,
-            status: 'processing',
+            status: 'pending',
             cacheKey,
             sourceWrapImageId: wrap.visualizerTextureImage.id,
             sourceWrapImageVersion: wrap.visualizerTextureImage.version,
@@ -164,51 +89,22 @@ export async function createVisualizerPreview(
         },
     })
 
-    try {
-        const result = await generatePreviewResult({
-            previewId: preview.id,
-            vehicleBuffer: normalizedVehicle.buffer,
-            textureBuffer,
-            wrap,
-        })
+    await prisma.auditLog.create({
+        data: {
+            userId,
+            action: 'visualizerPreview.created',
+            resourceType: 'VisualizerPreview',
+            resourceId: preview.id,
+            details: JSON.stringify({
+                wrapId: wrap.id,
+                cacheKey,
+                promptVersion: prompt.promptVersion,
+                sourceWrapImageId: wrap.visualizerTextureImage.id,
+                sourceWrapImageVersion: wrap.visualizerTextureImage.version,
+            }),
+            timestamp: new Date(),
+        },
+    })
 
-        const completedPreview = await prisma.visualizerPreview.update({
-            where: { id: preview.id },
-            data: {
-                status: 'complete',
-                processedImageUrl: result.processedImageUrl,
-                expiresAt: new Date(Date.now() + visualizerConfig.previewTtlMs),
-            },
-        })
-
-        await prisma.auditLog.create({
-            data: {
-                userId,
-                action: 'visualizerPreview.created',
-                resourceType: 'VisualizerPreview',
-                resourceId: completedPreview.id,
-                details: JSON.stringify({
-                    wrapId: wrap.id,
-                    cacheKey,
-                    promptVersion: result.promptVersion,
-                    sourceWrapImageId: wrap.visualizerTextureImage.id,
-                    sourceWrapImageVersion: wrap.visualizerTextureImage.version,
-                    generationFallbackReason: result.generationFallbackReason,
-                }),
-                timestamp: new Date(),
-            },
-        })
-
-        return toVisualizerPreviewDTO(completedPreview)
-    } catch (error) {
-        await prisma.visualizerPreview.update({
-            where: { id: preview.id },
-            data: {
-                status: 'failed',
-            },
-        })
-
-        const message = error instanceof Error ? error.message : 'Preview generation failed.'
-        throw new Error(message)
-    }
+    return toVisualizerPreviewDTO(preview)
 }

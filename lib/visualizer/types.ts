@@ -68,8 +68,14 @@ export const regenerateVisualizerPreviewSchema = z.object({
 
 export type RegenerateVisualizerPreviewInput = z.infer<typeof regenerateVisualizerPreviewSchema>
 
+export const processVisualizerPreviewSchema = z.object({
+    previewId: z.string().min(1, 'Preview ID is required'),
+})
+
+export type ProcessVisualizerPreviewInput = z.infer<typeof processVisualizerPreviewSchema>
+
 export const uploadPhotoSchema = createVisualizerPreviewSchema
 export type UploadPhotoInput = CreateVisualizerPreviewInput
 
-export const generatePreviewSchema = regenerateVisualizerPreviewSchema
-export type GeneratePreviewInput = RegenerateVisualizerPreviewInput
+export const generatePreviewSchema = processVisualizerPreviewSchema
+export type GeneratePreviewInput = ProcessVisualizerPreviewInput

@@ -1,35 +1,10 @@
+import 'server-only'
+
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
 import { prisma } from '@/lib/prisma'
-import { type VisualizerPreviewDTO, visualizerPreviewDTOFields, type PreviewStatus } from '../types'
-
-function toPreviewDTO(record: {
-    id: string
-    wrapId: string
-    customerPhotoUrl: string
-    processedImageUrl: string | null
-    status: string
-    cacheKey: string
-    sourceWrapImageId: string | null
-    sourceWrapImageVersion: number | null
-    expiresAt: Date
-    createdAt: Date
-    updatedAt: Date
-}): VisualizerPreviewDTO {
-    return {
-        id: record.id,
-        wrapId: record.wrapId,
-        customerPhotoUrl: record.customerPhotoUrl,
-        processedImageUrl: record.processedImageUrl,
-        status: record.status as PreviewStatus,
-        cacheKey: record.cacheKey,
-        sourceWrapImageId: record.sourceWrapImageId,
-        sourceWrapImageVersion: record.sourceWrapImageVersion,
-        expiresAt: record.expiresAt,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-    }
-}
+import { toVisualizerPreviewDTO } from '../dto'
+import { type VisualizerPreviewDTO, visualizerPreviewDTOFields } from '../types'
 
 export async function getPreviewById(previewId: string): Promise<VisualizerPreviewDTO | null> {
     const session = await getSession()
@@ -48,7 +23,7 @@ export async function getPreviewById(previewId: string): Promise<VisualizerPrevi
         select: visualizerPreviewDTOFields,
     })
 
-    return preview ? toPreviewDTO(preview) : null
+    return preview ? toVisualizerPreviewDTO(preview) : null
 }
 
 export async function getPreviewsByWrap(wrapId: string): Promise<VisualizerPreviewDTO[]> {
@@ -72,5 +47,5 @@ export async function getPreviewsByWrap(wrapId: string): Promise<VisualizerPrevi
         select: visualizerPreviewDTOFields,
     })
 
-    return previews.map(toPreviewDTO)
+    return previews.map(toVisualizerPreviewDTO)
 }

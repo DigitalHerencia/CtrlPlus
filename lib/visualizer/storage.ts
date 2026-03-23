@@ -13,7 +13,7 @@ export function storePreviewImage(params: {
     contentType?: string
 }): Promise<string> {
     const filename = `visualizer/previews/${params.previewId}-${randomUUID()}`
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 public_id: filename,
@@ -24,13 +24,11 @@ export function storePreviewImage(params: {
             },
             (error, result) => {
                 if (error || !result || !result.secure_url) {
-                    // Fallback: return data URL if Cloudinary fails
-                    resolve(
-                        `data:${params.contentType ?? 'image/png'};base64,${params.buffer.toString('base64')}`
-                    )
-                } else {
-                    resolve(result.secure_url)
+                    reject(error ?? new Error('Preview image storage failed.'))
+                    return
                 }
+
+                resolve(result.secure_url)
             }
         )
         uploadStream.end(params.buffer)

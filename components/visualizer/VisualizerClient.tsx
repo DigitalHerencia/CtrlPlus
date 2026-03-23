@@ -1,89 +1,52 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState, useTransition } from 'react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { regenerateVisualizerPreview } from '@/lib/visualizer/actions/regenerate-visualizer-preview'
 import { formatInstallationTime, formatPrice } from '@/lib/catalog/formatters'
-import type { VisualizerWrapSelectionDTO } from '@/lib/catalog/types'
 import type { VisualizerPreviewDTO } from '@/lib/visualizer/types'
+import type { VisualizerWrapSelectionDTO } from '@/lib/catalog/types'
 import { PreviewCanvas } from './PreviewCanvas'
 import { UploadForm } from './UploadForm'
 import { WrapSelector } from './WrapSelector'
 
 interface VisualizerClientProps {
     wraps: VisualizerWrapSelectionDTO[]
-    initialWrapId?: string | null
-    canManageCatalog?: boolean
+    selectedWrap: VisualizerWrapSelectionDTO | null
+    selectedWrapId: string | null
+    searchQuery: string
+    canManageCatalog: boolean
+    preview: VisualizerPreviewDTO | null
+    error: string | null
+    isPending: boolean
+    isProcessing: boolean
+    selectedFile: File | null
+    onSearchQueryChange: (query: string) => void
+    onSelectWrap: (wrapId: string) => void
+    onFileChange: (file: File | null) => void
+    onCreatePreview: (file: File) => void
+    onRegeneratePreview: () => void
 }
 
 export function VisualizerClient({
     wraps,
-    initialWrapId = null,
-    canManageCatalog = false,
+    selectedWrap,
+    selectedWrapId,
+    searchQuery,
+    canManageCatalog,
+    preview,
+    error,
+    isPending,
+    isProcessing,
+    selectedFile,
+    onSearchQueryChange,
+    onSelectWrap,
+    onFileChange,
+    onCreatePreview,
+    onRegeneratePreview,
 }: VisualizerClientProps) {
-    const [isPending, startTransition] = useTransition()
-    const [searchQuery, setSearchQuery] = useState('')
-    const [selectedWrapId, setSelectedWrapId] = useState<string | null>(
-        initialWrapId && wraps.some((wrap) => wrap.id === initialWrapId)
-            ? initialWrapId
-            : (wraps[0]?.id ?? null)
-    )
-    const [preview, setPreview] = useState<VisualizerPreviewDTO | null>(null)
-    const [error, setError] = useState<string | null>(null)
-
-    const filteredWraps = useMemo(() => {
-        const query = searchQuery.trim().toLowerCase()
-        if (!query) {
-            return wraps
-        }
-
-        return wraps.filter((wrap) =>
-            [wrap.name, wrap.description ?? '', ...wrap.categories.map((category) => category.name)]
-                .join(' ')
-                .toLowerCase()
-                .includes(query)
-        )
-    }, [searchQuery, wraps])
-
-    const selectedWrap = useMemo(
-        () =>
-            filteredWraps.find((wrap) => wrap.id === selectedWrapId) ??
-            wraps.find((wrap) => wrap.id === selectedWrapId) ??
-            null,
-        [filteredWraps, selectedWrapId, wraps]
-    )
-
-    function handleSelectWrap(wrapId: string) {
-        setSelectedWrapId(wrapId)
-        setError(null)
-        setPreview(null)
-    }
-
-    function handleRegenerate() {
-        if (!preview) {
-            return
-        }
-
-        setError(null)
-        startTransition(() => {
-            void regenerateVisualizerPreview({ previewId: preview.id })
-                .then((nextPreview) => {
-                    setPreview(nextPreview)
-                })
-                .catch((previewError) => {
-                    setError(
-                        previewError instanceof Error
-                            ? previewError.message
-                            : 'Preview regeneration failed.'
-                    )
-                })
-        })
-    }
-
     return (
         <div className="space-y-6">
             <section className="rounded-2xl border border-neutral-800 bg-neutral-950/90 p-8 text-neutral-100 shadow-[0_24px_80px_-56px_rgba(0,0,0,0.95)]">
@@ -100,16 +63,11 @@ export function VisualizerClient({
                     {selectedWrap ? (
                         <UploadForm
                             wrapId={selectedWrap.id}
-                            onPreviewReady={(nextPreview) => {
-                                setPreview(nextPreview)
-                                setError(null)
-                            }}
-                            onUploadingChange={(isUploading) => {
-                                if (isUploading) {
-                                    setError(null)
-                                }
-                            }}
-                            onError={setError}
+                            selectedFile={selectedFile}
+                            onFileChange={onFileChange}
+                            onSubmit={onCreatePreview}
+                            isSubmitting={isPending || isProcessing}
+                            error={error}
                         />
                     ) : (
                         <Card className="border-neutral-800 bg-neutral-950/90 text-neutral-100">
@@ -182,8 +140,8 @@ export function VisualizerClient({
                                 <div className="flex flex-wrap gap-3">
                                     <Button
                                         type="button"
-                                        onClick={handleRegenerate}
-                                        disabled={!preview || isPending}
+                                        onClick={onRegeneratePreview}
+                                        disabled={!preview || isPending || isProcessing}
                                     >
                                         Regenerate Preview
                                     </Button>
@@ -213,16 +171,16 @@ export function VisualizerClient({
                             </div>
                             <input
                                 value={searchQuery}
-                                onChange={(event) => setSearchQuery(event.target.value)}
+                                onChange={(event) => onSearchQueryChange(event.target.value)}
                                 placeholder="Search wraps, finishes, or categories"
                                 className="h-12 rounded-lg border border-neutral-800 bg-neutral-900 px-4 text-sm text-neutral-100 outline-none transition focus:border-blue-500"
                             />
                         </CardHeader>
                         <CardContent>
                             <WrapSelector
-                                wraps={filteredWraps}
+                                wraps={wraps}
                                 selectedWrapId={selectedWrapId}
-                                onSelect={handleSelectWrap}
+                                onSelect={onSelectWrap}
                                 canManageCatalog={canManageCatalog}
                             />
                         </CardContent>
@@ -253,14 +211,9 @@ export function VisualizerClient({
                             ) : null}
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            {error ? (
-                                <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
-                                    {error}
-                                </div>
-                            ) : null}
                             <PreviewCanvas
                                 preview={preview}
-                                isLoading={isPending}
+                                isLoading={isPending && !preview}
                                 error={error}
                                 className="min-h-[34rem]"
                             />

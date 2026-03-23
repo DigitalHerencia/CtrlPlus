@@ -1,10 +1,7 @@
-import { VisualizerClient } from '@/components/visualizer/VisualizerClient'
 import { getSession } from '@/lib/auth/session'
-import { hasCapability } from '@/lib/authz/policy'
-import {
-    getVisualizerWrapSelectionById,
-    listVisualizerWrapSelections,
-} from '@/lib/visualizer/fetchers/get-wrap-selections'
+import { hasCapability, requireCapability } from '@/lib/authz/policy'
+import { VisualizerPageFeature } from '@/features/visualizer/visualizer-page-feature'
+import { parseVisualizerSearchParams } from '@/lib/visualizer/search-params'
 import { redirect } from 'next/navigation'
 
 interface VisualizerPageProps {
@@ -17,49 +14,17 @@ export default async function VisualizerPage({ searchParams }: VisualizerPagePro
         redirect('/sign-in')
     }
 
+    requireCapability(session.authz, 'visualizer.use')
+
     const canManageCatalog = hasCapability(session.authz, 'catalog.manage')
     const includeHidden = session.isOwner || session.isPlatformAdmin
-    const parsedSearchParams = await searchParams
-    const requestedWrapId =
-        typeof parsedSearchParams.wrapId === 'string' ? parsedSearchParams.wrapId : null
-
-    let wraps: Awaited<ReturnType<typeof listVisualizerWrapSelections>> = []
-    let selectedWrapId: string | null = null
-    let error: string | null = null
-
-    try {
-        wraps = await listVisualizerWrapSelections({ includeHidden })
-        if (requestedWrapId) {
-            const requestedWrap = await getVisualizerWrapSelectionById(requestedWrapId, {
-                includeHidden,
-            })
-            selectedWrapId = requestedWrap?.id ?? null
-        }
-    } catch {
-        error = 'Failed to load wraps.'
-    }
-
-    if (error) {
-        return (
-            <div className="space-y-6">
-                <div className="text-red-600">{error}</div>
-            </div>
-        )
-    }
-
-    if (!wraps || wraps.length === 0) {
-        return (
-            <div className="space-y-6">
-                <div className="text-neutral-400">No wraps found.</div>
-            </div>
-        )
-    }
+    const { requestedWrapId } = parseVisualizerSearchParams(await searchParams)
 
     return (
-        <VisualizerClient
-            wraps={wraps}
-            initialWrapId={selectedWrapId}
+        <VisualizerPageFeature
+            requestedWrapId={requestedWrapId}
             canManageCatalog={canManageCatalog}
+            includeHidden={includeHidden}
         />
     )
 }

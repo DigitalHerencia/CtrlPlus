@@ -1,10 +1,10 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 'use client'
+
+import { useState } from 'react'
 
 import { cn } from '@/lib/utils'
 import { PreviewStatus, type VisualizerPreviewDTO } from '@/lib/visualizer/types'
 import { ImageOff, Loader2 } from 'lucide-react'
-import { useState } from 'react'
 
 interface PreviewCanvasProps {
     preview: VisualizerPreviewDTO | null
@@ -21,6 +21,34 @@ export function PreviewCanvas({
     error,
     permissionDenied,
 }: PreviewCanvasProps) {
+    const [zoom, setZoom] = useState(1)
+    const [pan, setPan] = useState({ x: 0, y: 0 })
+
+    function handleZoomIn() {
+        setZoom((value) => Math.min(value + 0.2, 2))
+    }
+
+    function handleZoomOut() {
+        setZoom((value) => Math.max(value - 0.2, 0.5))
+    }
+
+    function handleReset() {
+        setZoom(1)
+        setPan({ x: 0, y: 0 })
+    }
+
+    function handleDownload() {
+        const imageUrl = preview?.processedImageUrl ?? preview?.customerPhotoUrl
+        if (!imageUrl) {
+            return
+        }
+
+        const link = document.createElement('a')
+        link.href = imageUrl
+        link.download = 'visualizer-preview.png'
+        link.click()
+    }
+
     if (isLoading) {
         return (
             <div
@@ -113,31 +141,6 @@ export function PreviewCanvas({
 
     const imageUrl = preview.processedImageUrl ?? preview.customerPhotoUrl
 
-    const [zoom, setZoom] = useState(1)
-    const [pan, setPan] = useState({ x: 0, y: 0 })
-
-    function handleZoomIn() {
-        setZoom((z) => Math.min(z + 0.2, 2))
-    }
-    function handleZoomOut() {
-        setZoom((z) => Math.max(z - 0.2, 0.5))
-    }
-    function handleReset() {
-        setZoom(1)
-        setPan({ x: 0, y: 0 })
-    }
-
-    // Download logic
-    function handleDownload() {
-        const url = imageUrl
-        if (url) {
-            const link = document.createElement('a')
-            link.href = url
-            link.download = 'visualizer-preview.png'
-            link.click()
-        }
-    }
-
     return (
         <div
             className={cn(
@@ -145,7 +148,6 @@ export function PreviewCanvas({
                 className
             )}
         >
-            {/* Overlay actions */}
             <div className="absolute right-3 top-3 z-20 flex gap-2">
                 <button
                     type="button"
@@ -154,9 +156,7 @@ export function PreviewCanvas({
                 >
                     Download
                 </button>
-                {/* TODO: Add share action */}
             </div>
-            {/* Zoom/pan controls */}
             <div className="absolute bottom-3 left-3 z-20 flex gap-2 rounded bg-neutral-900/80 p-2">
                 <button
                     type="button"
@@ -181,7 +181,6 @@ export function PreviewCanvas({
                     Reset
                 </button>
             </div>
-            {/* Responsive canvas */}
             <div className="relative flex h-full min-h-72 items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -198,7 +197,6 @@ export function PreviewCanvas({
                     className="object-contain"
                 />
             </div>
-            {/* Status badge and expiry info */}
             <div className="flex items-center justify-between border-t border-neutral-700 bg-neutral-900 px-4 py-2">
                 <span className="inline-block rounded bg-blue-600 px-2 py-1 text-xs text-neutral-100">
                     {preview.status}
