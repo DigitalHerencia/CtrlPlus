@@ -57,5 +57,4 @@ next-env.d.ts
 # agent
 /.codex/arch/*
 /.codex/examples/*
-/.codex/prompts/*
 /.codex/issues/*

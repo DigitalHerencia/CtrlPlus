@@ -12,12 +12,26 @@
 - existing repo fetcher/action architecture
 - existing shadcn/ui primitives in `components/ui/**`
 
+## Active codex domains
+
+- admin
+- auth/authz
+- billing
+- catalog
+- platform
+- scheduling
+- settings
+- visualizer
+
 ## Required architectural rules
 
 - no Prisma imports in `app/**`
 - reads only through `lib/{domain}/fetchers/**`
 - writes only through `lib/{domain}/actions/**`
+- thin `app/**` routes that hand off to feature orchestration
+- validation contracts live in domain schemas or established validation modules
 - auth and ownership checks server-side
+- `lib/auth/**` and `lib/authz/**` remain server-boundary concerns, not client concerns
 - input validation for all mutations
 - Server Components first
 - client components only for interactive UI
@@ -60,6 +74,7 @@ At minimum preserve or improve:
 Work is complete only when:
 
 - implementation follows repo boundaries
+- auth/authz boundaries are preserved server-side
 - tests are updated where needed
 - CI expectations remain satisfied
 - security checklist items in existing PR template remain true

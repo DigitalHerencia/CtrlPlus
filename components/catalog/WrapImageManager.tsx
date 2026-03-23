@@ -52,11 +52,12 @@ export function WrapImageManager({
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
     const [uploadKind, setUploadKind] = useState<WrapImageKindValue>(WrapImageKind.GALLERY)
     const [uploadIsActive, setUploadIsActive] = useState(true)
-    const [drafts, setDrafts] = useState<Record<string, { kind: WrapImageKindValue; isActive: boolean }>>(
-        () =>
-            Object.fromEntries(
-                orderedImages.map((image) => [image.id, { kind: image.kind, isActive: image.isActive }])
-            )
+    const [drafts, setDrafts] = useState<
+        Record<string, { kind: WrapImageKindValue; isActive: boolean }>
+    >(() =>
+        Object.fromEntries(
+            orderedImages.map((image) => [image.id, { kind: image.kind, isActive: image.isActive }])
+        )
     )
 
     function handleUploadSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -117,14 +118,19 @@ export function WrapImageManager({
                     ) : null}
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleUploadSubmit} className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_0.8fr_0.5fr_auto]">
+                    <form
+                        onSubmit={handleUploadSubmit}
+                        className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_0.8fr_0.5fr_auto]"
+                    >
                         <label className="space-y-2 text-sm text-neutral-300">
                             <span className="block">Upload asset</span>
                             <input
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp"
                                 disabled={isPending}
-                                onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+                                onChange={(event) =>
+                                    setSelectedFile(event.target.files?.[0] ?? null)
+                                }
                                 className="block w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-sm text-neutral-100"
                             />
                         </label>
@@ -133,7 +139,9 @@ export function WrapImageManager({
                             <select
                                 value={uploadKind}
                                 disabled={isPending}
-                                onChange={(event) => setUploadKind(event.target.value as WrapImageKindValue)}
+                                onChange={(event) =>
+                                    setUploadKind(event.target.value as WrapImageKindValue)
+                                }
                                 className="h-11 w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100"
                             >
                                 {kindOptions.map((option) => (
@@ -164,15 +172,20 @@ export function WrapImageManager({
             {orderedImages.length === 0 ? (
                 <Card className="border-neutral-800 bg-neutral-950/70 text-neutral-300">
                     <CardContent className="py-8 text-sm">
-                        No assets uploaded for wrap <span className="font-semibold">{wrapId}</span> yet.
+                        No assets uploaded for wrap <span className="font-semibold">{wrapId}</span>{' '}
+                        yet.
                     </CardContent>
                 </Card>
             ) : (
                 <div className="space-y-3">
                     {orderedImages.map((image, index) => {
                         const asset = toCatalogAssetImage(image)
-                        const draft = drafts[image.id] ?? { kind: image.kind, isActive: image.isActive }
-                        const hasChanges = draft.kind !== image.kind || draft.isActive !== image.isActive
+                        const draft = drafts[image.id] ?? {
+                            kind: image.kind,
+                            isActive: image.isActive,
+                        }
+                        const hasChanges =
+                            draft.kind !== image.kind || draft.isActive !== image.isActive
 
                         return (
                             <Card
@@ -200,7 +213,8 @@ export function WrapImageManager({
                                                         ...current,
                                                         [image.id]: {
                                                             ...draft,
-                                                            kind: event.target.value as WrapImageKindValue,
+                                                            kind: event.target
+                                                                .value as WrapImageKindValue,
                                                         },
                                                     }))
                                                 }
@@ -246,7 +260,9 @@ export function WrapImageManager({
                                                 type="button"
                                                 size="sm"
                                                 variant="outline"
-                                                disabled={isPending || index === orderedImages.length - 1}
+                                                disabled={
+                                                    isPending || index === orderedImages.length - 1
+                                                }
                                                 onClick={() => handleMove(image.id, 1)}
                                             >
                                                 Move Down
@@ -281,7 +297,10 @@ export function WrapImageManager({
                                         <p>Order #{index + 1}</p>
                                         <p>v{image.version}</p>
                                         <div className="flex flex-wrap justify-end gap-2">
-                                            <Badge variant="outline" className="border-neutral-700 text-neutral-200">
+                                            <Badge
+                                                variant="outline"
+                                                className="border-neutral-700 text-neutral-200"
+                                            >
                                                 {image.kind}
                                             </Badge>
                                             {!image.isActive ? (

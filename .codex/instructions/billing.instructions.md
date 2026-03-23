@@ -32,6 +32,7 @@ This domain does not own:
 - Keep `app/(tenant)/billing/**` read/orchestration focused.
 - Reads go through `lib/billing/fetchers/**`.
 - Writes go through `lib/billing/actions/**`.
+- Future refactors should move page composition into `features/billing/**` instead of growing `app/**`.
 - Stripe integration details belong in `lib/billing/stripe.ts` and webhook routes.
 - Billing state must remain server-authoritative.
 
@@ -49,6 +50,7 @@ This domain does not own:
 - Checkout initiation must be explicit and safe.
 - Booking-to-invoice handoff must be deterministic.
 - Payment confirmation must handle retry, pending, success, and failure states cleanly.
+- Future refactors must preserve room for failed-payment, refund, and reconciliation flows identified in `DOMAIN_AUDIT.md`.
 
 ## UI requirements
 
@@ -62,6 +64,7 @@ This domain does not own:
 - Avoid repeated status polling unless necessary.
 - Prevent duplicate checkout session creation for the same unresolved invoice when possible.
 - Keep billing fetches focused and server-side.
+- Prefer dynamic or short-lived reads when stale payment state would mislead users.
 
 ## Testing requirements
 

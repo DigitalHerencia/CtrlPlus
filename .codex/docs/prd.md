@@ -2,7 +2,7 @@
 
 ## Product goal
 
-Ship CtrlPlus as a professional, production-ready single-store operations platform with strong tenant isolation, clear owner workflows, and reliable domain behavior across catalog, visualizer, scheduling, billing, owner operations, and platform admin.
+Ship CtrlPlus as a professional, production-ready single-store operations platform with strong tenant isolation, clear owner workflows, and reliable domain behavior across admin, auth/authz, catalog, visualizer, scheduling, billing, settings, and platform.
 
 ## Core users
 
@@ -13,10 +13,16 @@ Ship CtrlPlus as a professional, production-ready single-store operations platfo
 ## Primary outcomes
 
 - users can browse wraps, preview wraps on vehicles, book services, and complete billing flows
-- owners can manage wraps, scheduling, settings, and operational workflows confidently
+- owners can manage wraps, scheduling, settings, and admin workflows confidently
 - platform admins can monitor and recover integration/platform issues safely
 
 ## Domain goals
+
+### Auth/Authz
+
+- secure sign-in and sign-up flows
+- server-authoritative session resolution and role mapping
+- strict capability and ownership enforcement across all domains
 
 ### Catalog
 
@@ -40,12 +46,17 @@ Ship CtrlPlus as a professional, production-ready single-store operations platfo
 - trustworthy invoice and checkout flow
 - server-authoritative payment state
 
-### Owner Operations
+### Admin
 
-- useful owner dashboard and settings
-- coherent cross-domain operational workflows
+- useful owner dashboard and quick actions
+- coherent owner-scoped operational visibility without duplicating domain rules
 
-### Admin Platform
+### Settings
+
+- clear current-user or owner-scoped configuration flows
+- strong validation, save feedback, and permission boundaries
+
+### Platform
 
 - clear system status
 - safe recovery and webhook tooling
@@ -68,6 +79,7 @@ Ship CtrlPlus as a professional, production-ready single-store operations platfo
 ## Success criteria
 
 - all domains use consistent fetcher/action boundaries
+- auth/authz remains a hard server boundary across every domain
 - authz is enforced server-side everywhere
 - critical flows have usable loading/error/empty/success states
 - CI, tests, and build pass cleanly

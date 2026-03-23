@@ -33,7 +33,9 @@ export async function CatalogManagerPageFeature({ filters }: CatalogManagerPageF
                 }
                 detail={
                     <div className="text-right">
-                        <p className="text-xs uppercase tracking-[0.24em] text-neutral-500">Managed Wraps</p>
+                        <p className="text-xs uppercase tracking-[0.24em] text-neutral-500">
+                            Managed Wraps
+                        </p>
                         <p className="text-3xl font-black text-neutral-100">{data.total}</p>
                     </div>
                 }

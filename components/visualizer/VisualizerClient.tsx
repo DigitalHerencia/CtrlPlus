@@ -30,7 +30,7 @@ export function VisualizerClient({
     const [selectedWrapId, setSelectedWrapId] = useState<string | null>(
         initialWrapId && wraps.some((wrap) => wrap.id === initialWrapId)
             ? initialWrapId
-            : wraps[0]?.id ?? null
+            : (wraps[0]?.id ?? null)
     )
     const [preview, setPreview] = useState<VisualizerPreviewDTO | null>(null)
     const [error, setError] = useState<string | null>(null)
@@ -50,7 +50,10 @@ export function VisualizerClient({
     }, [searchQuery, wraps])
 
     const selectedWrap = useMemo(
-        () => filteredWraps.find((wrap) => wrap.id === selectedWrapId) ?? wraps.find((wrap) => wrap.id === selectedWrapId) ?? null,
+        () =>
+            filteredWraps.find((wrap) => wrap.id === selectedWrapId) ??
+            wraps.find((wrap) => wrap.id === selectedWrapId) ??
+            null,
         [filteredWraps, selectedWrapId, wraps]
     )
 
@@ -127,7 +130,9 @@ export function VisualizerClient({
                             </div>
                             <div className="flex items-center justify-between gap-4">
                                 <span>Generation path</span>
-                                <span className="text-neutral-100">HF primary / deterministic fallback</span>
+                                <span className="text-neutral-100">
+                                    HF primary / deterministic fallback
+                                </span>
                             </div>
                             <div className="flex items-center justify-between gap-4">
                                 <span>Accepted uploads</span>
@@ -145,7 +150,9 @@ export function VisualizerClient({
                                 <div className="space-y-2">
                                     <div className="flex items-start justify-between gap-4">
                                         <h2 className="text-3xl font-black">{selectedWrap.name}</h2>
-                                        <p className="text-3xl font-black">{formatPrice(selectedWrap.price)}</p>
+                                        <p className="text-3xl font-black">
+                                            {formatPrice(selectedWrap.price)}
+                                        </p>
                                     </div>
                                     <p className="text-sm leading-7 text-neutral-300">
                                         {selectedWrap.description ?? 'Preview-ready wrap package.'}
@@ -166,7 +173,9 @@ export function VisualizerClient({
                                             variant="secondary"
                                             className="bg-neutral-900 text-neutral-200"
                                         >
-                                            {formatInstallationTime(selectedWrap.installationMinutes)}
+                                            {formatInstallationTime(
+                                                selectedWrap.installationMinutes
+                                            )}
                                         </Badge>
                                     ) : null}
                                 </div>
@@ -179,7 +188,9 @@ export function VisualizerClient({
                                         Regenerate Preview
                                     </Button>
                                     <Button asChild variant="outline">
-                                        <Link href={`/catalog/${selectedWrap.id}`}>View Details</Link>
+                                        <Link href={`/catalog/${selectedWrap.id}`}>
+                                            View Details
+                                        </Link>
                                     </Button>
                                 </div>
                             </CardContent>
@@ -191,7 +202,9 @@ export function VisualizerClient({
                     <Card className="border-neutral-800 bg-neutral-950/90 text-neutral-100">
                         <CardHeader className="space-y-4">
                             <div className="flex flex-wrap items-center justify-between gap-4">
-                                <CardTitle className="text-xl">Browse Visualizer-Ready Wraps</CardTitle>
+                                <CardTitle className="text-xl">
+                                    Browse Visualizer-Ready Wraps
+                                </CardTitle>
                                 {canManageCatalog ? (
                                     <Button asChild variant="outline">
                                         <Link href="/catalog/manage">Open Catalog Manager</Link>
@@ -227,7 +240,9 @@ export function VisualizerClient({
                                     </CardTitle>
                                 </div>
                                 {selectedWrap ? (
-                                    <p className="text-3xl font-black">{formatPrice(selectedWrap.price)}</p>
+                                    <p className="text-3xl font-black">
+                                        {formatPrice(selectedWrap.price)}
+                                    </p>
                                 ) : null}
                             </div>
                             {selectedWrap ? (

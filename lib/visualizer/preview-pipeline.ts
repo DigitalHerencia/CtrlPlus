@@ -81,7 +81,9 @@ async function readRemoteImage(url: URL): Promise<{ buffer: Buffer; contentType:
     return { buffer, contentType }
 }
 
-async function readLocalWrapImage(urlPath: string): Promise<{ buffer: Buffer; contentType: string }> {
+async function readLocalWrapImage(
+    urlPath: string
+): Promise<{ buffer: Buffer; contentType: string }> {
     if (!urlPath.startsWith('/uploads/wraps/')) {
         throw new Error('Unsupported local texture path')
     }

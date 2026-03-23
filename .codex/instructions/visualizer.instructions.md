@@ -33,6 +33,7 @@ This domain does not own:
 - Keep `app/(tenant)/visualizer/page.tsx` thin.
 - Put reads in `lib/visualizer/fetchers/**`.
 - Put writes in `lib/visualizer/actions/**`.
+- Future refactors should move page composition into `features/visualizer/**`.
 - Keep image processing and provider integrations inside `lib/visualizer/**`.
 - Keep interactive UI in `components/visualizer/**`.
 - Use catalog-backed visualizer selection fetchers rather than reading raw wrap/image lists in the page.
@@ -74,6 +75,7 @@ This domain does not own:
 - Avoid duplicate generation for the same effective input set.
 - Prefer storage references over inline base64 strings.
 - Cache keys should include normalized vehicle bytes, source wrap image id/version, generation mode/model, and prompt version.
+- Preserve room for background processing and signed or short-lived preview delivery called out in `DOMAIN_AUDIT.md`.
 
 ## Testing requirements
 

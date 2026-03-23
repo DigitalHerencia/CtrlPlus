@@ -141,7 +141,9 @@ describe('regenerateVisualizerPreview', () => {
             promptVersion: 'prompt-version',
         })
         mocks.buildPreviewConditioningBoard.mockResolvedValue(Buffer.from('board-bytes'))
-        mocks.generateDeterministicCompositePreview.mockResolvedValue('https://cloudinary.com/fallback.png')
+        mocks.generateDeterministicCompositePreview.mockResolvedValue(
+            'https://cloudinary.com/fallback.png'
+        )
         mocks.storePreviewImage.mockResolvedValue('https://cloudinary.com/generated.png')
         mocks.prisma.visualizerPreview.findFirst.mockResolvedValue(makePreviewRecord())
         mocks.prisma.visualizerPreview.update.mockResolvedValue({

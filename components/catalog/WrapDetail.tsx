@@ -92,14 +92,22 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
                                             : 'border-red-500/40 text-red-200'
                                     }
                                 >
-                                    {wrap.readiness.canPublish ? 'Publish-ready' : 'Needs asset attention'}
+                                    {wrap.readiness.canPublish
+                                        ? 'Publish-ready'
+                                        : 'Needs asset attention'}
                                 </Badge>
                                 {wrap.isHidden ? (
-                                    <Badge variant="outline" className="border-amber-500/40 text-amber-200">
+                                    <Badge
+                                        variant="outline"
+                                        className="border-amber-500/40 text-amber-200"
+                                    >
                                         Hidden from customers
                                     </Badge>
                                 ) : (
-                                    <Badge variant="secondary" className="bg-blue-500/15 text-blue-200">
+                                    <Badge
+                                        variant="secondary"
+                                        className="bg-blue-500/15 text-blue-200"
+                                    >
                                         Visible in catalog
                                     </Badge>
                                 )}

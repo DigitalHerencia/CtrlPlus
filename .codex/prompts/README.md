@@ -1,3 +1,14 @@
-# .copilot/prompts
+# .codex/prompts
 
-Contains Copilot prompt files for each domain. These files define agent delegation, orchestration, and task breakdowns for Copilot. Use them to guide Copilot agents in domain-specific workflows and automation.
+Contains per-domain refactor prompts for the active CtrlPlus domains:
+
+- `admin`
+- `auth/authz`
+- `billing`
+- `catalog`
+- `platform`
+- `scheduling`
+- `settings`
+- `visualizer`
+
+Each prompt is a preparatory orchestration input for a future domain refactor pass. Prompt files define mission, scope, non-goals, target architecture, required implementation rules, preserved domain behaviors, validation steps, and completion criteria.

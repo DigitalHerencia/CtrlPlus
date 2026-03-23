@@ -1,12 +1,23 @@
-# .copilot Directory
+# .codex Directory
 
-This directory contains domain-specific Copilot resources for CtrlPlus. It organizes documentation, instructions, issue templates, and prompt files for each major domain (billing, catalog, operations, platform, scheduling, visualizer).
+This directory contains Codex-facing architecture guidance and preparatory refactor artifacts for CtrlPlus. These files define how future domain refactors should be scoped and executed without changing runtime code in advance.
+
+## Active domains
+
+- `admin`
+- `auth/authz`
+- `billing`
+- `catalog`
+- `platform`
+- `scheduling`
+- `settings`
+- `visualizer`
 
 ## Structure
 
-- `docs/`: Domain specs and requirements
-- `instructions/`: Domain-specific instructions and architectural notes
-- `issues/`: Issue templates for Copilot-driven work
-- `prompts/`: Copilot prompt files for agent orchestration
+- `arch/`: cross-domain target architecture, refactor principles, and directory-tree specs
+- `docs/`: domain specs and cross-domain product or technical requirements
+- `instructions/`: domain-specific implementation rules and boundaries
+- `prompts/`: per-domain refactor prompts for future execution passes
 
-Use these files to guide Copilot agents, document domain boundaries, and automate issue creation and task delegation.
+Use these files to align agents on domain boundaries, server-first architecture, and refactor sequencing. This layer is preparatory guidance only and is separate from runtime implementation work.

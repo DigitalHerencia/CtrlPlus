@@ -20,7 +20,8 @@ export default async function VisualizerPage({ searchParams }: VisualizerPagePro
     const canManageCatalog = hasCapability(session.authz, 'catalog.manage')
     const includeHidden = session.isOwner || session.isPlatformAdmin
     const parsedSearchParams = await searchParams
-    const requestedWrapId = typeof parsedSearchParams.wrapId === 'string' ? parsedSearchParams.wrapId : null
+    const requestedWrapId =
+        typeof parsedSearchParams.wrapId === 'string' ? parsedSearchParams.wrapId : null
 
     let wraps: Awaited<ReturnType<typeof listVisualizerWrapSelections>> = []
     let selectedWrapId: string | null = null
@@ -54,5 +55,11 @@ export default async function VisualizerPage({ searchParams }: VisualizerPagePro
         )
     }
 
-    return <VisualizerClient wraps={wraps} initialWrapId={selectedWrapId} canManageCatalog={canManageCatalog} />
+    return (
+        <VisualizerClient
+            wraps={wraps}
+            initialWrapId={selectedWrapId}
+            canManageCatalog={canManageCatalog}
+        />
+    )
 }

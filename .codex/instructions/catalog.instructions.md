@@ -32,6 +32,7 @@ This domain does not own:
 - Keep route pages thin and server-first.
 - Reads belong in `lib/catalog/fetchers/**`.
 - Writes belong in `lib/catalog/actions/**`.
+- Future refactors should move route composition into `features/catalog/**`.
 - Validation belongs in domain validators/types, not ad hoc page logic.
 - Asset handling belongs in `lib/catalog/image-storage.ts` and related actions.
 
@@ -70,6 +71,7 @@ This domain does not own:
 - Use targeted revalidation instead of broad invalidation when practical.
 - Prefer small card payloads and avoid over-fetching image metadata when not needed.
 - Use catalog-specific DTOs for browse/detail/manager/visualizer selection instead of reusing raw `WrapDTO` everywhere.
+- Preserve room for provider metadata persistence and deterministic delete handling highlighted in `DOMAIN_AUDIT.md`.
 
 ## Testing requirements
 

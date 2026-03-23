@@ -39,7 +39,9 @@ export async function CatalogBrowsePageFeature({
                 }
                 detail={
                     <div className="text-right">
-                        <p className="text-xs uppercase tracking-[0.24em] text-neutral-500">Results</p>
+                        <p className="text-xs uppercase tracking-[0.24em] text-neutral-500">
+                            Results
+                        </p>
                         <p className="text-3xl font-black text-neutral-100">{data.total}</p>
                     </div>
                 }

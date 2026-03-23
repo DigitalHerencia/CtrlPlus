@@ -150,7 +150,9 @@ describe('createVisualizerPreview', () => {
             promptVersion: 'prompt-version',
         })
         mocks.buildPreviewConditioningBoard.mockResolvedValue(Buffer.from('board-bytes'))
-        mocks.generateDeterministicCompositePreview.mockResolvedValue('https://cloudinary.com/fallback.png')
+        mocks.generateDeterministicCompositePreview.mockResolvedValue(
+            'https://cloudinary.com/fallback.png'
+        )
         mocks.createWrapPreviewGeneratorAdapter.mockReturnValue({
             generate: vi.fn().mockResolvedValue(Buffer.from('generated-bytes')),
         })

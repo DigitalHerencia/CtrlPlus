@@ -141,7 +141,9 @@ export function getCatalogAssetReadiness(
     return {
         canPublish,
         isVisualizerReady:
-            activeHeroCount === 1 && activeVisualizerTextureCount === 1 && primaryDisplayAsset !== null,
+            activeHeroCount === 1 &&
+            activeVisualizerTextureCount === 1 &&
+            primaryDisplayAsset !== null,
         missingRequiredAssetRoles,
         requiredAssetRoles: [...PUBLISH_REQUIRED_WRAP_IMAGE_KINDS],
         activeAssetKinds,
@@ -166,7 +168,9 @@ export function toCatalogAssetImage(image: WrapImageDTO): CatalogAssetImageDTO {
 export function resolvePrimaryDisplayAsset(images: WrapImageDTO[]): CatalogAssetImageDTO | null {
     const orderedImages = sortImages(images)
     const displayCandidates = orderedImages.filter(
-        (image) => image.isActive && (image.kind === WrapImageKind.HERO || image.kind === WrapImageKind.GALLERY)
+        (image) =>
+            image.isActive &&
+            (image.kind === WrapImageKind.HERO || image.kind === WrapImageKind.GALLERY)
     )
 
     const heroImage =
@@ -192,7 +196,9 @@ export function resolveCatalogGalleryImages(images: WrapImageDTO[]): CatalogAsse
     const activeDisplayImages = orderedImages.filter(
         (image) => image.isActive && image.kind === WrapImageKind.GALLERY
     )
-    const fallbackDisplayImages = orderedImages.filter((image) => image.kind === WrapImageKind.GALLERY)
+    const fallbackDisplayImages = orderedImages.filter(
+        (image) => image.kind === WrapImageKind.GALLERY
+    )
 
     return (activeDisplayImages.length > 0 ? activeDisplayImages : fallbackDisplayImages).map(
         toCatalogAssetImage
@@ -216,7 +222,9 @@ export function resolveVisualizerTextureAsset(images: WrapImageDTO[]): CatalogAs
     return textureImage ? toCatalogAssetImage(textureImage) : null
 }
 
-export function resolveVisualizerMaskHintAsset(images: WrapImageDTO[]): CatalogAssetImageDTO | null {
+export function resolveVisualizerMaskHintAsset(
+    images: WrapImageDTO[]
+): CatalogAssetImageDTO | null {
     const orderedImages = sortImages(images)
     const maskHintImage =
         orderedImages.find(

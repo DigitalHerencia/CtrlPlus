@@ -38,12 +38,23 @@ CtrlPlus is a single-store, tenant-scoped operations platform built on Next.js A
 
 The `.codex` directory contains domain-specific resources to guide codex agents and automate workflows:
 
-- `.codex/docs/`: Domain specs and requirements. See README for details.
-- `.codex/instructions/`: Domain-specific instructions and architectural notes. See README for usage.
-- `.codex/issues/`: Issue templates for codex-driven work. See README for automation guidance.
-- `.codex/prompts/`: codex prompt files for agent orchestration. See README for workflow details.
+- `.codex/arch/`: Target architecture, refactor principles, and directory-tree specs.
+- `.codex/docs/`: Domain specs and cross-domain product or technical requirements.
+- `.codex/instructions/`: Domain-specific instructions and architectural notes.
+- `.codex/prompts/`: Per-domain refactor prompts for future execution passes.
 
-codex agents should consult these files for domain boundaries, implementation standards, issue creation, and prompt-driven task orchestration. Refer to each subfolder's README for specifics.
+The active codex domain set is:
+
+- `admin`
+- `auth/authz`
+- `billing`
+- `catalog`
+- `platform`
+- `scheduling`
+- `settings`
+- `visualizer`
+
+codex agents should consult these files for domain boundaries, implementation standards, and prompt-driven refactor orchestration. These codex artifacts are preparatory guidance and do not themselves authorize runtime refactors that are outside the current task.
 
 ## Implementation standards
 
@@ -68,6 +79,7 @@ codex agents should consult these files for domain boundaries, implementation st
 ## Security rules
 
 - Enforce ownership and authorization on the server.
+- Keep `lib/auth/**` and `lib/authz/**` as server-boundary concerns.
 - Do not expose secret keys, webhook secrets, or provider internals.
 - Do not accept client-provided scope identifiers as authoritative.
 - Sanitize upload handling and remote-fetch behavior.

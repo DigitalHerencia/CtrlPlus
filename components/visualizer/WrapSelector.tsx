@@ -51,7 +51,9 @@ export function WrapSelector({
                         onClick={() => onSelect(wrap.id)}
                         className={cn(
                             'overflow-hidden rounded-xl border bg-neutral-950 text-left transition hover:border-blue-500/70',
-                            isSelected ? 'border-blue-500 shadow-[0_0_0_1px_rgba(37,99,235,0.35)]' : 'border-neutral-800'
+                            isSelected
+                                ? 'border-blue-500 shadow-[0_0_0_1px_rgba(37,99,235,0.35)]'
+                                : 'border-neutral-800'
                         )}
                     >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -63,7 +65,9 @@ export function WrapSelector({
                         <div className="space-y-3 p-4">
                             <div className="flex items-start justify-between gap-4">
                                 <div>
-                                    <h3 className="text-2xl font-black text-neutral-100">{wrap.name}</h3>
+                                    <h3 className="text-2xl font-black text-neutral-100">
+                                        {wrap.name}
+                                    </h3>
                                     <p className="mt-2 line-clamp-2 text-sm text-neutral-400">
                                         {wrap.description ?? 'Preview-ready wrap package.'}
                                     </p>
@@ -77,7 +81,9 @@ export function WrapSelector({
                                     {isSelected ? 'Selected' : 'Choose Wrap'}
                                 </span>
                                 <span className="rounded-md border border-neutral-800 px-3 py-2 text-sm text-neutral-300">
-                                    {wrap.visualizerTextureImage ? 'Texture ready' : 'Texture missing'}
+                                    {wrap.visualizerTextureImage
+                                        ? 'Texture ready'
+                                        : 'Texture missing'}
                                 </span>
                             </div>
                         </div>

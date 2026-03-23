@@ -278,10 +278,7 @@ async function createBrandHeroCard(name, description, logoPath, palette) {
             background: palette.background,
         },
     })
-        .composite([
-            { input: svg },
-            { input: logoBuffer, left: 540, top: 320 },
-        ])
+        .composite([{ input: svg }, { input: logoBuffer, left: 540, top: 320 }])
         .png()
         .toBuffer()
 }
@@ -309,10 +306,7 @@ async function createBrandTexture(logoPath, palette) {
             background: palette.background,
         },
     })
-        .composite([
-            { input: svg },
-            { input: logoBuffer, left: 634, top: 634 },
-        ])
+        .composite([{ input: svg }, { input: logoBuffer, left: 634, top: 634 }])
         .png()
         .toBuffer()
 }
@@ -354,7 +348,12 @@ async function buildSeedFileSet(definition, rootDir) {
 
 async function buildBrandFileSet(logoPath, rootDir) {
     const palette = await deriveBrandPalette(logoPath)
-    const heroBuffer = await createBrandHeroCard('Brand Spectrum', 'Logo-derived demo wrap for visualizer testing.', logoPath, palette)
+    const heroBuffer = await createBrandHeroCard(
+        'Brand Spectrum',
+        'Logo-derived demo wrap for visualizer testing.',
+        logoPath,
+        palette
+    )
     const textureBuffer = await createBrandTexture(logoPath, palette)
 
     const baseDir = path.join(rootDir, 'brand-spectrum')

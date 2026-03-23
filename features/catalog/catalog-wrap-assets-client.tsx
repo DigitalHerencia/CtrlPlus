@@ -31,7 +31,9 @@ export function CatalogWrapAssetsClient({ wrap }: CatalogWrapAssetsClientProps) 
                     router.refresh()
                 } catch (mutationError) {
                     setError(
-                        mutationError instanceof Error ? mutationError.message : 'Asset update failed.'
+                        mutationError instanceof Error
+                            ? mutationError.message
+                            : 'Asset update failed.'
                     )
                 }
             })()

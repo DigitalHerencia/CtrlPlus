@@ -32,6 +32,7 @@ This domain does not own:
 - Keep page files orchestration-only.
 - Reads go through `lib/scheduling/fetchers/**`.
 - Writes go through `lib/scheduling/actions/**`.
+- Future refactors should move route composition into `features/scheduling/**`.
 - Capacity and slot logic belongs in `lib/scheduling/capacity.ts` and related utilities.
 - Booking form behavior should stay aligned with existing domain typing and validation patterns.
 
@@ -41,6 +42,7 @@ This domain does not own:
 - Reservation and confirmation must avoid double-booking behavior.
 - Booking status transitions must be explicit.
 - Scheduling UI must clearly distinguish available, reserved, confirmed, cancelled, and expired states.
+- Future refactors must keep timezone handling and cleanup execution explicit.
 
 ## Security requirements
 
@@ -61,6 +63,7 @@ This domain does not own:
 - Avoid repeated availability fetches in the same flow.
 - Keep slot calculations server-consistent.
 - Prevent race-prone client-only booking assumptions.
+- Avoid optimistic UI for contested slot reservation or confirmation behavior.
 
 ## Testing requirements
 

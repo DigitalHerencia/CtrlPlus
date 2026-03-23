@@ -1,13 +1,13 @@
 ---
-description: 'Domain instructions for platform admin and recovery operations'
-applyTo: 'app/(tenant)/platform/**,components/platform/**,lib/platform/**,app/api/clerk/**,app/api/stripe/**'
+description: 'Domain instructions for platform admin diagnostics and recovery operations'
+applyTo: 'app/(tenant)/platform/**,components/platform/**,lib/platform/**,app/api/stripe/**'
 ---
 
-# Admin Platform Domain Instructions
+# Platform Domain Instructions
 
 ## Domain purpose
 
-Admin platform covers internal platform operations, webhook status/recovery workflows, maintenance actions, and platform health visibility.
+The platform domain covers internal platform operations, webhook status or recovery workflows, maintenance actions, and platform health visibility.
 
 ## Scope boundaries
 
@@ -21,6 +21,8 @@ This domain owns:
 
 This domain does not own:
 
+- auth route implementation
+- Clerk identity sync implementation
 - tenant-facing catalog UX
 - booking UX
 - invoice UX
@@ -31,8 +33,10 @@ This domain does not own:
 - Keep platform pages read-heavy and server-controlled.
 - Reads go through `lib/platform/fetchers/**` and related operational fetchers.
 - Writes go through `lib/platform/actions/**` or explicit webhook handlers.
+- Future refactors should move route composition into `features/platform/**`.
 - Webhook routes remain narrow integration boundaries.
 - Recovery actions must be explicit, auditable, and safe.
+- Platform may observe Clerk-related failures operationally, but auth identity sync ownership stays in the auth/authz domain.
 
 ## Security requirements
 
@@ -47,6 +51,7 @@ This domain does not own:
 - Platform dashboard must expose health, backlog, failures, and recovery options clearly.
 - Recovery actions must distinguish retryable failures from terminal states.
 - Webhook management must make operational state understandable quickly.
+- Platform recovery UX must not imply a retry happened when the code only flipped stored state.
 
 ## UI requirements
 
@@ -74,7 +79,7 @@ Add or update tests when changing:
 ## Refactor priorities
 
 1. improve platform status clarity
-2. harden replay/recovery workflows
+2. harden replay/recovery workflows into real retry execution
 3. separate diagnostics from dangerous actions
 4. tighten privilege enforcement
 5. improve operational test coverage around webhooks and recovery

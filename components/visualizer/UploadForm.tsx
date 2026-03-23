@@ -47,9 +47,7 @@ export function UploadForm({
                     onPreviewReady(preview)
                 })
                 .catch((error) => {
-                    onError?.(
-                        error instanceof Error ? error.message : 'Preview generation failed.'
-                    )
+                    onError?.(error instanceof Error ? error.message : 'Preview generation failed.')
                 })
                 .finally(() => {
                     onUploadingChange?.(false)

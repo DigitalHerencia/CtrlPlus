@@ -88,11 +88,11 @@ export function parseCatalogSearchParams(
         filters,
         hasActiveFilters: Boolean(
             filters.query ||
-                filters.maxPrice !== undefined ||
-                filters.categoryId ||
-                filters.sortBy !== 'createdAt' ||
-                filters.sortOrder !== 'desc' ||
-                filters.pageSize !== 20
+            filters.maxPrice !== undefined ||
+            filters.categoryId ||
+            filters.sortBy !== 'createdAt' ||
+            filters.sortOrder !== 'desc' ||
+            filters.pageSize !== 20
         ),
     }
 }
