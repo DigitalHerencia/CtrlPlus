@@ -24,11 +24,13 @@ export type ReserveSlotInput = z.infer<typeof reserveSlotSchema>
 export interface ReservedBookingDTO {
     id: string
     wrapId: string
+    wrapName?: string
     startTime: Date
     endTime: Date
     status: string
     totalPrice: number
     reservationExpiresAt: Date
+    displayStatus: 'reserved'
 }
 
 export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBookingDTO> {
@@ -98,6 +100,11 @@ export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBook
                 select: {
                     id: true,
                     wrapId: true,
+                    wrap: {
+                        select: {
+                            name: true,
+                        },
+                    },
                     startTime: true,
                     endTime: true,
                     status: true,
@@ -129,11 +136,13 @@ export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBook
             return {
                 id: booking.id,
                 wrapId: booking.wrapId,
+                wrapName: booking.wrap.name,
                 startTime: booking.startTime,
                 endTime: booking.endTime,
                 status: booking.status,
                 totalPrice: booking.totalPrice,
                 reservationExpiresAt: booking.reservation?.expiresAt ?? expiresAt,
+                displayStatus: 'reserved',
             }
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }

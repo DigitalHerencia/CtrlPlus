@@ -1,6 +1,7 @@
 'use server'
 
 import { ensureInvoiceForBooking } from '@/lib/billing/actions/ensure-invoice-for-booking'
+import { revalidateBillingBookingRoute, revalidateSchedulingPages } from '../revalidation'
 import { reserveSlot, type ReserveSlotInput, type ReservedBookingDTO } from './reserve-slot'
 
 export type CreateBookingInput = ReserveSlotInput
@@ -17,6 +18,8 @@ export type CreatedBookingDTO = ReservedBookingDTO & {
 export async function createBooking(input: CreateBookingInput): Promise<CreatedBookingDTO> {
     const booking = await reserveSlot(input)
     const { invoiceId } = await ensureInvoiceForBooking({ bookingId: booking.id })
+    revalidateSchedulingPages()
+    revalidateBillingBookingRoute(invoiceId)
 
     return {
         ...booking,

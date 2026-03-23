@@ -1,10 +1,14 @@
+import 'server-only'
+
 import { prisma } from '@/lib/prisma'
+import { canViewAllSchedulingBookings, requireSchedulingReadSession } from '../access'
+import { getBookingDisplayStatus } from '../utils'
 import {
-    BookingStatus,
     bookingListParamsSchema,
     type BookingDTO,
     type BookingListParams,
     type BookingListResult,
+    type BookingStatusValue,
 } from '../types'
 
 const DEFAULT_BOOKING_LIST_PARAMS: BookingListParams = {
@@ -12,29 +16,40 @@ const DEFAULT_BOOKING_LIST_PARAMS: BookingListParams = {
     pageSize: 20,
 }
 
-interface BookingScope {
-    customerId?: string
-}
-
 function toBookingDTO(record: {
     id: string
     customerId: string
     wrapId: string
+    wrap: {
+        name: string
+    }
     startTime: Date
     endTime: Date
     status: string
     totalPrice: number
+    reservation: {
+        expiresAt: Date
+    } | null
     createdAt: Date
     updatedAt: Date
 }): BookingDTO {
+    const reservationExpiresAt = record.reservation?.expiresAt ?? null
+    const displayStatus = getBookingDisplayStatus(
+        record.status as BookingStatusValue,
+        reservationExpiresAt
+    )
+
     return {
         id: record.id,
         customerId: record.customerId,
         wrapId: record.wrapId,
+        wrapName: record.wrap.name,
         startTime: record.startTime,
         endTime: record.endTime,
-        status: record.status as BookingStatus,
+        status: record.status as BookingDTO['status'],
         totalPrice: record.totalPrice,
+        reservationExpiresAt,
+        displayStatus,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
     }
@@ -44,24 +59,41 @@ const bookingSelectFields = {
     id: true,
     customerId: true,
     wrapId: true,
+    wrap: {
+        select: {
+            name: true,
+        },
+    },
     startTime: true,
     endTime: true,
     status: true,
     totalPrice: true,
+    reservation: {
+        select: {
+            expiresAt: true,
+        },
+    },
     createdAt: true,
     updatedAt: true,
 } as const
 
 export async function getBookings(
     params: BookingListParams = DEFAULT_BOOKING_LIST_PARAMS,
-    scope: BookingScope = {}
+    _scope?: {
+        customerId?: string
+    }
 ): Promise<BookingListResult> {
+    void _scope
+
+    const session = await requireSchedulingReadSession()
     const { page, pageSize, status, fromDate, toDate } = bookingListParamsSchema.parse(params)
     const skip = (page - 1) * pageSize
 
+    const customerId = canViewAllSchedulingBookings(session) ? undefined : session.userId
+
     const where = {
         deletedAt: null,
-        ...(scope.customerId ? { customerId: scope.customerId } : {}),
+        ...(customerId ? { customerId } : {}),
         ...(status !== undefined && { status }),
         ...((fromDate !== undefined || toDate !== undefined) && {
             startTime: {
@@ -91,14 +123,14 @@ export async function getBookings(
     }
 }
 
-export async function getBookingById(
-    bookingId: string,
-    scope: BookingScope = {}
-): Promise<BookingDTO | null> {
+export async function getBookingById(bookingId: string): Promise<BookingDTO | null> {
+    const session = await requireSchedulingReadSession()
+    const customerId = canViewAllSchedulingBookings(session) ? undefined : session.userId
+
     const record = await prisma.booking.findFirst({
         where: {
             id: bookingId,
-            ...(scope.customerId ? { customerId: scope.customerId } : {}),
+            ...(customerId ? { customerId } : {}),
             deletedAt: null,
         },
         select: bookingSelectFields,
@@ -107,15 +139,15 @@ export async function getBookingById(
     return record ? toBookingDTO(record) : null
 }
 
-export async function getUpcomingBookingCount(
-    from: Date = new Date(),
-    scope: BookingScope = {}
-): Promise<number> {
+export async function getUpcomingBookingCount(from: Date = new Date()): Promise<number> {
+    const session = await requireSchedulingReadSession()
+    const customerId = canViewAllSchedulingBookings(session) ? undefined : session.userId
+
     return prisma.booking.count({
         where: {
-            ...(scope.customerId ? { customerId: scope.customerId } : {}),
+            ...(customerId ? { customerId } : {}),
             deletedAt: null,
-            status: { notIn: [BookingStatus.CANCELLED, BookingStatus.COMPLETED] },
+            status: { notIn: ['cancelled', 'completed'] },
             startTime: { gte: from },
         },
     })

@@ -3,15 +3,19 @@
 import { getSession } from '@/lib/auth/session'
 import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
 import { prisma } from '@/lib/prisma'
+import { revalidateSchedulingPages } from '../revalidation'
 
 export interface ConfirmedBookingDTO {
     id: string
     customerId: string
     wrapId: string
+    wrapName?: string
     startTime: Date
     endTime: Date
     status: 'confirmed'
     totalPrice: number
+    reservationExpiresAt: null
+    displayStatus: 'confirmed'
     createdAt: Date
     updatedAt: Date
 }
@@ -24,7 +28,7 @@ export async function confirmBooking(bookingId: string): Promise<ConfirmedBookin
         throw new Error('Unauthorized: not authenticated')
     }
 
-    return prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
         const now = new Date()
 
         const booking = await tx.booking.findFirst({
@@ -36,6 +40,11 @@ export async function confirmBooking(bookingId: string): Promise<ConfirmedBookin
                 id: true,
                 customerId: true,
                 wrapId: true,
+                wrap: {
+                    select: {
+                        name: true,
+                    },
+                },
                 startTime: true,
                 endTime: true,
                 status: true,
@@ -93,12 +102,19 @@ export async function confirmBooking(bookingId: string): Promise<ConfirmedBookin
             id: confirmed.id,
             customerId: confirmed.customerId,
             wrapId: confirmed.wrapId,
+            wrapName: booking.wrap.name,
             startTime: confirmed.startTime,
             endTime: confirmed.endTime,
-            status: 'confirmed',
+            status: 'confirmed' as const,
             totalPrice: confirmed.totalPrice,
+            reservationExpiresAt: null,
+            displayStatus: 'confirmed' as const,
             createdAt: confirmed.createdAt,
             updatedAt: confirmed.updatedAt,
         }
     })
+
+    revalidateSchedulingPages()
+
+    return result
 }

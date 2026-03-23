@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card'
-import { CalendarDays, Clock3, DollarSign } from 'lucide-react'
-import { BookingStatusBadge } from './booking-status-badge'
+import { CalendarDays, Clock3, DollarSign, TimerReset } from 'lucide-react'
+
+import { BookingStatusBadge, type BookingDisplayStatus } from './booking-status-badge'
 
 export interface BookingCardItem {
     id: string
@@ -9,6 +10,8 @@ export interface BookingCardItem {
     startTime: Date
     endTime: Date
     status: string
+    displayStatus?: BookingDisplayStatus | string
+    reservationExpiresAt?: Date | null
     totalPrice: number
 }
 
@@ -40,7 +43,17 @@ function formatPrice(cents: number): string {
     }).format(cents / 100)
 }
 
+function formatExpiry(date: Date): string {
+    return new Intl.DateTimeFormat('en-US', {
+        weekday: 'short',
+        hour: 'numeric',
+        minute: '2-digit',
+    }).format(date)
+}
+
 export function BookingCard({ booking }: BookingCardProps) {
+    const displayStatus = booking.displayStatus ?? booking.status
+
     return (
         <Card className="border-neutral-700 bg-neutral-900 text-neutral-100 shadow-sm transition-all hover:-translate-y-0.5">
             <CardContent className="p-4">
@@ -50,7 +63,7 @@ export function BookingCard({ booking }: BookingCardProps) {
                             <span className="truncate text-sm font-semibold text-neutral-100">
                                 {booking.wrapName ?? `Wrap ${booking.wrapId.slice(0, 8)}…`}
                             </span>
-                            <BookingStatusBadge status={booking.status} />
+                            <BookingStatusBadge status={displayStatus} />
                         </div>
 
                         <p className="flex items-center gap-2 text-sm text-neutral-300">
@@ -61,6 +74,20 @@ export function BookingCard({ booking }: BookingCardProps) {
                             <Clock3 className="size-3.5 text-neutral-500" />
                             {formatTime(booking.startTime)} – {formatTime(booking.endTime)}
                         </p>
+
+                        {displayStatus === 'reserved' && booking.reservationExpiresAt ? (
+                            <p className="flex items-center gap-2 text-xs text-amber-100/80">
+                                <TimerReset className="size-3.5 text-amber-300" />
+                                Reserved until {formatExpiry(booking.reservationExpiresAt)}
+                            </p>
+                        ) : null}
+
+                        {displayStatus === 'expired' ? (
+                            <p className="flex items-center gap-2 text-xs text-neutral-400">
+                                <TimerReset className="size-3.5 text-neutral-500" />
+                                Reservation expired
+                            </p>
+                        ) : null}
                     </div>
 
                     <div className="shrink-0 border border-neutral-700 bg-neutral-900 px-3 py-2 text-right">

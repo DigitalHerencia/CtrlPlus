@@ -1,3 +1,8 @@
+import type {
+    BookingStatusValue,
+    SchedulingBookingDisplayStatus,
+} from '@/lib/scheduling/types'
+
 /**
  * Formats a Date as a zero-padded "HH:mm" string in UTC.
  *
@@ -7,4 +12,20 @@
  */
 export function toHHmm(date: Date): string {
     return `${String(date.getUTCHours()).padStart(2, '0')}:${String(date.getUTCMinutes()).padStart(2, '0')}`
+}
+
+export function getBookingDisplayStatus(
+    status: BookingStatusValue,
+    reservationExpiresAt: Date | null,
+    now: Date = new Date()
+): SchedulingBookingDisplayStatus {
+    if (status === 'pending') {
+        if (reservationExpiresAt && reservationExpiresAt > now) {
+            return 'reserved'
+        }
+
+        return 'expired'
+    }
+
+    return status
 }

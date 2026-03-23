@@ -12,6 +12,13 @@ export const BookingStatus = {
 
 export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus]
 
+export type SchedulingBookingDisplayStatus =
+    | 'reserved'
+    | 'confirmed'
+    | 'completed'
+    | 'cancelled'
+    | 'expired'
+
 // ─── Booking DTOs ─────────────────────────────────────────────────────────────
 
 /** Valid booking status values (plain strings, not enum) */
@@ -21,10 +28,13 @@ export interface BookingDTO {
     id: string
     customerId: string
     wrapId: string
+    wrapName?: string
     startTime: Date
     endTime: Date
     status: BookingStatus
     totalPrice: number
+    reservationExpiresAt: Date | null
+    displayStatus: SchedulingBookingDisplayStatus
     createdAt: Date
     updatedAt: Date
 }

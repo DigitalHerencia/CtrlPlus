@@ -60,7 +60,15 @@ test.describe('Sign-up page', () => {
 // ─── Protected route redirection ─────────────────────────────────────────────
 
 test.describe('Protected routes', () => {
-    const protectedRoutes = ['/catalog', '/visualizer', '/scheduling', '/billing', '/admin']
+    const protectedRoutes = [
+        '/catalog',
+        '/visualizer',
+        '/scheduling',
+        '/scheduling/book',
+        '/scheduling/bookings',
+        '/billing',
+        '/admin',
+    ]
 
     for (const route of protectedRoutes) {
         test(`${route} redirects unauthenticated users to sign-in`, async ({ page }) => {

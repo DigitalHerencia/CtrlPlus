@@ -1,4 +1,7 @@
+import 'server-only'
+
 import { prisma } from '@/lib/prisma'
+import { requireSchedulingReadSession } from '../access'
 import {
     availabilityListParamsSchema,
     type AvailabilityListParams,
@@ -45,6 +48,8 @@ const availabilitySelectFields = {
 export async function getAvailabilityRules(
     params: AvailabilityListParams = DEFAULT_AVAILABILITY_LIST_PARAMS
 ): Promise<AvailabilityListResult> {
+    await requireSchedulingReadSession()
+
     const { page, pageSize, dayOfWeek } = availabilityListParamsSchema.parse(params)
     const skip = (page - 1) * pageSize
 
@@ -78,6 +83,8 @@ export const getAvailabilityWindows = getAvailabilityRules
 export async function getAvailabilityRuleById(
     windowId: string
 ): Promise<AvailabilityWindowDTO | null> {
+    await requireSchedulingReadSession()
+
     const record = await prisma.availabilityRule.findFirst({
         where: {
             id: windowId,
@@ -94,6 +101,8 @@ export const getAvailabilityWindowById = getAvailabilityRuleById
 export async function getAvailabilityRulesByDay(
     dayOfWeek: number
 ): Promise<AvailabilityWindowDTO[]> {
+    await requireSchedulingReadSession()
+
     const records = await prisma.availabilityRule.findMany({
         where: {
             dayOfWeek,

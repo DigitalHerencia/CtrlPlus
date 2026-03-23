@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { revalidateSchedulingPages } from '../revalidation'
 
 export interface CleanupExpiredReservationsInput {
     now?: Date
@@ -74,6 +75,8 @@ export async function cleanupExpiredReservations(
             })),
         })
     })
+
+    revalidateSchedulingPages()
 
     return {
         processedReservationIds: reservationIds,

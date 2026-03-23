@@ -4,6 +4,7 @@ import { getSession } from '@/lib/auth/session'
 import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
 import { prisma } from '@/lib/prisma'
 import { BookingStatus, type BookingDTO } from '@/lib/scheduling/types'
+import { revalidateSchedulingPages } from '../revalidation'
 
 export async function cancelBooking(bookingId: string): Promise<BookingDTO> {
     const session = await getSession()
@@ -15,7 +16,16 @@ export async function cancelBooking(bookingId: string): Promise<BookingDTO> {
 
     const existing = await prisma.booking.findFirst({
         where: { id: bookingId, deletedAt: null },
-        select: { id: true, customerId: true, status: true },
+        select: {
+            id: true,
+            customerId: true,
+            status: true,
+            wrap: {
+                select: {
+                    name: true,
+                },
+            },
+        },
     })
 
     if (!existing) {
@@ -48,14 +58,19 @@ export async function cancelBooking(bookingId: string): Promise<BookingDTO> {
         return updated
     })
 
+    revalidateSchedulingPages()
+
     return {
         id: booking.id,
         customerId: booking.customerId,
         wrapId: booking.wrapId,
+        wrapName: existing.wrap.name,
         startTime: booking.startTime,
         endTime: booking.endTime,
         status: booking.status as BookingDTO['status'],
         totalPrice: booking.totalPrice,
+        reservationExpiresAt: null,
+        displayStatus: 'cancelled',
         createdAt: booking.createdAt,
         updatedAt: booking.updatedAt,
     }

@@ -4,8 +4,10 @@ import { getSession } from '@/lib/auth/session'
 import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
 import { prisma } from '@/lib/prisma'
 import { assertSlotHasCapacity } from '@/lib/scheduling/capacity'
+import { getBookingDisplayStatus } from '@/lib/scheduling/utils'
 import { Prisma } from '@prisma/client'
 import { z } from 'zod'
+import { revalidateSchedulingPages } from '../revalidation'
 
 const updateBookingSchema = z
     .object({
@@ -23,10 +25,13 @@ type BookingActionDTO = {
     id: string
     customerId: string
     wrapId: string
+    wrapName?: string
     startTime: Date
     endTime: Date
     status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
     totalPrice: number
+    reservationExpiresAt: Date | null
+    displayStatus: 'reserved' | 'confirmed' | 'completed' | 'cancelled' | 'expired'
     createdAt: Date
     updatedAt: Date
 }
@@ -53,6 +58,16 @@ export async function updateBooking(
             startTime: true,
             endTime: true,
             status: true,
+            wrap: {
+                select: {
+                    name: true,
+                },
+            },
+            reservation: {
+                select: {
+                    expiresAt: true,
+                },
+            },
         },
     })
 
@@ -96,14 +111,22 @@ export async function updateBooking(
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
     )
 
+    revalidateSchedulingPages()
+
     return {
         id: booking.id,
         customerId: booking.customerId,
         wrapId: booking.wrapId,
+        wrapName: existing.wrap.name,
         startTime: booking.startTime,
         endTime: booking.endTime,
         status: booking.status as BookingActionDTO['status'],
         totalPrice: booking.totalPrice,
+        reservationExpiresAt: existing.reservation?.expiresAt ?? null,
+        displayStatus: getBookingDisplayStatus(
+            booking.status as 'pending' | 'confirmed' | 'completed' | 'cancelled',
+            existing.reservation?.expiresAt ?? null
+        ),
         createdAt: booking.createdAt,
         updatedAt: booking.updatedAt,
     }
