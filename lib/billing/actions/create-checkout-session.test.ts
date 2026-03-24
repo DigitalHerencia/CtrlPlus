@@ -25,6 +25,10 @@ vi.mock('@/lib/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
+// next/cache revalidatePath is a runtime helper that requires a static generation
+// store; mock it in tests to avoid Next.js runtime invariant errors.
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+
 vi.mock('../access', () => ({
     getBillingAccessContext: mocks.getBillingAccessContext,
     requireInvoiceWriteAccess: mocks.requireInvoiceWriteAccess,

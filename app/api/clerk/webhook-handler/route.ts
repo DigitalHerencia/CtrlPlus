@@ -11,8 +11,9 @@
  * CLERK_WEBHOOK_SIGNING_SECRET (or the legacy CLERK_WEBHOOK_SECRET fallback).
  */
 
-import { verifyWebhook } from '@clerk/nextjs/webhooks'
+import { verifyAndParseClerkWebhook } from '@/lib/auth/clerk-webhook'
 import { resolveGlobalRoleForClerkUserId } from '@/lib/auth/identity'
+import { upsertUserFromClerk } from '@/lib/auth/actions/auth'
 import { prisma } from '@/lib/prisma'
 import { type NextRequest, NextResponse } from 'next/server'
 
@@ -352,24 +353,14 @@ async function handleUserEvent(eventType: string, data: unknown): Promise<void> 
         return
     }
 
-    await prisma.user.upsert({
-        where: { clerkUserId },
-        create: {
-            clerkUserId,
-            email,
-            globalRole,
-            firstName,
-            lastName,
-            imageUrl,
-        },
-        update: {
-            email,
-            globalRole,
-            firstName,
-            lastName,
-            imageUrl,
-            deletedAt: null,
-        },
+    // Centralize auth-domain writes into lib/actions/auth
+    await upsertUserFromClerk({
+        clerkUserId,
+        email,
+        firstName,
+        lastName,
+        imageUrl,
+        globalRole,
     })
 }
 
@@ -582,7 +573,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing svix-id header' }, { status: 400 })
         }
 
-        const evt = (await verifyWebhook(req)) as ClerkWebhookEvent
+        const evt = (await verifyAndParseClerkWebhook(req)) as ClerkWebhookEvent
 
         // Guard: Only process supported events
         if (!SUPPORTED_EVENTS.has(evt.type)) {
