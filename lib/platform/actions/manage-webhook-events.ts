@@ -1,23 +1,43 @@
 'use server'
 
 import { requirePlatformDeveloperAdmin } from '@/lib/authz/guards'
+import { processStripeWebhookEvent } from '@/lib/billing/actions/process-stripe-webhook-event'
 import { prisma } from '@/lib/prisma'
+import type { Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
+import type Stripe from 'stripe'
 import { z } from 'zod'
-import { type WebhookMutationResultDTO } from '../types'
+
+import { type WebhookMutationResultDTO, type WebhookReplayResultDTO } from '../types'
 
 const resetWebhookLocksSchema = z.object({
     source: z.enum(['clerk', 'stripe']),
-    eventIds: z.array(z.string().min(1)).min(1).max(100),
+    eventIds: z.array(z.string().min(1)).min(1).max(25),
 })
 
-const SOURCE_TO_TABLE = {
-    clerk: 'clerk',
-    stripe: 'stripe',
-} as const
+function getStoredStripeEvent(payload: unknown, eventId: string, eventType: string): Stripe.Event | null {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+        return null
+    }
+
+    const candidate = payload as Partial<Stripe.Event>
+    if (candidate.id !== eventId || candidate.type !== eventType) {
+        return null
+    }
+
+    if (!candidate.data || typeof candidate.data !== 'object' || !('object' in candidate.data)) {
+        return null
+    }
+
+    return candidate as Stripe.Event
+}
 
 export async function clearStuckWebhookProcessingEvents(): Promise<WebhookMutationResultDTO> {
-    await requirePlatformDeveloperAdmin()
+    const session = await requirePlatformDeveloperAdmin()
+
+    if (!session.userId) {
+        throw new Error('Unauthorized: not authenticated')
+    }
 
     const staleCutoff = new Date(Date.now() - 5 * 60_000)
 
@@ -32,6 +52,7 @@ export async function clearStuckWebhookProcessingEvents(): Promise<WebhookMutati
             data: {
                 status: 'failed',
                 processedAt: new Date(),
+                error: 'Processing lock released by platform admin.',
             },
         }),
         prisma.stripeWebhookEvent.updateMany({
@@ -44,14 +65,129 @@ export async function clearStuckWebhookProcessingEvents(): Promise<WebhookMutati
             data: {
                 status: 'failed',
                 processedAt: new Date(),
+                error: 'Processing lock released by platform admin.',
             },
         }),
     ])
+
+    await prisma.auditLog.create({
+        data: {
+            userId: session.userId,
+            action: 'PLATFORM_WEBHOOK_STALE_LOCKS_CLEARED',
+            resourceType: 'WebhookEvent',
+            resourceId: 'platform:webhook-locks',
+            details: JSON.stringify({
+                staleCutoff: staleCutoff.toISOString(),
+                clerkAffectedCount: releasedClerk.count,
+                stripeAffectedCount: releasedStripe.count,
+            }),
+        },
+    })
 
     revalidatePath('/platform')
 
     return {
         affectedCount: releasedClerk.count + releasedStripe.count,
+        clerkAffectedCount: releasedClerk.count,
+        stripeAffectedCount: releasedStripe.count,
+    }
+}
+
+export async function replayStripeWebhookFailures(
+    rawInput: { eventIds: string[] }
+): Promise<WebhookReplayResultDTO> {
+    const session = await requirePlatformDeveloperAdmin()
+
+    if (!session.userId) {
+        throw new Error('Unauthorized: not authenticated')
+    }
+
+    const input = resetWebhookLocksSchema.pick({ eventIds: true }).parse(rawInput)
+    const failedEvents = await prisma.stripeWebhookEvent.findMany({
+        where: {
+            id: {
+                in: input.eventIds,
+            },
+            status: 'failed',
+        },
+        select: {
+            id: true,
+            type: true,
+            payload: true,
+        },
+    })
+
+    const failedEventMap = new Map(failedEvents.map((event) => [event.id, event]))
+    let replayedCount = 0
+    let ignoredCount = 0
+    let nonReplayableCount = 0
+    let failedCount = 0
+    const failedIds: string[] = []
+    const ignoredIds: string[] = []
+    const nonReplayableIds: string[] = []
+
+    for (const eventId of input.eventIds) {
+        const event = failedEventMap.get(eventId)
+
+        if (!event) {
+            failedCount += 1
+            failedIds.push(eventId)
+            continue
+        }
+
+        const storedEvent = getStoredStripeEvent(event.payload, event.id, event.type)
+        if (!storedEvent) {
+            nonReplayableCount += 1
+            nonReplayableIds.push(event.id)
+            continue
+        }
+
+        try {
+            const result = await processStripeWebhookEvent({
+                event: storedEvent,
+                payload: event.payload as unknown as Prisma.InputJsonValue,
+            })
+
+            if (result.kind === 'ignored') {
+                ignoredCount += 1
+                ignoredIds.push(event.id)
+                continue
+            }
+
+            replayedCount += 1
+        } catch {
+            failedCount += 1
+            failedIds.push(event.id)
+        }
+    }
+
+    await prisma.auditLog.create({
+        data: {
+            userId: session.userId,
+            action: 'PLATFORM_STRIPE_WEBHOOK_REPLAY_REQUESTED',
+            resourceType: 'StripeWebhookEvent',
+            resourceId: input.eventIds.join(','),
+            details: JSON.stringify({
+                requestedIds: input.eventIds,
+                replayedCount,
+                ignoredCount,
+                nonReplayableCount,
+                failedCount,
+                ignoredIds,
+                nonReplayableIds,
+                failedIds,
+            }),
+        },
+    })
+
+    revalidatePath('/platform')
+
+    return {
+        requestedCount: input.eventIds.length,
+        replayedCount,
+        ignoredCount,
+        nonReplayableCount,
+        failedCount,
     }
 }
 
@@ -59,39 +195,17 @@ export async function resetFailedWebhookLocks(rawInput: {
     source: 'clerk' | 'stripe'
     eventIds: string[]
 }): Promise<WebhookMutationResultDTO> {
-    await requirePlatformDeveloperAdmin()
-
     const input = resetWebhookLocksSchema.parse(rawInput)
-    const where = {
-        id: {
-            in: input.eventIds,
-        },
-        status: {
-            in: ['failed', 'processing'],
-        },
+
+    if (input.source === 'clerk') {
+        throw new Error('Clerk replay remains owned by auth/authz and is not available from platform.')
     }
 
-    const now = new Date()
-    const result =
-        SOURCE_TO_TABLE[input.source] === 'clerk'
-            ? await prisma.clerkWebhookEvent.updateMany({
-                  where,
-                  data: {
-                      status: 'failed',
-                      processedAt: now,
-                  },
-              })
-            : await prisma.stripeWebhookEvent.updateMany({
-                  where,
-                  data: {
-                      status: 'failed',
-                      processedAt: now,
-                  },
-              })
-
-    revalidatePath('/platform')
+    const result = await replayStripeWebhookFailures({ eventIds: input.eventIds })
 
     return {
-        affectedCount: result.count,
+        affectedCount: result.replayedCount + result.ignoredCount,
+        clerkAffectedCount: 0,
+        stripeAffectedCount: result.replayedCount + result.ignoredCount,
     }
 }

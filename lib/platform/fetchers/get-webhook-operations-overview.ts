@@ -1,21 +1,36 @@
 import { prisma } from '@/lib/prisma'
 import { requirePlatformDeveloperAdmin } from '@/lib/authz/guards'
-import { type WebhookFailureDTO, type WebhookOperationsOverviewDTO } from '../types'
+import { type WebhookFailureDTO, type WebhookOperationsOverviewDTO, type WebhookSource } from '../types'
 
 const STALE_THRESHOLD_MINUTES = 5
 const RECENT_FAILURE_LIMIT = 25
 
-function toFailureDTO(record: {
-    id: string
-    type: string
-    status: string
-    processedAt: Date
-}): WebhookFailureDTO {
+function toFailureDTO(
+    source: WebhookSource,
+    record: {
+        id: string
+        type: string
+        status: string
+        processedAt: Date
+        error: string | null
+        payload: unknown
+    }
+): WebhookFailureDTO {
+    const canReplay = source === 'stripe' && record.payload !== null
+
     return {
         id: record.id,
+        source,
         type: record.type,
         status: record.status,
         processedAt: record.processedAt.toISOString(),
+        error: record.error,
+        canReplay,
+        replayUnavailableReason: canReplay
+            ? null
+            : source === 'clerk'
+              ? 'Clerk replay stays owned by auth/authz and is not available from platform.'
+              : 'Stored payload unavailable for replay.',
     }
 }
 
@@ -56,6 +71,8 @@ export async function getWebhookOperationsOverview(): Promise<WebhookOperationsO
                 type: true,
                 status: true,
                 processedAt: true,
+                error: true,
+                payload: true,
             },
             orderBy: {
                 processedAt: 'desc',
@@ -82,6 +99,8 @@ export async function getWebhookOperationsOverview(): Promise<WebhookOperationsO
                 type: true,
                 status: true,
                 processedAt: true,
+                error: true,
+                payload: true,
             },
             orderBy: {
                 processedAt: 'desc',
@@ -89,6 +108,9 @@ export async function getWebhookOperationsOverview(): Promise<WebhookOperationsO
             take: RECENT_FAILURE_LIMIT,
         }),
     ])
+
+    const clerkFailures = clerkRecentFailures.map((record) => toFailureDTO('clerk', record))
+    const stripeFailures = stripeRecentFailures.map((record) => toFailureDTO('stripe', record))
 
     return {
         generatedAt: new Date().toISOString(),
@@ -98,14 +120,18 @@ export async function getWebhookOperationsOverview(): Promise<WebhookOperationsO
             failed: clerkFailed,
             processing: clerkProcessing,
             staleProcessing: clerkStaleProcessing,
-            recentFailures: clerkRecentFailures.map(toFailureDTO),
+            recentFailures: clerkFailures,
+            replayableRecentFailures: 0,
+            nonReplayableRecentFailures: clerkFailures.length,
         },
         stripe: {
             processed: stripeProcessed,
             failed: stripeFailed,
             processing: stripeProcessing,
             staleProcessing: stripeStaleProcessing,
-            recentFailures: stripeRecentFailures.map(toFailureDTO),
+            recentFailures: stripeFailures,
+            replayableRecentFailures: stripeFailures.filter((failure) => failure.canReplay).length,
+            nonReplayableRecentFailures: stripeFailures.filter((failure) => !failure.canReplay).length,
         },
     }
 }
