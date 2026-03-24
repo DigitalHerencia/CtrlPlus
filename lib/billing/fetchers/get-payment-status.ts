@@ -1,27 +1,26 @@
+import 'server-only'
+
 import { prisma } from '@/lib/prisma'
 import { type PaymentDTO, type PaymentStatus, paymentDTOFields } from '../types'
+import { buildInvoiceReadWhere, getBillingAccessContext } from '../access'
 
 export async function getPaymentStatusForInvoice(invoiceId: string): Promise<PaymentDTO[] | null> {
-    const invoice = await prisma.invoice.findFirst({
-        where: {
-            id: invoiceId,
-            deletedAt: null,
-        },
-        select: { id: true },
-    })
+    const access = await getBillingAccessContext()
 
-    if (!invoice) return null
-
-    const payments = await prisma.payment.findMany({
+    const rows = await prisma.payment.findMany({
         where: {
-            invoiceId,
             deletedAt: null,
+            invoice: {
+                id: invoiceId,
+                deletedAt: null,
+                ...buildInvoiceReadWhere(access.session.userId, access.canReadAllInvoices),
+            },
         },
         select: paymentDTOFields,
         orderBy: { createdAt: 'asc' },
     })
 
-    return payments.map(
+    const payments = rows.map(
         (p: {
             id: string
             invoiceId: string
@@ -38,4 +37,19 @@ export async function getPaymentStatusForInvoice(invoiceId: string): Promise<Pay
             createdAt: p.createdAt,
         })
     )
+
+    if (payments.length > 0) {
+        return payments
+    }
+
+    const invoice = await prisma.invoice.findFirst({
+        where: {
+            id: invoiceId,
+            deletedAt: null,
+            ...buildInvoiceReadWhere(access.session.userId, access.canReadAllInvoices),
+        },
+        select: { id: true },
+    })
+
+    return invoice ? [] : null
 }

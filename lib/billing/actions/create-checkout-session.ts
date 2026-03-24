@@ -1,11 +1,16 @@
 'use server'
 
-import { getSession } from '@/lib/auth/session'
-import { hasCapability } from '@/lib/authz/policy'
+import { revalidatePath } from 'next/cache'
+
 import { getAppBaseUrl, getStripeClient } from '@/lib/billing/stripe'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-import { type CheckoutSessionDTO, type InvoiceLineItemDTO } from '../types'
+import { type CheckoutSessionDTO, type InvoiceLineItemDTO, type InvoiceStatus } from '../types'
+import {
+    getBillingAccessContext,
+    isInvoiceCheckoutEligible,
+    requireInvoiceWriteAccess,
+} from '../access'
 
 type InvoiceLineItemRow = Pick<InvoiceLineItemDTO, 'description' | 'quantity' | 'unitPrice'>
 const checkoutInputSchema = z.object({
@@ -23,10 +28,7 @@ function toStripeAmount(cents: number): number {
 export async function createCheckoutSession(rawInput: {
     invoiceId: string
 }): Promise<CheckoutSessionDTO> {
-    const session = await getSession()
-    const userId = session.userId
-    if (!session.isAuthenticated || !userId) throw new Error('Unauthorized: not authenticated')
-
+    const access = await getBillingAccessContext()
     const { invoiceId } = checkoutInputSchema.parse(rawInput)
 
     const invoice = await prisma.invoice.findFirst({
@@ -35,6 +37,7 @@ export async function createCheckoutSession(rawInput: {
             id: true,
             totalAmount: true,
             status: true,
+            updatedAt: true,
             booking: {
                 select: {
                     customerId: true,
@@ -50,14 +53,12 @@ export async function createCheckoutSession(rawInput: {
         throw new Error('Forbidden: invoice not found')
     }
 
-    const canManageAllBilling = hasCapability(session.authz, 'billing.write.all')
+    requireInvoiceWriteAccess(access, invoice.booking.customerId)
 
-    if (invoice.booking.customerId !== userId && !canManageAllBilling) {
-        throw new Error('Forbidden: user cannot pay this invoice')
-    }
+    const invoiceStatus = invoice.status as InvoiceStatus
 
-    if (invoice.status === 'paid') {
-        throw new Error('Forbidden: invoice is already paid')
+    if (!isInvoiceCheckoutEligible(invoiceStatus)) {
+        throw new Error(`Forbidden: invoice is not payable from status ${invoice.status}`)
     }
 
     const lineItems =
@@ -83,33 +84,54 @@ export async function createCheckoutSession(rawInput: {
 
     const baseUrl = getAppBaseUrl()
     const stripe = getStripeClient()
+    const idempotencyKey = `billing:checkout:${invoice.id}:${invoice.updatedAt.getTime()}`
 
-    const checkoutSession = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: lineItems,
-        mode: 'payment',
-        client_reference_id: invoice.id,
-        success_url: `${baseUrl}/billing/${invoice.id}?payment=success`,
-        cancel_url: `${baseUrl}/billing/${invoice.id}?payment=cancelled`,
-        metadata: {
-            invoiceId: invoice.id,
+    const checkoutSession = await stripe.checkout.sessions.create(
+        {
+            payment_method_types: ['card'],
+            line_items: lineItems,
+            mode: 'payment',
+            client_reference_id: invoice.id,
+            success_url: `${baseUrl}/billing/${invoice.id}?payment=success`,
+            cancel_url: `${baseUrl}/billing/${invoice.id}?payment=cancelled`,
+            metadata: {
+                invoiceId: invoice.id,
+                invoiceUpdatedAt: invoice.updatedAt.toISOString(),
+            },
         },
-    })
+        {
+            idempotencyKey,
+        }
+    )
 
     if (!checkoutSession.url) {
         throw new Error('Stripe did not return a checkout URL')
     }
 
+    if (invoice.status === 'draft') {
+        await prisma.invoice.update({
+            where: { id: invoice.id },
+            data: { status: 'sent' },
+        })
+    }
+
     await prisma.auditLog.create({
         data: {
-            userId,
+            userId: access.session.userId,
             action: 'CREATE_CHECKOUT_SESSION',
             resourceType: 'Invoice',
             resourceId: invoice.id,
-            details: JSON.stringify({ sessionId: checkoutSession.id }),
+            details: JSON.stringify({
+                sessionId: checkoutSession.id,
+                idempotencyKey,
+                invoiceStatus,
+            }),
             timestamp: new Date(),
         },
     })
+
+    revalidatePath('/billing')
+    revalidatePath(`/billing/${invoice.id}`)
 
     return { sessionId: checkoutSession.id, url: checkoutSession.url, invoiceId: invoice.id }
 }

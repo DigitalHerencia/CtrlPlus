@@ -1,3 +1,7 @@
+import 'server-only'
+
+import type { Prisma } from '@prisma/client'
+
 import { prisma } from '@/lib/prisma'
 import {
     invoiceDTOFields,
@@ -6,10 +10,7 @@ import {
     type InvoiceListParams,
     type InvoiceListResult,
 } from '../types'
-
-interface InvoiceScope {
-    customerId?: string
-}
+import { buildInvoiceReadWhere, getBillingAccessContext } from '../access'
 
 function toInvoiceDTO(row: {
     id: string
@@ -30,21 +31,15 @@ function toInvoiceDTO(row: {
 }
 
 export async function getInvoices(
-    params: InvoiceListParams = { page: 1, pageSize: 20 },
-    scope: InvoiceScope = {}
+    params: InvoiceListParams = { page: 1, pageSize: 20 }
 ): Promise<InvoiceListResult> {
+    const access = await getBillingAccessContext()
     const { page, pageSize, status } = invoiceListParamsSchema.parse(params)
     const skip = (page - 1) * pageSize
 
-    const where = {
+    const where: Prisma.InvoiceWhereInput = {
         deletedAt: null,
-        ...(scope.customerId
-            ? {
-                  booking: {
-                      customerId: scope.customerId,
-                  },
-              }
-            : {}),
+        ...buildInvoiceReadWhere(access.session.userId, access.canReadAllInvoices),
         ...(status ? { status } : {}),
     }
 

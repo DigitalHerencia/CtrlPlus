@@ -1,15 +1,26 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { createCheckoutSession } from '@/lib/billing/actions/create-checkout-session'
 import { useState, useTransition } from 'react'
 
-interface CheckoutButtonProps {
-    invoiceId: string
-    disabled?: boolean
+import { Button } from '@/components/ui/button'
+
+interface CheckoutSessionResult {
+    url: string
 }
 
-export function CheckoutButton({ invoiceId, disabled }: CheckoutButtonProps) {
+interface CheckoutButtonProps {
+    onCheckout: () => Promise<CheckoutSessionResult>
+    disabled?: boolean
+    actionLabel?: string
+    pendingLabel?: string
+}
+
+export function CheckoutButton({
+    onCheckout,
+    disabled,
+    actionLabel = 'Pay with Stripe',
+    pendingLabel = 'Redirecting…',
+}: CheckoutButtonProps) {
     const [isPending, startTransition] = useTransition()
     const [error, setError] = useState<string | null>(null)
 
@@ -17,7 +28,7 @@ export function CheckoutButton({ invoiceId, disabled }: CheckoutButtonProps) {
         setError(null)
         startTransition(async () => {
             try {
-                const result = await createCheckoutSession({ invoiceId })
+                const result = await onCheckout()
                 window.location.href = result.url
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Checkout failed. Please try again.')
@@ -32,7 +43,7 @@ export function CheckoutButton({ invoiceId, disabled }: CheckoutButtonProps) {
                 disabled={disabled || isPending}
                 className="w-full sm:w-auto"
             >
-                {isPending ? 'Redirecting…' : 'Pay with Stripe'}
+                {isPending ? pendingLabel : actionLabel}
             </Button>
             {error && <p className="text-sm text-neutral-100">{error}</p>}
         </div>

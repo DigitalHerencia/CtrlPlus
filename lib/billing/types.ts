@@ -12,6 +12,8 @@ export const InvoiceStatus = {
 
 export type InvoiceStatus = (typeof InvoiceStatus)[keyof typeof InvoiceStatus]
 
+const PAYABLE_INVOICE_STATUSES = new Set<InvoiceStatus>(['draft', 'sent', 'failed'])
+
 export const PaymentStatus = {
     PENDING: 'pending',
     SUCCEEDED: 'succeeded',
@@ -111,4 +113,8 @@ export interface ConfirmPaymentResult {
     invoiceId: string
     paymentId: string
     status: 'pending' | 'succeeded' | 'failed'
+}
+
+export function isInvoicePayable(status: InvoiceStatus): boolean {
+    return PAYABLE_INVOICE_STATUSES.has(status)
 }
