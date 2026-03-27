@@ -2,8 +2,9 @@
 
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/prisma'
+import { updateWrapSchema } from '@/schema/catalog'
 import { revalidateCatalogPaths } from '../revalidation'
-import { updateWrapSchema, type UpdateWrapInput, type WrapDTO } from '../types'
+import { type UpdateWrapInput, type WrapDTO } from '../types'
 import { getWrapById } from '../fetchers/get-wraps'
 
 export async function updateWrap(wrapId: string, input: UpdateWrapInput): Promise<WrapDTO> {

@@ -2,11 +2,8 @@ import { getSession } from '@/lib/auth/session'
 import { hasCapability, requireCapability } from '@/lib/authz/policy'
 import { VisualizerPageFeature } from '@/features/visualizer/visualizer-page-feature'
 import { parseVisualizerSearchParams } from '@/lib/visualizer/search-params'
+import { type VisualizerPageProps } from '@/types/visualizer'
 import { redirect } from 'next/navigation'
-
-interface VisualizerPageProps {
-    searchParams: Promise<Record<string, string | string[] | undefined>>
-}
 
 export default async function VisualizerPage({ searchParams }: VisualizerPageProps) {
     const session = await getSession()

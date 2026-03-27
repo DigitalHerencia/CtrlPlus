@@ -13,7 +13,7 @@ export type CreateInvoiceParams = {
  * Billing manager - orchestrates billing flows used by admin actions.
  */
 export const createInvoice = async (params: CreateInvoiceParams) => {
-    const { tenantId, bookingId, customerId, amountCents, currency = 'usd', description } = params
+    const { bookingId, amountCents } = params
 
     const invoice = await prisma.invoice.create({
         data: {

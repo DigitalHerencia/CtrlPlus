@@ -1,9 +1,5 @@
-import { type SearchWrapsInput, searchWrapsSchema } from '@/lib/catalog/types'
-
-interface CatalogSearchParamsResult {
-    filters: SearchWrapsInput
-    hasActiveFilters: boolean
-}
+import { searchWrapsSchema } from '@/schema/catalog'
+import { type CatalogSearchParamsResult, type SearchWrapsInput } from '@/types/catalog'
 
 function toNumber(value: string | null): number | undefined {
     if (!value) {

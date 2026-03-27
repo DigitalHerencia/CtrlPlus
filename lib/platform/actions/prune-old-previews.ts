@@ -4,7 +4,7 @@ import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
 import { prisma } from '@/lib/prisma'
 
-export async function pruneOldPreviews(_formData: FormData): Promise<void> {
+export async function pruneOldPreviews(): Promise<void> {
     const session = await getSession()
     const userId = session.userId
     if (!session.isAuthenticated || !userId) {

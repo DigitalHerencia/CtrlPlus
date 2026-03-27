@@ -12,7 +12,7 @@ export type ConfirmAppointmentParams = {
  * Keep logic small: call Prisma scoped to tenant and return minimal payloads.
  */
 export const confirmAppointment = async (params: ConfirmAppointmentParams) => {
-    const { tenantId, bookingId, status, note } = params
+    const { bookingId, status } = params
 
     const booking = await prisma.booking.updateMany({
         where: { id: bookingId, deletedAt: null },

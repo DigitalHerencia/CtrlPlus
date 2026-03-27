@@ -1,48 +1,14 @@
 'use client'
 
-import { type FormEventHandler } from 'react'
-
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+    type BookingFormAvailabilityWindow,
+    type BookingFormProps,
+} from '@/types/scheduling'
 
 import { CalendarClient } from './calendar-client'
 import { TimeSlot } from './time-slot'
-
-export interface BookingFormAvailabilityWindow {
-    id: string
-    dayOfWeek: number
-    startTime: string
-    endTime: string
-    capacity: number
-}
-
-export interface BookingFormWrapOption {
-    id: string
-    name: string
-    price: number
-}
-
-export interface BookingFormErrors {
-    date?: string
-    windowId?: string
-    wrapId?: string
-    root?: string
-}
-
-export interface BookingFormProps {
-    availabilityWindows: BookingFormAvailabilityWindow[]
-    wraps: BookingFormWrapOption[]
-    selectedDate: Date | null
-    selectedWindowId: string
-    selectedWrapId: string
-    errors?: BookingFormErrors
-    isPending?: boolean
-    minDate?: Date
-    onSubmit: FormEventHandler<HTMLFormElement>
-    onDateSelect: (date: Date) => void
-    onWindowSelect: (windowId: string) => void
-    onWrapSelect: (wrapId: string) => void
-}
 
 function getAvailableWeekdays(windows: BookingFormAvailabilityWindow[]): number[] {
     return [...new Set(windows.map((window) => window.dayOfWeek))]

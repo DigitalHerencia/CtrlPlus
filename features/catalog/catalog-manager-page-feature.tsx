@@ -1,18 +1,14 @@
 import Link from 'next/link'
 
-import { CatalogManager } from '@/components/catalog/CatalogManager'
 import { CatalogPagination } from '@/components/catalog/CatalogPagination'
-import { WrapFilter } from '@/components/catalog/WrapFilter'
 import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { getWrapCategories } from '@/lib/catalog/fetchers/get-wrap-categories'
 import { getCatalogManagerWraps } from '@/lib/catalog/fetchers/get-wraps'
 import { createCatalogQueryString } from '@/lib/catalog/search-params'
-import { type SearchWrapsInput } from '@/lib/catalog/types'
-
-interface CatalogManagerPageFeatureProps {
-    filters: SearchWrapsInput
-}
+import { type CatalogManagerPageFeatureProps } from '@/types/catalog'
+import { CatalogFiltersClient } from './catalog-filters-client'
+import { CatalogManagerClient } from './catalog-manager-client'
 
 export async function CatalogManagerPageFeature({ filters }: CatalogManagerPageFeatureProps) {
     const [data, categories] = await Promise.all([
@@ -40,8 +36,8 @@ export async function CatalogManagerPageFeature({ filters }: CatalogManagerPageF
                     </div>
                 }
             />
-            <WrapFilter categories={categories} />
-            <CatalogManager wraps={data.wraps} categories={categories} />
+            <CatalogFiltersClient categories={categories} />
+            <CatalogManagerClient wraps={data.wraps} categories={categories} />
             <CatalogPagination
                 page={data.page}
                 totalPages={data.totalPages}

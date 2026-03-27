@@ -6,13 +6,8 @@ import {
     getVisualizerWrapSelectionById,
     listVisualizerWrapSelections,
 } from '@/lib/visualizer/fetchers/get-wrap-selections'
+import { type VisualizerPageFeatureProps } from '@/types/visualizer'
 import { VisualizerWorkspaceClient } from './visualizer-workspace-client'
-
-interface VisualizerPageFeatureProps {
-    requestedWrapId: string | null
-    canManageCatalog: boolean
-    includeHidden: boolean
-}
 
 export async function VisualizerPageFeature({
     requestedWrapId,

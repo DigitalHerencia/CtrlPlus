@@ -1,9 +1,9 @@
 import 'server-only'
 
 import { prisma } from '@/lib/prisma'
+import { availabilityListParamsSchema } from '@/schema/scheduling'
 import { requireSchedulingReadSession } from '../access'
 import {
-    availabilityListParamsSchema,
     type AvailabilityListParams,
     type AvailabilityListResult,
     type AvailabilityRuleDTO,

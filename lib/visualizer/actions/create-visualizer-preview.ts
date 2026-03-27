@@ -10,8 +10,8 @@ import { storePreviewImage } from '@/lib/visualizer/storage'
 import { visualizerConfig } from '@/lib/visualizer/config'
 import { buildVisualizerCacheKey } from '@/lib/visualizer/cache-key'
 import { toVisualizerPreviewDTO } from '@/lib/visualizer/dto'
+import { createVisualizerPreviewSchema } from '@/schema/visualizer'
 import {
-    createVisualizerPreviewSchema,
     type CreateVisualizerPreviewInput,
     type VisualizerPreviewDTO,
 } from '../types'

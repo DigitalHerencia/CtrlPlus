@@ -4,12 +4,9 @@ import { getSession } from '@/lib/auth/session'
 import { hasCapability } from '@/lib/authz/policy'
 import { parseCatalogSearchParams } from '@/lib/catalog/search-params'
 import { CatalogBrowsePageFeature } from '@/features/catalog/catalog-browse-page-feature'
+import { type CatalogPageSearchParams } from '@/types/catalog'
 
-interface CatalogPageProps {
-    searchParams: Promise<Record<string, string | string[] | undefined>>
-}
-
-export default async function CatalogPage({ searchParams }: CatalogPageProps) {
+export default async function CatalogPage({ searchParams }: CatalogPageSearchParams) {
     const session = await getSession()
 
     if (!session.isAuthenticated || !session.userId) {

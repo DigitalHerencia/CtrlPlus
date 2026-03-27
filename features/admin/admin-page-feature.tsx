@@ -41,7 +41,7 @@ export default async function AdminPageFeature() {
         canManageBilling: true,
     }
 
-    async function confirmExampleAppointmentAction(_formData: FormData) {
+    async function confirmExampleAppointmentAction() {
         'use server'
 
         if (!managementToolExamples.confirmAppointmentExample) return
@@ -49,7 +49,7 @@ export default async function AdminPageFeature() {
         await confirmAppointment(managementToolExamples.confirmAppointmentExample)
     }
 
-    async function createExampleInvoiceAction(_formData: FormData) {
+    async function createExampleInvoiceAction() {
         'use server'
 
         if (!managementToolExamples.createInvoiceExample) return

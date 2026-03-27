@@ -1,45 +1,8 @@
 import { resolveGlobalRoleForClerkUserId } from '@/lib/auth/identity'
-import { type AuthzContext } from '@/lib/authz/types'
+import { type AuthzContext } from '@/types/authz'
+import { type Session, type SessionContext, type SessionUser } from '@/types/auth'
 import { auth } from '@clerk/nextjs/server'
 import { cache } from 'react'
-
-/**
- * The session context returned by getSession().
- * Provides authentication and role context for the current request.
- */
-export interface SessionContext {
-    /** Clerk user ID, or null if not authenticated */
-    userId: string | null
-    /** Whether the current user is authenticated */
-    isAuthenticated: boolean
-    /** Unified authorization context */
-    authz: AuthzContext
-    role: AuthzContext['role']
-    isOwner: boolean
-    isPlatformAdmin: boolean
-}
-
-/**
- * @deprecated Use SessionContext instead.
- * Kept for backward compatibility.
- */
-export interface SessionUser {
-    id: string
-    clerkUserId: string
-    email: string
-}
-
-/**
- * @deprecated Use SessionContext instead.
- * Kept for backward compatibility.
- */
-export interface Session {
-    user: SessionUser | null
-    /** Convenience flag: true when user is authenticated */
-    isAuthenticated: boolean
-    /** Convenience accessor: Clerk user ID or empty string when unauthenticated */
-    userId: string
-}
 
 /**
  * Resolves the current authenticated user and authorization role from Clerk.
@@ -97,3 +60,5 @@ export async function requireAuth(): Promise<SessionContext & { userId: string }
 
     return session as SessionContext & { userId: string }
 }
+
+export type { Session, SessionContext, SessionUser }

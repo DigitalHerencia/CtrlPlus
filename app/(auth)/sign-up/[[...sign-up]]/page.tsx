@@ -1,11 +1,6 @@
-import { SignupForm } from '@/components/auth/signup-form'
+import { SignupForm } from '@/features/auth/signup-form-client'
+import { type SignupPageProps } from '@/types/auth'
 import Image from 'next/image'
-
-interface SignupPageProps {
-    searchParams: Promise<{
-        redirect_url?: string
-    }>
-}
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {
     const { redirect_url: redirectUrl } = await searchParams

@@ -3,17 +3,9 @@
 import { getSession } from '@/lib/auth/session'
 import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
 import { prisma } from '@/lib/prisma'
+import { ensureInvoiceForBookingSchema } from '@/schema/billing'
+import { type EnsureInvoiceForBookingInput, type EnsureInvoiceResult } from '@/types/billing'
 import type { Prisma } from '@prisma/client'
-import { z } from 'zod'
-
-const ensureInvoiceInputSchema = z.object({
-    bookingId: z.string().min(1),
-})
-
-interface EnsureInvoiceResult {
-    invoiceId: string
-    created: boolean
-}
 
 function isUniqueConstraintError(error: unknown): boolean {
     return (
@@ -32,9 +24,9 @@ function normalizeCents(amount: number): number {
     return Math.round(amount)
 }
 
-export async function ensureInvoiceForBooking(rawInput: {
-    bookingId: string
-}): Promise<EnsureInvoiceResult> {
+export async function ensureInvoiceForBooking(
+    rawInput: EnsureInvoiceForBookingInput
+): Promise<EnsureInvoiceResult> {
     const session = await getSession()
     const userId = session.userId
 
@@ -42,7 +34,7 @@ export async function ensureInvoiceForBooking(rawInput: {
         throw new Error('Unauthorized: not authenticated')
     }
 
-    const { bookingId } = ensureInvoiceInputSchema.parse(rawInput)
+    const { bookingId } = ensureInvoiceForBookingSchema.parse(rawInput)
 
     const booking = await prisma.booking.findFirst({
         where: {

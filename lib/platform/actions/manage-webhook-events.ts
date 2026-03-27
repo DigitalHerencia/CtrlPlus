@@ -3,17 +3,13 @@
 import { requirePlatformDeveloperAdmin } from '@/lib/authz/guards'
 import { processStripeWebhookEvent } from '@/lib/billing/actions/process-stripe-webhook-event'
 import { prisma } from '@/lib/prisma'
+import { resetWebhookLocksSchema } from '@/schema/platform'
+import { type ResetWebhookLocksInput } from '@/types/platform'
 import type { Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import type Stripe from 'stripe'
-import { z } from 'zod'
 
 import { type WebhookMutationResultDTO, type WebhookReplayResultDTO } from '../types'
-
-const resetWebhookLocksSchema = z.object({
-    source: z.enum(['clerk', 'stripe']),
-    eventIds: z.array(z.string().min(1)).min(1).max(25),
-})
 
 function getStoredStripeEvent(payload: unknown, eventId: string, eventType: string): Stripe.Event | null {
     if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
@@ -195,7 +191,7 @@ export async function resetFailedWebhookLocks(rawInput: {
     source: 'clerk' | 'stripe'
     eventIds: string[]
 }): Promise<WebhookMutationResultDTO> {
-    const input = resetWebhookLocksSchema.parse(rawInput)
+    const input = resetWebhookLocksSchema.parse(rawInput as ResetWebhookLocksInput)
 
     if (input.source === 'clerk') {
         throw new Error('Clerk replay remains owned by auth/authz and is not available from platform.')

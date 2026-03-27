@@ -4,8 +4,13 @@ import { revalidatePath } from 'next/cache'
 
 import { getAppBaseUrl, getStripeClient } from '@/lib/billing/stripe'
 import { prisma } from '@/lib/prisma'
-import { z } from 'zod'
-import { type CheckoutSessionDTO, type InvoiceLineItemDTO, type InvoiceStatus } from '../types'
+import { createCheckoutSessionSchema } from '@/schema/billing'
+import {
+    type CheckoutSessionDTO,
+    type CreateCheckoutSessionInput,
+    type InvoiceLineItemDTO,
+    type InvoiceStatus,
+} from '@/types/billing'
 import {
     getBillingAccessContext,
     isInvoiceCheckoutEligible,
@@ -13,9 +18,6 @@ import {
 } from '../access'
 
 type InvoiceLineItemRow = Pick<InvoiceLineItemDTO, 'description' | 'quantity' | 'unitPrice'>
-const checkoutInputSchema = z.object({
-    invoiceId: z.string().min(1),
-})
 
 function toStripeAmount(cents: number): number {
     if (!Number.isFinite(cents)) {
@@ -25,11 +27,11 @@ function toStripeAmount(cents: number): number {
     return Math.round(cents)
 }
 
-export async function createCheckoutSession(rawInput: {
-    invoiceId: string
-}): Promise<CheckoutSessionDTO> {
+export async function createCheckoutSession(
+    rawInput: CreateCheckoutSessionInput
+): Promise<CheckoutSessionDTO> {
     const access = await getBillingAccessContext()
-    const { invoiceId } = checkoutInputSchema.parse(rawInput)
+    const { invoiceId } = createCheckoutSessionSchema.parse(rawInput)
 
     const invoice = await prisma.invoice.findFirst({
         where: { id: invoiceId, deletedAt: null },

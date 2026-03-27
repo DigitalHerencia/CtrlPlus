@@ -1,22 +1,12 @@
-import { z } from 'zod'
 import { getSession } from '@/lib/auth/session'
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/prisma'
 import { createInvoice as managerCreateInvoice } from '@/lib/admin/managers/billing-manager'
-
-const CreateInvoiceSchema = z.object({
-    tenantId: z.string().min(1),
-    bookingId: z.string().min(1),
-    customerId: z.string().optional(),
-    amountCents: z.number().int().positive(),
-    currency: z.string().optional(),
-    description: z.string().optional(),
-})
-
-export type CreateInvoiceInput = z.infer<typeof CreateInvoiceSchema>
+import { createInvoiceSchema } from '@/schema/admin'
+import { type CreateInvoiceInput } from '@/types/admin'
 
 export async function createInvoice(input: CreateInvoiceInput) {
-    const parsed = CreateInvoiceSchema.parse(input)
+    const parsed = createInvoiceSchema.parse(input)
 
     const session = await getSession()
     if (!session.isAuthenticated || !session.userId) throw new Error('Unauthorized')

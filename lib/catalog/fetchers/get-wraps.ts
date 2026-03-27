@@ -3,6 +3,7 @@ import 'server-only'
 import { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/prisma'
+import { searchWrapsSchema } from '@/schema/catalog'
 import {
     getCatalogAssetReadiness,
     resolveCatalogGalleryImages,
@@ -18,7 +19,6 @@ import {
     isExampleCatalogWrapId,
 } from './example-wraps'
 import {
-    searchWrapsSchema,
     wrapDTOFields,
     type CatalogBrowseCardDTO,
     type CatalogBrowseResultDTO,

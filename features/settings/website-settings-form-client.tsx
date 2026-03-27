@@ -8,8 +8,8 @@ import { WebsiteSettingsForm } from '@/components/settings/website-settings-form
 import { applyZodErrors } from '@/lib/forms/apply-zod-errors'
 import { zodResolver } from '@/lib/forms/zod-resolver'
 import { updateUserWebsiteSettings } from '@/lib/settings/actions/update-user-website-settings'
+import { websiteSettingsSchema } from '@/schema/settings'
 import {
-    websiteSettingsSchema,
     type WebsiteSettingsDTO,
     type WebsiteSettingsInput,
 } from '@/lib/settings/types'

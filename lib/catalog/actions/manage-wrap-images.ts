@@ -2,11 +2,10 @@
 
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/prisma'
+import { updateWrapImageMetadataSchema, wrapImageUploadSchema } from '@/schema/catalog'
 import { deletePersistedWrapImage, persistWrapImage, validateWrapImageFile } from '../image-storage'
 import { revalidateCatalogAndVisualizerPaths } from '../revalidation'
 import {
-    updateWrapImageMetadataSchema,
-    wrapImageUploadSchema,
     WrapImageKind,
     type UpdateWrapImageMetadataInput,
     type WrapImageDTO,

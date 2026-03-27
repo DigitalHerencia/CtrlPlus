@@ -4,12 +4,9 @@ import { CatalogManagerPageFeature } from '@/features/catalog/catalog-manager-pa
 import { getSession } from '@/lib/auth/session'
 import { hasCapability } from '@/lib/authz/policy'
 import { parseCatalogSearchParams } from '@/lib/catalog/search-params'
+import { type CatalogPageSearchParams } from '@/types/catalog'
 
-interface CatalogManagerPageProps {
-    searchParams: Promise<Record<string, string | string[] | undefined>>
-}
-
-export default async function CatalogManagerPage({ searchParams }: CatalogManagerPageProps) {
+export default async function CatalogManagerPage({ searchParams }: CatalogPageSearchParams) {
     const session = await getSession()
 
     if (!session.isAuthenticated || !session.userId) {

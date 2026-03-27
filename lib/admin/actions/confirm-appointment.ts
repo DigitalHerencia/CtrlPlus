@@ -1,20 +1,12 @@
-import { z } from 'zod'
-import { getSession, requireAuth } from '@/lib/auth/session'
+import { getSession } from '@/lib/auth/session'
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/prisma'
 import { confirmAppointment as managerConfirmAppointment } from '@/lib/admin/managers/scheduling-manager'
-
-const ConfirmAppointmentSchema = z.object({
-    tenantId: z.string().min(1),
-    bookingId: z.string().min(1),
-    status: z.enum(['confirmed', 'cancelled', 'rescheduled']),
-    note: z.string().optional(),
-})
-
-export type ConfirmAppointmentInput = z.infer<typeof ConfirmAppointmentSchema>
+import { confirmAppointmentSchema } from '@/schema/admin'
+import { type ConfirmAppointmentInput } from '@/types/admin'
 
 export async function confirmAppointment(input: ConfirmAppointmentInput) {
-    const parsed = ConfirmAppointmentSchema.parse(input)
+    const parsed = confirmAppointmentSchema.parse(input)
 
     // ensure authenticated and authorized
     const session = await getSession()

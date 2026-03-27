@@ -4,33 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
-import { z } from 'zod'
 
-import {
-    BookingForm,
-    type BookingFormAvailabilityWindow,
-    type BookingFormWrapOption,
-} from '@/components/scheduling/booking-form'
+import { BookingForm } from '@/components/scheduling/booking-form'
 import { createBooking } from '@/lib/scheduling/actions/create-booking'
-
-const bookingFormSchema = z
-    .object({
-        date: z.date({ error: 'Select a date.' }),
-        windowId: z.string().min(1, 'Select a time slot.'),
-        wrapId: z.string().min(1, 'Select a wrap service.'),
-    })
-    .refine((values) => values.windowId.length > 0, {
-        message: 'Select a time slot.',
-        path: ['windowId'],
-    })
-
-type BookingFormValues = z.infer<typeof bookingFormSchema>
-
-interface SchedulingBookingFormClientProps {
-    availabilityWindows: BookingFormAvailabilityWindow[]
-    wraps: BookingFormWrapOption[]
-    minDate?: Date
-}
+import { bookingFormSchema } from '@/schema/scheduling'
+import { type BookingFormValues, type SchedulingBookingFormClientProps } from '@/types/scheduling'
 
 function buildDateTime(date: Date, time: string): Date {
     const [hourPart, minutePart = '0'] = time.split(':')

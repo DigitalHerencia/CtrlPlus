@@ -2,36 +2,12 @@
 
 import { getSession } from '@/lib/auth/session'
 import { prisma } from '@/lib/prisma'
+import { reserveSlotSchema } from '@/schema/scheduling'
 import { assertSlotHasCapacity } from '@/lib/scheduling/capacity'
+import { type ReserveSlotInput, type ReservedBookingDTO } from '@/types/scheduling'
 import { Prisma } from '@prisma/client'
-import { z } from 'zod'
 
 const RESERVATION_TTL_MINUTES = 15
-
-const reserveSlotSchema = z
-    .object({
-        wrapId: z.string().min(1, 'Wrap is required'),
-        startTime: z.coerce.date(),
-        endTime: z.coerce.date(),
-    })
-    .refine((data) => data.endTime > data.startTime, {
-        message: 'End time must be after start time',
-        path: ['endTime'],
-    })
-
-export type ReserveSlotInput = z.infer<typeof reserveSlotSchema>
-
-export interface ReservedBookingDTO {
-    id: string
-    wrapId: string
-    wrapName?: string
-    startTime: Date
-    endTime: Date
-    status: string
-    totalPrice: number
-    reservationExpiresAt: Date
-    displayStatus: 'reserved'
-}
 
 export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBookingDTO> {
     const session = await getSession()

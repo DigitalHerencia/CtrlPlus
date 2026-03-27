@@ -3,17 +3,12 @@ import Link from 'next/link'
 import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { CatalogPagination } from '@/components/catalog/CatalogPagination'
-import { WrapFilter } from '@/components/catalog/WrapFilter'
 import { WrapGrid } from '@/components/catalog/WrapGrid'
 import { getWrapCategories } from '@/lib/catalog/fetchers/get-wrap-categories'
 import { searchCatalogWraps } from '@/lib/catalog/fetchers/get-wraps'
 import { createCatalogPageHref } from '@/lib/catalog/search-params'
-import { type SearchWrapsInput } from '@/lib/catalog/types'
-
-interface CatalogBrowsePageFeatureProps {
-    filters: SearchWrapsInput
-    canManageCatalog: boolean
-}
+import { type CatalogBrowsePageFeatureProps } from '@/types/catalog'
+import { CatalogFiltersClient } from './catalog-filters-client'
 
 export async function CatalogBrowsePageFeature({
     filters,
@@ -46,7 +41,7 @@ export async function CatalogBrowsePageFeature({
                     </div>
                 }
             />
-            <WrapFilter categories={categories} />
+            <CatalogFiltersClient categories={categories} />
             <WrapGrid wraps={data.wraps} canManageCatalog={canManageCatalog} />
             <CatalogPagination
                 page={data.page}

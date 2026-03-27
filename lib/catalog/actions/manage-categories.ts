@@ -2,11 +2,13 @@
 
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/prisma'
-import { revalidateCatalogPaths } from '../revalidation'
 import {
     createWrapCategorySchema,
     setWrapCategoryMappingsSchema,
     updateWrapCategorySchema,
+} from '@/schema/catalog'
+import { revalidateCatalogPaths } from '../revalidation'
+import {
     type CreateWrapCategoryInput,
     type SetWrapCategoryMappingsInput,
     type UpdateWrapCategoryInput,

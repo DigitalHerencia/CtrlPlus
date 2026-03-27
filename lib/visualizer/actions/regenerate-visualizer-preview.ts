@@ -6,8 +6,8 @@ import { prisma } from '@/lib/prisma'
 import { visualizerConfig } from '@/lib/visualizer/config'
 import { getVisualizerWrapSelectionById } from '@/lib/visualizer/fetchers/get-wrap-selections'
 import { toVisualizerPreviewDTO } from '@/lib/visualizer/dto'
+import { regenerateVisualizerPreviewSchema } from '@/schema/visualizer'
 import {
-    regenerateVisualizerPreviewSchema,
     type RegenerateVisualizerPreviewInput,
     type VisualizerPreviewDTO,
 } from '../types'

@@ -3,38 +3,12 @@
 import { getSession } from '@/lib/auth/session'
 import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
 import { prisma } from '@/lib/prisma'
+import { updateBookingSchema } from '@/schema/scheduling'
 import { assertSlotHasCapacity } from '@/lib/scheduling/capacity'
 import { getBookingDisplayStatus } from '@/lib/scheduling/utils'
+import { type BookingActionDTO, type UpdateBookingInput } from '@/types/scheduling'
 import { Prisma } from '@prisma/client'
-import { z } from 'zod'
 import { revalidateSchedulingPages } from '../revalidation'
-
-const updateBookingSchema = z
-    .object({
-        startTime: z.date(),
-        endTime: z.date(),
-    })
-    .refine((data) => data.endTime > data.startTime, {
-        message: 'End time must be after start time',
-        path: ['endTime'],
-    })
-
-type UpdateBookingInput = z.infer<typeof updateBookingSchema>
-
-type BookingActionDTO = {
-    id: string
-    customerId: string
-    wrapId: string
-    wrapName?: string
-    startTime: Date
-    endTime: Date
-    status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
-    totalPrice: number
-    reservationExpiresAt: Date | null
-    displayStatus: 'reserved' | 'confirmed' | 'completed' | 'cancelled' | 'expired'
-    createdAt: Date
-    updatedAt: Date
-}
 
 export async function updateBooking(
     bookingId: string,

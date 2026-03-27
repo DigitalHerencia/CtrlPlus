@@ -1,8 +1,9 @@
 'use server'
 
 import { ensureInvoiceForBooking } from '@/lib/billing/actions/ensure-invoice-for-booking'
+import { type ReserveSlotInput, type ReservedBookingDTO } from '@/types/scheduling'
 import { revalidateBillingBookingRoute, revalidateSchedulingPages } from '../revalidation'
-import { reserveSlot, type ReserveSlotInput, type ReservedBookingDTO } from './reserve-slot'
+import { reserveSlot } from './reserve-slot'
 
 export type CreateBookingInput = ReserveSlotInput
 

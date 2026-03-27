@@ -1,10 +1,10 @@
 import 'server-only'
 
 import { prisma } from '@/lib/prisma'
+import { bookingListParamsSchema } from '@/schema/scheduling'
 import { canViewAllSchedulingBookings, requireSchedulingReadSession } from '../access'
 import { getBookingDisplayStatus } from '../utils'
 import {
-    bookingListParamsSchema,
     type BookingDTO,
     type BookingListParams,
     type BookingListResult,

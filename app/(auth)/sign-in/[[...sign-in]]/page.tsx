@@ -1,11 +1,6 @@
-import { LoginForm } from '@/components/auth/login-form'
+import { LoginForm } from '@/features/auth/login-form-client'
+import { type LoginPageProps } from '@/types/auth'
 import Image from 'next/image'
-
-interface LoginPageProps {
-    searchParams: Promise<{
-        redirect_url?: string
-    }>
-}
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
     const { redirect_url: redirectUrl } = await searchParams

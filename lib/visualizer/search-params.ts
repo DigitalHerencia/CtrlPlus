@@ -1,12 +1,5 @@
-import { z } from 'zod'
-
-const visualizerSearchParamsSchema = z.object({
-    wrapId: z.string().min(1).optional(),
-})
-
-export interface VisualizerSearchParamsResult {
-    requestedWrapId: string | null
-}
+import { visualizerSearchParamsSchema } from '@/schema/visualizer'
+import { type VisualizerSearchParamsResult } from '@/types/visualizer'
 
 export function parseVisualizerSearchParams(
     searchParams: Record<string, string | string[] | undefined>

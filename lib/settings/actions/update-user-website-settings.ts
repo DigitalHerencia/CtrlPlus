@@ -3,9 +3,9 @@
 import { requireAuthzCapability } from '@/lib/authz/guards'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { websiteSettingsSchema } from '@/schema/settings'
 import {
     createWebsiteSettingsDTO,
-    websiteSettingsSchema,
     type WebsiteSettingsDTO,
     type WebsiteSettingsInput,
 } from '../types'

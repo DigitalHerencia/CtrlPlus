@@ -11,8 +11,8 @@ import {
 import { readPhotoBuffer } from '@/lib/visualizer/preview-pipeline'
 import { toVisualizerPreviewDTO } from '@/lib/visualizer/dto'
 import { visualizerConfig } from '@/lib/visualizer/config'
+import { processVisualizerPreviewSchema } from '@/schema/visualizer'
 import {
-    processVisualizerPreviewSchema,
     type ProcessVisualizerPreviewInput,
     type VisualizerPreviewDTO,
 } from '../types'

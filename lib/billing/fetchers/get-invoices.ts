@@ -3,9 +3,9 @@ import 'server-only'
 import type { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/prisma'
+import { invoiceListParamsSchema } from '@/schema/billing'
 import {
     invoiceDTOFields,
-    invoiceListParamsSchema,
     type InvoiceDTO,
     type InvoiceListParams,
     type InvoiceListResult,
