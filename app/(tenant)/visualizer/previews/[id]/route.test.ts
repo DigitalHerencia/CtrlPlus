@@ -38,15 +38,14 @@ describe('GET /visualizer/previews/[id]', () => {
         })
     })
 
-    it('returns a null preview when the read helper throws', async () => {
+    it('returns 500 when the read helper throws', async () => {
         mocks.getPreviewById.mockRejectedValue(new Error('Forbidden'))
 
         const response = await GET(new Request('http://localhost/visualizer/previews/preview-1'), {
             params: Promise.resolve({ id: 'preview-1' }),
         })
 
-        await expect(response.json()).resolves.toEqual({
-            preview: null,
-        })
+        expect(response.status).toBe(500)
+        await expect(response.json()).resolves.toEqual({ error: 'Preview lookup failed' })
     })
 })
