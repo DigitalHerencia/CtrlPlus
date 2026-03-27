@@ -11,4 +11,4 @@ Contains reusable domain instruction files for the active CtrlPlus refactor doma
 - `settings`
 - `visualizer`
 
-Each file defines scope boundaries, required architecture patterns, security rules, performance constraints, testing expectations, and refactor priorities for that domain. Use these instructions to keep future domain refactors aligned with the target server-first architecture.
+Each file defines scope boundaries, required architecture patterns, security rules, performance constraints, testing expectations, phased integration boundaries where relevant, and refactor priorities for that domain. Use these instructions to keep future domain refactors aligned with the target server-first architecture and with external-provider boundaries such as catalog-to-visualizer handoff, Cloudinary persistence, and Hugging Face generation.

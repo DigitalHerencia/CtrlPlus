@@ -2,7 +2,12 @@
 
 ## Goal
 
-Refactor the visualizer into a production-ready feature that preserves current repo boundaries while improving reliability, security, and usability under the target server-first architecture.
+Refactor the visualizer into a production-ready, catalog-driven preview feature that accepts a selected wrap and a customer vehicle photo, generates an AI-assisted concept preview, stores original and generated assets in Cloudinary, and preserves strict server-side ownership and lifecycle control.
+
+## Authoritative references
+
+- `.codex/arch/codex_visualizer_huggingface_generation_spec.md`
+- `.codex/arch/codex_catalog_visualizer_migration_spec.md` for upstream catalog handoff requirements
 
 ## Current repo anchors
 
@@ -19,50 +24,100 @@ Refactor the visualizer into a production-ready feature that preserves current r
 - `lib/visualizer/preview-pipeline.ts`
 - `lib/catalog/fetchers/**`
 
-## Main requirements
+## Product framing
 
-- use deterministic wrap asset selection
-- improve upload validation and storage strategy
-- make preview status handling explicit
-- reduce brittle synchronous UX
-- preserve server-authoritative generation logic
-- keep customer-facing selection limited to visualizer-ready wraps
+- The visualizer is a storefront sales aid that produces an AI concept preview, not a print-proofing or manufacturing-accuracy engine.
+- The uploaded vehicle image is the structural base.
+- The selected catalog wrap is the design authority.
+- The output should be framed in product copy as an AI preview or concept render, not an exact production proof.
 
-## Key implementation points
+## Source-of-truth responsibilities
 
-- keep route entrypoints thin and move orchestration into `features/visualizer/**`
-- keep image processing, storage, and provider integrations in `lib/visualizer/**`
-- keep wrap selection catalog-backed and server-filtered to visualizer-ready wraps
-- keep preview ownership scoped to the authenticated user and server session
-- avoid inline heavy payload persistence where better storage references exist
-- use File-based vehicle uploads and normalize them server-side before caching or generation
-- reuse previews by deterministic cache key before generation
-- run Hugging Face image generation behind an adapter and fall back immediately to deterministic compositing
-- account for audit follow-up work around background processing and signed or short-lived preview delivery
+The visualizer owns:
+
+- authenticated preview creation and retrieval
+- vehicle image validation and normalization
+- preview lifecycle state transitions
+- Hugging Face generation orchestration
+- fallback composite generation
+- Cloudinary-backed upload and preview persistence
+- preview ownership, cache reuse, and regenerate flows
+
+The visualizer does not own:
+
+- wrap CRUD or category management
+- visualizer texture selection rules
+- catalog publish-readiness logic
+
+## Required contracts
+
+### Upstream catalog contract
+
+The visualizer may only consume wraps returned by catalog-approved selection fetchers. At minimum, the selected wrap DTO should expose:
+
+- `id`
+- `name`
+- `description`
+- resolved `heroImage`
+- exactly one active `visualizerTexture`
+- optional prompt metadata such as `aiPromptTemplate` and `aiNegativePrompt`
+
+### Preview lifecycle contract
+
+The visualizer must use an explicit `PreviewStatus` contract with these statuses:
+
+- `pending`
+- `processing`
+- `complete`
+- `failed`
+
+### Primary action contract
+
+The visualizer should preserve or introduce these domain contracts:
+
+- `VisualizerWrapInput`
+- `createVisualizerPreview`
+- `regenerateVisualizerPreview`
+- `getVisualizerWrapSelection`
+- `getVisualizerPreviewById`
+- deterministic preview cache key helpers
+- Hugging Face adapter boundary and fallback composite boundary
+
+## Generation strategy
+
+- primary mode is Hugging Face image-to-image style generation driven by a catalog-selected wrap and a normalized vehicle image
+- generation must be hidden behind a dedicated adapter so the model can change without rewriting domain actions
+- a fallback composite path is mandatory so the user can still receive a preview if free inference is unavailable or unstable
+- the catalog-selected visualizer texture must materially influence the output, either through prompt construction, reference-board preprocessing, or both
+
+## Storage and persistence requirements
+
+- Cloudinary is the system of record for customer uploads and generated preview outputs
+- preview rows should store URLs and source metadata, not large inline image payloads
+- preview records must retain `sourceWrapImageId` and `sourceWrapImageVersion`
+- cache keys should capture the effective generation inputs so duplicate preview work can be reused safely
 
 ## UX requirements
 
-- better wrap selection UX
-- cleaner upload flow
-- clear progress, failure, retry, and success states
-- final preview prioritized over fallback overlay behavior
-- `/visualizer?wrapId=...` is the primary preselection handoff from catalog
-- long-running work should present status-driven UX rather than pretending the request is instant
+- `/visualizer?wrapId=...` is the primary entry path from the catalog
+- the selected wrap should load server-side before the client shell renders
+- upload flow must show clear validation, pending, processing, failed, and success states
+- preview UI should privilege the final generated result and make retry/regenerate behavior explicit
+- long-running work should feel status-driven rather than pretending to be instantaneous
 
 ## Security/performance focus
 
-- validate files server-side
-- protect preview ownership
-- avoid over-trusting remote sources
-- keep generation resilient and cache-aware
-- preserve source wrap image id or version on preview records for cache-key stability and traceability
-- avoid duplicate generation for the same effective input set
+- require authentication and `visualizer.use` server-side
+- keep preview access scoped to the preview owner unless elevated access is explicitly intended
+- never trust client-provided wrap asset ids, URLs, or Cloudinary metadata
+- normalize uploads server-side before generation
+- avoid duplicate generation by checking the deterministic cache key before invoking providers
+- fail fast from provider instability into the fallback path when possible
 
 ## Acceptance signals
 
-- visualizer routes, features, and helpers align with the target architecture
-- visualizer flow feels ship-ready
-- preview generation behavior is understandable
-- core states are covered in UI and tests
-- server boundaries remain clean
-- HF unavailability does not block preview delivery because deterministic fallback still completes the request
+- wrap selection remains catalog-backed and server-authoritative
+- preview generation is status-driven and operationally understandable
+- originals and outputs live in Cloudinary with traceable metadata
+- preview ownership and cache stability remain intact
+- HF failures no longer imply total feature failure because fallback composite still delivers a usable concept preview

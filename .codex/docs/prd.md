@@ -12,8 +12,8 @@ Ship CtrlPlus as a professional, production-ready single-store operations platfo
 
 ## Primary outcomes
 
-- users can browse wraps, preview wraps on vehicles, book services, and complete billing flows
-- owners can manage wraps, scheduling, settings, and admin workflows confidently
+- customers can browse a wrap storefront, open wrap detail pages, launch AI concept previews on their own vehicle photos, book services, and complete billing flows
+- owners can manage wraps, categories, publish-readiness, visualizer assets, scheduling, settings, and admin workflows confidently
 - platform admins can monitor and recover integration/platform issues safely
 
 ## Domain goals
@@ -26,15 +26,15 @@ Ship CtrlPlus as a professional, production-ready single-store operations platfo
 
 ### Catalog
 
-- professional wrap browsing and management
-- deterministic asset roles
-- safe publish/hide workflow
+- professional wrap storefront browsing and management
+- deterministic asset-role ownership for display and visualizer assets
+- safe publish/hide workflow tied to visualizer readiness
 
 ### Visualizer
 
-- reliable preview generation
-- secure image handling
-- clear progress and failure states
+- reliable catalog-driven AI concept preview generation
+- secure image handling with durable storage references
+- clear progress, fallback, retry, and failure states without implying manufacturing exactness
 
 ### Scheduling
 
@@ -68,6 +68,7 @@ Ship CtrlPlus as a professional, production-ready single-store operations platfo
 - clear states and validation
 - minimal confusion between domains
 - admin/owner actions feel intentional and safe
+- catalog and visualizer should work together like one storefront funnel without collapsing into one overloaded interface
 
 ## Non-goals
 
@@ -75,6 +76,7 @@ Ship CtrlPlus as a professional, production-ready single-store operations platfo
 - major auth-provider replacement
 - generic marketplace behavior
 - visual novelty over operational clarity
+- positioning the visualizer as print-proofing or production-accuracy software
 
 ## Success criteria
 
@@ -82,5 +84,7 @@ Ship CtrlPlus as a professional, production-ready single-store operations platfo
 - auth/authz remains a hard server boundary across every domain
 - authz is enforced server-side everywhere
 - critical flows have usable loading/error/empty/success states
+- catalog behaves like a wrap storefront, not a generic gallery
+- visualizer behaves like an AI concept preview with clear limitations and resilient fallback behavior
 - CI, tests, and build pass cleanly
 - major domain UIs are professional enough to ship without prototype-level roughness

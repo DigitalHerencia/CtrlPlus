@@ -2,7 +2,14 @@
 
 ## Mission
 
-Refactor only the `catalog` domain to the target CtrlPlus server-first architecture while preserving publish-readiness, asset-role rules, and the visualizer handoff contract.
+Refactor only the `catalog` domain to the target CtrlPlus server-first architecture while preserving publish-readiness, deterministic asset-role rules, and the visualizer handoff contract that now feeds a catalog-driven preview pipeline.
+
+## Authoritative specs
+
+- `.codex/arch/codex_catalog_visualizer_migration_spec.md`
+- `.codex/arch/codex_visualizer_huggingface_generation_spec.md` for downstream handoff assumptions
+- `.codex/docs/catalog.md`
+- `.codex/instructions/catalog.instructions.md`
 
 ## Scope anchors
 
@@ -11,6 +18,12 @@ Refactor only the `catalog` domain to the target CtrlPlus server-first architect
 - `components/catalog/**`
 - `lib/catalog/**`
 - affected tests under `e2e/**` and `tests/**`
+
+## Upstream and downstream dependencies
+
+- upstream auth/authz and storage boundaries must remain intact
+- downstream visualizer work depends on catalog-owned DTOs, asset resolution, publish-readiness, and `/visualizer?wrapId=...` handoff behavior
+- phase prompts should be executed in order unless an earlier phase is already complete and verified
 
 ## Non-goals
 
@@ -34,6 +47,7 @@ Refactor only the `catalog` domain to the target CtrlPlus server-first architect
 - keep feature orchestration outside `app/**`
 - keep client components free of authz, business rules, and cache invalidation
 - preserve owner and platform-admin enforcement at the server boundary
+- encode image meaning through `WrapImage.kind`, never array order
 
 ## Domain behaviors to preserve
 
@@ -42,6 +56,15 @@ Refactor only the `catalog` domain to the target CtrlPlus server-first architect
 - browse, detail, manager, and visualizer-selection DTO separation
 - visualizer handoff through `/visualizer?wrapId=...`
 - visualizer-ready filtering for customer-visible surfaces
+- server-authoritative wrap visibility and asset validation
+
+## Phase execution order
+
+1. `catalog.phase-1.asset-resolution-and-dtos.prompt.md`
+2. `catalog.phase-2.public-storefront.prompt.md`
+3. `catalog.phase-3.manager-and-publish-readiness.prompt.md`
+4. `catalog.phase-4.visualizer-handoff.prompt.md`
+5. `catalog-visualizer.integration-e2e.prompt.md` for cross-domain smoke coverage when catalog changes affect the funnel
 
 ## Refactor checklist
 
@@ -50,6 +73,7 @@ Refactor only the `catalog` domain to the target CtrlPlus server-first architect
 - split pure UI from workflow logic
 - keep asset resolution deterministic
 - preserve explicit publish and unpublish actions
+- preserve catalog-owned DTOs and selection contracts
 - update affected tests
 
 ## Validation and tests
@@ -67,4 +91,5 @@ Refactor only the `catalog` domain to the target CtrlPlus server-first architect
 - asset-role handling is deterministic and centralized
 - publish and visualizer-ready behavior remain server-authoritative
 - catalog DTOs are explicit for each surface
+- the catalog can safely hand off an approved wrap into the visualizer pipeline
 - quality gates pass

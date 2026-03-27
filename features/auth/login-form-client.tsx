@@ -204,7 +204,7 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
 
     return (
         <form
-            className={cn('flex flex-col gap-6', className)}
+            className={cn('flex flex-col gap-6 bg-neutral-950/90', className)}
             onSubmit={handleSubmit}
             noValidate
             {...props}
@@ -212,17 +212,13 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
             <FieldGroup className="gap-6 border border-neutral-800 bg-neutral-950/90 p-6 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.9)] sm:p-8">
                 <div className="flex flex-col items-center text-center">
                     <Link href="/" className="mb-8 inline-flex items-center">
-                        <LogoMark className="scale-150" />
+                        <LogoMark className="mt-4 scale-150" />
                     </Link>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-neutral-800 bg-neutral-900 px-3 py-1 text-xs uppercase tracking-[0.24em] text-neutral-300">
-                        <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
-                        Secure Access
-                    </div>
-                    <h1 className="mt-4 text-3xl font-semibold tracking-tight text-neutral-50 sm:text-4xl">
+                    <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-50 sm:text-4xl">
                         Welcome back
                     </h1>
                     <p className="mt-2 max-w-sm text-sm text-neutral-400">
-                        Sign in to manage your storefront, bookings, and customer workflows.
+                        Sign in to manage your account
                     </p>
                 </div>
 
@@ -345,7 +341,7 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
                                 type="email"
                                 autoComplete="email"
                                 placeholder="m@example.com"
-                                className="h-12 border-neutral-800 bg-neutral-900 text-neutral-50 placeholder:text-neutral-500"
+                                className="h-12 border-neutral-800 bg-neutral-900 px-3 text-neutral-50 placeholder:text-neutral-500"
                                 disabled={isBusy}
                                 {...form.register('email', {
                                     setValueAs: (value: string) =>
@@ -368,7 +364,7 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
                                 </FieldLabel>
                                 <Link
                                     href="/forgot-password"
-                                    className="text-sm font-medium text-blue-400 transition hover:text-blue-300"
+                                    className="text-sm font-medium text-blue-600 transition hover:text-blue-300"
                                 >
                                     Forgot password?
                                 </Link>
@@ -378,7 +374,7 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
                                 type="password"
                                 autoComplete="current-password"
                                 placeholder="Enter your password"
-                                className="h-12 border-neutral-800 bg-neutral-900 text-neutral-50 placeholder:text-neutral-500"
+                                className="h-12 border-neutral-800 bg-neutral-900 px-3 text-neutral-50 placeholder:text-neutral-500"
                                 disabled={isBusy}
                                 {...form.register('password')}
                             />
@@ -410,7 +406,7 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
                                         ? `/sign-up?redirect_url=${encodeURIComponent(redirectUrl)}`
                                         : '/sign-up'
                                 }
-                                className="font-medium text-blue-400 transition hover:text-blue-300"
+                                className="font-medium text-blue-600 transition hover:text-blue-300"
                             >
                                 Sign up
                             </Link>

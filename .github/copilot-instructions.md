@@ -56,6 +56,34 @@ The active Copilot domain set is:
 
 Agents should consult these files for domain boundaries, implementation standards, and prompt-driven refactor orchestration. These artifacts are preparatory guidance and do not themselves authorize runtime refactors that are outside the current task.
 
+For catalog or visualizer work, treat these `.codex` files as authoritative first:
+
+- `.codex/arch/codex_catalog_visualizer_migration_spec.md`
+- `.codex/arch/codex_visualizer_huggingface_generation_spec.md`
+- `.codex/docs/catalog.md`
+- `.codex/docs/visualizer.md`
+- `.codex/instructions/catalog.instructions.md`
+- `.codex/instructions/visualizer.instructions.md`
+
+Catalog and visualizer prompt work now follows a `master + phases` model:
+
+- use `.codex/prompts/catalog.refactor.prompt.md` or `.codex/prompts/visualizer.refactor.prompt.md` as the domain-level entrypoint
+- pair the master prompt with the relevant phase prompt under `.codex/prompts/` for bounded implementation passes
+- use `.codex/prompts/catalog-visualizer.integration-e2e.prompt.md` when the storefront funnel spans both domains
+
+## Catalog and visualizer directives
+
+- Treat the catalog as a wrap storefront and source of truth for wrap discovery, detail presentation, publish-readiness, and visualizer handoff.
+- Standardize wrap asset meaning through `WrapImageKind` with `hero`, `gallery`, `visualizer_texture`, and `visualizer_mask_hint`.
+- Never derive wrap asset meaning from unordered image arrays such as `images[0]`.
+- Keep catalog DTOs explicit for browse, detail, manager, publish-readiness, and visualizer selection flows.
+- Preserve the customer handoff contract through `/visualizer?wrapId=...` with server-side wrap validation.
+- Treat the visualizer as an AI concept preview flow, not a manufacturing proofing system.
+- Keep visualizer previews on an explicit `PreviewStatus` lifecycle: `pending`, `processing`, `complete`, `failed`.
+- Keep Hugging Face generation behind an adapter boundary and persist vehicle uploads and generated previews in Cloudinary rather than inline database payloads.
+- Preserve fallback preview generation when HF inference is unavailable or unstable.
+- Keep preview cache keys and preview ownership server-authoritative and traceable through source wrap image metadata.
+
 ## Implementation standards
 
 - Use TypeScript strictly and avoid `any`.
