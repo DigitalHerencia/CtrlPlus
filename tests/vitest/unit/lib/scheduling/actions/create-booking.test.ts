@@ -22,7 +22,7 @@ vi.mock('@/lib/actions/billing.actions', () => ({
     ensureInvoiceForBooking: mocks.ensureInvoiceForBooking,
 }))
 
-vi.mock('@/lib/scheduling/revalidation', () => ({
+vi.mock('@/lib/cache/revalidate-tags', () => ({
     revalidateSchedulingPages: mocks.revalidateSchedulingPages,
     revalidateBillingBookingRoute: mocks.revalidateBillingBookingRoute,
 }))
@@ -53,7 +53,12 @@ describe('createBooking', () => {
 
         mocks.prisma.$transaction.mockImplementation(async (callback) => callback(tx))
 
-        tx.wrap.findFirst.mockResolvedValue({ id: 'wrap-1', price: 100000, isHidden: false })
+        tx.wrap.findFirst.mockResolvedValue({
+            id: 'wrap-1',
+            name: 'Midnight Matte',
+            price: 100000,
+            isHidden: false,
+        })
         tx.bookingReservation.findFirst.mockResolvedValue(null)
         tx.availabilityRule.findMany.mockResolvedValue([
             {
@@ -62,16 +67,13 @@ describe('createBooking', () => {
                 capacitySlots: 2,
             },
         ])
-        const expiresAt = new Date('2026-03-23T16:15:00.000Z')
         tx.booking.create.mockResolvedValue({
             id: 'booking-1',
             wrapId: 'wrap-1',
-            wrap: { name: 'Midnight Matte' },
             startTime: new Date('2026-03-23T16:00:00.000Z'),
             endTime: new Date('2026-03-23T18:00:00.000Z'),
             status: 'pending',
             totalPrice: 100000,
-            reservation: { expiresAt },
         })
         tx.auditLog.create.mockResolvedValue(undefined)
 
@@ -87,6 +89,8 @@ describe('createBooking', () => {
             expect.objectContaining({
                 id: 'booking-1',
                 invoiceId: 'invoice-1',
+                wrapName: 'Midnight Matte',
+                reservationExpiresAt: expect.any(Date),
             })
         )
 

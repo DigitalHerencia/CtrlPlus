@@ -1,5 +1,3 @@
-import 'server-only'
-
 import { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/db/prisma'
@@ -12,7 +10,7 @@ import {
     resolvePrimaryDisplayAsset,
     resolveVisualizerMaskHintAsset,
     resolveVisualizerTextureAsset,
-} from '@/lib/catalog/assets'
+} from '@/lib/utils/catalog-assets'
 import {
     wrapDTOFields,
     WrapImageKind,

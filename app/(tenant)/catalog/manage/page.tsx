@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { CatalogManagerPageFeature } from '@/features/catalog/catalog-manager-page-feature'
 import { getSession } from '@/lib/auth/session'
 import { hasCapability } from '@/lib/authz/policy'
-import { parseCatalogSearchParams } from '@/lib/catalog/search-params'
+import { parseCatalogSearchParams } from '@/lib/utils/search-params'
 import { type CatalogPageSearchParams } from '@/types/catalog'
 
 export default async function CatalogManagerPage({ searchParams }: CatalogPageSearchParams) {

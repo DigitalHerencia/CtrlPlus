@@ -1,11 +1,11 @@
-import 'server-only'
-
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
-import { toVisualizerPreviewDTO } from '@/lib/visualizer/dto'
-import type { VisualizerPreviewDTO } from '@/types/visualizer'
-import { visualizerPreviewDTOFields } from '@/types/visualizer'
+import {
+    toVisualizerPreviewDTO,
+    type VisualizerPreviewDTO,
+    visualizerPreviewDTOFields,
+} from '@/types/visualizer'
 import {
     getVisualizerSelectableWrapById,
     listVisualizerSelectableWraps,

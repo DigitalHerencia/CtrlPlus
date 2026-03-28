@@ -1,5 +1,5 @@
 import { type GlobalRole } from '@/types/authz'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 
 function readOptionalEnv(name: 'STORE_OWNER_CLERK_USER_ID' | 'PLATFORM_DEV_CLERK_USER_ID') {
     const value = process.env[name]?.trim()

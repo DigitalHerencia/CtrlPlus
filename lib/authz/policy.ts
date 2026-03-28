@@ -1,50 +1,5 @@
-import { type AuthzContext, type Capability, type GlobalRole } from '@/types/authz'
-
-const ROLE_CAPABILITIES: Record<GlobalRole, Set<Capability>> = {
-    customer: new Set<Capability>([
-        'catalog.read',
-        'visualizer.use',
-        'scheduling.read.own',
-        'scheduling.write.own',
-        'billing.read.own',
-        'billing.write.own',
-        'settings.manage.own',
-    ]),
-    owner: new Set<Capability>([
-        'catalog.read',
-        'catalog.manage',
-        'visualizer.use',
-        'scheduling.read.own',
-        'scheduling.read.all',
-        'scheduling.write.own',
-        'scheduling.write.all',
-        'billing.read.own',
-        'billing.read.all',
-        'billing.write.own',
-        'billing.write.all',
-        'settings.manage.own',
-        'dashboard.owner',
-    ]),
-    admin: new Set<Capability>([
-        'catalog.read',
-        'catalog.manage',
-        'visualizer.use',
-        'visualizer.manage',
-        'scheduling.read.own',
-        'scheduling.read.all',
-        'scheduling.write.own',
-        'scheduling.write.all',
-        'billing.read.own',
-        'billing.read.all',
-        'billing.write.own',
-        'billing.write.all',
-        'settings.manage.own',
-        'dashboard.owner',
-        'dashboard.platform',
-        'platform.webhook.ops',
-        'platform.database.ops',
-    ]),
-}
+import { type AuthzContext, type Capability } from '@/types/authz'
+import { ROLE_CAPABILITIES } from '@/lib/authz/capabilities'
 
 export function hasCapability(context: AuthzContext, capability: Capability): boolean {
     if (!context.isAuthenticated) {

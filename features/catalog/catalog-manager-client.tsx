@@ -29,7 +29,7 @@ import {
     unpublishWrap,
     updateWrap,
 } from '@/lib/actions/catalog.actions'
-import { formatPrice } from '@/lib/catalog/formatters'
+import { formatPrice } from '@/lib/utils/currency'
 import { type CatalogManagerProps, type WrapImageKind } from '@/types/catalog'
 import { WrapImageManager } from '@/components/catalog/WrapImageManager'
 

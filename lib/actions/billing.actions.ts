@@ -2,23 +2,19 @@
 
 import { revalidatePath } from 'next/cache'
 
-import { getAppBaseUrl, getStripeClient } from '@/lib/billing/stripe'
+import { getAppBaseUrl, getStripeClient } from '@/lib/integrations/stripe'
 import { prisma } from '@/lib/db/prisma'
 import { createCheckoutSessionSchema, ensureInvoiceForBookingSchema } from '@/schema/billing'
 import {
     type CheckoutSessionDTO,
     type CreateCheckoutSessionInput,
     type InvoiceLineItemDTO,
-    type InvoiceStatus,
     type EnsureInvoiceForBookingInput,
     type EnsureInvoiceResult,
     type ConfirmPaymentResult,
+    isInvoicePayable,
 } from '@/types/billing'
-import {
-    getBillingAccessContext,
-    isInvoiceCheckoutEligible,
-    requireInvoiceWriteAccess,
-} from '@/lib/billing/access'
+import { getBillingAccessContext, requireInvoiceWriteAccess } from '@/lib/authz/guards'
 import { getSession } from '@/lib/auth/session'
 import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
 import type { Prisma } from '@prisma/client'
@@ -63,9 +59,7 @@ export async function createCheckoutSession(
 
     requireInvoiceWriteAccess(access, invoice.booking.customerId)
 
-    const invoiceStatus = invoice.status as InvoiceStatus
-
-    if (!isInvoiceCheckoutEligible(invoiceStatus)) {
+    if (!isInvoicePayable(invoice.status as Parameters<typeof isInvoicePayable>[0])) {
         throw new Error(`Forbidden: invoice is not payable from status ${invoice.status}`)
     }
 
@@ -132,7 +126,7 @@ export async function createCheckoutSession(
             details: JSON.stringify({
                 sessionId: checkoutSession.id,
                 idempotencyKey,
-                invoiceStatus,
+                invoiceStatus: invoice.status,
             }),
             timestamp: new Date(),
         },

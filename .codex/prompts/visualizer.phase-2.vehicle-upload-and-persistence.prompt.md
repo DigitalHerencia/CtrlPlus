@@ -16,9 +16,9 @@ Implement vehicle upload validation, normalization, Cloudinary persistence, and 
 
 ## Scope anchors
 
-- `lib/visualizer/actions/**`
-- `lib/visualizer/cloudinary/**` or equivalent storage helpers
-- `lib/visualizer/preprocessing/**`
+- `lib/actions/visualizer.actions.ts`
+- `lib/uploads/storage.ts`
+- `lib/uploads/image-processing.ts`
 - `components/visualizer/**`
 - affected tests
 

@@ -5,7 +5,7 @@ import {
     type CatalogAssetReadinessDTO,
     type WrapImageDTO,
 } from '@/types/catalog'
-import { getMissingRequiredAssetRolesForPublish } from './validators/publish-wrap'
+import { getMissingRequiredAssetRolesForPublish } from '@/schema/catalog'
 
 const CLOUDINARY_HOST = 'res.cloudinary.com'
 
@@ -50,6 +50,84 @@ function insertCloudinaryTransformation(url: string, transformation: string): st
 
 export function getCatalogAssetDeliveryUrl(url: string, variant: CatalogDeliveryVariant): string {
     return insertCloudinaryTransformation(url, TRANSFORMATION_BY_VARIANT[variant])
+}
+
+export function toCatalogAssetImage(image: WrapImageDTO): CatalogAssetImageDTO {
+    return {
+        ...image,
+        thumbnailUrl: getCatalogAssetDeliveryUrl(image.url, 'thumbnail'),
+        cardUrl: getCatalogAssetDeliveryUrl(image.url, 'card'),
+        detailUrl: getCatalogAssetDeliveryUrl(image.url, 'detail'),
+    }
+}
+
+export function resolvePrimaryDisplayAsset(images: WrapImageDTO[]): CatalogAssetImageDTO | null {
+    const orderedImages = sortImages(images)
+    const displayCandidates = orderedImages.filter(
+        (image) =>
+            image.isActive &&
+            (image.kind === WrapImageKind.HERO || image.kind === WrapImageKind.GALLERY)
+    )
+
+    const heroImage =
+        displayCandidates.find((image) => image.kind === WrapImageKind.HERO) ??
+        displayCandidates.find((image) => image.kind === WrapImageKind.GALLERY) ??
+        orderedImages.find((image) => image.kind === WrapImageKind.HERO) ??
+        orderedImages.find((image) => image.kind === WrapImageKind.GALLERY)
+
+    return heroImage ? toCatalogAssetImage(heroImage) : null
+}
+
+export function resolveHeroAsset(images: WrapImageDTO[]): CatalogAssetImageDTO | null {
+    const orderedImages = sortImages(images)
+    const heroImage =
+        orderedImages.find((image) => image.isActive && image.kind === WrapImageKind.HERO) ??
+        orderedImages.find((image) => image.kind === WrapImageKind.HERO)
+
+    return heroImage ? toCatalogAssetImage(heroImage) : null
+}
+
+export function resolveCatalogGalleryImages(images: WrapImageDTO[]): CatalogAssetImageDTO[] {
+    const orderedImages = sortImages(images)
+    const activeDisplayImages = orderedImages.filter(
+        (image) => image.isActive && image.kind === WrapImageKind.GALLERY
+    )
+    const fallbackDisplayImages = orderedImages.filter(
+        (image) => image.kind === WrapImageKind.GALLERY
+    )
+
+    return (activeDisplayImages.length > 0 ? activeDisplayImages : fallbackDisplayImages).map(
+        toCatalogAssetImage
+    )
+}
+
+export function resolveDisplayImages(images: WrapImageDTO[]): CatalogAssetImageDTO[] {
+    const heroImage = resolveHeroAsset(images)
+    const galleryImages = resolveCatalogGalleryImages(images)
+
+    return heroImage ? [heroImage, ...galleryImages] : galleryImages
+}
+
+export function resolveVisualizerTextureAsset(images: WrapImageDTO[]): CatalogAssetImageDTO | null {
+    const orderedImages = sortImages(images)
+    const textureImage =
+        orderedImages.find(
+            (image) => image.isActive && image.kind === WrapImageKind.VISUALIZER_TEXTURE
+        ) ?? orderedImages.find((image) => image.kind === WrapImageKind.VISUALIZER_TEXTURE)
+
+    return textureImage ? toCatalogAssetImage(textureImage) : null
+}
+
+export function resolveVisualizerMaskHintAsset(
+    images: WrapImageDTO[]
+): CatalogAssetImageDTO | null {
+    const orderedImages = sortImages(images)
+    const maskHintImage =
+        orderedImages.find(
+            (image) => image.isActive && image.kind === WrapImageKind.VISUALIZER_MASK_HINT
+        ) ?? orderedImages.find((image) => image.kind === WrapImageKind.VISUALIZER_MASK_HINT)
+
+    return maskHintImage ? toCatalogAssetImage(maskHintImage) : null
 }
 
 export function getCatalogAssetReadiness(
@@ -154,82 +232,4 @@ export function getCatalogAssetReadiness(
         activeVisualizerMaskHintCount,
         issues,
     }
-}
-
-export function toCatalogAssetImage(image: WrapImageDTO): CatalogAssetImageDTO {
-    return {
-        ...image,
-        thumbnailUrl: getCatalogAssetDeliveryUrl(image.url, 'thumbnail'),
-        cardUrl: getCatalogAssetDeliveryUrl(image.url, 'card'),
-        detailUrl: getCatalogAssetDeliveryUrl(image.url, 'detail'),
-    }
-}
-
-export function resolvePrimaryDisplayAsset(images: WrapImageDTO[]): CatalogAssetImageDTO | null {
-    const orderedImages = sortImages(images)
-    const displayCandidates = orderedImages.filter(
-        (image) =>
-            image.isActive &&
-            (image.kind === WrapImageKind.HERO || image.kind === WrapImageKind.GALLERY)
-    )
-
-    const heroImage =
-        displayCandidates.find((image) => image.kind === WrapImageKind.HERO) ??
-        displayCandidates.find((image) => image.kind === WrapImageKind.GALLERY) ??
-        orderedImages.find((image) => image.kind === WrapImageKind.HERO) ??
-        orderedImages.find((image) => image.kind === WrapImageKind.GALLERY)
-
-    return heroImage ? toCatalogAssetImage(heroImage) : null
-}
-
-export function resolveHeroAsset(images: WrapImageDTO[]): CatalogAssetImageDTO | null {
-    const orderedImages = sortImages(images)
-    const heroImage =
-        orderedImages.find((image) => image.isActive && image.kind === WrapImageKind.HERO) ??
-        orderedImages.find((image) => image.kind === WrapImageKind.HERO)
-
-    return heroImage ? toCatalogAssetImage(heroImage) : null
-}
-
-export function resolveCatalogGalleryImages(images: WrapImageDTO[]): CatalogAssetImageDTO[] {
-    const orderedImages = sortImages(images)
-    const activeDisplayImages = orderedImages.filter(
-        (image) => image.isActive && image.kind === WrapImageKind.GALLERY
-    )
-    const fallbackDisplayImages = orderedImages.filter(
-        (image) => image.kind === WrapImageKind.GALLERY
-    )
-
-    return (activeDisplayImages.length > 0 ? activeDisplayImages : fallbackDisplayImages).map(
-        toCatalogAssetImage
-    )
-}
-
-export function resolveDisplayImages(images: WrapImageDTO[]): CatalogAssetImageDTO[] {
-    const heroImage = resolveHeroAsset(images)
-    const galleryImages = resolveCatalogGalleryImages(images)
-
-    return heroImage ? [heroImage, ...galleryImages] : galleryImages
-}
-
-export function resolveVisualizerTextureAsset(images: WrapImageDTO[]): CatalogAssetImageDTO | null {
-    const orderedImages = sortImages(images)
-    const textureImage =
-        orderedImages.find(
-            (image) => image.isActive && image.kind === WrapImageKind.VISUALIZER_TEXTURE
-        ) ?? orderedImages.find((image) => image.kind === WrapImageKind.VISUALIZER_TEXTURE)
-
-    return textureImage ? toCatalogAssetImage(textureImage) : null
-}
-
-export function resolveVisualizerMaskHintAsset(
-    images: WrapImageDTO[]
-): CatalogAssetImageDTO | null {
-    const orderedImages = sortImages(images)
-    const maskHintImage =
-        orderedImages.find(
-            (image) => image.isActive && image.kind === WrapImageKind.VISUALIZER_MASK_HINT
-        ) ?? orderedImages.find((image) => image.kind === WrapImageKind.VISUALIZER_MASK_HINT)
-
-    return maskHintImage ? toCatalogAssetImage(maskHintImage) : null
 }

@@ -4,21 +4,18 @@ import { getSession } from '@/lib/auth/session'
 import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
 import { reserveSlotSchema, updateBookingSchema } from '@/schema/scheduling'
-import { assertSlotHasCapacity } from '@/lib/scheduling/capacity'
-import { getBookingDisplayStatus } from '@/lib/scheduling/utils'
+import { assertSlotHasCapacity } from '@/lib/db/transactions/scheduling.transactions'
 import { ensureInvoiceForBooking } from '@/lib/actions/billing.actions'
-import {
-    revalidateBillingBookingRoute,
-    revalidateSchedulingPages,
-} from '@/lib/scheduling/revalidation'
+import { revalidateBillingBookingRoute, revalidateSchedulingPages } from '@/lib/cache/revalidate-tags'
 import type {
     ReserveSlotInput,
     ReservedBookingDTO,
     BookingDTO,
+    CreatedBookingDTO,
     UpdateBookingInput,
     BookingActionDTO,
-    BookingStatusValue,
 } from '@/types/scheduling'
+import { getBookingDisplayStatus } from '@/types/scheduling'
 import { Prisma } from '@prisma/client'
 
 // Reservation TTL (minutes)
@@ -131,13 +128,14 @@ export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBook
     )
 }
 
-export async function createBooking(input: ReserveSlotInput): Promise<BookingDTO> {
+export async function createBooking(input: ReserveSlotInput): Promise<CreatedBookingDTO> {
     const booking = await reserveSlot(input)
     const { invoiceId } = await ensureInvoiceForBooking({ bookingId: booking.id })
     revalidateSchedulingPages()
     revalidateBillingBookingRoute(invoiceId)
 
     return {
+        invoiceId,
         ...booking,
         id: booking.id,
         wrapId: booking.wrapId,
@@ -241,7 +239,7 @@ export async function updateBooking(
         totalPrice: booking.totalPrice,
         reservationExpiresAt: existing.reservation?.expiresAt ?? null,
         displayStatus: getBookingDisplayStatus(
-            booking.status as BookingStatusValue,
+            booking.status as BookingActionDTO['status'],
             existing.reservation?.expiresAt ?? null
         ),
         createdAt: booking.createdAt,

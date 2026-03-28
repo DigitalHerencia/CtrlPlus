@@ -1,6 +1,6 @@
 ---
 description: 'Domain instructions for billing, invoices, and Stripe flows'
-applyTo: 'app/(tenant)/billing/**,app/api/stripe/**,components/billing/**,lib/billing/**'
+applyTo: 'app/(tenant)/billing/**,app/api/stripe/**,components/billing/**,lib/actions/billing.actions.ts,lib/fetchers/billing.fetchers.ts,lib/integrations/stripe.ts,lib/db/transactions/billing.transactions.ts'
 ---
 
 # Billing Domain Instructions
@@ -30,10 +30,10 @@ This domain does not own:
 ## Required patterns
 
 - Keep `app/(tenant)/billing/**` read/orchestration focused.
-- Reads go through `lib/billing/fetchers/**`.
-- Writes go through `lib/billing/actions/**`.
+- Reads go through `lib/fetchers/billing.fetchers.ts`.
+- Writes go through `lib/actions/billing.actions.ts`.
 - Future refactors should move page composition into `features/billing/**` instead of growing `app/**`.
-- Stripe integration details belong in `lib/billing/stripe.ts` and webhook routes.
+- Stripe integration details belong in `lib/integrations/stripe.ts` and webhook routes.
 - Billing state must remain server-authoritative.
 
 ## Security requirements

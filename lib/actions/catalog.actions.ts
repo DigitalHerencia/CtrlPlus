@@ -3,6 +3,7 @@
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/db/prisma'
 import {
+    assertWrapIsPublishReady,
     createWrapSchema,
     updateWrapSchema,
     createWrapCategorySchema,
@@ -11,15 +12,9 @@ import {
     updateWrapImageMetadataSchema,
     wrapImageUploadSchema,
 } from '@/schema/catalog'
-import {
-    revalidateCatalogPaths,
-    revalidateCatalogAndVisualizerPaths,
-} from '@/lib/catalog/revalidation'
-import {
-    deletePersistedWrapImage,
-    persistWrapImage,
-    validateWrapImageFile,
-} from '@/lib/catalog/image-storage'
+import { revalidateCatalogPaths, revalidateCatalogAndVisualizerPaths } from '@/lib/cache/revalidate-tags'
+import { deletePersistedWrapImage, persistWrapImage } from '@/lib/uploads/storage'
+import { validateWrapImageFile } from '@/lib/uploads/file-validation'
 import { getWrapById, getCatalogWrapById } from '@/lib/fetchers/catalog.fetchers'
 import {
     type CreateWrapInput,
@@ -35,7 +30,6 @@ import {
     type WrapCategoryDTO,
     type UpdateWrapInput,
 } from '@/types/catalog'
-import { assertWrapIsPublishReady } from '@/lib/catalog/validators/publish-wrap'
 
 // --- createWrap ---
 export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {

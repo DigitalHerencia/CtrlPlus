@@ -11,9 +11,9 @@ Refactor billing into a clean, trustworthy invoice and payment system that follo
 - `app/api/stripe/webhook/route.ts`
 - `components/billing/CheckoutButton.tsx`
 - `components/billing/InvoiceStatusBadge.tsx`
-- `lib/billing/actions/**`
-- `lib/billing/fetchers/**`
-- `lib/billing/stripe.ts`
+- `lib/actions/billing.actions.ts`
+- `lib/fetchers/billing.fetchers.ts`
+- `lib/integrations/stripe.ts`
 - `lib/auth/**`
 - `lib/authz/**`
 
@@ -27,8 +27,8 @@ Refactor billing into a clean, trustworthy invoice and payment system that follo
 
 ## Key implementation points
 
-- keep all billing reads in `lib/billing/fetchers/**`
-- keep all billing mutations in `lib/billing/actions/**`
+- keep all billing reads in `lib/fetchers/billing.fetchers.ts`
+- keep all billing mutations in `lib/actions/billing.actions.ts`
 - keep feature orchestration outside `app/**`
 - enforce invoice ownership and capability checks at the server boundary
 - keep Stripe route handling narrow, idempotent, and auditable

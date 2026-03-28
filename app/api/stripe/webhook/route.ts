@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client'
 
 import { processStripeWebhookEvent } from '@/lib/actions/billing.actions'
-import { constructWebhookEvent } from '@/lib/billing/stripe'
+import { constructWebhookEvent } from '@/lib/integrations/stripe'
 import { type NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {

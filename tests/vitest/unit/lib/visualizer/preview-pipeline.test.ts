@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { readPhotoBuffer } from '@/lib/visualizer/preview-pipeline'
+import { readPhotoBuffer } from '@/lib/uploads/image-processing'
 
 describe('readPhotoBuffer', () => {
     it('supports legacy data URLs for stored customer photos', async () => {

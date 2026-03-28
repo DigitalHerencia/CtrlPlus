@@ -1,7 +1,7 @@
 'use server'
 
 import { requireAuthzCapability } from '@/lib/authz/guards'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 import { revalidatePath } from 'next/cache'
 import { websiteSettingsSchema } from '@/schema/settings'
 import {

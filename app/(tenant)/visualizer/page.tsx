@@ -1,7 +1,7 @@
 import { getSession } from '@/lib/auth/session'
 import { hasCapability, requireCapability } from '@/lib/authz/policy'
 import { VisualizerPageFeature } from '@/features/visualizer/visualizer-page-feature'
-import { parseVisualizerSearchParams } from '@/lib/visualizer/search-params'
+import { parseVisualizerSearchParams } from '@/lib/utils/search-params'
 import { type VisualizerPageProps } from '@/types/visualizer'
 import { redirect } from 'next/navigation'
 

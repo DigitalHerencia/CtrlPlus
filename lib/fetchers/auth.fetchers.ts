@@ -1,6 +1,4 @@
-import 'server-only'
-
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 
 /**
  * Read-only helpers for the auth domain.

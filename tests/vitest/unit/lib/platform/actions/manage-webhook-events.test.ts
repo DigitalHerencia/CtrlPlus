@@ -31,7 +31,7 @@ vi.mock('next/cache', () => ({
     revalidatePath: mocks.revalidatePath,
 }))
 
-vi.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 

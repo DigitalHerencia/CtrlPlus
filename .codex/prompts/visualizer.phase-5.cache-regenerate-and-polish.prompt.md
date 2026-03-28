@@ -19,9 +19,9 @@ Finalize preview reuse, regenerate behavior, and surface polish once selection, 
 
 ## Scope anchors
 
-- `lib/visualizer/cache-key.ts`
-- `lib/visualizer/actions/**`
-- `lib/visualizer/fetchers/**`
+- `lib/cache/cache-keys.ts`
+- `lib/actions/visualizer.actions.ts`
+- `lib/fetchers/visualizer.fetchers.ts`
 - `components/visualizer/**`
 - affected tests
 

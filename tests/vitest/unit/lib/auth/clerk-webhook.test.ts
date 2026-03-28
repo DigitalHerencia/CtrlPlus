@@ -4,7 +4,7 @@ vi.mock('@clerk/nextjs/webhooks', () => ({
     verifyWebhook: vi.fn(async () => ({ type: 'user.created', data: { id: 'clerk|123' } })),
 }))
 
-import { verifyAndParseClerkWebhook } from '@/lib/auth/clerk-webhook'
+import { verifyAndParseClerkWebhook } from '@/lib/integrations/clerk'
 import { NextRequest } from 'next/server'
 
 describe('verifyAndParseClerkWebhook', () => {

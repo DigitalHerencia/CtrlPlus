@@ -1,6 +1,4 @@
-import 'server-only'
-
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 import { requirePlatformDeveloperAdmin } from '@/lib/authz/guards'
 import type {
     WebhookFailureDTO,

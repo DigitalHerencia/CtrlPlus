@@ -1,5 +1,3 @@
-import 'server-only'
-
 import type { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/db/prisma'
@@ -15,7 +13,22 @@ import {
     type InvoiceLineItemDTO,
     type PaymentDTO,
 } from '@/types/billing'
-import { buildInvoiceReadWhere, getBillingAccessContext } from '@/lib/billing/access'
+import { getBillingAccessContext } from '@/lib/authz/guards'
+
+function buildInvoiceReadWhere(
+    userId: string,
+    canAccessAllInvoices: boolean
+): Prisma.InvoiceWhereInput {
+    if (canAccessAllInvoices) {
+        return {}
+    }
+
+    return {
+        booking: {
+            customerId: userId,
+        },
+    }
+}
 
 function toInvoiceDTO(row: {
     id: string

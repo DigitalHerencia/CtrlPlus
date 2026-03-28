@@ -3,20 +3,28 @@
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
+import { getVisualizerWrapSelectionById } from '@/lib/fetchers/visualizer.fetchers'
 import {
-    getVisualizerWrapSelectionById,
-} from '@/lib/fetchers/visualizer.fetchers'
-import { buildVisualizerPromptForWrap } from '@/lib/visualizer/preview-execution'
-import { normalizeVehicleUpload, readPhotoBuffer } from '@/lib/visualizer/preview-pipeline'
-import { storePreviewImage } from '@/lib/visualizer/storage'
-import { visualizerConfig } from '@/lib/visualizer/config'
-import { buildVisualizerCacheKey } from '@/lib/visualizer/cache-key'
-import { toVisualizerPreviewDTO } from '@/lib/visualizer/dto'
+    createWrapPreviewGeneratorAdapter,
+    HuggingFacePreviewUnavailableError,
+    visualizerConfig,
+} from '@/lib/integrations/huggingface'
+import { buildVisualizerCacheKey } from '@/lib/cache/cache-keys'
+import {
+    buildPreviewConditioningBoard,
+    buildWrapPreviewPrompt,
+    generateDeterministicCompositePreview,
+    normalizeVehicleUpload,
+    readImageBufferFromUrl,
+    readPhotoBuffer,
+} from '@/lib/uploads/image-processing'
+import { storePreviewImage } from '@/lib/uploads/storage'
 import {
     createVisualizerPreviewSchema,
     processVisualizerPreviewSchema,
     regenerateVisualizerPreviewSchema,
 } from '@/schema/visualizer'
+import { toVisualizerPreviewDTO } from '@/types/visualizer'
 import type {
     CreateVisualizerPreviewInput,
     RegenerateVisualizerPreviewInput,
@@ -25,10 +33,85 @@ import type {
     UploadPhotoInput,
     VisualizerPreviewDTO,
 } from '@/types/visualizer'
-import {
-    executeVisualizerPreviewGeneration,
-    resolveVisualizerGenerationAssets,
-} from '@/lib/visualizer/preview-execution'
+
+function buildVisualizerPromptForWrap(
+    wrap: NonNullable<Awaited<ReturnType<typeof getVisualizerWrapSelectionById>>>
+) {
+    return buildWrapPreviewPrompt({
+        name: wrap.name,
+        description: wrap.description,
+        aiPromptTemplate: wrap.aiPromptTemplate,
+        aiNegativePrompt: wrap.aiNegativePrompt,
+    })
+}
+
+async function resolveVisualizerGenerationAssets(
+    wrap: NonNullable<Awaited<ReturnType<typeof getVisualizerWrapSelectionById>>>
+) {
+    const [textureBuffer, prompt] = await Promise.all([
+        readImageBufferFromUrl(wrap.visualizerTextureImage.url),
+        Promise.resolve(buildVisualizerPromptForWrap(wrap)),
+    ])
+
+    return {
+        textureBuffer,
+        prompt,
+    }
+}
+
+async function executeVisualizerPreviewGeneration(params: {
+    previewId: string
+    vehicleBuffer: Buffer
+    textureBuffer: Buffer
+    wrap: NonNullable<Awaited<ReturnType<typeof getVisualizerWrapSelectionById>>>
+    prompt: ReturnType<typeof buildWrapPreviewPrompt>
+}): Promise<{
+    processedImageUrl: string
+    promptVersion: string
+    generationFallbackReason: string | null
+}> {
+    try {
+        const adapter = createWrapPreviewGeneratorAdapter()
+        const boardBuffer = await buildPreviewConditioningBoard({
+            vehicleBuffer: params.vehicleBuffer,
+            textureBuffer: params.textureBuffer,
+            wrapName: params.wrap.name,
+            wrapDescription: params.wrap.description,
+        })
+        const generatedBuffer = await adapter.generate({
+            boardBuffer,
+            prompt: params.prompt.prompt,
+            negativePrompt: params.prompt.negativePrompt,
+        })
+
+        return {
+            processedImageUrl: await storePreviewImage({
+                previewId: params.previewId,
+                buffer: generatedBuffer,
+                contentType: 'image/png',
+            }),
+            promptVersion: params.prompt.promptVersion,
+            generationFallbackReason: null,
+        }
+    } catch (error) {
+        const fallbackReason =
+            error instanceof HuggingFacePreviewUnavailableError
+                ? error.message
+                : error instanceof Error
+                  ? error.message
+                  : 'Hugging Face preview generation failed.'
+
+        return {
+            processedImageUrl: await generateDeterministicCompositePreview({
+                previewId: params.previewId,
+                photoBuffer: params.vehicleBuffer,
+                textureBuffer: params.textureBuffer,
+            }),
+            promptVersion: params.prompt.promptVersion,
+            generationFallbackReason: fallbackReason,
+        }
+    }
+}
 
 export async function createVisualizerPreview(
     input: CreateVisualizerPreviewInput

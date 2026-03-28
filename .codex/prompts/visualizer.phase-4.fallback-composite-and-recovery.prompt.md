@@ -16,8 +16,8 @@ Add the resilient fallback path so preview requests can still complete when Hugg
 
 ## Scope anchors
 
-- `lib/visualizer/fallback/**`
-- `lib/visualizer/actions/**`
+- `lib/uploads/image-processing.ts`
+- `lib/actions/visualizer.actions.ts`
 - `components/visualizer/**`
 - affected tests
 

@@ -18,16 +18,8 @@ vi.mock('@/lib/db/prisma', () => ({
 
 vi.mock('server-only', () => ({}))
 
-vi.mock('@/lib/billing/access', () => ({
+vi.mock('@/lib/authz/guards', () => ({
     getBillingAccessContext: mocks.getBillingAccessContext,
-    buildInvoiceReadWhere: (userId: string, canReadAllInvoices: boolean) =>
-        canReadAllInvoices
-            ? {}
-            : {
-                  booking: {
-                      customerId: userId,
-                  },
-              },
 }))
 
 import { getPaymentStatusForInvoice } from '@/lib/fetchers/billing.fetchers'

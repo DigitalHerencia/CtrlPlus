@@ -16,14 +16,18 @@ Refactor only the `visualizer` domain to the target CtrlPlus server-first archit
 - `app/(tenant)/visualizer/**`
 - `features/visualizer/**`
 - `components/visualizer/**`
-- `lib/visualizer/**`
-- `lib/catalog/fetchers/**` when explicitly needed for wrap selection boundaries
+- `lib/actions/visualizer.actions.ts`
+- `lib/fetchers/visualizer.fetchers.ts`
+- `lib/uploads/**`
+- `lib/integrations/huggingface.ts`
+- `lib/cache/cache-keys.ts`
+- `lib/fetchers/catalog.fetchers.ts` when explicitly needed for wrap selection boundaries
 - affected tests under `e2e/**` and `tests/**`
 
 ## Upstream and downstream dependencies
 
 - visualizer work assumes catalog-owned selection DTOs and deterministic visualizer texture resolution
-- external-provider assumptions must remain isolated to `lib/visualizer/**`
+- external-provider assumptions must remain isolated to `lib/integrations/huggingface.ts`
 - phase prompts should be executed in order unless an earlier phase is already complete and verified
 
 ## Non-goals
@@ -37,8 +41,8 @@ Refactor only the `visualizer` domain to the target CtrlPlus server-first archit
 - keep `app/**` thin and orchestration-only
 - move page composition into `features/visualizer/**`
 - keep pure UI in `components/visualizer/**`
-- keep reads in `lib/visualizer/fetchers/**`
-- keep writes in `lib/visualizer/actions/**`
+- keep reads in `lib/fetchers/visualizer.fetchers.ts`
+- keep writes in `lib/actions/visualizer.actions.ts`
 
 ## Required implementation rules
 
@@ -73,7 +77,7 @@ Refactor only the `visualizer` domain to the target CtrlPlus server-first archit
 - thin visualizer route files
 - move orchestration into features
 - isolate pure UI from upload, preview, and polling logic
-- keep image processing and provider adapters in `lib/visualizer/**`
+- keep image processing and provider adapters in `lib/uploads/**` and `lib/integrations/**`
 - preserve cache-aware generation and fallback behavior
 - update affected tests
 

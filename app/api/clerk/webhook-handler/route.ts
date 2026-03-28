@@ -11,10 +11,10 @@
  * CLERK_WEBHOOK_SIGNING_SECRET (or the legacy CLERK_WEBHOOK_SECRET fallback).
  */
 
-import { verifyAndParseClerkWebhook } from '@/lib/auth/clerk-webhook'
+import { verifyAndParseClerkWebhook } from '@/lib/integrations/clerk'
 import { resolveGlobalRoleForClerkUserId } from '@/lib/auth/identity'
 import { upsertUserFromClerk } from '@/lib/actions/auth.actions'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 import { type NextRequest, NextResponse } from 'next/server'
 
 interface ClerkWebhookEvent {

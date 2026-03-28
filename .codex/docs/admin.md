@@ -11,10 +11,11 @@ Refactor the owner admin surface into a focused operational dashboard and quick-
 - `components/shared/tenant-elements.tsx`
 - `components/shared/tenant-nav-config.ts`
 - `components/shared/tenant-sidebar.tsx`
-- `lib/admin/**`
-- `lib/catalog/**`
-- `lib/scheduling/**`
-- `lib/billing/**`
+- `lib/actions/admin.actions.ts`
+- `lib/fetchers/admin.fetchers.ts`
+- `lib/fetchers/catalog.fetchers.ts`
+- `lib/fetchers/scheduling.fetchers.ts`
+- `lib/db/transactions/billing.transactions.ts`
 - `lib/auth/**`
 - `lib/authz/**`
 
@@ -28,7 +29,7 @@ Refactor the owner admin surface into a focused operational dashboard and quick-
 
 ## Key implementation points
 
-- keep admin reads in `lib/admin/**` or compose from other domain fetchers instead of duplicating business logic
+- keep admin reads in `lib/fetchers/admin.fetchers.ts` or compose from other domain fetchers instead of duplicating business logic
 - keep admin mutations narrow and server-side when they are truly admin-specific
 - keep route entrypoints thin and move dashboard orchestration into `features/admin/**` during the actual refactor
 - use admin to summarize catalog, scheduling, and billing state, not to reimplement those domains

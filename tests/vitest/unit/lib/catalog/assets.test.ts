@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { getCatalogAssetReadiness, resolvePrimaryDisplayAsset } from '@/lib/catalog/assets'
+import { getCatalogAssetReadiness, resolvePrimaryDisplayAsset } from '@/lib/utils/catalog-assets'
 import { WrapImageKind, type WrapImageDTO } from '@/types/catalog'
 
 function createImage(overrides: Partial<WrapImageDTO>): WrapImageDTO {

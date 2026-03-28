@@ -17,7 +17,9 @@ Implement the catalog domain foundations required for deterministic wrap asset r
 
 ## Scope anchors
 
-- `lib/catalog/**`
+- `lib/actions/catalog.actions.ts`
+- `lib/fetchers/catalog.fetchers.ts`
+- `lib/utils/catalog-assets.ts`
 - `types/**` or schema modules only if the catalog domain already relies on them
 - affected catalog unit and integration tests
 

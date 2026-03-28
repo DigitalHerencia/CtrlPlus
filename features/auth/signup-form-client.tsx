@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input'
 import { sanitizePostAuthRedirect } from '@/lib/auth/redirect'
 import { signupSchema, verificationSchema } from '@/schema/auth'
 import { type SignupFormProps, type SignupFormValues } from '@/types/auth'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/cn'
 
 function getErrorMessage(error: unknown, fallback: string): string {
     const clerkError = error as { errors?: Array<{ message?: string }> }

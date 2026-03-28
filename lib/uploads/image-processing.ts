@@ -4,10 +4,13 @@ import path from 'path'
 
 import sharp from 'sharp'
 
-import { compositeVehicleWrap } from '@/lib/visualizer/compositor'
-import { isAllowedRemotePhotoHost, visualizerConfig } from '@/lib/visualizer/config'
-import { createVehicleMask, fallbackCenterMask } from '@/lib/visualizer/huggingface'
-import { storePreviewImage } from '@/lib/visualizer/storage'
+import {
+    createVehicleMask,
+    fallbackCenterMask,
+    isAllowedRemotePhotoHost,
+    visualizerConfig,
+} from '@/lib/integrations/huggingface'
+import { storePreviewImage } from '@/lib/uploads/storage'
 
 const MIN_DIMENSION = 512
 const MAX_DIMENSION = 4096
@@ -81,9 +84,7 @@ async function readRemoteImage(url: URL): Promise<{ buffer: Buffer; contentType:
     return { buffer, contentType }
 }
 
-async function readLocalWrapImage(
-    urlPath: string
-): Promise<{ buffer: Buffer; contentType: string }> {
+async function readLocalWrapImage(urlPath: string): Promise<{ buffer: Buffer; contentType: string }> {
     if (!urlPath.startsWith('/uploads/wraps/')) {
         throw new Error('Unsupported local texture path')
     }
@@ -278,6 +279,38 @@ export async function buildPreviewConditioningBoard(params: {
             { input: vehicleImage, left: 24, top: 48 },
             { input: textureTile, left: rightPanelX, top: 220 },
         ])
+        .png()
+        .toBuffer()
+}
+
+export async function compositeVehicleWrap(params: {
+    photoBuffer: Buffer
+    maskBuffer: Buffer
+    textureBuffer: Buffer
+    opacity: number
+    blend: 'multiply' | 'overlay'
+}): Promise<Buffer> {
+    const baseMetadata = await sharp(params.photoBuffer).metadata()
+    if (!baseMetadata.width || !baseMetadata.height) {
+        throw new Error('Unable to read uploaded photo dimensions')
+    }
+
+    const width = baseMetadata.width
+    const height = baseMetadata.height
+
+    const resizedTexture = await sharp(params.textureBuffer)
+        .resize(width, height, { fit: 'cover' })
+        .ensureAlpha(params.opacity)
+        .png()
+        .toBuffer()
+
+    const maskedTexture = await sharp(resizedTexture)
+        .composite([{ input: params.maskBuffer, blend: 'dest-in' }])
+        .png()
+        .toBuffer()
+
+    return sharp(params.photoBuffer)
+        .composite([{ input: maskedTexture, blend: params.blend }])
         .png()
         .toBuffer()
 }

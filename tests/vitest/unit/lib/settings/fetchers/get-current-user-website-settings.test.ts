@@ -15,7 +15,7 @@ vi.mock('@/lib/authz/guards', () => ({
 
 vi.mock('server-only', () => ({}))
 
-vi.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 

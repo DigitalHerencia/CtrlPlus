@@ -1,7 +1,5 @@
-import 'server-only'
-
 import { requireAuthzCapability } from '@/lib/authz/guards'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 import {
     createDefaultWebsiteSettingsInput,
     createWebsiteSettingsDTO,

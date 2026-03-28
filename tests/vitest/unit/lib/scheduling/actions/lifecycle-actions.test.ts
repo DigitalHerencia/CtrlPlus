@@ -32,7 +32,7 @@ vi.mock('@/lib/authz/policy', () => ({
     requireCustomerOwnedResourceAccess: mocks.requireCustomerOwnedResourceAccess,
 }))
 
-vi.mock('@/lib/scheduling/capacity', () => ({
+vi.mock('@/lib/db/transactions/scheduling.transactions', () => ({
     assertSlotHasCapacity: mocks.assertSlotHasCapacity,
 }))
 
@@ -40,7 +40,7 @@ vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
-vi.mock('@/lib/scheduling/revalidation', () => ({
+vi.mock('@/lib/cache/revalidate-tags', () => ({
     revalidateSchedulingPages: mocks.revalidateSchedulingPages,
     revalidateBillingBookingRoute: vi.fn(),
 }))

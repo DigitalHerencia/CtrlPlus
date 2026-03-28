@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { toCatalogAssetImage } from '@/lib/catalog/assets'
+import { toCatalogAssetImage } from '@/lib/utils/catalog-assets'
 import {
     WrapImageKind,
     type CatalogAssetReadinessDTO,

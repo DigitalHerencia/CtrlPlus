@@ -4,11 +4,11 @@
 // Prisma 7 Configuration for Neon Serverless Postgres
 //
 // Connection Strategy:
-// - DATABASE_URL (pooled with -pooler suffix): Used by PrismaClient via Neon adapter in lib/prisma.ts
+// - DATABASE_URL (pooled with -pooler suffix): Used by PrismaClient via Neon adapter in lib/db/prisma.ts
 // - DATABASE_URL_UNPOOLED (direct): Used for migrations via prisma.config.ts
 //
 // Connection strings are passed to PrismaClient constructor, not in datasource block.
-// See lib/prisma.ts for adapter configuration.
+// See lib/db/prisma.ts for adapter configuration.
 
 generator client {
   provider = "prisma-client-js"

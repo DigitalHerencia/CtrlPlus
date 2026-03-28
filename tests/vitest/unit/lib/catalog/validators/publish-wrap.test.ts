@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
     assertWrapCanBePublished,
     getMissingRequiredAssetRolesForPublish,
-} from '@/lib/catalog/validators/publish-wrap'
+} from '@/schema/catalog'
 
 describe('getMissingRequiredAssetRolesForPublish', () => {
     it('returns both required roles when no assets are present', () => {

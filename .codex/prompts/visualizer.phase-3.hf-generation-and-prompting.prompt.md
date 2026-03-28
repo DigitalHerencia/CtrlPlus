@@ -17,10 +17,9 @@ Implement the primary AI preview path using prompt construction, generation-boar
 
 ## Scope anchors
 
-- `lib/visualizer/prompting/**`
-- `lib/visualizer/preprocessing/**`
-- `lib/visualizer/huggingface/**`
-- `lib/visualizer/actions/**`
+- `lib/uploads/image-processing.ts`
+- `lib/integrations/huggingface.ts`
+- `lib/actions/visualizer.actions.ts`
 - affected tests
 
 ## Exact implementation slice

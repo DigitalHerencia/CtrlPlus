@@ -2,9 +2,9 @@
 
 import { getSession } from '@/lib/auth/session'
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
-import { prisma } from '@/lib/prisma'
-import { confirmAppointment as managerConfirmAppointment } from '@/lib/admin/managers/scheduling-manager'
-import { createInvoice as managerCreateInvoice } from '@/lib/admin/managers/billing-manager'
+import { prisma } from '@/lib/db/prisma'
+import { createAdminInvoice } from '@/lib/db/transactions/billing.transactions'
+import { confirmAdminAppointment } from '@/lib/db/transactions/scheduling.transactions'
 import { createInvoiceSchema, confirmAppointmentSchema } from '@/schema/admin'
 import type { CreateInvoiceInput, ConfirmAppointmentInput } from '@/types/admin'
 
@@ -16,13 +16,9 @@ export async function createInvoice(input: CreateInvoiceInput) {
 
     await requireOwnerOrPlatformAdmin()
 
-    const result = await managerCreateInvoice({
-        tenantId: parsed.tenantId,
+    const result = await createAdminInvoice(prisma, {
         bookingId: parsed.bookingId,
-        customerId: parsed.customerId ?? null,
         amountCents: parsed.amountCents,
-        currency: parsed.currency ?? 'usd',
-        description: parsed.description ?? null,
     })
 
     await prisma.auditLog.create({
@@ -48,11 +44,9 @@ export async function confirmAppointment(input: ConfirmAppointmentInput) {
 
     await requireOwnerOrPlatformAdmin()
 
-    const result = await managerConfirmAppointment({
-        tenantId: parsed.tenantId,
+    const result = await confirmAdminAppointment(prisma, {
         bookingId: parsed.bookingId,
         status: parsed.status,
-        note: parsed.note ?? null,
     })
 
     await prisma.auditLog.create({

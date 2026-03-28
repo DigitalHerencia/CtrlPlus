@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/cn'
 import { PreviewStatus, type VisualizerPreviewDTO } from '@/types/visualizer'
 import { ImageOff, Loader2 } from 'lucide-react'
 

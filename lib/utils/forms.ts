@@ -1,5 +1,31 @@
-import type { FieldErrors, FieldValues, Resolver } from 'react-hook-form'
+import type { FieldErrors, FieldPath, FieldValues, Resolver, UseFormClearErrors, UseFormSetError } from 'react-hook-form'
 import { type z } from 'zod'
+
+export function applyZodErrors<TFieldValues extends FieldValues>(
+    error: z.ZodError,
+    setError: UseFormSetError<TFieldValues>,
+    clearErrors?: UseFormClearErrors<TFieldValues>
+): void {
+    clearErrors?.()
+
+    for (const issue of error.issues) {
+        const path = issue.path.join('.')
+        const message = issue.message
+
+        if (!path) {
+            setError('root.server' as FieldPath<TFieldValues>, {
+                type: issue.code,
+                message,
+            })
+            continue
+        }
+
+        setError(path as FieldPath<TFieldValues>, {
+            type: issue.code,
+            message,
+        })
+    }
+}
 
 type ResolverError = {
     type: string
@@ -54,7 +80,8 @@ export function zodResolver<TFieldValues extends FieldValues>(
             setNestedError(
                 errors,
                 issue.path.filter(
-                    (k): k is string | number => typeof k === 'string' || typeof k === 'number'
+                    (key): key is string | number =>
+                        typeof key === 'string' || typeof key === 'number'
                 ),
                 {
                     type: issue.code,
@@ -63,7 +90,6 @@ export function zodResolver<TFieldValues extends FieldValues>(
             )
         }
 
-        // React Hook Form expects values to be an empty object of type Record<string, never> when errors exist
         return {
             values: {} as Record<string, never>,
             errors,

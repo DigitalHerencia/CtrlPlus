@@ -6,17 +6,16 @@ $ErrorView = "ConciseView"
 $env:POWERSHELL_TELEMETRY_OPTOUT = "1"
 
 try {
-    $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
-    [Console]::InputEncoding = $utf8NoBom
-    [Console]::OutputEncoding = $utf8NoBom
-    $OutputEncoding = $utf8NoBom
+    $utf8 = [System.Text.UTF8Encoding]::new($false)
+    [Console]::InputEncoding = $utf8
+    [Console]::OutputEncoding = $utf8
+    $OutputEncoding = $utf8
 } catch {
     # Some hosts do not allow direct console encoding changes.
 }
 
 if ($Host.Name -eq "ConsoleHost") {
     try {
-        # Plain text is easier for Codex to parse than ANSI-heavy output.
         $PSStyle.OutputRendering = "PlainText"
     } catch {
         # Ignore hosts that do not expose PSStyle.
@@ -24,39 +23,59 @@ if ($Host.Name -eq "ConsoleHost") {
 }
 
 function Set-CodexEnvDefault {
-    [CmdletBinding()]
     param(
-        [Parameter(Mandatory = $true)]
-        [string]$Name,
-
-        [Parameter(Mandatory = $true)]
-        [string]$Value
+        [Parameter(Mandatory = $true)][string]$Name,
+        [Parameter(Mandatory = $true)][string]$Value
     )
 
-    $currentValue = [Environment]::GetEnvironmentVariable($Name, 'Process')
+    $currentValue = [Environment]::GetEnvironmentVariable($Name, "Process")
     if ([string]::IsNullOrWhiteSpace($currentValue)) {
-        [Environment]::SetEnvironmentVariable($Name, $Value, 'Process')
+        [Environment]::SetEnvironmentVariable($Name, $Value, "Process")
+    }
+}
+
+function Copy-CodexEnvAlias {
+    param(
+        [Parameter(Mandatory = $true)][string]$Target,
+        [Parameter(Mandatory = $true)][string[]]$Sources
+    )
+
+    if (-not [string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($Target, "Process"))) {
+        return
+    }
+
+    foreach ($source in $Sources) {
+        $value = [Environment]::GetEnvironmentVariable($source, "Process")
+        if (-not [string]::IsNullOrWhiteSpace($value)) {
+            [Environment]::SetEnvironmentVariable($Target, $value, "Process")
+            return
+        }
     }
 }
 
 function Import-CodexDotEnvFile {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Path
-    )
+    param([Parameter(Mandatory = $true)][string]$Path)
 
-    if (-not (Test-Path $Path)) {
+    if (-not (Test-Path -LiteralPath $Path)) {
         return
     }
 
-    foreach ($line in Get-Content -Path $Path) {
-        if ([string]::IsNullOrWhiteSpace($line)) { continue }
-        if ($line.TrimStart().StartsWith('#')) { continue }
-        if ($line -notmatch '^(?<key>[A-Za-z_][A-Za-z0-9_]*)=(?<value>.*)$') { continue }
+    foreach ($line in Get-Content -LiteralPath $Path) {
+        if ([string]::IsNullOrWhiteSpace($line)) {
+            continue
+        }
 
-        $key = $matches['key']
-        $value = $matches['value']
+        $trimmedLine = $line.Trim()
+        if ($trimmedLine.StartsWith("#")) {
+            continue
+        }
+
+        if ($trimmedLine -notmatch "^(?:export\s+)?(?<key>[A-Za-z_][A-Za-z0-9_]*)=(?<value>.*)$") {
+            continue
+        }
+
+        $key = $matches["key"]
+        $value = $matches["value"]
 
         if (($value.StartsWith('"') -and $value.EndsWith('"')) -or ($value.StartsWith("'") -and $value.EndsWith("'"))) {
             $value = $value.Substring(1, $value.Length - 2)
@@ -67,50 +86,50 @@ function Import-CodexDotEnvFile {
 }
 
 # Load repo-local environment variables into the session so shell commands and
-# MCP auth that rely on process env can use the same keys as the app.
-Import-CodexDotEnvFile -Path 'D:\CtrlPlus\.env'
-Import-CodexDotEnvFile -Path 'D:\CtrlPlus\.env.local'
+# MCP auth can reuse the same keys as the app. Load .env.local first so its
+# values win over .env without overwriting environment variables that were
+# already provided by the parent process.
+Import-CodexDotEnvFile -Path "D:\CtrlPlus\.env.local"
+Import-CodexDotEnvFile -Path "D:\CtrlPlus\.env"
 
-# Provide a compatibility alias for tools that still expect STRIPE_API_KEY.
-if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable('STRIPE_API_KEY', 'Process'))) {
-    $stripeMcpKey = [Environment]::GetEnvironmentVariable('ctrl_plus_STRIPE_MCP_KEY', 'Process')
-    if (-not [string]::IsNullOrWhiteSpace($stripeMcpKey)) {
-        [Environment]::SetEnvironmentVariable('STRIPE_API_KEY', $stripeMcpKey, 'Process')
-    }
+# Compatibility aliases for MCP/auth tools that look for different env names.
+Copy-CodexEnvAlias -Target "AUTH_CLERK_SECRET_KEY" -Sources @("CLERK_SECRET_KEY")
+Copy-CodexEnvAlias -Target "STRIPE_API_KEY" -Sources @(
+    "ctrl_plus_STRIPE_MCP_KEY",
+    "CTRL_PLUS_STRIPE_MCP_KEY",
+    "STRIPE_SECRET_KEY",
+    "ctrl_plus_STRIPE_SECRET_KEY"
+)
+
+$codexDefaults = @{
+    CI                           = "1"
+    DOTNET_CLI_TELEMETRY_OPTOUT  = "1"
+    PAGER                        = "cat"
+    GIT_PAGER                    = "cat"
+    GIT_TERMINAL_PROMPT          = "0"
+    GH_PAGER                     = "cat"
+    GH_NO_UPDATE_NOTIFIER        = "1"
+    COREPACK_ENABLE_DOWNLOAD_PROMPT = "0"
+    NPM_CONFIG_AUDIT             = "false"
+    NPM_CONFIG_COLOR             = "false"
+    NPM_CONFIG_FUND              = "false"
+    NPM_CONFIG_PROGRESS          = "false"
+    NPM_CONFIG_UPDATE_NOTIFIER   = "false"
+    NEXT_TELEMETRY_DISABLED      = "1"
+    PRISMA_HIDE_UPDATE_MESSAGE   = "1"
+    PYTHONUTF8                   = "1"
+    PYTHONUNBUFFERED             = "1"
+    PIP_DISABLE_PIP_VERSION_CHECK = "1"
+    PIP_PROGRESS_BAR             = "off"
+    POETRY_NO_INTERACTION        = "1"
+    UV_NO_PROGRESS               = "1"
+    BROWSERSLIST_IGNORE_OLD_DATA = "1"
+    NO_COLOR                     = "1"
+    FORCE_COLOR                  = "0"
 }
 
-# General non-interactive defaults for agent-driven commands.
-Set-CodexEnvDefault -Name 'CI' -Value '1'
-Set-CodexEnvDefault -Name 'DOTNET_CLI_TELEMETRY_OPTOUT' -Value '1'
-
-# Git and GitHub CLI: avoid pagers and hanging prompts.
-Set-CodexEnvDefault -Name 'GIT_PAGER' -Value 'cat'
-Set-CodexEnvDefault -Name 'GIT_TERMINAL_PROMPT' -Value '0'
-Set-CodexEnvDefault -Name 'GH_PAGER' -Value 'cat'
-Set-CodexEnvDefault -Name 'GH_NO_UPDATE_NOTIFIER' -Value '1'
-
-# Node and package-manager defaults: less noise, fewer prompts.
-Set-CodexEnvDefault -Name 'COREPACK_ENABLE_DOWNLOAD_PROMPT' -Value '0'
-Set-CodexEnvDefault -Name 'NPM_CONFIG_AUDIT' -Value 'false'
-Set-CodexEnvDefault -Name 'NPM_CONFIG_FUND' -Value 'false'
-Set-CodexEnvDefault -Name 'NPM_CONFIG_PROGRESS' -Value 'false'
-Set-CodexEnvDefault -Name 'NPM_CONFIG_UPDATE_NOTIFIER' -Value 'false'
-Set-CodexEnvDefault -Name 'NEXT_TELEMETRY_DISABLED' -Value '1'
-Set-CodexEnvDefault -Name 'PRISMA_HIDE_UPDATE_MESSAGE' -Value '1'
-
-# Python defaults: UTF-8 output and quieter package installs.
-Set-CodexEnvDefault -Name 'PYTHONUTF8' -Value '1'
-Set-CodexEnvDefault -Name 'PYTHONUNBUFFERED' -Value '1'
-Set-CodexEnvDefault -Name 'PIP_DISABLE_PIP_VERSION_CHECK' -Value '1'
-Set-CodexEnvDefault -Name 'PIP_PROGRESS_BAR' -Value 'off'
-Set-CodexEnvDefault -Name 'POETRY_NO_INTERACTION' -Value '1'
-Set-CodexEnvDefault -Name 'UV_NO_PROGRESS' -Value '1'
-
-# This repo uses browsers, Prisma, and frequent frontend work. Keep command
-# output compact without changing behavior.
-Set-CodexEnvDefault -Name 'BROWSERSLIST_IGNORE_OLD_DATA' -Value '1'
-
-# Keep the prompt minimal in Codex-driven shells.
-function prompt {
-    'PS> '
+foreach ($entry in $codexDefaults.GetEnumerator()) {
+    Set-CodexEnvDefault -Name $entry.Key -Value $entry.Value
 }
+
+function prompt { "PS> " }

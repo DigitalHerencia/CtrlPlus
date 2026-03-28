@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
     requireCapability: vi.fn(),
     getVisualizerWrapSelectionById: vi.fn(),
     normalizeVehicleUpload: vi.fn(),
-    buildVisualizerPromptForWrap: vi.fn(),
+    buildWrapPreviewPrompt: vi.fn(),
     storePreviewImage: vi.fn(),
     buildVisualizerCacheKey: vi.fn(),
     prisma: {
@@ -27,10 +27,6 @@ vi.mock('@/lib/authz/policy', () => ({
     requireCapability: mocks.requireCapability,
 }))
 
-vi.mock('@/lib/prisma', () => ({
-    prisma: mocks.prisma,
-}))
-
 vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
@@ -39,19 +35,16 @@ vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
     getVisualizerWrapSelectionById: mocks.getVisualizerWrapSelectionById,
 }))
 
-vi.mock('@/lib/visualizer/preview-pipeline', () => ({
+vi.mock('@/lib/uploads/image-processing', () => ({
     normalizeVehicleUpload: mocks.normalizeVehicleUpload,
+    buildWrapPreviewPrompt: mocks.buildWrapPreviewPrompt,
 }))
 
-vi.mock('@/lib/visualizer/preview-execution', () => ({
-    buildVisualizerPromptForWrap: mocks.buildVisualizerPromptForWrap,
-}))
-
-vi.mock('@/lib/visualizer/storage', () => ({
+vi.mock('@/lib/uploads/storage', () => ({
     storePreviewImage: mocks.storePreviewImage,
 }))
 
-vi.mock('@/lib/visualizer/cache-key', () => ({
+vi.mock('@/lib/cache/cache-keys', () => ({
     buildVisualizerCacheKey: mocks.buildVisualizerCacheKey,
 }))
 
@@ -139,7 +132,7 @@ describe('createVisualizerPreview', () => {
             height: 768,
             hash: 'vehicle-hash',
         })
-        mocks.buildVisualizerPromptForWrap.mockReturnValue({
+        mocks.buildWrapPreviewPrompt.mockReturnValue({
             prompt: 'Apply Ocean Spectrum wrap',
             negativePrompt: 'No distortion',
             promptVersion: 'prompt-version',

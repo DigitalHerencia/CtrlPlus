@@ -15,7 +15,7 @@ import {
     SidebarProvider,
     SidebarRail,
 } from '@/components/ui/sidebar'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/cn'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { type CSSProperties, type ReactNode, useEffect, useMemo, useState } from 'react'

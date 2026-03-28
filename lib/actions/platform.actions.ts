@@ -2,7 +2,7 @@
 
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 
 import { requirePlatformDeveloperAdmin } from '@/lib/authz/guards'
 import { processStripeWebhookEvent } from '@/lib/actions/billing.actions'

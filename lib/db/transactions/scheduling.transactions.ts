@@ -1,7 +1,8 @@
-import 'server-only'
+import type { Prisma, PrismaClient } from '@prisma/client'
 
-import type { Prisma } from '@prisma/client'
-import { toHHmm } from '@/lib/scheduling/utils'
+import { toHHmm } from '@/lib/utils/dates'
+
+type SchedulingWriter = PrismaClient | Prisma.TransactionClient
 
 export interface SlotRange {
     startTime: Date
@@ -11,6 +12,11 @@ export interface SlotRange {
 export interface AssertSlotCapacityInput extends SlotRange {
     excludeBookingId?: string
     now?: Date
+}
+
+export interface ConfirmAdminAppointmentParams {
+    bookingId: string
+    status: 'confirmed' | 'cancelled' | 'rescheduled'
 }
 
 function getDayOfWeekUtc(date: Date): number {
@@ -82,5 +88,20 @@ export async function assertSlotHasCapacity(
 
     if (overlappingCount >= maxCapacity) {
         throw new Error('The requested time slot is fully booked - no remaining capacity')
+    }
+}
+
+export async function confirmAdminAppointment(
+    db: SchedulingWriter,
+    params: ConfirmAdminAppointmentParams
+): Promise<{ bookingId: string; updatedCount: number }> {
+    const booking = await db.booking.updateMany({
+        where: { id: params.bookingId, deletedAt: null },
+        data: { status: params.status, updatedAt: new Date() },
+    })
+
+    return {
+        bookingId: params.bookingId,
+        updatedCount: booking.count,
     }
 }

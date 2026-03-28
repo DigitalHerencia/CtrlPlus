@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { formatInstallationTime, formatPrice } from '@/lib/catalog/formatters'
+import { formatPrice } from '@/lib/utils/currency'
+import { formatInstallationTime } from '@/lib/utils/dates'
 import { type CatalogDetailDTO } from '@/types/catalog'
 
 interface WrapDetailProps {

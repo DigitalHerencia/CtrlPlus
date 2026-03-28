@@ -3,11 +3,10 @@ import path from 'path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
-    MAX_WRAP_IMAGE_BYTES,
     deletePersistedWrapImage,
     persistWrapImage,
-    validateWrapImageFile,
-} from '@/lib/catalog/image-storage'
+} from '@/lib/uploads/storage'
+import { MAX_WRAP_IMAGE_BYTES, validateWrapImageFile } from '@/lib/uploads/file-validation'
 
 const originalEnv = {
     CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,

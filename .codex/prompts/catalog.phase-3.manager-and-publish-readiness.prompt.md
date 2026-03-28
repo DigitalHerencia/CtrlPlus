@@ -21,7 +21,7 @@ Refactor catalog management into a coherent operator workflow with explicit asse
 - `features/catalog/**`
 - `components/catalog/CatalogManager.tsx`
 - `components/catalog/WrapImageManager.tsx`
-- `lib/catalog/actions/**`
+- `lib/actions/catalog.actions.ts`
 - affected tests
 
 ## Exact implementation slice

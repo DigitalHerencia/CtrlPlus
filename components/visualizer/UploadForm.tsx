@@ -4,7 +4,7 @@ import type { FormEvent } from 'react'
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { cn } from '@/lib/utils/cn'
 import { Loader2, UploadCloud } from 'lucide-react'
 
 interface UploadFormProps {

@@ -11,9 +11,9 @@ Refactor scheduling into a reliable booking system with clear availability, rese
 - `components/scheduling/booking-form.tsx`
 - `components/scheduling/calendar-client.tsx`
 - `components/scheduling/time-slot.tsx`
-- `lib/scheduling/actions/**`
-- `lib/scheduling/fetchers/**`
-- `lib/scheduling/capacity.ts`
+- `lib/actions/scheduling.actions.ts`
+- `lib/fetchers/scheduling.fetchers.ts`
+- `lib/db/transactions/scheduling.transactions.ts`
 - `lib/authz/**`
 
 ## Main requirements

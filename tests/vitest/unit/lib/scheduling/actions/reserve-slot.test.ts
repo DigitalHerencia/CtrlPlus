@@ -12,7 +12,7 @@ vi.mock('@/lib/auth/session', () => ({
     getSession: mocks.getSession,
 }))
 
-vi.mock('@/lib/scheduling/capacity', () => ({
+vi.mock('@/lib/db/transactions/scheduling.transactions', () => ({
     assertSlotHasCapacity: mocks.assertSlotHasCapacity,
 }))
 
@@ -74,6 +74,7 @@ describe('reserveSlot', () => {
         mocks.prisma.$transaction.mockImplementation(async (callback) => callback(tx))
         tx.wrap.findFirst.mockResolvedValue({
             id: 'wrap-1',
+            name: 'Midnight Matte',
             price: 100000,
             isHidden: false,
         })
@@ -104,6 +105,7 @@ describe('reserveSlot', () => {
         )
         tx.wrap.findFirst.mockResolvedValue({
             id: 'wrap-1',
+            name: 'Midnight Matte',
             price: 100000,
             isHidden: false,
         })
@@ -121,8 +123,6 @@ describe('reserveSlot', () => {
 
     it('creates a reserved booking with a hold expiration and derived display status', async () => {
         const tx = createTx()
-        const expiresAt = new Date('2030-03-23T16:15:00.000Z')
-
         mocks.getSession.mockResolvedValue({
             isAuthenticated: true,
             userId: 'user-1',
@@ -134,6 +134,7 @@ describe('reserveSlot', () => {
         mocks.assertSlotHasCapacity.mockResolvedValue(undefined)
         tx.wrap.findFirst.mockResolvedValue({
             id: 'wrap-1',
+            name: 'Midnight Matte',
             price: 100000,
             isHidden: false,
         })
@@ -141,14 +142,10 @@ describe('reserveSlot', () => {
         tx.booking.create.mockResolvedValue({
             id: 'booking-1',
             wrapId: 'wrap-1',
-            wrap: { name: 'Midnight Matte' },
             startTime: new Date('2026-03-23T16:00:00.000Z'),
             endTime: new Date('2026-03-23T18:00:00.000Z'),
             status: 'pending',
             totalPrice: 100000,
-            reservation: {
-                expiresAt,
-            },
         })
         tx.auditLog.create.mockResolvedValue(undefined)
 
@@ -162,7 +159,7 @@ describe('reserveSlot', () => {
             expect.objectContaining({
                 id: 'booking-1',
                 wrapName: 'Midnight Matte',
-                reservationExpiresAt: expiresAt,
+                reservationExpiresAt: expect.any(Date),
                 displayStatus: 'reserved',
             })
         )

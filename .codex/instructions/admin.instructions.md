@@ -1,6 +1,6 @@
 ---
 description: 'Domain instructions for owner admin dashboard and operational quick actions'
-applyTo: 'app/(tenant)/admin/**,components/admin/**,lib/admin/**,components/shared/tenant-elements.tsx,components/shared/tenant-nav-config.ts,components/shared/tenant-sidebar.tsx'
+applyTo: 'app/(tenant)/admin/**,components/admin/**,lib/actions/admin.actions.ts,lib/fetchers/admin.fetchers.ts,components/shared/tenant-elements.tsx,components/shared/tenant-nav-config.ts,components/shared/tenant-sidebar.tsx'
 ---
 
 # Admin Domain Instructions
@@ -30,7 +30,7 @@ This domain does not own:
 
 - Keep `app/(tenant)/admin/**` thin and orchestration-focused.
 - Future refactors should move admin composition into `features/admin/**`.
-- Compose admin from `lib/admin/**` and existing domain fetchers instead of duplicating business logic.
+- Compose admin from `lib/fetchers/admin.fetchers.ts` and existing domain fetchers instead of duplicating business logic.
 - Keep owner-only mutations server-side and narrow.
 - Shared tenant navigation or shell changes must remain capability-aware.
 

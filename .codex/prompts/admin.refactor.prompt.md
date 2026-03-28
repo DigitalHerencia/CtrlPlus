@@ -9,7 +9,8 @@ Refactor only the `admin` domain to the target CtrlPlus server-first architectur
 - `app/(tenant)/admin/**`
 - `features/admin/**`
 - `components/admin/**`
-- `lib/admin/**`
+- `lib/actions/admin.actions.ts`
+- `lib/fetchers/admin.fetchers.ts`
 - `components/shared/tenant-elements.tsx`
 - `components/shared/tenant-nav-config.ts`
 - `components/shared/tenant-sidebar.tsx`
@@ -26,7 +27,7 @@ Refactor only the `admin` domain to the target CtrlPlus server-first architectur
 - keep `app/**` thin and orchestration-only
 - move page composition into `features/admin/**`
 - keep pure UI in `components/admin/**`
-- keep admin reads in `lib/admin/**` or compose from existing domain fetchers
+- keep admin reads in `lib/fetchers/admin.fetchers.ts` or compose from existing domain fetchers
 - keep admin-only writes server-side
 
 ## Required implementation rules

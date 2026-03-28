@@ -1,6 +1,6 @@
 ---
 description: 'Domain instructions for the vehicle visualizer'
-applyTo: 'app/(tenant)/visualizer/**,components/visualizer/**,lib/visualizer/**'
+applyTo: 'app/(tenant)/visualizer/**,components/visualizer/**,lib/actions/visualizer.actions.ts,lib/fetchers/visualizer.fetchers.ts,lib/integrations/huggingface.ts,lib/uploads/**,lib/cache/**,lib/utils/search-params.ts'
 ---
 
 # Visualizer Domain Instructions
@@ -34,10 +34,10 @@ This domain does not own:
 ## Required patterns
 
 - Keep `app/(tenant)/visualizer/page.tsx` thin.
-- Put reads in `lib/visualizer/fetchers/**`.
-- Put writes in `lib/visualizer/actions/**`.
+- Put reads in `lib/fetchers/visualizer.fetchers.ts`.
+- Put writes in `lib/actions/visualizer.actions.ts`.
 - Future refactors should move page composition into `features/visualizer/**`.
-- Keep image processing and provider integrations inside `lib/visualizer/**`.
+- Keep image processing, uploads, cache keys, and provider integrations inside `lib/uploads/**`, `lib/cache/**`, and `lib/integrations/**`.
 - Keep interactive UI in `components/visualizer/**`.
 - Use catalog-backed visualizer selection fetchers rather than reading raw wrap/image lists in the page.
 - Keep Hugging Face behind an adapter boundary so model changes do not leak into actions or UI.

@@ -9,7 +9,9 @@ Refactor only the `billing` domain to the target CtrlPlus server-first architect
 - `app/(tenant)/billing/**`
 - `features/billing/**`
 - `components/billing/**`
-- `lib/billing/**`
+- `lib/actions/billing.actions.ts`
+- `lib/fetchers/billing.fetchers.ts`
+- `lib/integrations/stripe.ts`
 - `app/api/stripe/**`
 - affected tests under `e2e/**` and `tests/**`
 
@@ -24,8 +26,8 @@ Refactor only the `billing` domain to the target CtrlPlus server-first architect
 - keep `app/**` thin and orchestration-only
 - move page composition into `features/billing/**`
 - keep pure UI in `components/billing/**`
-- keep reads in `lib/billing/fetchers/**`
-- keep writes in `lib/billing/actions/**`
+- keep reads in `lib/fetchers/billing.fetchers.ts`
+- keep writes in `lib/actions/billing.actions.ts`
 
 ## Required implementation rules
 

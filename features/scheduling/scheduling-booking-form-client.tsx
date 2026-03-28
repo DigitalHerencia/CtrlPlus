@@ -88,7 +88,7 @@ export function SchedulingBookingFormClient({
                 endTime,
             })
 
-            router.push(`/billing/${booking.id}`)
+            router.push(`/billing/${booking.invoiceId}`)
             router.refresh()
         } catch (error) {
             setServerError(getErrorMessage(error))

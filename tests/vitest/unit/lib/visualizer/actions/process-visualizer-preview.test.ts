@@ -5,8 +5,12 @@ const mocks = vi.hoisted(() => ({
     requireCapability: vi.fn(),
     getVisualizerWrapSelectionById: vi.fn(),
     readPhotoBuffer: vi.fn(),
-    resolveVisualizerGenerationAssets: vi.fn(),
-    executeVisualizerPreviewGeneration: vi.fn(),
+    readImageBufferFromUrl: vi.fn(),
+    buildWrapPreviewPrompt: vi.fn(),
+    buildPreviewConditioningBoard: vi.fn(),
+    generateDeterministicCompositePreview: vi.fn(),
+    createWrapPreviewGeneratorAdapter: vi.fn(),
+    storePreviewImage: vi.fn(),
     prisma: {
         visualizerPreview: {
             findFirst: vi.fn(),
@@ -34,13 +38,27 @@ vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
     getVisualizerWrapSelectionById: mocks.getVisualizerWrapSelectionById,
 }))
 
-vi.mock('@/lib/visualizer/preview-pipeline', () => ({
+vi.mock('@/lib/uploads/image-processing', () => ({
     readPhotoBuffer: mocks.readPhotoBuffer,
+    readImageBufferFromUrl: mocks.readImageBufferFromUrl,
+    buildWrapPreviewPrompt: mocks.buildWrapPreviewPrompt,
+    buildPreviewConditioningBoard: mocks.buildPreviewConditioningBoard,
+    generateDeterministicCompositePreview: mocks.generateDeterministicCompositePreview,
 }))
 
-vi.mock('@/lib/visualizer/preview-execution', () => ({
-    resolveVisualizerGenerationAssets: mocks.resolveVisualizerGenerationAssets,
-    executeVisualizerPreviewGeneration: mocks.executeVisualizerPreviewGeneration,
+vi.mock('@/lib/integrations/huggingface', async () => {
+    const actual = await vi.importActual<typeof import('@/lib/integrations/huggingface')>(
+        '@/lib/integrations/huggingface'
+    )
+
+    return {
+        ...actual,
+        createWrapPreviewGeneratorAdapter: mocks.createWrapPreviewGeneratorAdapter,
+    }
+})
+
+vi.mock('@/lib/uploads/storage', () => ({
+    storePreviewImage: mocks.storePreviewImage,
 }))
 
 import { processVisualizerPreview } from '@/lib/actions/visualizer.actions'
@@ -123,19 +141,20 @@ describe('processVisualizerPreview', () => {
             buffer: Buffer.from('vehicle-bytes'),
             contentType: 'image/png',
         })
-        mocks.resolveVisualizerGenerationAssets.mockResolvedValue({
-            textureBuffer: Buffer.from('texture-bytes'),
-            prompt: {
-                prompt: 'Apply Ocean Spectrum wrap',
-                negativePrompt: 'No distortion',
-                promptVersion: 'prompt-version',
-            },
-        })
-        mocks.executeVisualizerPreviewGeneration.mockResolvedValue({
-            processedImageUrl: 'https://cloudinary.com/fallback.png',
+        mocks.readImageBufferFromUrl.mockResolvedValue(Buffer.from('texture-bytes'))
+        mocks.buildWrapPreviewPrompt.mockReturnValue({
+            prompt: 'Apply Ocean Spectrum wrap',
+            negativePrompt: 'No distortion',
             promptVersion: 'prompt-version',
-            generationFallbackReason: 'Hugging Face unavailable.',
         })
+        mocks.buildPreviewConditioningBoard.mockResolvedValue(Buffer.from('board-bytes'))
+        mocks.createWrapPreviewGeneratorAdapter.mockReturnValue({
+            generate: vi.fn().mockResolvedValue(Buffer.from('generated-preview')),
+        })
+        mocks.storePreviewImage.mockResolvedValue('https://cloudinary.com/fallback.png')
+        mocks.generateDeterministicCompositePreview.mockResolvedValue(
+            'https://cloudinary.com/fallback.png'
+        )
         mocks.prisma.visualizerPreview.findFirst.mockResolvedValue(makePreviewRecord())
         mocks.prisma.visualizerPreview.update
             .mockResolvedValueOnce(makePreviewRecord({ status: 'processing' }))
@@ -152,9 +171,11 @@ describe('processVisualizerPreview', () => {
         const result = await processVisualizerPreview({ previewId: 'preview-1' })
 
         expect(mocks.readPhotoBuffer).toHaveBeenCalledWith('data:image/png;base64,ZmFrZQ==')
-        expect(mocks.executeVisualizerPreviewGeneration).toHaveBeenCalledWith(
+        expect(mocks.readImageBufferFromUrl).toHaveBeenCalledWith(
+            'https://example.com/texture.png'
+        )
+        expect(mocks.buildPreviewConditioningBoard).toHaveBeenCalledWith(
             expect.objectContaining({
-                previewId: 'preview-1',
                 vehicleBuffer: Buffer.from('vehicle-bytes'),
                 textureBuffer: Buffer.from('texture-bytes'),
             })
@@ -179,7 +200,7 @@ describe('processVisualizerPreview', () => {
         const result = await processVisualizerPreview({ previewId: 'preview-1' })
 
         expect(mocks.readPhotoBuffer).not.toHaveBeenCalled()
-        expect(mocks.executeVisualizerPreviewGeneration).not.toHaveBeenCalled()
+        expect(mocks.readImageBufferFromUrl).not.toHaveBeenCalled()
         expect(result).toEqual(
             expect.objectContaining({
                 status: 'complete',
@@ -188,10 +209,8 @@ describe('processVisualizerPreview', () => {
         )
     })
 
-    it('marks the preview as failed when processing throws', async () => {
-        mocks.executeVisualizerPreviewGeneration.mockRejectedValue(
-            new Error('Preview generation failed.')
-        )
+    it('marks the preview as failed when the source photo cannot be read', async () => {
+        mocks.readPhotoBuffer.mockRejectedValue(new Error('Preview generation failed.'))
         mocks.prisma.visualizerPreview.update
             .mockResolvedValueOnce(makePreviewRecord({ status: 'processing' }))
             .mockResolvedValueOnce(makePreviewRecord({ status: 'failed' }))

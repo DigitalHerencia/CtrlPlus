@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { CatalogPagination } from '@/components/catalog/CatalogPagination'
 import { WrapGrid } from '@/components/catalog/WrapGrid'
 import { getWrapCategories, searchCatalogWraps } from '@/lib/fetchers/catalog.fetchers'
-import { createCatalogPageHref } from '@/lib/catalog/search-params'
+import { createCatalogPageHref } from '@/lib/utils/search-params'
 import { type CatalogBrowsePageFeatureProps } from '@/types/catalog'
 import { CatalogFiltersClient } from './catalog-filters-client'
 

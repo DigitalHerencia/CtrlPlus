@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/db/prisma', () => ({
     prisma: {
         clerkWebhookEvent: {
             create: vi.fn(),
@@ -10,7 +10,7 @@ vi.mock('@/lib/prisma', () => ({
     },
 }))
 
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 import {
     claimClerkWebhookEvent,
     isClerkSubscriptionSyncEnabled,

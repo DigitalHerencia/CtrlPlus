@@ -1,6 +1,6 @@
 ---
 description: 'Domain instructions for scheduling and bookings'
-applyTo: 'app/(tenant)/scheduling/**,components/scheduling/**,lib/scheduling/**'
+applyTo: 'app/(tenant)/scheduling/**,components/scheduling/**,lib/actions/scheduling.actions.ts,lib/fetchers/scheduling.fetchers.ts,lib/db/transactions/scheduling.transactions.ts,lib/cache/revalidate-tags.ts'
 ---
 
 # Scheduling Domain Instructions
@@ -30,10 +30,10 @@ This domain does not own:
 ## Required patterns
 
 - Keep page files orchestration-only.
-- Reads go through `lib/scheduling/fetchers/**`.
-- Writes go through `lib/scheduling/actions/**`.
+- Reads go through `lib/fetchers/scheduling.fetchers.ts`.
+- Writes go through `lib/actions/scheduling.actions.ts`.
 - Future refactors should move route composition into `features/scheduling/**`.
-- Capacity and slot logic belongs in `lib/scheduling/capacity.ts` and related utilities.
+- Capacity and slot logic belongs in `lib/db/transactions/scheduling.transactions.ts` and related server-side helpers.
 - Booking form behavior should stay aligned with existing domain typing and validation patterns.
 
 ## Product requirements

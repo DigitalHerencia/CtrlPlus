@@ -18,6 +18,22 @@ export type SchedulingBookingDisplayStatus =
 
 export type BookingStatusValue = 'pending' | 'confirmed' | 'completed' | 'cancelled'
 
+export function getBookingDisplayStatus(
+    status: BookingStatusValue,
+    reservationExpiresAt: Date | null,
+    now: Date = new Date()
+): SchedulingBookingDisplayStatus {
+    if (status === 'pending') {
+        if (reservationExpiresAt && reservationExpiresAt > now) {
+            return 'reserved'
+        }
+
+        return 'expired'
+    }
+
+    return status
+}
+
 export interface BookingDTO {
     id: string
     customerId?: string
@@ -31,6 +47,10 @@ export interface BookingDTO {
     displayStatus: SchedulingBookingDisplayStatus
     createdAt: Date
     updatedAt: Date
+}
+
+export interface CreatedBookingDTO extends BookingDTO {
+    invoiceId: string
 }
 
 export interface BookingListResult {

@@ -1,5 +1,7 @@
 import { searchWrapsSchema } from '@/schema/catalog'
+import { visualizerSearchParamsSchema } from '@/schema/visualizer'
 import { type CatalogSearchParamsResult, type SearchWrapsInput } from '@/types/catalog'
+import { type VisualizerSearchParamsResult } from '@/types/visualizer'
 
 function toNumber(value: string | null): number | undefined {
     if (!value) {
@@ -20,21 +22,27 @@ export function createCatalogQueryString(filters: SearchWrapsInput): string {
     if (filters.query) {
         params.set('query', filters.query)
     }
+
     if (filters.maxPrice !== undefined) {
         params.set('maxPrice', String(filters.maxPrice))
     }
+
     if (filters.categoryId) {
         params.set('categoryId', filters.categoryId)
     }
+
     if (filters.sortBy && filters.sortBy !== 'createdAt') {
         params.set('sortBy', filters.sortBy)
     }
+
     if (filters.sortOrder && filters.sortOrder !== 'desc') {
         params.set('sortOrder', filters.sortOrder)
     }
+
     if (filters.pageSize !== undefined && filters.pageSize !== 20) {
         params.set('pageSize', String(filters.pageSize))
     }
+
     if (filters.page !== undefined && filters.page !== 1) {
         params.set('page', String(filters.page))
     }
@@ -65,7 +73,6 @@ export function parseCatalogSearchParams(
     }
 
     const parsed = searchWrapsSchema.safeParse(candidate)
-
     const normalized = parsed.success
         ? parsed.data
         : searchWrapsSchema.parse({
@@ -84,11 +91,23 @@ export function parseCatalogSearchParams(
         filters,
         hasActiveFilters: Boolean(
             filters.query ||
-            filters.maxPrice !== undefined ||
-            filters.categoryId ||
-            filters.sortBy !== 'createdAt' ||
-            filters.sortOrder !== 'desc' ||
-            filters.pageSize !== 20
+                filters.maxPrice !== undefined ||
+                filters.categoryId ||
+                filters.sortBy !== 'createdAt' ||
+                filters.sortOrder !== 'desc' ||
+                filters.pageSize !== 20
         ),
+    }
+}
+
+export function parseVisualizerSearchParams(
+    searchParams: Record<string, string | string[] | undefined>
+): VisualizerSearchParamsResult {
+    const parsed = visualizerSearchParamsSchema.safeParse({
+        wrapId: typeof searchParams.wrapId === 'string' ? searchParams.wrapId : undefined,
+    })
+
+    return {
+        requestedWrapId: parsed.success ? parsed.data.wrapId ?? null : null,
     }
 }

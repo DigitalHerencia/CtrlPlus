@@ -9,7 +9,9 @@ Refactor only the `scheduling` domain to the target CtrlPlus server-first archit
 - `app/(tenant)/scheduling/**`
 - `features/scheduling/**`
 - `components/scheduling/**`
-- `lib/scheduling/**`
+- `lib/actions/scheduling.actions.ts`
+- `lib/fetchers/scheduling.fetchers.ts`
+- `lib/db/transactions/scheduling.transactions.ts`
 - affected tests under `e2e/**` and `tests/**`
 
 ## Non-goals
@@ -23,8 +25,8 @@ Refactor only the `scheduling` domain to the target CtrlPlus server-first archit
 - keep `app/**` thin and orchestration-only
 - move page composition into `features/scheduling/**`
 - keep pure UI in `components/scheduling/**`
-- keep reads in `lib/scheduling/fetchers/**`
-- keep writes in `lib/scheduling/actions/**`
+- keep reads in `lib/fetchers/scheduling.fetchers.ts`
+- keep writes in `lib/actions/scheduling.actions.ts`
 
 ## Required implementation rules
 

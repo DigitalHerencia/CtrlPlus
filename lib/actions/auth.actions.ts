@@ -4,7 +4,7 @@
  * Server actions for auth/domain mutations.
  * Call these helpers from server components, API routes, or other server actions.
  */
-import { prisma } from '@/lib/prisma'
+import { prisma } from '@/lib/db/prisma'
 import type { GlobalRole } from '@/types/authz'
 
 export async function upsertUserFromClerk(payload: {

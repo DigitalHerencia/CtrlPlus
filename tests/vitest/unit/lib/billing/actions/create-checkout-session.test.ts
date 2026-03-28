@@ -29,14 +29,12 @@ vi.mock('@/lib/db/prisma', () => ({
 // store; mock it in tests to avoid Next.js runtime invariant errors.
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
-vi.mock('@/lib/billing/access', () => ({
+vi.mock('@/lib/authz/guards', () => ({
     getBillingAccessContext: mocks.getBillingAccessContext,
     requireInvoiceWriteAccess: mocks.requireInvoiceWriteAccess,
-    isInvoiceCheckoutEligible: (status: string) =>
-        status === 'draft' || status === 'sent' || status === 'failed',
 }))
 
-vi.mock('@/lib/billing/stripe', () => ({
+vi.mock('@/lib/integrations/stripe', () => ({
     getStripeClient: () => mocks.stripe,
     getAppBaseUrl: mocks.getAppBaseUrl,
 }))

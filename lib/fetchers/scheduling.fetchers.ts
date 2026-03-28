@@ -1,9 +1,7 @@
-import 'server-only'
-
 import { prisma } from '@/lib/db/prisma'
 import { availabilityListParamsSchema, bookingListParamsSchema } from '@/schema/scheduling'
-import { requireSchedulingReadSession, canViewAllSchedulingBookings } from '@/lib/scheduling/access'
-import { getBookingDisplayStatus } from '@/lib/scheduling/utils'
+import { getSession } from '@/lib/auth/session'
+import { hasCapability } from '@/lib/authz/policy'
 import type {
     AvailabilityListParams,
     AvailabilityListResult,
@@ -14,6 +12,25 @@ import type {
     BookingListResult,
     BookingStatusValue,
 } from '@/types/scheduling'
+import { getBookingDisplayStatus } from '@/types/scheduling'
+
+async function requireSchedulingReadSession() {
+    const session = await getSession()
+
+    if (!session.isAuthenticated || !session.userId) {
+        throw new Error('Unauthorized: not authenticated')
+    }
+
+    if (!hasCapability(session.authz, 'scheduling.read.own')) {
+        throw new Error('Forbidden: insufficient permissions')
+    }
+
+    return session
+}
+
+function canViewAllSchedulingBookings(session: Awaited<ReturnType<typeof requireSchedulingReadSession>>): boolean {
+    return hasCapability(session.authz, 'scheduling.read.all')
+}
 
 const DEFAULT_AVAILABILITY_LIST_PARAMS: AvailabilityListParams = {
     page: 1,
@@ -264,5 +281,3 @@ export async function getUpcomingBookingCount(from: Date = new Date()): Promise<
         },
     })
 }
-
-export default {}

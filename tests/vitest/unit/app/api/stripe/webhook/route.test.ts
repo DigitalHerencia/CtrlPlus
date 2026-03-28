@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
     processStripeWebhookEvent: vi.fn(),
 }))
 
-vi.mock('@/lib/billing/stripe', () => ({
+vi.mock('@/lib/integrations/stripe', () => ({
     constructWebhookEvent: mocks.constructWebhookEvent,
 }))
 

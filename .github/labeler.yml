@@ -3,21 +3,32 @@ domain:catalog:
           - any-glob-to-any-file:
                 - 'app/(tenant)/catalog/**'
                 - 'components/catalog/**'
-                - 'lib/catalog/**'
+                - 'lib/actions/catalog.actions.ts'
+                - 'lib/fetchers/catalog.fetchers.ts'
+                - 'lib/utils/catalog-assets.ts'
+                - 'lib/utils/search-params.ts'
+                - 'schema/catalog.ts'
 
 domain:visualizer:
     - changed-files:
           - any-glob-to-any-file:
                 - 'app/(tenant)/visualizer/**'
                 - 'components/visualizer/**'
-                - 'lib/visualizer/**'
+                - 'lib/actions/visualizer.actions.ts'
+                - 'lib/fetchers/visualizer.fetchers.ts'
+                - 'lib/integrations/huggingface.ts'
+                - 'lib/uploads/**'
+                - 'lib/cache/cache-keys.ts'
 
 domain:scheduling:
     - changed-files:
           - any-glob-to-any-file:
                 - 'app/(tenant)/scheduling/**'
                 - 'components/scheduling/**'
-                - 'lib/scheduling/**'
+                - 'lib/actions/scheduling.actions.ts'
+                - 'lib/fetchers/scheduling.fetchers.ts'
+                - 'lib/db/transactions/scheduling.transactions.ts'
+                - 'lib/cache/revalidate-tags.ts'
 
 domain:billing:
     - changed-files:
@@ -25,14 +36,18 @@ domain:billing:
                 - 'app/(tenant)/billing/**'
                 - 'app/api/stripe/**'
                 - 'components/billing/**'
-                - 'lib/billing/**'
+                - 'lib/actions/billing.actions.ts'
+                - 'lib/fetchers/billing.fetchers.ts'
+                - 'lib/integrations/stripe.ts'
+                - 'lib/db/transactions/billing.transactions.ts'
 
 domain:admin:
     - changed-files:
           - any-glob-to-any-file:
                 - 'app/(tenant)/admin/**'
                 - 'components/admin/**'
-                - 'lib/admin/**'
+                - 'lib/actions/admin.actions.ts'
+                - 'lib/fetchers/admin.fetchers.ts'
 
 domain:auth:
     - changed-files:
@@ -47,13 +62,15 @@ domain:settings:
           - any-glob-to-any-file:
                 - 'app/(tenant)/settings/**'
                 - 'components/settings/**'
-                - 'lib/settings/**'
+                - 'lib/actions/settings.actions.ts'
+                - 'lib/fetchers/settings.fetchers.ts'
 
 domain:platform:
     - changed-files:
           - any-glob-to-any-file:
                 - 'app/(tenant)/platform/**'
-                - 'lib/platform/**'
+                - 'lib/actions/platform.actions.ts'
+                - 'lib/fetchers/platform.fetchers.ts'
 
 domain:ci:
     - changed-files:
