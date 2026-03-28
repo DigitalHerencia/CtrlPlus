@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation'
 import { CatalogDetailPageFeature } from '@/features/catalog/catalog-detail-page-feature'
 import { getSession } from '@/lib/auth/session'
 import { hasCapability } from '@/lib/authz/policy'
-import { getCatalogWrapById } from '@/lib/catalog/fetchers/get-wraps'
+import { getCatalogWrapById } from '@/lib/fetchers/catalog.fetchers'
 import { type WrapDetailPageParams } from '@/types/catalog'
 
 export async function generateMetadata({ params }: WrapDetailPageParams) {

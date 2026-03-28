@@ -1,6 +1,6 @@
 import 'server-only'
 
-import { getVisualizerWrapSelectionById } from '@/lib/visualizer/fetchers/get-wrap-selections'
+import { getVisualizerWrapSelectionById } from '@/lib/fetchers/visualizer.fetchers'
 import {
     createWrapPreviewGeneratorAdapter,
     HuggingFacePreviewUnavailableError,

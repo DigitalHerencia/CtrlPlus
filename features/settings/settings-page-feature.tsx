@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
-import { getCurrentUserWebsiteSettings } from '@/lib/settings/fetchers/get-current-user-website-settings'
+import { getCurrentUserWebsiteSettings } from '@/lib/fetchers/settings.fetchers'
 
 import { WebsiteSettingsFormClient } from './website-settings-form-client'
 

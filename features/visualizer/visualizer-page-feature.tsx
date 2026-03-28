@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import {
     getVisualizerWrapSelectionById,
     listVisualizerWrapSelections,
-} from '@/lib/visualizer/fetchers/get-wrap-selections'
+} from '@/lib/fetchers/visualizer.fetchers'
 import { type VisualizerPageFeatureProps } from '@/types/visualizer'
 import { VisualizerWorkspaceClient } from './visualizer-workspace-client'
 

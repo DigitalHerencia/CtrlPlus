@@ -13,7 +13,7 @@
 
 import { verifyAndParseClerkWebhook } from '@/lib/auth/clerk-webhook'
 import { resolveGlobalRoleForClerkUserId } from '@/lib/auth/identity'
-import { upsertUserFromClerk } from '@/lib/auth/actions/auth'
+import { upsertUserFromClerk } from '@/lib/actions/auth.actions'
 import { prisma } from '@/lib/prisma'
 import { type NextRequest, NextResponse } from 'next/server'
 

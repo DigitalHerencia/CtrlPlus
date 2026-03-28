@@ -1,17 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-    reserveSlot: vi.fn(),
+    getSession: vi.fn(),
+    prisma: {
+        $transaction: vi.fn(),
+    },
     ensureInvoiceForBooking: vi.fn(),
     revalidateSchedulingPages: vi.fn(),
     revalidateBillingBookingRoute: vi.fn(),
 }))
 
-vi.mock('@/lib/scheduling/actions/reserve-slot', () => ({
-    reserveSlot: mocks.reserveSlot,
+vi.mock('@/lib/auth/session', () => ({
+    getSession: mocks.getSession,
 }))
 
-vi.mock('@/lib/billing/actions/ensure-invoice-for-booking', () => ({
+vi.mock('@/lib/db/prisma', () => ({
+    prisma: mocks.prisma,
+}))
+
+vi.mock('@/lib/actions/billing.actions', () => ({
     ensureInvoiceForBooking: mocks.ensureInvoiceForBooking,
 }))
 
@@ -20,7 +27,7 @@ vi.mock('@/lib/scheduling/revalidation', () => ({
     revalidateBillingBookingRoute: mocks.revalidateBillingBookingRoute,
 }))
 
-import { createBooking } from '@/lib/scheduling/actions/create-booking'
+import { createBooking } from '@/lib/actions/scheduling.actions'
 
 describe('createBooking', () => {
     beforeEach(() => {
@@ -28,20 +35,47 @@ describe('createBooking', () => {
     })
 
     it('preserves the reservation handoff to billing and revalidates the affected routes', async () => {
-        mocks.reserveSlot.mockResolvedValue({
+        mocks.getSession.mockResolvedValue({
+            isAuthenticated: true,
+            userId: 'user-1',
+            isOwner: false,
+            isPlatformAdmin: false,
+            authz: { role: 'customer' },
+        })
+
+        const tx = {
+            wrap: { findFirst: vi.fn() },
+            bookingReservation: { findFirst: vi.fn() },
+            booking: { create: vi.fn(), count: vi.fn() },
+            auditLog: { create: vi.fn() },
+            availabilityRule: { findMany: vi.fn() },
+        }
+
+        mocks.prisma.$transaction.mockImplementation(async (callback) => callback(tx))
+
+        tx.wrap.findFirst.mockResolvedValue({ id: 'wrap-1', price: 100000, isHidden: false })
+        tx.bookingReservation.findFirst.mockResolvedValue(null)
+        tx.availabilityRule.findMany.mockResolvedValue([
+            {
+                startTime: '16:00',
+                endTime: '18:00',
+                capacitySlots: 2,
+            },
+        ])
+        const expiresAt = new Date('2026-03-23T16:15:00.000Z')
+        tx.booking.create.mockResolvedValue({
             id: 'booking-1',
             wrapId: 'wrap-1',
-            wrapName: 'Midnight Matte',
+            wrap: { name: 'Midnight Matte' },
             startTime: new Date('2026-03-23T16:00:00.000Z'),
             endTime: new Date('2026-03-23T18:00:00.000Z'),
             status: 'pending',
             totalPrice: 100000,
-            reservationExpiresAt: new Date('2026-03-23T16:15:00.000Z'),
-            displayStatus: 'reserved',
+            reservation: { expiresAt },
         })
-        mocks.ensureInvoiceForBooking.mockResolvedValue({
-            invoiceId: 'invoice-1',
-        })
+        tx.auditLog.create.mockResolvedValue(undefined)
+
+        mocks.ensureInvoiceForBooking.mockResolvedValue({ invoiceId: 'invoice-1' })
 
         await expect(
             createBooking({
@@ -56,7 +90,6 @@ describe('createBooking', () => {
             })
         )
 
-        expect(mocks.reserveSlot).toHaveBeenCalledTimes(1)
         expect(mocks.ensureInvoiceForBooking).toHaveBeenCalledWith({ bookingId: 'booking-1' })
         expect(mocks.revalidateSchedulingPages).toHaveBeenCalledTimes(1)
         expect(mocks.revalidateBillingBookingRoute).toHaveBeenCalledWith('invoice-1')

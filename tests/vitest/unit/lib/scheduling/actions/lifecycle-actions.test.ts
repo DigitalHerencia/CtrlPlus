@@ -36,7 +36,7 @@ vi.mock('@/lib/scheduling/capacity', () => ({
     assertSlotHasCapacity: mocks.assertSlotHasCapacity,
 }))
 
-vi.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
@@ -45,10 +45,8 @@ vi.mock('@/lib/scheduling/revalidation', () => ({
     revalidateBillingBookingRoute: vi.fn(),
 }))
 
-import { cancelBooking } from '@/lib/scheduling/actions/cancel-booking'
-import { cleanupExpiredReservations } from '@/lib/scheduling/actions/cleanup-expired-reservations'
-import { confirmBooking } from '@/lib/scheduling/actions/confirm-booking'
-import { updateBooking } from '@/lib/scheduling/actions/update-booking'
+import { cancelBooking, confirmBooking, updateBooking } from '@/lib/actions/scheduling.actions'
+import { cleanupExpiredReservations } from '@/lib/actions/scheduling.actions'
 
 function createTx() {
     return {

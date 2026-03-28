@@ -6,7 +6,10 @@ import { useState, useTransition } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { clearStuckWebhookProcessingEvents, replayStripeWebhookFailures } from '@/lib/platform/actions/manage-webhook-events'
+import {
+    clearStuckWebhookProcessingEvents,
+    replayStripeWebhookFailures,
+} from '@/lib/actions/platform.actions'
 
 interface PlatformRecoveryActionsClientProps {
     clerkFailedCount: number
@@ -74,21 +77,34 @@ export function PlatformRecoveryActionsClient({
                 <CardHeader>
                     <CardTitle>Clear stale processing locks</CardTitle>
                     <CardDescription className="text-neutral-400">
-                        Mark processing rows older than {staleThresholdMinutes} minutes as failed so recovery can resume on the next controlled attempt.
+                        Mark processing rows older than {staleThresholdMinutes} minutes as failed so
+                        recovery can resume on the next controlled attempt.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-3 sm:grid-cols-2">
                         <div className="border border-neutral-800 bg-neutral-900/60 p-3">
-                            <p className="text-xs uppercase tracking-[0.18em] text-neutral-500">Clerk stale</p>
-                            <p className="mt-2 text-2xl font-semibold text-neutral-100">{staleProcessingCounts.clerk}</p>
+                            <p className="text-xs uppercase tracking-[0.18em] text-neutral-500">
+                                Clerk stale
+                            </p>
+                            <p className="mt-2 text-2xl font-semibold text-neutral-100">
+                                {staleProcessingCounts.clerk}
+                            </p>
                         </div>
                         <div className="border border-neutral-800 bg-neutral-900/60 p-3">
-                            <p className="text-xs uppercase tracking-[0.18em] text-neutral-500">Stripe stale</p>
-                            <p className="mt-2 text-2xl font-semibold text-neutral-100">{staleProcessingCounts.stripe}</p>
+                            <p className="text-xs uppercase tracking-[0.18em] text-neutral-500">
+                                Stripe stale
+                            </p>
+                            <p className="mt-2 text-2xl font-semibold text-neutral-100">
+                                {staleProcessingCounts.stripe}
+                            </p>
                         </div>
                     </div>
-                    <Button type="button" disabled={isPending || staleTotal === 0} onClick={handleClearStaleProcessing}>
+                    <Button
+                        type="button"
+                        disabled={isPending || staleTotal === 0}
+                        onClick={handleClearStaleProcessing}
+                    >
                         <RefreshCcw className="mr-2 h-4 w-4" />
                         {isPending ? 'Running…' : 'Clear stale processing'}
                     </Button>
@@ -99,16 +115,36 @@ export function PlatformRecoveryActionsClient({
                 <CardHeader>
                     <CardTitle>Replay Stripe failures</CardTitle>
                     <CardDescription className="text-neutral-400">
-                        Replay only failures whose verified payload is stored. This runs the real Stripe processing path and records an operator audit event.
+                        Replay only failures whose verified payload is stored. This runs the real
+                        Stripe processing path and records an operator audit event.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2 text-sm text-neutral-300">
-                        <p>Failed Stripe events in snapshot: <span className="font-medium text-neutral-100">{stripeFailedCount}</span></p>
-                        <p>Replayable right now: <span className="font-medium text-neutral-100">{stripeReplayableCount}</span></p>
-                        <p>Non-replayable right now: <span className="font-medium text-neutral-100">{stripeNonReplayableCount}</span></p>
+                        <p>
+                            Failed Stripe events in snapshot:{' '}
+                            <span className="font-medium text-neutral-100">
+                                {stripeFailedCount}
+                            </span>
+                        </p>
+                        <p>
+                            Replayable right now:{' '}
+                            <span className="font-medium text-neutral-100">
+                                {stripeReplayableCount}
+                            </span>
+                        </p>
+                        <p>
+                            Non-replayable right now:{' '}
+                            <span className="font-medium text-neutral-100">
+                                {stripeNonReplayableCount}
+                            </span>
+                        </p>
                     </div>
-                    <Button type="button" disabled={isPending || stripeReplayableIds.length === 0} onClick={handleReplayStripeFailures}>
+                    <Button
+                        type="button"
+                        disabled={isPending || stripeReplayableIds.length === 0}
+                        onClick={handleReplayStripeFailures}
+                    >
                         <RotateCcw className="mr-2 h-4 w-4" />
                         {isPending ? 'Running…' : 'Replay Stripe failures'}
                     </Button>
@@ -119,24 +155,32 @@ export function PlatformRecoveryActionsClient({
                 <CardHeader>
                     <CardTitle>Clerk recovery boundary</CardTitle>
                     <CardDescription className="text-neutral-400">
-                        Platform remains diagnostic-first for Clerk. Replay stays with the auth/authz domain in this pass.
+                        Platform remains diagnostic-first for Clerk. Replay stays with the
+                        auth/authz domain in this pass.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm text-neutral-300">
                     <p>
-                        Current Clerk failures in snapshot: <span className="font-medium text-neutral-100">{clerkFailedCount}</span>
+                        Current Clerk failures in snapshot:{' '}
+                        <span className="font-medium text-neutral-100">{clerkFailedCount}</span>
                     </p>
                     <div className="flex items-start gap-2 border border-neutral-800 bg-neutral-900/60 p-3">
                         <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
                         <p>
-                            Use this dashboard to confirm scope and stale backlog. Do not interpret visibility here as permission to replay Clerk identity sync events from platform.
+                            Use this dashboard to confirm scope and stale backlog. Do not interpret
+                            visibility here as permission to replay Clerk identity sync events from
+                            platform.
                         </p>
                     </div>
                 </CardContent>
             </Card>
 
-            {statusMessage ? <p className="xl:col-span-3 text-sm text-emerald-300">{statusMessage}</p> : null}
-            {errorMessage ? <p className="xl:col-span-3 text-sm text-destructive">{errorMessage}</p> : null}
+            {statusMessage ? (
+                <p className="text-sm text-emerald-300 xl:col-span-3">{statusMessage}</p>
+            ) : null}
+            {errorMessage ? (
+                <p className="text-destructive text-sm xl:col-span-3">{errorMessage}</p>
+            ) : null}
         </div>
     )
 }

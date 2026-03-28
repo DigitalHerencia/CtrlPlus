@@ -20,7 +20,7 @@ vi.mock('@/lib/authz/policy', () => ({
     hasCapability: mocks.hasCapability,
 }))
 
-vi.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
@@ -28,7 +28,7 @@ import {
     getBookingById,
     getBookings,
     getUpcomingBookingCount,
-} from '@/lib/scheduling/fetchers/get-bookings'
+} from '@/lib/fetchers/scheduling.fetchers'
 
 const sharedSession = {
     isAuthenticated: true,

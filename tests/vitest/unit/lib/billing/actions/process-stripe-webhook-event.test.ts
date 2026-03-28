@@ -26,11 +26,11 @@ const mocks = vi.hoisted(() => ({
     },
 }))
 
-vi.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
-import { processStripeWebhookEvent } from '@/lib/billing/actions/process-stripe-webhook-event'
+import { processStripeWebhookEvent } from '@/lib/actions/billing.actions'
 
 describe('processStripeWebhookEvent', () => {
     beforeEach(() => {

@@ -2,14 +2,11 @@ import 'server-only'
 
 import Link from 'next/link'
 
-import {
-    WorkspaceEmptyState,
-    WorkspacePageIntro,
-} from '@/components/shared/tenant-elements'
+import { WorkspaceEmptyState, WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { getWraps } from '@/lib/catalog/fetchers/get-wraps'
-import { getAvailabilityWindows } from '@/lib/scheduling/fetchers/get-availability'
+import { getWraps } from '@/lib/fetchers/catalog.fetchers'
+import { getAvailabilityWindows } from '@/lib/fetchers/scheduling.fetchers'
 
 import { SchedulingBookingFormClient } from './scheduling-booking-form-client'
 

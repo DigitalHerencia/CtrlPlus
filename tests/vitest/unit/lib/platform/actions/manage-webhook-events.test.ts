@@ -23,7 +23,7 @@ vi.mock('@/lib/authz/guards', () => ({
     requirePlatformDeveloperAdmin: mocks.requirePlatformDeveloperAdmin,
 }))
 
-vi.mock('@/lib/billing/actions/process-stripe-webhook-event', () => ({
+vi.mock('@/lib/actions/billing.actions', () => ({
     processStripeWebhookEvent: mocks.processStripeWebhookEvent,
 }))
 
@@ -38,7 +38,7 @@ vi.mock('@/lib/prisma', () => ({
 import {
     clearStuckWebhookProcessingEvents,
     replayStripeWebhookFailures,
-} from '@/lib/platform/actions/manage-webhook-events'
+} from '@/lib/actions/platform.actions'
 
 describe('manage-webhook-events', () => {
     beforeEach(() => {

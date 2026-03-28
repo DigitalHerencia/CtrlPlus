@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { CatalogManagerItemDTO } from '@/lib/catalog/types'
+import type { CatalogManagerItemDTO } from '@/types/catalog'
 import { CatalogManager } from '@/components/catalog/CatalogManager'
 
 const mocks = vi.hoisted(() => ({
@@ -26,30 +26,15 @@ vi.mock('next/navigation', () => ({
     }),
 }))
 
-vi.mock('@/lib/catalog/actions/create-wrap', () => ({
+vi.mock('@/lib/actions/catalog.actions', () => ({
     createWrap: mocks.createWrap,
-}))
-
-vi.mock('@/lib/catalog/actions/update-wrap', () => ({
     updateWrap: mocks.updateWrap,
-}))
-
-vi.mock('@/lib/catalog/actions/publish-wrap', () => ({
     publishWrap: mocks.publishWrap,
     unpublishWrap: mocks.unpublishWrap,
-}))
-
-vi.mock('@/lib/catalog/actions/delete-wrap', () => ({
     deleteWrap: mocks.deleteWrap,
-}))
-
-vi.mock('@/lib/catalog/actions/manage-categories', () => ({
     createWrapCategory: mocks.createWrapCategory,
     deleteWrapCategory: mocks.deleteWrapCategory,
     setWrapCategoryMappings: mocks.setWrapCategoryMappings,
-}))
-
-vi.mock('@/lib/catalog/actions/manage-wrap-images', () => ({
     addWrapImage: mocks.addWrapImage,
     removeWrapImage: mocks.removeWrapImage,
     reorderWrapImages: mocks.reorderWrapImages,

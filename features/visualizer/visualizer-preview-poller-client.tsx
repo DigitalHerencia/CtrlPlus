@@ -2,10 +2,12 @@
 
 import { useEffect, useEffectEvent } from 'react'
 
-import { PreviewStatus, type VisualizerPreviewDTO } from '@/lib/visualizer/types'
+import { PreviewStatus, type VisualizerPreviewDTO } from '@/types/visualizer'
 
-interface SerializedVisualizerPreview
-    extends Omit<VisualizerPreviewDTO, 'expiresAt' | 'createdAt' | 'updatedAt'> {
+interface SerializedVisualizerPreview extends Omit<
+    VisualizerPreviewDTO,
+    'expiresAt' | 'createdAt' | 'updatedAt'
+> {
     expiresAt: string
     createdAt: string
     updatedAt: string

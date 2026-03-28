@@ -2,12 +2,9 @@ import Link from 'next/link'
 
 import { BillingSummaryCards } from '@/components/billing/billing-summary-cards'
 import { InvoiceListCard } from '@/components/billing/invoice-list-card'
-import {
-    WorkspaceEmptyState,
-    WorkspacePageIntro,
-} from '@/components/shared/tenant-elements'
+import { WorkspaceEmptyState, WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
-import { getInvoices } from '@/lib/billing/fetchers/get-invoices'
+import { getInvoices } from '@/lib/fetchers/billing.fetchers'
 
 export async function BillingPageFeature() {
     const { invoices, total } = await getInvoices()

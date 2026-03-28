@@ -1,7 +1,4 @@
-import type {
-    BookingStatusValue,
-    SchedulingBookingDisplayStatus,
-} from '@/lib/scheduling/types'
+import type { BookingStatusValue, SchedulingBookingDisplayStatus } from '@/types/scheduling'
 
 /**
  * Formats a Date as a zero-padded "HH:mm" string in UTC.

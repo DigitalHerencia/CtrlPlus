@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
     getBillingAccessContext: vi.fn(),
 }))
 
-vi.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
@@ -30,7 +30,7 @@ vi.mock('@/lib/billing/access', () => ({
               },
 }))
 
-import { getPaymentStatusForInvoice } from '@/lib/billing/fetchers/get-payment-status'
+import { getPaymentStatusForInvoice } from '@/lib/fetchers/billing.fetchers'
 
 describe('getPaymentStatusForInvoice', () => {
     beforeEach(() => {

@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-import { type PlatformStatusOverviewDTO } from '@/lib/platform/fetchers/get-platform-status-overview'
+import { type PlatformStatusOverviewDTO } from '@/types/platform'
 
 interface PlatformHealthOverviewProps {
     status: PlatformStatusOverviewDTO
@@ -31,7 +31,10 @@ export function PlatformHealthOverview({ status }: PlatformHealthOverviewProps) 
                 { label: 'Active invoices', value: status.activeInvoices },
                 { label: 'Active wraps', value: status.activeWraps },
             ].map((item) => (
-                <Card key={item.label} className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
+                <Card
+                    key={item.label}
+                    className="border-neutral-700 bg-neutral-950/80 text-neutral-100"
+                >
                     <CardHeader className="pb-3">
                         <CardDescription className="text-neutral-400">{item.label}</CardDescription>
                     </CardHeader>

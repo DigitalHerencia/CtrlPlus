@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import { WorkspaceEmptyState } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
-import { type CatalogBrowseCardDTO } from '@/lib/catalog/types'
+import { type CatalogBrowseCardDTO } from '@/types/catalog'
 
 import { WrapCard } from './WrapCard'
 

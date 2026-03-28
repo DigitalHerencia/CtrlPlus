@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatInstallationTime, formatPrice } from '@/lib/catalog/formatters'
-import { type CatalogBrowseCardDTO } from '@/lib/catalog/types'
+import { type CatalogBrowseCardDTO } from '@/types/catalog'
 
 interface WrapCardProps {
     wrap: CatalogBrowseCardDTO

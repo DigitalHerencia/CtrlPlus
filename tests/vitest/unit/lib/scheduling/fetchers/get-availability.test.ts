@@ -20,7 +20,7 @@ vi.mock('@/lib/authz/policy', () => ({
     hasCapability: mocks.hasCapability,
 }))
 
-vi.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
@@ -28,7 +28,7 @@ import {
     getAvailabilityRuleById,
     getAvailabilityRules,
     getAvailabilityRulesByDay,
-} from '@/lib/scheduling/fetchers/get-availability'
+} from '@/lib/fetchers/scheduling.fetchers'
 
 describe('scheduling availability fetchers', () => {
     beforeEach(() => {

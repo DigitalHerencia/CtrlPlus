@@ -1,4 +1,4 @@
-import { type AuthzContext, type Capability, type GlobalRole } from './types'
+import { type AuthzContext, type Capability, type GlobalRole } from '@/types/authz'
 
 const ROLE_CAPABILITIES: Record<GlobalRole, Set<Capability>> = {
     customer: new Set<Capability>([

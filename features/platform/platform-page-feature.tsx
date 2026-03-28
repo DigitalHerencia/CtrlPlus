@@ -3,8 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { PlatformFailureTable } from '@/components/platform/platform-failure-table'
 import { PlatformHealthOverview } from '@/components/platform/platform-health-overview'
 import { PlatformWebhookDiagnostics } from '@/components/platform/platform-webhook-diagnostics'
-import { getPlatformStatusOverview } from '@/lib/platform/fetchers/get-platform-status-overview'
-import { getWebhookOperationsOverview } from '@/lib/platform/fetchers/get-webhook-operations-overview'
+import {
+    getPlatformStatusOverview,
+    getWebhookOperationsOverview,
+} from '@/lib/fetchers/platform.fetchers'
 
 import { PlatformRecoveryActionsClient } from './platform-recovery-actions-client'
 
@@ -14,9 +16,10 @@ export async function PlatformPageFeature() {
         getPlatformStatusOverview(),
     ])
 
-    const recentFailures = [...overview.stripe.recentFailures, ...overview.clerk.recentFailures].sort(
-        (left, right) => Date.parse(right.processedAt) - Date.parse(left.processedAt)
-    )
+    const recentFailures = [
+        ...overview.stripe.recentFailures,
+        ...overview.clerk.recentFailures,
+    ].sort((left, right) => Date.parse(right.processedAt) - Date.parse(left.processedAt))
 
     const stripeReplayableIds = overview.stripe.recentFailures
         .filter((failure) => failure.canReplay)
@@ -33,7 +36,9 @@ export async function PlatformPageFeature() {
                         <p className="text-xs uppercase tracking-[0.24em] text-neutral-500">
                             Recent failures in snapshot
                         </p>
-                        <p className="text-3xl font-black text-neutral-100">{recentFailures.length}</p>
+                        <p className="text-3xl font-black text-neutral-100">
+                            {recentFailures.length}
+                        </p>
                     </div>
                 }
             />
@@ -45,7 +50,8 @@ export async function PlatformPageFeature() {
                 <CardHeader>
                     <CardTitle>Recent webhook failures</CardTitle>
                     <CardDescription className="text-neutral-400">
-                        The table below is diagnostic-first. Replay is available only for Stripe failures with stored verified payloads.
+                        The table below is diagnostic-first. Replay is available only for Stripe
+                        failures with stored verified payloads.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

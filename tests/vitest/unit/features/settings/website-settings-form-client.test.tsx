@@ -5,7 +5,7 @@ const mocks = vi.hoisted(() => ({
     updateUserWebsiteSettings: vi.fn(),
 }))
 
-vi.mock('@/lib/settings/actions/update-user-website-settings', () => ({
+vi.mock('@/lib/actions/settings.actions', () => ({
     updateUserWebsiteSettings: mocks.updateUserWebsiteSettings,
 }))
 

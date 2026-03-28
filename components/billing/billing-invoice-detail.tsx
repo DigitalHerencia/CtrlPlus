@@ -14,7 +14,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { type InvoiceDetailDTO } from '@/lib/billing/types'
+import { type InvoiceDetailDTO } from '@/types/billing'
 
 interface BillingInvoiceDetailProps {
     invoice: InvoiceDetailDTO

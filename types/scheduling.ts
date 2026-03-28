@@ -1,4 +1,4 @@
-import type { FormEventHandler } from 'react'
+import type { SubmitEventHandler } from 'react'
 
 export const BookingStatus = {
     PENDING: 'pending',
@@ -20,7 +20,7 @@ export type BookingStatusValue = 'pending' | 'confirmed' | 'completed' | 'cancel
 
 export interface BookingDTO {
     id: string
-    customerId: string
+    customerId?: string
     wrapId: string
     wrapName?: string
     startTime: Date
@@ -87,7 +87,7 @@ export interface ReservedBookingDTO {
     wrapName?: string
     startTime: Date
     endTime: Date
-    status: string
+    status: BookingStatusValue
     totalPrice: number
     reservationExpiresAt: Date
     displayStatus: 'reserved'
@@ -143,7 +143,7 @@ export interface BookingFormProps {
     errors?: BookingFormErrors
     isPending?: boolean
     minDate?: Date
-    onSubmit: FormEventHandler<HTMLFormElement>
+    onSubmit: SubmitEventHandler<HTMLFormElement>
     onDateSelect: (date: Date) => void
     onWindowSelect: (windowId: string) => void
     onWrapSelect: (wrapId: string) => void

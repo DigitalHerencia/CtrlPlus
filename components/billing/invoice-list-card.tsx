@@ -10,7 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { type InvoiceDTO } from '@/lib/billing/types'
+import { type InvoiceDTO } from '@/types/billing'
 
 import { InvoiceStatusBadge } from './InvoiceStatusBadge'
 

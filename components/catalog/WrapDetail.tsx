@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatInstallationTime, formatPrice } from '@/lib/catalog/formatters'
-import { type CatalogDetailDTO } from '@/lib/catalog/types'
+import { type CatalogDetailDTO } from '@/types/catalog'
 
 interface WrapDetailProps {
     wrap: CatalogDetailDTO
@@ -35,10 +35,10 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
                             <img
                                 src={wrap.displayImage.detailUrl}
                                 alt={wrap.name}
-                                className="h-[26rem] w-full object-cover"
+                                className="h-104 w-full object-cover"
                             />
                         ) : (
-                            <div className="flex h-[26rem] items-center justify-center text-sm text-neutral-500">
+                            <div className="h-104 flex items-center justify-center text-sm text-neutral-500">
                                 No display asset available
                             </div>
                         )}

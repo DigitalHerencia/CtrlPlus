@@ -1,4 +1,4 @@
-import type { PreviewStatus, VisualizerPreviewDTO } from './types'
+import type { PreviewStatus, VisualizerPreviewDTO } from '@/types/visualizer'
 
 type VisualizerPreviewRecord = {
     id: string

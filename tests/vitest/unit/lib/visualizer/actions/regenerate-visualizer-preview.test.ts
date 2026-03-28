@@ -23,15 +23,15 @@ vi.mock('@/lib/authz/policy', () => ({
     requireCapability: mocks.requireCapability,
 }))
 
-vi.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
-vi.mock('@/lib/visualizer/fetchers/get-wrap-selections', () => ({
+vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
     getVisualizerWrapSelectionById: mocks.getVisualizerWrapSelectionById,
 }))
 
-import { regenerateVisualizerPreview } from '@/lib/visualizer/actions/regenerate-visualizer-preview'
+import { regenerateVisualizerPreview } from '@/lib/actions/visualizer.actions'
 
 function makeSession() {
     return {

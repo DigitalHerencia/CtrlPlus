@@ -8,7 +8,7 @@ import {
     TableRow,
 } from '@/components/ui/table'
 
-import { type WebhookFailureDTO } from '@/lib/platform/types'
+import { type WebhookFailureDTO } from '@/types/platform'
 
 interface PlatformFailureTableProps {
     failures: WebhookFailureDTO[]
@@ -42,20 +42,22 @@ export function PlatformFailureTable({ failures }: PlatformFailureTableProps) {
                                     {failure.source}
                                 </Badge>
                             </TableCell>
-                            <TableCell className="font-medium text-neutral-100">{failure.type}</TableCell>
+                            <TableCell className="font-medium text-neutral-100">
+                                {failure.type}
+                            </TableCell>
                             <TableCell>
                                 <Badge variant="destructive">{failure.status}</Badge>
                             </TableCell>
-                            <TableCell>
-                                {new Date(failure.processedAt).toLocaleString()}
-                            </TableCell>
+                            <TableCell>{new Date(failure.processedAt).toLocaleString()}</TableCell>
                             <TableCell>
                                 <Badge variant={failure.canReplay ? 'secondary' : 'outline'}>
                                     {failure.canReplay ? 'Replay available' : 'Diagnostics only'}
                                 </Badge>
                             </TableCell>
                             <TableCell className="max-w-md text-sm text-neutral-400">
-                                {failure.error ?? failure.replayUnavailableReason ?? 'No additional notes.'}
+                                {failure.error ??
+                                    failure.replayUnavailableReason ??
+                                    'No additional notes.'}
                             </TableCell>
                         </TableRow>
                     ))

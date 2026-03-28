@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatInstallationTime, formatPrice } from '@/lib/catalog/formatters'
-import type { VisualizerPreviewDTO } from '@/lib/visualizer/types'
-import type { VisualizerWrapSelectionDTO } from '@/lib/catalog/types'
+import type { VisualizerPreviewDTO } from '@/types/visualizer'
+import type { VisualizerWrapSelectionDTO } from '@/types/catalog'
 import { PreviewCanvas } from './PreviewCanvas'
 import { UploadForm } from './UploadForm'
 import { WrapSelector } from './WrapSelector'
@@ -215,7 +215,7 @@ export function VisualizerClient({
                                 preview={preview}
                                 isLoading={isPending && !preview}
                                 error={error}
-                                className="min-h-[34rem]"
+                                className="min-h-136"
                             />
                         </CardContent>
                     </Card>

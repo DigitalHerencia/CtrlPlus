@@ -26,7 +26,7 @@ vi.mock('@/lib/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
-import { updateUserWebsiteSettings } from '@/lib/settings/actions/update-user-website-settings'
+import { updateUserWebsiteSettings } from '@/lib/actions/settings.actions'
 
 describe('updateUserWebsiteSettings', () => {
     beforeEach(() => {

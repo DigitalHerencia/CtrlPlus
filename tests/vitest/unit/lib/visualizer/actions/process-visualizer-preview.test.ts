@@ -26,11 +26,11 @@ vi.mock('@/lib/authz/policy', () => ({
     requireCapability: mocks.requireCapability,
 }))
 
-vi.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
-vi.mock('@/lib/visualizer/fetchers/get-wrap-selections', () => ({
+vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
     getVisualizerWrapSelectionById: mocks.getVisualizerWrapSelectionById,
 }))
 
@@ -43,7 +43,7 @@ vi.mock('@/lib/visualizer/preview-execution', () => ({
     executeVisualizerPreviewGeneration: mocks.executeVisualizerPreviewGeneration,
 }))
 
-import { processVisualizerPreview } from '@/lib/visualizer/actions/process-visualizer-preview'
+import { processVisualizerPreview } from '@/lib/actions/visualizer.actions'
 
 function makeSession() {
     return {

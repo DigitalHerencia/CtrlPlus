@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { pruneOldPreviews } from '@/lib/platform/actions/prune-old-previews'
+import { pruneOldPreviews } from '@/lib/actions/platform.actions'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ClipboardList, Grid3x3, Layers } from 'lucide-react'
 

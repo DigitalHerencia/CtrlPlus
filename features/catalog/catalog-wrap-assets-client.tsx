@@ -10,8 +10,8 @@ import {
     removeWrapImage,
     reorderWrapImages,
     updateWrapImageMetadata,
-} from '@/lib/catalog/actions/manage-wrap-images'
-import { type CatalogDetailDTO, type WrapImageKind } from '@/lib/catalog/types'
+} from '@/lib/actions/catalog.actions'
+import { type CatalogDetailDTO, type WrapImageKind } from '@/types/catalog'
 
 interface CatalogWrapAssetsClientProps {
     wrap: CatalogDetailDTO

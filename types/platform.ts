@@ -6,6 +6,15 @@ export interface WebhookStatusCountsDTO {
 
 export type WebhookSource = 'clerk' | 'stripe'
 
+export interface PlatformStatusOverviewDTO {
+    generatedAt: string
+    databaseVersion: string
+    activeUsers: number
+    activeBookings: number
+    activeInvoices: number
+    activeWraps: number
+}
+
 export interface WebhookFailureDTO {
     id: string
     source: WebhookSource

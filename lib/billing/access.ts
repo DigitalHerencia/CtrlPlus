@@ -5,7 +5,7 @@ import type { Prisma } from '@prisma/client'
 import { type SessionContext, requireAuth } from '@/lib/auth/session'
 import { canAccessCustomerOwnedResource, hasCapability } from '@/lib/authz/policy'
 
-import { type InvoiceStatus, isInvoicePayable } from './types'
+import { type InvoiceStatus, isInvoicePayable } from '@/types/billing'
 
 export interface BillingAccessContext {
     session: SessionContext & { userId: string }
@@ -92,10 +92,7 @@ export function canAccessCustomerInvoice(
     return canAccessAllInvoices || customerId === userId
 }
 
-export function requireInvoiceWriteAccess(
-    access: BillingAccessContext,
-    customerId: string
-): void {
+export function requireInvoiceWriteAccess(access: BillingAccessContext, customerId: string): void {
     const canWriteOwnInvoices =
         access.canWriteAllInvoices || hasCapability(access.session.authz, 'billing.write.own')
 

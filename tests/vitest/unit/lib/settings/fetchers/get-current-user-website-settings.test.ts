@@ -19,7 +19,7 @@ vi.mock('@/lib/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
-import { getCurrentUserWebsiteSettings } from '@/lib/settings/fetchers/get-current-user-website-settings'
+import { getCurrentUserWebsiteSettings } from '@/lib/fetchers/settings.fetchers'
 
 describe('getCurrentUserWebsiteSettings', () => {
     beforeEach(() => {

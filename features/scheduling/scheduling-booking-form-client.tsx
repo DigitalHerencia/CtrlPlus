@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
 import { BookingForm } from '@/components/scheduling/booking-form'
-import { createBooking } from '@/lib/scheduling/actions/create-booking'
+import { createBooking } from '@/lib/actions/scheduling.actions'
 import { bookingFormSchema } from '@/schema/scheduling'
 import { type BookingFormValues, type SchedulingBookingFormClientProps } from '@/types/scheduling'
 
@@ -40,9 +40,7 @@ export function SchedulingBookingFormClient({
         },
     })
 
-    const selectedDate = (useWatch({ control: form.control, name: 'date' }) ?? null) as
-        | Date
-        | null
+    const selectedDate = (useWatch({ control: form.control, name: 'date' }) ?? null) as Date | null
     const selectedWindowId = useWatch({ control: form.control, name: 'windowId' }) ?? ''
     const selectedWrapId = useWatch({ control: form.control, name: 'wrapId' }) ?? ''
 
@@ -90,7 +88,7 @@ export function SchedulingBookingFormClient({
                 endTime,
             })
 
-            router.push(`/billing/${booking.invoiceId}`)
+            router.push(`/billing/${booking.id}`)
             router.refresh()
         } catch (error) {
             setServerError(getErrorMessage(error))

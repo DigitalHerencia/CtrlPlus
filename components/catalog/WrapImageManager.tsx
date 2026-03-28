@@ -11,7 +11,7 @@ import {
     type CatalogAssetReadinessDTO,
     type WrapImageDTO,
     type WrapImageKind as WrapImageKindValue,
-} from '@/lib/catalog/types'
+} from '@/types/catalog'
 
 interface WrapImageManagerProps {
     wrapId: string

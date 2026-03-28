@@ -9,7 +9,7 @@ vi.mock('@/lib/billing/stripe', () => ({
     constructWebhookEvent: mocks.constructWebhookEvent,
 }))
 
-vi.mock('@/lib/billing/actions/process-stripe-webhook-event', () => ({
+vi.mock('@/lib/actions/billing.actions', () => ({
     processStripeWebhookEvent: mocks.processStripeWebhookEvent,
 }))
 

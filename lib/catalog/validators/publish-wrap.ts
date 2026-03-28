@@ -2,7 +2,7 @@ import {
     PUBLISH_REQUIRED_WRAP_IMAGE_KINDS,
     type CatalogAssetReadinessDTO,
     type PublishRequiredWrapImageKind,
-} from '../types'
+} from '@/types/catalog'
 
 export interface WrapPublishAssetRoleSnapshot {
     kind: string

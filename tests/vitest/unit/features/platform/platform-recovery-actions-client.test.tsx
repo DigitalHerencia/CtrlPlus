@@ -13,7 +13,7 @@ vi.mock('next/navigation', () => ({
     }),
 }))
 
-vi.mock('@/lib/platform/actions/manage-webhook-events', () => ({
+vi.mock('@/lib/actions/platform.actions', () => ({
     clearStuckWebhookProcessingEvents: mocks.clearStuckWebhookProcessingEvents,
     replayStripeWebhookFailures: mocks.replayStripeWebhookFailures,
 }))

@@ -15,26 +15,22 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { createWrap } from '@/lib/catalog/actions/create-wrap'
-import { deleteWrap } from '@/lib/catalog/actions/delete-wrap'
 import {
+    createWrap,
+    deleteWrap,
     createWrapCategory,
     deleteWrapCategory,
     setWrapCategoryMappings,
-} from '@/lib/catalog/actions/manage-categories'
-import {
     addWrapImage,
     removeWrapImage,
     reorderWrapImages,
     updateWrapImageMetadata,
-} from '@/lib/catalog/actions/manage-wrap-images'
-import { publishWrap, unpublishWrap } from '@/lib/catalog/actions/publish-wrap'
-import { updateWrap } from '@/lib/catalog/actions/update-wrap'
+    publishWrap,
+    unpublishWrap,
+    updateWrap,
+} from '@/lib/actions/catalog.actions'
 import { formatPrice } from '@/lib/catalog/formatters'
-import {
-    type CatalogManagerProps,
-    type WrapImageKind,
-} from '@/types/catalog'
+import { type CatalogManagerProps, type WrapImageKind } from '@/types/catalog'
 import { WrapImageManager } from '@/components/catalog/WrapImageManager'
 
 function slugifyCategory(value: string): string {

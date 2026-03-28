@@ -6,7 +6,7 @@ import { BookingCard, type BookingCardItem } from '@/components/scheduling/booki
 import { WorkspaceEmptyState, WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { getBookings } from '@/lib/scheduling/fetchers/get-bookings'
+import { getBookings } from '@/lib/fetchers/scheduling.fetchers'
 
 interface SchedulingBookingsPageFeatureProps {
     tab: 'upcoming' | 'past'
@@ -28,9 +28,7 @@ function toBookingCardItem(
     }
 }
 
-export async function SchedulingBookingsPageFeature({
-    tab,
-}: SchedulingBookingsPageFeatureProps) {
+export async function SchedulingBookingsPageFeature({ tab }: SchedulingBookingsPageFeatureProps) {
     const now = new Date()
     const bookingsResult = await getBookings(
         tab === 'upcoming'

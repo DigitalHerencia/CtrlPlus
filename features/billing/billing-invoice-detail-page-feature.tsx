@@ -1,8 +1,8 @@
 import 'server-only'
 
 import { BillingInvoiceDetail } from '@/components/billing/billing-invoice-detail'
-import { createCheckoutSession } from '@/lib/billing/actions/create-checkout-session'
-import { getInvoiceById } from '@/lib/billing/fetchers/get-invoice-by-id'
+import { createCheckoutSession } from '@/lib/actions/billing.actions'
+import { getInvoiceById } from '@/lib/fetchers/billing.fetchers'
 import { notFound } from 'next/navigation'
 
 interface BillingInvoiceDetailPageFeatureProps {

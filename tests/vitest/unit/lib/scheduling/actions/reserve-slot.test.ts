@@ -16,11 +16,11 @@ vi.mock('@/lib/scheduling/capacity', () => ({
     assertSlotHasCapacity: mocks.assertSlotHasCapacity,
 }))
 
-vi.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
-import { reserveSlot } from '@/lib/scheduling/actions/reserve-slot'
+import { reserveSlot } from '@/lib/actions/scheduling.actions'
 
 function createTx() {
     return {

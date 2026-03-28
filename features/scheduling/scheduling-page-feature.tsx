@@ -4,14 +4,10 @@ import Link from 'next/link'
 
 import { BookingCard, type BookingCardItem } from '@/components/scheduling/booking-card'
 import { CalendarClient } from '@/components/scheduling/calendar-client'
-import {
-    WorkspaceMetricCard,
-    WorkspacePageIntro,
-} from '@/components/shared/tenant-elements'
+import { WorkspaceMetricCard, WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { getAvailabilityWindows } from '@/lib/scheduling/fetchers/get-availability'
-import { getBookings } from '@/lib/scheduling/fetchers/get-bookings'
+import { getAvailabilityWindows, getBookings } from '@/lib/fetchers/scheduling.fetchers'
 
 const DAY_NAMES = [
     'Sunday',
@@ -39,7 +35,9 @@ function toBookingCardItem(
     }
 }
 
-function getAvailableWeekdays(windows: Awaited<ReturnType<typeof getAvailabilityWindows>>['items']) {
+function getAvailableWeekdays(
+    windows: Awaited<ReturnType<typeof getAvailabilityWindows>>['items']
+) {
     const availableWeekdays = [...new Set(windows.map((window) => window.dayOfWeek))]
     return availableWeekdays
 }
@@ -124,7 +122,9 @@ export async function SchedulingPageFeature() {
                             ) : (
                                 <ul className="space-y-1.5">
                                     {[0, 1, 2, 3, 4, 5, 6]
-                                        .filter((dayOfWeek) => availableWeekdays.includes(dayOfWeek))
+                                        .filter((dayOfWeek) =>
+                                            availableWeekdays.includes(dayOfWeek)
+                                        )
                                         .map((dayOfWeek) => {
                                             const slots = availabilityResult.items.filter(
                                                 (window) => window.dayOfWeek === dayOfWeek

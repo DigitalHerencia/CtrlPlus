@@ -1,11 +1,12 @@
 import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import AdminMetrics from '@/components/admin/admin-metrics'
 import AdminManagementTools from '@/components/admin/admin-management-tools'
-import { getAdminManagementToolExamples } from '@/lib/admin/fetchers/get-admin-management-tool-examples'
-import { getOwnerDashboardStats } from '@/lib/admin/fetchers/get-owner-dashboard-stats'
+import {
+    getAdminManagementToolExamples,
+    getOwnerDashboardStats,
+} from '@/lib/fetchers/admin.fetchers'
 import { getSession } from '@/lib/auth/session'
-import { confirmAppointment } from '@/lib/admin/actions/confirm-appointment'
-import { createInvoice } from '@/lib/admin/actions/create-invoice'
+import { confirmAppointment, createInvoice } from '@/lib/actions/admin.actions'
 
 export default async function AdminPageFeature() {
     const session = await getSession()

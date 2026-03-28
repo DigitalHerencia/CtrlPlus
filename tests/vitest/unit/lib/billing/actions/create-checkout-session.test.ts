@@ -21,7 +21,7 @@ const mocks = vi.hoisted(() => ({
     getAppBaseUrl: vi.fn(),
 }))
 
-vi.mock('@/lib/prisma', () => ({
+vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
@@ -41,7 +41,7 @@ vi.mock('@/lib/billing/stripe', () => ({
     getAppBaseUrl: mocks.getAppBaseUrl,
 }))
 
-import { createCheckoutSession } from '@/lib/billing/actions/create-checkout-session'
+import { createCheckoutSession } from '@/lib/actions/billing.actions'
 
 describe('createCheckoutSession', () => {
     beforeEach(() => {

@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
     refresh: vi.fn(),
 }))
 
-vi.mock('@/lib/scheduling/actions/create-booking', () => ({
+vi.mock('@/lib/actions/scheduling.actions', () => ({
     createBooking: mocks.createBooking,
 }))
 

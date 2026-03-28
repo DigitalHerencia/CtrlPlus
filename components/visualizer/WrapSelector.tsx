@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
-import type { VisualizerWrapSelectionDTO } from '@/lib/catalog/types'
+import type { VisualizerWrapSelectionDTO } from '@/types/catalog'
 import { cn } from '@/lib/utils'
 
 interface WrapSelectorProps {

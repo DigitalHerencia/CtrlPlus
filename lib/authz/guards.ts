@@ -5,7 +5,7 @@ import {
     requireOwnerOrAdmin,
     requirePlatformAdmin,
 } from './policy'
-import { type Capability } from './types'
+import { type Capability } from '@/types/authz'
 
 export async function requireAuthzCapability(capability: Capability) {
     const session = await getSession()

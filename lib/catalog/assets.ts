@@ -4,7 +4,7 @@ import {
     type CatalogAssetImageDTO,
     type CatalogAssetReadinessDTO,
     type WrapImageDTO,
-} from './types'
+} from '@/types/catalog'
 import { getMissingRequiredAssetRolesForPublish } from './validators/publish-wrap'
 
 const CLOUDINARY_HOST = 'res.cloudinary.com'

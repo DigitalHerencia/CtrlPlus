@@ -1,6 +1,6 @@
 import type { Prisma } from '@prisma/client'
 
-import { processStripeWebhookEvent } from '@/lib/billing/actions/process-stripe-webhook-event'
+import { processStripeWebhookEvent } from '@/lib/actions/billing.actions'
 import { constructWebhookEvent } from '@/lib/billing/stripe'
 import { type NextRequest, NextResponse } from 'next/server'
 
