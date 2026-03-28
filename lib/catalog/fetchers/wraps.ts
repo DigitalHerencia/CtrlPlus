@@ -1,196 +1,42 @@
-import { Prisma } from '@prisma/client'
-
 import { prisma } from '@/lib/db/prisma'
-import { searchWrapsSchema } from '@/schema/catalog'
+import { getCatalogAssetReadiness } from '@/lib/catalog/asset-resolution'
 import {
-    getCatalogAssetReadiness,
     resolveCatalogGalleryImages,
     resolveDisplayImages,
     resolveHeroAsset,
     resolvePrimaryDisplayAsset,
     resolveVisualizerMaskHintAsset,
     resolveVisualizerTextureAsset,
-} from '@/lib/utils/catalog-assets'
+} from '@/lib/catalog/asset-resolution'
+import { searchWrapsSchema } from '@/schema/catalog/search-schemas'
+import type {
+    CatalogBrowseCardDTO,
+    CatalogBrowseResultDTO,
+    CatalogDetailDTO,
+    CatalogManagerItemDTO,
+    CatalogManagerResultDTO,
+    VisualizerWrapSelectionDTO,
+    WrapDTO,
+    WrapListDTO,
+} from '@/types/catalog/domain'
+import type { SearchWrapsInput } from '@/types/catalog/inputs'
+
 import {
+    getExampleCatalogWrapById,
+    getExampleCatalogWraps,
+    getExampleWrapCategories,
+    isExampleCatalogWrapId,
+} from './demo-wraps'
+import {
+    getVisibilityFilter,
+    getWrapWhere,
+    toWrapDTO,
     wrapDTOFields,
-    WrapImageKind,
-    type CatalogBrowseCardDTO,
-    type CatalogBrowseResultDTO,
-    type CatalogDetailDTO,
-    type CatalogManagerItemDTO,
-    type CatalogManagerResultDTO,
-    type SearchWrapsInput,
-    type VisualizerWrapSelectionDTO,
-    type WrapDTO,
-    type WrapImageDTO,
-    type WrapListDTO,
-} from '@/types/catalog'
+    type WrapRecord,
+    type WrapVisibilityScope,
+} from './wrap-record'
 
-// Example wraps (moved inline to avoid additional fetcher file)
-const EXAMPLE_WRAP_ID = 'demo-lorem-ipsum-phoenix'
-const EXAMPLE_WRAP_CATEGORY_ID = 'demo-showcase'
-const EXAMPLE_CREATED_AT = new Date('2026-03-21T12:00:00.000Z')
-
-const EXAMPLE_WRAP_CATEGORY = {
-    id: EXAMPLE_WRAP_CATEGORY_ID,
-    name: 'Demo Showcase',
-    slug: 'demo-showcase',
-}
-
-const EXAMPLE_WRAP_IMAGES: WrapImageDTO[] = [
-    {
-        id: 'demo-lorem-ipsum-hero',
-        url: '/catalog-demo/lorem-ipsum-hero.png',
-        kind: WrapImageKind.HERO,
-        isActive: true,
-        version: 1,
-        contentHash: 'demo-lorem-ipsum-hero',
-        displayOrder: 0,
-    },
-    {
-        id: 'demo-lorem-ipsum-texture',
-        url: '/catalog-demo/lorem-ipsum-alt.png',
-        kind: WrapImageKind.VISUALIZER_TEXTURE,
-        isActive: true,
-        version: 1,
-        contentHash: 'demo-lorem-ipsum-texture',
-        displayOrder: 1,
-    },
-    {
-        id: 'demo-lorem-ipsum-gallery-hero',
-        url: '/catalog-demo/lorem-ipsum-hero.png',
-        kind: WrapImageKind.GALLERY,
-        isActive: true,
-        version: 1,
-        contentHash: 'demo-lorem-ipsum-gallery-hero',
-        displayOrder: 2,
-    },
-    {
-        id: 'demo-lorem-ipsum-gallery-alt',
-        url: '/catalog-demo/lorem-ipsum-alt.png',
-        kind: WrapImageKind.GALLERY,
-        isActive: true,
-        version: 1,
-        contentHash: 'demo-lorem-ipsum-gallery-alt',
-        displayOrder: 3,
-    },
-    {
-        id: 'demo-lorem-ipsum-gallery-logo',
-        url: '/catalog-demo/lorem-ipsum-logo.png',
-        kind: WrapImageKind.GALLERY,
-        isActive: true,
-        version: 1,
-        contentHash: 'demo-lorem-ipsum-gallery-logo',
-        displayOrder: 4,
-    },
-]
-
-const EXAMPLE_WRAP: WrapDTO = {
-    id: EXAMPLE_WRAP_ID,
-    name: 'Lorem Ipsum Phoenix',
-    description:
-        'Demo-ready showcase wrap with a clickable hero card, alternate vehicle angles, and logo artwork for product-gallery walkthroughs.',
-    price: 265000,
-    isHidden: false,
-    installationMinutes: 300,
-    aiPromptTemplate: null,
-    aiNegativePrompt: null,
-    images: EXAMPLE_WRAP_IMAGES,
-    categories: [EXAMPLE_WRAP_CATEGORY],
-    createdAt: EXAMPLE_CREATED_AT,
-    updatedAt: EXAMPLE_CREATED_AT,
-}
-
-export function getExampleCatalogWraps(): WrapDTO[] {
-    return [EXAMPLE_WRAP]
-}
-
-export function getExampleCatalogWrapById(wrapId: string): WrapDTO | null {
-    return wrapId === EXAMPLE_WRAP_ID ? EXAMPLE_WRAP : null
-}
-
-export function getExampleWrapCategories() {
-    return [EXAMPLE_WRAP_CATEGORY]
-}
-
-export function isExampleCatalogWrapId(wrapId: string): boolean {
-    return wrapId === EXAMPLE_WRAP_ID
-}
-
-export interface WrapVisibilityScope {
-    includeHidden?: boolean
-    requireVisualizerReady?: boolean
-}
-
-type WrapRecord = Prisma.WrapGetPayload<{
-    select: typeof wrapDTOFields
-}>
-
-function normalizePriceInCents(value: number): number {
-    return Number.isInteger(value) ? value : Math.round(value)
-}
-
-function getVisibilityFilter(scope: WrapVisibilityScope) {
-    return scope.includeHidden ? {} : { isHidden: false }
-}
-
-function getWrapWhere(
-    filters: SearchWrapsInput,
-    scope: WrapVisibilityScope
-): Prisma.WrapWhereInput {
-    return {
-        deletedAt: null,
-        ...getVisibilityFilter(scope),
-        ...(filters.query
-            ? {
-                  OR: [
-                      { name: { contains: filters.query, mode: 'insensitive' } },
-                      { description: { contains: filters.query, mode: 'insensitive' } },
-                  ],
-              }
-            : {}),
-        ...(filters.maxPrice !== undefined ? { price: { lte: filters.maxPrice } } : {}),
-        ...(filters.categoryId
-            ? {
-                  categoryMappings: {
-                      some: {
-                          categoryId: filters.categoryId,
-                          category: {
-                              deletedAt: null,
-                          },
-                      },
-                  },
-              }
-            : {}),
-    }
-}
-
-function mapWrapImage(image: WrapRecord['images'][number], index: number): WrapImageDTO {
-    return {
-        ...image,
-        kind: (image.kind as WrapImageKind) ?? (index === 0 ? 'hero' : 'gallery'),
-    }
-}
-
-function toWrapDTO(prismaWrap: WrapRecord): WrapDTO {
-    return {
-        id: prismaWrap.id,
-        name: prismaWrap.name,
-        description: prismaWrap.description,
-        price: normalizePriceInCents(prismaWrap.price),
-        isHidden: prismaWrap.isHidden,
-        installationMinutes: prismaWrap.installationMinutes,
-        aiPromptTemplate: prismaWrap.aiPromptTemplate,
-        aiNegativePrompt: prismaWrap.aiNegativePrompt,
-        images: prismaWrap.images.map(mapWrapImage),
-        categories: prismaWrap.categoryMappings
-            .map((mapping) => mapping.category)
-            .filter((category) => category.deletedAt === null)
-            .map(({ ...category }) => category),
-        createdAt: prismaWrap.createdAt,
-        updatedAt: prismaWrap.updatedAt,
-    }
-}
+export { isExampleCatalogWrapId } from './demo-wraps'
 
 function getWrapReadiness(wrap: WrapDTO) {
     return getCatalogAssetReadiness({
@@ -203,6 +49,7 @@ function getWrapReadiness(wrap: WrapDTO) {
 function toCatalogBrowseCard(wrap: WrapDTO): CatalogBrowseCardDTO {
     const readiness = getWrapReadiness(wrap)
     const heroImage = resolveHeroAsset(wrap.images)
+
     return {
         id: wrap.id,
         name: wrap.name,
@@ -243,6 +90,7 @@ function toCatalogDetail(wrap: WrapDTO): CatalogDetailDTO {
 
 function toCatalogManagerItem(wrap: WrapDTO): CatalogManagerItemDTO {
     const detail = toCatalogDetail(wrap)
+
     return {
         ...detail,
         imageCount: wrap.images.length,
@@ -281,13 +129,7 @@ function toWrapListResult<TItem>(
     total: number,
     filters: SearchWrapsInput,
     mapper: (wrap: WrapDTO) => TItem
-): {
-    wraps: TItem[]
-    total: number
-    page: number
-    pageSize: number
-    totalPages: number
-} {
+) {
     return {
         wraps: wraps.map((wrap) => mapper(toWrapDTO(wrap))),
         total,
@@ -341,6 +183,7 @@ export async function getCatalogManagerWraps(
 ): Promise<CatalogManagerResultDTO> {
     const parsedFilters = searchWrapsSchema.parse(filters)
     const { wraps, total } = await searchWrapRecords(parsedFilters, scope)
+
     return toWrapListResult(wraps, total, parsedFilters, toCatalogManagerItem)
 }
 
@@ -389,6 +232,7 @@ export async function searchWraps(
 ): Promise<WrapListDTO> {
     const parsedFilters = searchWrapsSchema.parse(filters)
     const { wraps, total } = await searchWrapRecords(parsedFilters, scope)
+
     return toWrapListResult(wraps, total, parsedFilters, (wrap) => wrap)
 }
 
@@ -521,3 +365,5 @@ export async function getWrapCategories(): Promise<
         )
         .sort((left, right) => left.name.localeCompare(right.name))
 }
+
+export type { WrapVisibilityScope } from './wrap-record'

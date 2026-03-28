@@ -13,7 +13,7 @@ Refactor the owner admin surface into a focused operational dashboard and quick-
 - `components/shared/tenant-sidebar.tsx`
 - `lib/actions/admin.actions.ts`
 - `lib/fetchers/admin.fetchers.ts`
-- `lib/fetchers/catalog.fetchers.ts`
+- `lib/catalog/fetchers/wraps.ts`
 - `lib/fetchers/scheduling.fetchers.ts`
 - `lib/db/transactions/billing.transactions.ts`
 - `lib/auth/**`

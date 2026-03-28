@@ -1,7 +1,6 @@
-import { searchWrapsSchema } from '@/schema/catalog'
-import { visualizerSearchParamsSchema } from '@/schema/visualizer'
-import { type CatalogSearchParamsResult, type SearchWrapsInput } from '@/types/catalog'
-import { type VisualizerSearchParamsResult } from '@/types/visualizer'
+import { searchWrapsSchema } from '@/schema/catalog/search-schemas'
+import type { SearchWrapsInput } from '@/types/catalog/inputs'
+import type { CatalogSearchParamsResult } from '@/types/catalog/route-types'
 
 function toNumber(value: string | null): number | undefined {
     if (!value) {
@@ -97,17 +96,5 @@ export function parseCatalogSearchParams(
                 filters.sortOrder !== 'desc' ||
                 filters.pageSize !== 20
         ),
-    }
-}
-
-export function parseVisualizerSearchParams(
-    searchParams: Record<string, string | string[] | undefined>
-): VisualizerSearchParamsResult {
-    const parsed = visualizerSearchParamsSchema.safeParse({
-        wrapId: typeof searchParams.wrapId === 'string' ? searchParams.wrapId : undefined,
-    })
-
-    return {
-        requestedWrapId: parsed.success ? parsed.data.wrapId ?? null : null,
     }
 }

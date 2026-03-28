@@ -2,16 +2,9 @@
 
 import { useEffect, useEffectEvent } from 'react'
 
-import { PreviewStatus, type VisualizerPreviewDTO } from '@/types/visualizer'
-
-interface SerializedVisualizerPreview extends Omit<
-    VisualizerPreviewDTO,
-    'expiresAt' | 'createdAt' | 'updatedAt'
-> {
-    expiresAt: string
-    createdAt: string
-    updatedAt: string
-}
+import { PreviewStatus } from '@/types/visualizer/constants'
+import type { VisualizerPreviewDTO } from '@/types/visualizer/domain'
+import type { SerializedVisualizerPreview } from '@/types/visualizer/route-types'
 
 interface PreviewPollResponse {
     preview: SerializedVisualizerPreview | null

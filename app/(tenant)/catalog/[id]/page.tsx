@@ -3,26 +3,11 @@ import { redirect } from 'next/navigation'
 import { CatalogDetailPageFeature } from '@/features/catalog/catalog-detail-page-feature'
 import { getSession } from '@/lib/auth/session'
 import { hasCapability } from '@/lib/authz/policy'
-import { getCatalogWrapById } from '@/lib/fetchers/catalog.fetchers'
-import { type WrapDetailPageParams } from '@/types/catalog'
+import { generateCatalogWrapMetadata } from '@/features/catalog/catalog-detail-page-feature'
+import type { WrapDetailPageParams } from '@/types/catalog/route-types'
 
 export async function generateMetadata({ params }: WrapDetailPageParams) {
-    const { id } = await params
-    const wrap = await getCatalogWrapById(id, { includeHidden: true })
-
-    if (!wrap) {
-        return { title: 'Wrap Not Found' }
-    }
-
-    return {
-        title: wrap.name,
-        description: wrap.description ?? undefined,
-        openGraph: {
-            title: wrap.name,
-            description: wrap.description ?? undefined,
-            images: wrap.heroImage ? [wrap.heroImage.detailUrl ?? wrap.heroImage.url] : undefined,
-        },
-    }
+    return generateCatalogWrapMetadata(params)
 }
 
 export default async function WrapDetailPage({ params }: WrapDetailPageParams) {

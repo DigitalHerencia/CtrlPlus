@@ -19,7 +19,7 @@ Finalize the catalog side of the visualizer funnel by exposing a server-authorit
 
 ## Scope anchors
 
-- `lib/fetchers/catalog.fetchers.ts`
+- `lib/catalog/fetchers/wraps.ts`
 - `app/(tenant)/catalog/**`
 - `components/catalog/**`
 - shared catalog-to-visualizer boundary files

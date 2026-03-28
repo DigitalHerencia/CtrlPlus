@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { CatalogManagerItemDTO } from '@/types/catalog'
-import { CatalogManager } from '@/components/catalog/CatalogManager'
+import { CatalogManagerClient } from '@/features/catalog/catalog-manager-client'
+import type { CatalogManagerItemDTO } from '@/types/catalog/domain'
 
 const mocks = vi.hoisted(() => ({
     refresh: vi.fn(),
@@ -26,7 +26,7 @@ vi.mock('next/navigation', () => ({
     }),
 }))
 
-vi.mock('@/lib/actions/catalog.actions', () => ({
+vi.mock('@/lib/catalog/actions/wraps', () => ({
     createWrap: mocks.createWrap,
     updateWrap: mocks.updateWrap,
     publishWrap: mocks.publishWrap,
@@ -119,13 +119,13 @@ const mockWraps: CatalogManagerItemDTO[] = [
     },
 ]
 
-describe('CatalogManager', () => {
+describe('CatalogManagerClient', () => {
     beforeEach(() => {
         vi.clearAllMocks()
     })
 
     it('renders the inventory and selected wrap workspace', () => {
-        render(<CatalogManager wraps={mockWraps} categories={mockCategories} />)
+        render(<CatalogManagerClient wraps={mockWraps} categories={mockCategories} />)
 
         expect(screen.getByText('Visible Wraps')).toBeInTheDocument()
         expect(screen.getAllByText('Graphite Stealth').length).toBeGreaterThan(0)
@@ -134,7 +134,7 @@ describe('CatalogManager', () => {
     })
 
     it('creates wraps through the create form', async () => {
-        render(<CatalogManager wraps={mockWraps} categories={mockCategories} />)
+        render(<CatalogManagerClient wraps={mockWraps} categories={mockCategories} />)
 
         fireEvent.change(screen.getByPlaceholderText('Wrap name'), {
             target: { value: 'Midnight Chrome' },
@@ -156,7 +156,7 @@ describe('CatalogManager', () => {
 
     it('publishes the selected wrap through metadata actions', async () => {
         render(
-            <CatalogManager
+            <CatalogManagerClient
                 wraps={[
                     {
                         ...mockWraps[0],

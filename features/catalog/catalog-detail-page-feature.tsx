@@ -1,10 +1,29 @@
 import { notFound } from 'next/navigation'
 
 import { WrapDetail } from '@/components/catalog/WrapDetail'
-import { getCatalogWrapById, isExampleCatalogWrapId } from '@/lib/fetchers/catalog.fetchers'
-import { type CatalogDetailPageFeatureProps } from '@/types/catalog'
+import { getCatalogWrapById, isExampleCatalogWrapId } from '@/lib/catalog/fetchers/wraps'
+import type { CatalogDetailPageFeatureProps, WrapDetailPageParams } from '@/types/catalog/route-types'
 
 import { CatalogWrapAssetsClient } from './catalog-wrap-assets-client'
+
+export async function generateCatalogWrapMetadata(params: WrapDetailPageParams['params']) {
+    const { id } = await params
+    const wrap = await getCatalogWrapById(id, { includeHidden: true })
+
+    if (!wrap) {
+        return { title: 'Wrap Not Found' }
+    }
+
+    return {
+        title: wrap.name,
+        description: wrap.description ?? undefined,
+        openGraph: {
+            title: wrap.name,
+            description: wrap.description ?? undefined,
+            images: wrap.heroImage ? [wrap.heroImage.detailUrl ?? wrap.heroImage.url] : undefined,
+        },
+    }
+}
 
 export async function CatalogDetailPageFeature({
     wrapId,

@@ -17,12 +17,14 @@ Refactor the visualizer into a production-ready, catalog-driven preview feature 
 - `components/visualizer/UploadForm.tsx`
 - `components/visualizer/WrapSelector.tsx`
 - `components/visualizer/PreviewCanvas.tsx`
-- `lib/actions/visualizer.actions.ts`
-- `lib/fetchers/visualizer.fetchers.ts`
+- `lib/visualizer/actions/previews.ts`
+- `lib/visualizer/fetchers/selection.ts`
+- `lib/visualizer/fetchers/previews.ts`
+- `lib/visualizer/search-params.ts`
 - `lib/integrations/huggingface.ts`
 - `lib/uploads/image-processing.ts`
 - `lib/uploads/storage.ts`
-- `lib/fetchers/catalog.fetchers.ts`
+- `lib/catalog/fetchers/wraps.ts`
 
 ## Product framing
 

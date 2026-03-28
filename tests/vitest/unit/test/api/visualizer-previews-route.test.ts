@@ -1,20 +1,22 @@
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
+vi.mock('@/lib/visualizer/fetchers/previews', () => ({
     getPreviewById: vi.fn(),
 }))
 
 import { GET } from '@/app/(tenant)/visualizer/previews/[id]/route'
-import { getPreviewById } from '@/lib/fetchers/visualizer.fetchers'
+import { getPreviewById } from '@/lib/visualizer/fetchers/previews'
 
 describe('visualizer previews route', () => {
     it('returns 404 when preview not found', async () => {
         const mocked = vi.mocked(getPreviewById)
         mocked.mockResolvedValueOnce(null)
 
-        const res = await GET(new Request('https://example.test'), {
+        const context: Parameters<typeof GET>[1] = {
             params: Promise.resolve({ id: 'missing' }),
-        } as any)
+        }
+
+        const res = await GET(new Request('https://example.test'), context)
 
         expect(res.status).toBe(404)
     })

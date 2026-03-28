@@ -14,9 +14,4 @@ export const processVisualizerPreviewSchema = z.object({
 })
 
 export const uploadPhotoSchema = createVisualizerPreviewSchema
-
 export const generatePreviewSchema = processVisualizerPreviewSchema
-
-export const visualizerSearchParamsSchema = z.object({
-    wrapId: z.string().min(1).optional(),
-})

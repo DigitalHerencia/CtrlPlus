@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatPrice } from '@/lib/utils/currency'
 import { formatInstallationTime } from '@/lib/utils/dates'
-import { type CatalogBrowseCardDTO } from '@/types/catalog'
+import type { CatalogBrowseCardDTO } from '@/types/catalog/domain'
 
 interface WrapCardProps {
     wrap: CatalogBrowseCardDTO

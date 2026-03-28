@@ -31,7 +31,7 @@ vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
-vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
+vi.mock('@/lib/visualizer/fetchers/selection', () => ({
     getVisualizerWrapSelectionById: mocks.getVisualizerWrapSelectionById,
 }))
 
@@ -48,7 +48,7 @@ vi.mock('@/lib/cache/cache-keys', () => ({
     buildVisualizerCacheKey: mocks.buildVisualizerCacheKey,
 }))
 
-import { createVisualizerPreview } from '@/lib/actions/visualizer.actions'
+import { createVisualizerPreview } from '@/lib/visualizer/actions/previews'
 
 function makeSession(overrides: Partial<Awaited<ReturnType<typeof mocks.getSession>>> = {}) {
     return {

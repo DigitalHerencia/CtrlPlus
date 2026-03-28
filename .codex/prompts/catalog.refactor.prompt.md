@@ -16,10 +16,10 @@ Refactor only the `catalog` domain to the target CtrlPlus server-first architect
 - `app/(tenant)/catalog/**`
 - `features/catalog/**`
 - `components/catalog/**`
-- `lib/actions/catalog.actions.ts`
-- `lib/fetchers/catalog.fetchers.ts`
-- `lib/utils/catalog-assets.ts`
-- `lib/utils/search-params.ts`
+- `lib/catalog/actions/wraps.ts`
+- `lib/catalog/fetchers/wraps.ts`
+- `lib/catalog/asset-resolution.ts`
+- `lib/catalog/search-params.ts`
 - affected tests under `e2e/**` and `tests/**`
 
 ## Upstream and downstream dependencies
@@ -39,8 +39,8 @@ Refactor only the `catalog` domain to the target CtrlPlus server-first architect
 - keep `app/**` thin and orchestration-only
 - move route composition into `features/catalog/**`
 - keep pure UI in `components/catalog/**`
-- keep reads in `lib/fetchers/catalog.fetchers.ts`
-- keep writes in `lib/actions/catalog.actions.ts`
+- keep reads in `lib/catalog/fetchers/**`
+- keep writes in `lib/catalog/actions/**`
 
 ## Required implementation rules
 

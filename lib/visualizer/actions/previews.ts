@@ -3,7 +3,7 @@
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
-import { getVisualizerWrapSelectionById } from '@/lib/fetchers/visualizer.fetchers'
+import { getVisualizerWrapSelectionById } from '@/lib/visualizer/fetchers/selection'
 import {
     createWrapPreviewGeneratorAdapter,
     HuggingFacePreviewUnavailableError,
@@ -23,16 +23,16 @@ import {
     createVisualizerPreviewSchema,
     processVisualizerPreviewSchema,
     regenerateVisualizerPreviewSchema,
-} from '@/schema/visualizer'
-import { toVisualizerPreviewDTO } from '@/types/visualizer'
+} from '@/schema/visualizer/action-schemas'
+import { toVisualizerPreviewDTO } from '@/lib/visualizer/fetchers/preview-record'
 import type {
     CreateVisualizerPreviewInput,
     RegenerateVisualizerPreviewInput,
     ProcessVisualizerPreviewInput,
     GeneratePreviewInput,
     UploadPhotoInput,
-    VisualizerPreviewDTO,
-} from '@/types/visualizer'
+} from '@/types/visualizer/inputs'
+import type { VisualizerPreviewDTO } from '@/types/visualizer/domain'
 
 function buildVisualizerPromptForWrap(
     wrap: NonNullable<Awaited<ReturnType<typeof getVisualizerWrapSelectionById>>>

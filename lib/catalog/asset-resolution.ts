@@ -1,11 +1,13 @@
+import { getMissingRequiredAssetRolesForPublish } from '@/schema/catalog/publish-readiness'
 import {
     PUBLISH_REQUIRED_WRAP_IMAGE_KINDS,
     WrapImageKind,
-    type CatalogAssetImageDTO,
-    type CatalogAssetReadinessDTO,
-    type WrapImageDTO,
-} from '@/types/catalog'
-import { getMissingRequiredAssetRolesForPublish } from '@/schema/catalog'
+} from '@/types/catalog/constants'
+import type {
+    CatalogAssetImageDTO,
+    CatalogAssetReadinessDTO,
+    WrapImageDTO,
+} from '@/types/catalog/domain'
 
 const CLOUDINARY_HOST = 'res.cloudinary.com'
 

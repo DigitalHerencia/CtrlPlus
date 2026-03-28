@@ -16,12 +16,13 @@ Refactor only the `visualizer` domain to the target CtrlPlus server-first archit
 - `app/(tenant)/visualizer/**`
 - `features/visualizer/**`
 - `components/visualizer/**`
-- `lib/actions/visualizer.actions.ts`
-- `lib/fetchers/visualizer.fetchers.ts`
+- `lib/visualizer/actions/previews.ts`
+- `lib/visualizer/fetchers/selection.ts`
+- `lib/visualizer/fetchers/previews.ts`
 - `lib/uploads/**`
 - `lib/integrations/huggingface.ts`
 - `lib/cache/cache-keys.ts`
-- `lib/fetchers/catalog.fetchers.ts` when explicitly needed for wrap selection boundaries
+- `lib/catalog/fetchers/wraps.ts` when explicitly needed for wrap selection boundaries
 - affected tests under `e2e/**` and `tests/**`
 
 ## Upstream and downstream dependencies
@@ -41,8 +42,8 @@ Refactor only the `visualizer` domain to the target CtrlPlus server-first archit
 - keep `app/**` thin and orchestration-only
 - move page composition into `features/visualizer/**`
 - keep pure UI in `components/visualizer/**`
-- keep reads in `lib/fetchers/visualizer.fetchers.ts`
-- keep writes in `lib/actions/visualizer.actions.ts`
+- keep reads in `lib/visualizer/fetchers/**`
+- keep writes in `lib/visualizer/actions/**`
 
 ## Required implementation rules
 

@@ -3,7 +3,8 @@
 import { useState } from 'react'
 
 import { cn } from '@/lib/utils/cn'
-import { PreviewStatus, type VisualizerPreviewDTO } from '@/types/visualizer'
+import { PreviewStatus } from '@/types/visualizer/constants'
+import type { VisualizerPreviewDTO } from '@/types/visualizer/domain'
 import { ImageOff, Loader2 } from 'lucide-react'
 
 interface PreviewCanvasProps {

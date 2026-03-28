@@ -19,9 +19,9 @@ Refactor catalog management into a coherent operator workflow with explicit asse
 
 - `app/(tenant)/catalog/manage/**` or equivalent manager routes
 - `features/catalog/**`
-- `components/catalog/CatalogManager.tsx`
+- `features/catalog/catalog-manager-client.tsx`
 - `components/catalog/WrapImageManager.tsx`
-- `lib/actions/catalog.actions.ts`
+- `lib/catalog/actions/wraps.ts`
 - affected tests
 
 ## Exact implementation slice

@@ -1,29 +1,8 @@
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
-import {
-    toVisualizerPreviewDTO,
-    type VisualizerPreviewDTO,
-    visualizerPreviewDTOFields,
-} from '@/types/visualizer'
-import {
-    getVisualizerSelectableWrapById,
-    listVisualizerSelectableWraps,
-    type WrapVisibilityScope,
-} from '@/lib/fetchers/catalog.fetchers'
-
-export type { WrapVisibilityScope } from '@/lib/fetchers/catalog.fetchers'
-
-export async function getVisualizerWrapSelectionById(
-    wrapId: string,
-    scope: WrapVisibilityScope = {}
-) {
-    return getVisualizerSelectableWrapById(wrapId, scope)
-}
-
-export async function listVisualizerWrapSelections(scope: WrapVisibilityScope = {}) {
-    return listVisualizerSelectableWraps(scope)
-}
+import { toVisualizerPreviewDTO, visualizerPreviewDTOFields } from '@/lib/visualizer/fetchers/preview-record'
+import type { VisualizerPreviewDTO } from '@/types/visualizer/domain'
 
 export async function getPreviewById(previewId: string): Promise<VisualizerPreviewDTO | null> {
     const session = await getSession()
@@ -31,6 +10,7 @@ export async function getPreviewById(previewId: string): Promise<VisualizerPrevi
     if (!session.isAuthenticated || !userId) {
         return null
     }
+
     requireCapability(session.authz, 'visualizer.use')
 
     const preview = await prisma.visualizerPreview.findFirst({
@@ -51,6 +31,7 @@ export async function getPreviewsByWrap(wrapId: string): Promise<VisualizerPrevi
     if (!session.isAuthenticated || !userId) {
         return []
     }
+
     requireCapability(session.authz, 'visualizer.use')
 
     const previews = await prisma.visualizerPreview.findMany({

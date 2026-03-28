@@ -5,13 +5,12 @@ import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { toCatalogAssetImage } from '@/lib/utils/catalog-assets'
+import { toCatalogAssetImage } from '@/lib/catalog/asset-resolution'
 import {
     WrapImageKind,
-    type CatalogAssetReadinessDTO,
-    type WrapImageDTO,
     type WrapImageKind as WrapImageKindValue,
-} from '@/types/catalog'
+} from '@/types/catalog/constants'
+import type { CatalogAssetReadinessDTO, WrapImageDTO } from '@/types/catalog/domain'
 
 interface WrapImageManagerProps {
     wrapId: string

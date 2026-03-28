@@ -1,6 +1,6 @@
 ---
 description: 'Domain instructions for catalog and wrap management'
-applyTo: 'app/(tenant)/catalog/**,components/catalog/**,lib/actions/catalog.actions.ts,lib/fetchers/catalog.fetchers.ts,lib/utils/catalog-assets.ts,lib/utils/search-params.ts,lib/uploads/**,schema/catalog.ts'
+applyTo: 'app/(tenant)/catalog/**,components/catalog/**,features/catalog/**,lib/catalog/**,lib/uploads/**,schema/catalog/**,types/catalog/**'
 ---
 
 # Catalog Domain Instructions
@@ -32,8 +32,8 @@ This domain does not own:
 ## Required patterns
 
 - Keep route pages thin and server-first.
-- Reads belong in `lib/fetchers/catalog.fetchers.ts`.
-- Writes belong in `lib/actions/catalog.actions.ts`.
+- Reads belong in `lib/catalog/fetchers/**`.
+- Writes belong in `lib/catalog/actions/**`.
 - Future refactors should move route composition into `features/catalog/**`.
 - Validation belongs in domain validators/types, not ad hoc page logic.
 - Asset handling belongs in catalog-domain helpers and actions, not route files.

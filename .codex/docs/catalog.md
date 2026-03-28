@@ -13,15 +13,17 @@ Refactor catalog browsing and wrap management into a storefront-grade wrap produ
 
 - `app/(tenant)/catalog/**`
 - `features/catalog/**`
-- `components/catalog/CatalogManager.tsx`
+- `features/catalog/catalog-manager-client.tsx`
 - `components/catalog/WrapImageManager.tsx`
 - `components/catalog/WrapGrid.tsx`
 - `components/catalog/WrapCard.tsx`
 - `components/catalog/WrapDetail.tsx`
-- `lib/actions/catalog.actions.ts`
-- `lib/fetchers/catalog.fetchers.ts`
-- `lib/utils/catalog-assets.ts`
-- `schema/catalog.ts`
+- `lib/catalog/actions/wraps.ts`
+- `lib/catalog/fetchers/wraps.ts`
+- `lib/catalog/asset-resolution.ts`
+- `lib/catalog/search-params.ts`
+- `schema/catalog/**`
+- `types/catalog/**`
 - `lib/authz/**`
 
 ## Product framing

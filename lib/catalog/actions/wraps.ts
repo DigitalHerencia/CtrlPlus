@@ -3,33 +3,34 @@
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/db/prisma'
 import {
-    assertWrapIsPublishReady,
     createWrapSchema,
     updateWrapSchema,
+} from '@/schema/catalog/wrap-schemas'
+import {
     createWrapCategorySchema,
     setWrapCategoryMappingsSchema,
     updateWrapCategorySchema,
+} from '@/schema/catalog/category-schemas'
+import { assertWrapIsPublishReady } from '@/schema/catalog/publish-readiness'
+import {
     updateWrapImageMetadataSchema,
     wrapImageUploadSchema,
-} from '@/schema/catalog'
+} from '@/schema/catalog/image-schemas'
 import { revalidateCatalogPaths, revalidateCatalogAndVisualizerPaths } from '@/lib/cache/revalidate-tags'
 import { deletePersistedWrapImage, persistWrapImage } from '@/lib/uploads/storage'
 import { validateWrapImageFile } from '@/lib/uploads/file-validation'
-import { getWrapById, getCatalogWrapById } from '@/lib/fetchers/catalog.fetchers'
+import { getWrapById, getCatalogWrapById } from '@/lib/catalog/fetchers/wraps'
 import {
     type CreateWrapInput,
-    type WrapDTO,
-    type WrapImageDTO,
-    WrapImageKind,
     type UpdateWrapImageMetadataInput,
-    type WrapImageKind as WrapImageKindType,
     type WrapImageUploadInput,
     type CreateWrapCategoryInput,
     type SetWrapCategoryMappingsInput,
     type UpdateWrapCategoryInput,
-    type WrapCategoryDTO,
     type UpdateWrapInput,
-} from '@/types/catalog'
+} from '@/types/catalog/inputs'
+import { WrapImageKind, type WrapImageKind as WrapImageKindType } from '@/types/catalog/constants'
+import type { WrapCategoryDTO, WrapDTO, WrapImageDTO } from '@/types/catalog/domain'
 
 // --- createWrap ---
 export async function createWrap(input: CreateWrapInput): Promise<WrapDTO> {

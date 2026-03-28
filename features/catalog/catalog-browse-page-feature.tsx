@@ -4,9 +4,9 @@ import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { CatalogPagination } from '@/components/catalog/CatalogPagination'
 import { WrapGrid } from '@/components/catalog/WrapGrid'
-import { getWrapCategories, searchCatalogWraps } from '@/lib/fetchers/catalog.fetchers'
-import { createCatalogPageHref } from '@/lib/utils/search-params'
-import { type CatalogBrowsePageFeatureProps } from '@/types/catalog'
+import { getWrapCategories, searchCatalogWraps } from '@/lib/catalog/fetchers/wraps'
+import { createCatalogPageHref } from '@/lib/catalog/search-params'
+import type { CatalogBrowsePageFeatureProps } from '@/types/catalog/route-types'
 import { CatalogFiltersClient } from './catalog-filters-client'
 
 export async function CatalogBrowsePageFeature({

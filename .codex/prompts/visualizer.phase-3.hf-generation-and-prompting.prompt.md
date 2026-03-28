@@ -19,7 +19,7 @@ Implement the primary AI preview path using prompt construction, generation-boar
 
 - `lib/uploads/image-processing.ts`
 - `lib/integrations/huggingface.ts`
-- `lib/actions/visualizer.actions.ts`
+- `lib/visualizer/actions/previews.ts`
 - affected tests
 
 ## Exact implementation slice

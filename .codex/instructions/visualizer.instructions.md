@@ -1,6 +1,6 @@
 ---
 description: 'Domain instructions for the vehicle visualizer'
-applyTo: 'app/(tenant)/visualizer/**,components/visualizer/**,lib/actions/visualizer.actions.ts,lib/fetchers/visualizer.fetchers.ts,lib/integrations/huggingface.ts,lib/uploads/**,lib/cache/**,lib/utils/search-params.ts'
+applyTo: 'app/(tenant)/visualizer/**,components/visualizer/**,features/visualizer/**,lib/visualizer/**,lib/integrations/huggingface.ts,lib/uploads/**,lib/cache/**,schema/visualizer/**,types/visualizer/**'
 ---
 
 # Visualizer Domain Instructions
@@ -34,8 +34,8 @@ This domain does not own:
 ## Required patterns
 
 - Keep `app/(tenant)/visualizer/page.tsx` thin.
-- Put reads in `lib/fetchers/visualizer.fetchers.ts`.
-- Put writes in `lib/actions/visualizer.actions.ts`.
+- Put reads in `lib/visualizer/fetchers/**`.
+- Put writes in `lib/visualizer/actions/**`.
 - Future refactors should move page composition into `features/visualizer/**`.
 - Keep image processing, uploads, cache keys, and provider integrations inside `lib/uploads/**`, `lib/cache/**`, and `lib/integrations/**`.
 - Keep interactive UI in `components/visualizer/**`.

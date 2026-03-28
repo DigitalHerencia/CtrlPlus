@@ -19,7 +19,7 @@ Implement the visualizer-side consumption of the catalog handoff contract so the
 
 - `app/(tenant)/visualizer/**`
 - `features/visualizer/**`
-- `lib/fetchers/visualizer.fetchers.ts`
+- `lib/visualizer/fetchers/selection.ts`
 - shared catalog-selection boundary files
 - affected tests
 

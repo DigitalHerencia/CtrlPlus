@@ -5,8 +5,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import {
     getVisualizerWrapSelectionById,
     listVisualizerWrapSelections,
-} from '@/lib/fetchers/visualizer.fetchers'
-import { type VisualizerPageFeatureProps } from '@/types/visualizer'
+} from '@/lib/visualizer/fetchers/selection'
+import type { VisualizerPageFeatureProps } from '@/types/visualizer/route-types'
 import { VisualizerWorkspaceClient } from './visualizer-workspace-client'
 
 export async function VisualizerPageFeature({

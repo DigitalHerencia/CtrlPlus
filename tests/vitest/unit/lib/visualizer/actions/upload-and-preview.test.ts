@@ -4,13 +4,15 @@ const mocks = vi.hoisted(() => ({
     createVisualizerPreview: vi.fn(),
 }))
 
-vi.mock('@/lib/actions/visualizer.actions', () => ({
+vi.mock('@/lib/visualizer/actions/previews', () => ({
     createVisualizerPreview: mocks.createVisualizerPreview,
-    uploadAndGeneratePreview: (input: unknown) => mocks.createVisualizerPreview(input as any),
+    uploadAndGeneratePreview: (input: import('@/types/visualizer/inputs').UploadPhotoInput) =>
+        mocks.createVisualizerPreview(input),
 }))
 
-import { uploadAndGeneratePreview } from '@/lib/actions/visualizer.actions'
-import type { UploadPhotoInput, VisualizerPreviewDTO } from '@/types/visualizer'
+import { uploadAndGeneratePreview } from '@/lib/visualizer/actions/previews'
+import type { UploadPhotoInput } from '@/types/visualizer/inputs'
+import type { VisualizerPreviewDTO } from '@/types/visualizer/domain'
 
 describe('uploadAndGeneratePreview', () => {
     it('delegates File-based uploads to the create preview action', async () => {

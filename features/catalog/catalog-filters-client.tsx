@@ -2,9 +2,9 @@
 
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
-import { wrapFilterFormSchema } from '@/schema/catalog'
+import { wrapFilterFormSchema } from '@/schema/catalog/search-schemas'
 import { zodResolver } from '@/lib/utils/forms'
-import { type WrapFilterFormValues, type WrapFilterProps } from '@/types/catalog'
+import type { WrapFilterFormValues, WrapFilterProps } from '@/types/catalog/route-types'
 import type { ReadonlyURLSearchParams } from 'next/navigation'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useTransition } from 'react'

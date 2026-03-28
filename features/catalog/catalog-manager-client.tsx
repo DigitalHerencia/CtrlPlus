@@ -28,10 +28,11 @@ import {
     publishWrap,
     unpublishWrap,
     updateWrap,
-} from '@/lib/actions/catalog.actions'
+} from '@/lib/catalog/actions/wraps'
 import { formatPrice } from '@/lib/utils/currency'
-import { type CatalogManagerProps, type WrapImageKind } from '@/types/catalog'
 import { WrapImageManager } from '@/components/catalog/WrapImageManager'
+import type { WrapImageKind } from '@/types/catalog/constants'
+import type { CatalogManagerProps } from '@/types/catalog/route-types'
 
 function slugifyCategory(value: string): string {
     return value
