@@ -26,7 +26,8 @@ const webServer = shouldSkipWebServer
       }
 
 export default defineConfig({
-    testDir: './e2e',
+    // New target test folder for Playwright E2E tests
+    testDir: './tests/playwright/e2e',
     /* Maximum time one test can run */
     timeout: 30_000,
     /* Fail CI fast on first failure */

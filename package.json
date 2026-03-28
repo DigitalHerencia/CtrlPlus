@@ -23,6 +23,8 @@
         "test": "pnpm test:unit",
         "test:unit": "vitest run --passWithNoTests",
         "test:watch": "vitest",
+        "test:ci": "pnpm typecheck && pnpm test:unit",
+        "test:all": "pnpm test:unit && pnpm test:e2e",
         "seed:demo": "node scripts/seed-demo-wraps.mjs",
         "pretest:e2e": "playwright install chromium",
         "test:e2e": "playwright test",

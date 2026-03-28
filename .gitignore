@@ -57,3 +57,7 @@ next-env.d.ts
 # agent
 /.codex/arch/
 /.codex/examples/
+
+# old test locations (migrated to tests/)
+/test/
+/e2e/
