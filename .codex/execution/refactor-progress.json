@@ -1,0 +1,33 @@
+{
+  "programId": "CTR-REF-001",
+  "name": "ctrlplus-server-first-refactor",
+  "lastUpdated": "2026-03-29",
+  "summary": {
+    "completedTasks": 1,
+    "inProgressTasks": 0,
+    "pendingTasks": 5,
+    "blockedTasks": 0,
+    "percentComplete": 17
+  },
+  "activeWorkstream": "WS-005",
+  "currentState": "scaffolded",
+  "blockers": [],
+  "verification": {
+    "artifactJsonParse": "passed",
+    "artifactYamlParse": "passed",
+    "lint": "not_run",
+    "typecheck": "not_run",
+    "prismaValidate": "not_run",
+    "build": "not_run",
+    "test": "not_run",
+    "e2e": "not_run"
+  },
+  "recentUpdates": [
+    {
+      "date": "2026-03-29",
+      "taskId": "TASK-001",
+      "status": "done",
+      "note": "Created initial .codex scaffold, updated global and repo AGENTS guidance, and validated JSON and YAML parsing for the machine-readable layers."
+    }
+  ]
+}

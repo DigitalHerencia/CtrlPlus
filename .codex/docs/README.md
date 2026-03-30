@@ -1,14 +1,22 @@
-# .codex/docs
+# `.codex/docs`
 
-Contains domain specification and requirements files for the active CtrlPlus domains:
+This directory is the markdown intent layer for the CtrlPlus refactor program.
 
-- `admin`
-- `auth/authz`
-- `billing`
-- `catalog`
-- `platform`
-- `scheduling`
-- `settings`
-- `visualizer`
+## Purpose
 
-These files document goals, repo anchors, domain invariants, acceptance signals, and execution-critical contracts before any runtime refactor begins. Cross-domain files such as `prd.md` and `tech-requirements.md` define the shared product and architecture baseline for all domain passes, including cross-domain handoffs like catalog-to-visualizer selection and provider-backed preview generation.
+- Preserve human-readable architecture intent derived from source markdown.
+- Record scope, rationale, assumptions, and domain outcomes before they become contracts or execution state.
+- Provide the canonical repo-local PRD and technical requirements for the refactor.
+
+## Active Documents
+
+- `refactor-prd.md`
+- `refactor-technical-requirements.md`
+- `refactor-domain-map.md`
+- `ctrlplus-refactor-prd.md`
+- `ctrlplus-technical-requirements.md`
+- `ctrlplus-refactor-gap-analysis.md`
+- `catalog.md`
+- `visualizer.md`
+
+Update these files before expanding YAML contracts or JSON task scope.

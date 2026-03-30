@@ -1,0 +1,96 @@
+contract:
+  id: CTR-LAYERS-001
+  name: ctrlplus-layer-boundaries
+  status: active
+  layers:
+    - name: app
+      responsibilities:
+        - route segments
+        - route shells
+        - loading and error boundaries
+        - thin page entrypoints
+        - api route boundaries
+      forbidden:
+        - prisma access
+        - business mutation logic
+        - provider sdk logic
+    - name: features
+      responsibilities:
+        - page orchestration
+        - route-local client interactivity
+        - composition of fetchers, types, schemas, and components
+      forbidden:
+        - prisma access
+        - direct provider integration
+        - generic primitive ownership
+    - name: components
+      responsibilities:
+        - reusable domain ui blocks
+        - shared layout blocks
+        - presentational composition
+      forbidden:
+        - prisma access
+        - authz enforcement
+        - server mutation authority
+    - name: components-ui
+      responsibilities:
+        - shadcn and primitive wrappers
+      forbidden:
+        - domain semantics
+        - fetchers and actions
+        - server-only imports
+    - name: lib
+      responsibilities:
+        - reads
+        - writes
+        - auth
+        - authz
+        - integrations
+        - uploads
+        - cache
+        - database boundaries
+    - name: schemas
+      responsibilities:
+        - runtime validation
+    - name: types
+      responsibilities:
+        - dto and client-server contracts
+    - name: prisma
+      responsibilities:
+        - canonical data model
+  import_rules:
+    - id: IMP-001
+      from: app
+      to:
+        - features
+        - next
+        - route-safe auth helpers
+    - id: IMP-002
+      from: features
+      to:
+        - components
+        - lib
+        - schemas
+        - types
+    - id: IMP-003
+      from: components
+      to:
+        - components-ui
+        - components-shared
+        - lib-utils
+        - types
+    - id: IMP-004
+      from: lib-actions
+      to:
+        - lib-auth
+        - lib-authz
+        - lib-db-transactions
+        - lib-cache
+        - lib-integrations
+        - schemas
+        - types
+  acceptance:
+    - id: AC-001
+      statement: No refactor task may resolve a boundary problem by moving server authority into app, features, or components.
+    - id: AC-002
+      statement: No domain component may be introduced into components/ui.

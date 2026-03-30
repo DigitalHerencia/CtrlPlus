@@ -1,0 +1,31 @@
+{
+  "program_id": "CTRLPLUS-AFC-REF-001",
+  "updated_at": "2026-03-29",
+  "focus_areas": [
+    {
+      "id": "CTX-APP",
+      "path": "D:\\CtrlPlus\\app",
+      "purpose": "Route shells and Next.js file conventions"
+    },
+    {
+      "id": "CTX-FEATURES",
+      "path": "D:\\CtrlPlus\\features",
+      "purpose": "Page orchestration and interactive containers"
+    },
+    {
+      "id": "CTX-COMPONENTS",
+      "path": "D:\\CtrlPlus\\components",
+      "purpose": "Presentational UI blocks and shadcn primitives"
+    },
+    {
+      "id": "CTX-LIB",
+      "path": "D:\\CtrlPlus\\lib",
+      "purpose": "Server authority boundaries to preserve during refactor"
+    }
+  ],
+  "risks": [
+    "Route and feature renames can break imports if done without wave discipline.",
+    "Billing versus invoices terminology can cause accidental double-structures.",
+    "Mixed naming styles can hide ownership boundaries during extraction work."
+  ]
+}

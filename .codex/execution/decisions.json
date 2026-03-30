@@ -1,0 +1,27 @@
+{
+  "program_id": "CTRLPLUS-AFC-REF-001",
+  "updated_at": "2026-03-29",
+  "open_decisions": [
+    {
+      "id": "DEC-001",
+      "topic": "Billing versus invoices naming",
+      "status": "open",
+      "options": [
+        "Keep billing as the canonical domain name and treat invoices as subdomain language.",
+        "Rename the domain to invoices in a later migration wave."
+      ],
+      "impact": "Affects route names, feature names, docs, and task sequencing."
+    },
+    {
+      "id": "DEC-002",
+      "topic": "Route parameter normalization",
+      "status": "open",
+      "options": [
+        "Keep existing [id] params and document entity meaning in features.",
+        "Rename to expressive params such as [wrapId] and [bookingId] during WAVE-01."
+      ],
+      "impact": "Affects route files, links, fetchers, and tests."
+    }
+  ],
+  "resolved_decisions": []
+}

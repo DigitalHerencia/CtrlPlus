@@ -1,58 +1,69 @@
----
-name: Bug Report
-about: Create a report to help us improve
-title: '[BUG] '
-labels: bug
-assignees: ''
+name: Bug report
+about: Report a reproducible defect in CtrlPlus
+title: '[bug] '
+labels:
+
+- bug
+  assignees: []
+
 ---
 
-## Bug Description
+## Summary
 
-<!-- A clear and concise description of what the bug is -->
+Describe the defect in one or two sentences.
 
 ## Steps to Reproduce
 
-1. Go to '...'
-2. Click on '...'
-3. Scroll down to '...'
-4. See error
+1. Go to `...`
+2. Click `...`
+3. Observe `...`
 
 ## Expected Behavior
 
-<!-- A clear and concise description of what you expected to happen -->
+What should have happened?
 
 ## Actual Behavior
 
-<!-- What actually happened -->
+What actually happened instead?
+
+## Affected Area
+
+- [ ] auth
+- [ ] admin
+- [ ] billing
+- [ ] catalog
+- [ ] platform
+- [ ] scheduling
+- [ ] settings
+- [ ] visualizer
+- [ ] ci or tooling
 
 ## Screenshots
 
-<!-- If applicable, add screenshots to help explain your problem -->
+Add screenshots or recordings when they materially help.
 
 ## Environment
 
-- **OS**: [e.g., Windows 11, macOS 14, Ubuntu 22.04]
-- **Node Version**: [e.g., 20.10.0]
-- **pnpm Version**: [e.g., 9.0.0]
-- **Browser**: [e.g., Chrome 120, Firefox 121]
-- **Database**: [e.g., Neon, Local PostgreSQL]
+- OS:
+- Node version:
+- pnpm version:
+- Browser:
+- Database:
 
-## Error Logs
+## Validation Already Run
 
-<!-- If applicable, paste relevant error logs -->
+- [ ] `pnpm lint`
+- [ ] `pnpm typecheck`
+- [ ] `pnpm prisma:validate`
+- [ ] `pnpm test`
+- [ ] `pnpm build`
+
+## Logs or Stack Trace
 
 ```
-Paste error logs here
+Paste relevant logs here.
 ```
 
 ## Additional Context
 
-<!-- Add any other context about the problem here -->
-
-## Possible Solution
-
-<!-- Optional: suggest a fix or reason for the bug -->
-
-## Related Issues
-
-<!-- Link to related issues if any -->
+Anything else maintainers should know.

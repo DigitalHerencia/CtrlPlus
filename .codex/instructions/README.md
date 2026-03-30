@@ -1,14 +1,9 @@
-# .codex/instructions
+# `.codex/instructions`
 
-Contains reusable domain instruction files for the active CtrlPlus refactor domains:
+This directory contains execution-time markdown instructions for bounded refactor passes.
 
-- `admin`
-- `auth/authz`
-- `billing`
-- `catalog`
-- `platform`
-- `scheduling`
-- `settings`
-- `visualizer`
+## Use
 
-Each file defines scope boundaries, required architecture patterns, security rules, performance constraints, testing expectations, phased integration boundaries where relevant, and refactor priorities for that domain. Use these instructions to keep future domain refactors aligned with the target server-first architecture and with external-provider boundaries such as catalog-to-visualizer handoff, Cloudinary persistence, and Hugging Face generation.
+- Read `refactor-operating-model.instructions.md` before any task tied to the server-first refactor program.
+- Use the instructions layer to translate markdown intent and YAML contracts into concrete editing behavior.
+- Keep this directory focused on operating rules, not product requirements or execution state.

@@ -1,0 +1,25 @@
+contract:
+  id: CTR-PIPELINE-001
+  name: ctrlplus-artifact-pipeline
+  status: active
+  intent:
+    markdown: source-of-intent and durable human context
+    yaml: agent-consumable contract layer
+    json: execution tracking and progress state
+  rules:
+    - id: RULE-001
+      statement: Markdown artifacts must exist before new YAML contracts or JSON execution state are created for a program of work.
+    - id: RULE-002
+      statement: YAML contracts may distill markdown intent but may not introduce contradictory scope.
+    - id: RULE-003
+      statement: JSON execution artifacts must track operational state only and must not redefine product or architecture intent.
+    - id: RULE-004
+      statement: Agents must update JSON progress artifacts when task status changes materially.
+  required_paths:
+    - .codex/docs/
+    - .codex/contracts/
+    - .codex/execution/
+  optional_paths:
+    - .codex/arch/
+    - .codex/instructions/
+    - .codex/prompts/

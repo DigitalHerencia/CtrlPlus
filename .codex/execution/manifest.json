@@ -1,0 +1,31 @@
+{
+  "programId": "CTR-REF-001",
+  "name": "ctrlplus-server-first-refactor",
+  "lastUpdated": "2026-03-29",
+  "artifacts": {
+    "markdown": [
+      ".codex/README.md",
+      ".codex/docs/refactor-prd.md",
+      ".codex/docs/refactor-technical-requirements.md",
+      ".codex/docs/refactor-domain-map.md",
+      ".codex/arch/server-first-refactor-architecture.md",
+      ".codex/instructions/refactor-operating-model.instructions.md"
+    ],
+    "yaml": [
+      ".codex/contracts/artifact-pipeline.contract.yaml",
+      ".codex/contracts/refactor-program.contract.yaml",
+      ".codex/contracts/domains.contract.yaml",
+      ".codex/contracts/layer-boundaries.contract.yaml",
+      ".codex/contracts/workstreams.contract.yaml",
+      ".codex/contracts/phases/phase-01.app-shells.contract.yaml",
+      ".codex/contracts/phases/phase-02.features-components.contract.yaml",
+      ".codex/contracts/phases/phase-03.server-boundaries.contract.yaml"
+    ],
+    "json": [
+      ".codex/execution/manifest.json",
+      ".codex/execution/refactor-backlog.json",
+      ".codex/execution/refactor-progress.json",
+      ".codex/execution/refactor-decisions.json"
+    ]
+  }
+}

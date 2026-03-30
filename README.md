@@ -1,39 +1,54 @@
-# CTRL+
+# CtrlPlus
 
-Single-store vehicle wrap platform built with Next.js 16, React 19, TypeScript 5, Prisma 7, Neon Postgres, Clerk, Tailwind 4, and Vercel.
+CtrlPlus is a single-store vehicle wrap operations platform built with Next.js 16, React 19, TypeScript, Prisma, Neon Postgres, Clerk, Stripe, and Tailwind CSS.
+
+## What This Repo Contains
+
+- Tenant-facing wrap catalog and visualizer flows
+- Scheduling and billing workflows
+- Admin and platform operational surfaces
+- A server-first architecture scaffold under `.codex/` for large refactor work
 
 ## Quick Start
 
-```bash
+```powershell
 pnpm install
 Copy-Item .env.example .env.local
-pnpm prisma generate
+pnpm exec prisma generate
 pnpm dev
 ```
 
-## Workspace Setup
+## Core Architecture Rules
 
-Project-facing engineering workflow docs now live under `.codex/`:
+- Keep `app/**` thin and route-focused.
+- Keep reads behind `lib/fetchers/**`.
+- Keep writes behind `lib/actions/**`.
+- Keep Prisma, authz, ownership, billing, and preview authority on the server.
+- Reuse `components/ui/**` for primitives and keep domain UI in `components/{domain}/**`.
+
+## Engineering Docs
+
+Project-facing engineering workflow docs live under `.codex/`:
 
 - `.codex/README.md`
-- `.codex/config.toml`
+- `.codex/docs/`
+- `.codex/contracts/`
+- `.codex/execution/`
 - `.codex/instructions/`
-- `.codex/setup/`
+- `.codex/prompts/`
 
-`docs/` is reserved for end-user and operational product documentation only.
+`docs/` is reserved for end-user and operational product documentation.
 
-## Core Rules
+## Common Commands
 
-- Do not import Prisma in `app/**` except webhook handlers.
-- Keep reads in `lib/*/fetchers` and writes in `lib/*/actions`.
-- All actions follow `auth -> authorize -> validate -> mutate -> audit`.
-- Resolve elevated access server-side from session and environment only.
-
-## Commands
-
-```bash
+```powershell
+pnpm lint
 pnpm typecheck
+pnpm prisma:validate
 pnpm test
 pnpm build
-pnpm codex:doctor
 ```
+
+## Contributing
+
+See `CONTRIBUTING.md` for contribution workflow, validation expectations, and PR guidance.

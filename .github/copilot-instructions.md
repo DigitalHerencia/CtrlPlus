@@ -41,6 +41,8 @@ The `.codex` directory contains domain-specific resources to guide agents and au
 - `.codex/arch/`: Target architecture, refactor principles, and directory-tree specs.
 - `.codex/docs/`: Domain specs and cross-domain product or technical requirements.
 - `.codex/instructions/`: Domain-specific instructions and architectural notes.
+- `.codex/contracts/`: YAML contracts for literal execution rules and architectural boundaries.
+- `.codex/execution/`: JSON backlog, progress, decisions, and validation state for active programs.
 - `.codex/prompts/`: Per-domain refactor prompts for future execution passes.
 
 The active Copilot domain set is:
@@ -55,6 +57,21 @@ The active Copilot domain set is:
 - `visualizer`
 
 Agents should consult these files for domain boundaries, implementation standards, and prompt-driven refactor orchestration. These artifacts are preparatory guidance and do not themselves authorize runtime refactors that are outside the current task.
+
+When `.codex` resources exist, consume them in this order:
+
+1. `.codex/README.md`
+2. relevant `.codex/instructions/*.md`
+3. relevant `.codex/docs/*.md` and `.codex/arch/*.md`
+4. relevant `.codex/contracts/*.yaml`
+5. relevant `.codex/execution/*.json`
+6. relevant `.codex/prompts/*.md`
+
+## Instruction Discovery
+
+- Codex auto-discovers `AGENTS.md` files by name and scope.
+- Files under `.codex/instructions/*.md` are repo-directed support artifacts, not auto-discovered instruction files by filename alone.
+- Keep `AGENTS.md` and `.github/copilot-instructions.md` aligned when instruction discovery or precedence changes.
 
 For catalog or visualizer work, treat these `.codex` files as authoritative first:
 

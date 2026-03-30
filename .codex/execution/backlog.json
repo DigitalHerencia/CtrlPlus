@@ -1,0 +1,101 @@
+{
+  "program_id": "CTRLPLUS-AFC-REF-001",
+  "updated_at": "2026-03-29",
+  "tasks": [
+    {
+      "id": "TASK-000",
+      "title": "Seed markdown, YAML, and JSON scaffold",
+      "status": "complete",
+      "wave": "WAVE-00",
+      "depends_on": [],
+      "source_docs": [
+        "C:\\Users\\scree\\Documents\\DevNotes\\Thinking vs Execution vs Machines.md",
+        "C:\\Users\\scree\\Documents\\DevNotes\\CtrlPlus Server-First Architecture Blueprint.md"
+      ],
+      "contract_refs": [
+        "CONTRACT-MANIFEST",
+        "CONTRACT-PROGRAM"
+      ],
+      "touched_paths": [
+        "D:\\CtrlPlus\\.codex",
+        "D:\\CtrlPlus\\AGENTS.md",
+        "C:\\Users\\scree\\.codex\\AGENTS.md"
+      ],
+      "validation": [
+        "directory scaffold exists",
+        "YAML and JSON artifacts parse visually"
+      ]
+    },
+    {
+      "id": "TASK-101",
+      "title": "Normalize route shell ownership and page feature targets",
+      "status": "planned",
+      "wave": "WAVE-01",
+      "depends_on": [
+        "TASK-000"
+      ],
+      "source_docs": [
+        "D:\\CtrlPlus\\.codex\\arch\\ctrlplus-server-first-refactor-blueprint.md"
+      ],
+      "contract_refs": [
+        "CONTRACT-ROUTES",
+        "CONTRACT-WAVES"
+      ],
+      "touched_paths": [
+        "D:\\CtrlPlus\\app",
+        "D:\\CtrlPlus\\features"
+      ],
+      "validation": [
+        "affected routes remain thin",
+        "lint",
+        "typecheck"
+      ]
+    },
+    {
+      "id": "TASK-201",
+      "title": "Normalize feature naming and client container boundaries",
+      "status": "planned",
+      "wave": "WAVE-02",
+      "depends_on": [
+        "TASK-101"
+      ],
+      "source_docs": [
+        "D:\\CtrlPlus\\.codex\\docs\\ctrlplus-technical-requirements.md"
+      ],
+      "contract_refs": [
+        "CONTRACT-DOMAINS",
+        "CONTRACT-WAVES"
+      ],
+      "touched_paths": [
+        "D:\\CtrlPlus\\features"
+      ],
+      "validation": [
+        "feature naming is consistent",
+        "client suffix usage is explicit"
+      ]
+    },
+    {
+      "id": "TASK-301",
+      "title": "Normalize domain and shared component ownership",
+      "status": "planned",
+      "wave": "WAVE-03",
+      "depends_on": [
+        "TASK-201"
+      ],
+      "source_docs": [
+        "D:\\CtrlPlus\\.codex\\docs\\ctrlplus-refactor-gap-analysis.md"
+      ],
+      "contract_refs": [
+        "CONTRACT-DOMAINS",
+        "CONTRACT-WAVES"
+      ],
+      "touched_paths": [
+        "D:\\CtrlPlus\\components"
+      ],
+      "validation": [
+        "presentational ownership is clear",
+        "no server authority in components"
+      ]
+    }
+  ]
+}

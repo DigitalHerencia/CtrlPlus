@@ -1,0 +1,57 @@
+domains:
+  - id: admin
+    route_root: "app/(tenant)/admin"
+    feature_root: "features/admin"
+    component_root: "components/admin"
+    read_boundary: "lib/fetchers/admin.fetchers.ts"
+    write_boundary: "lib/actions/admin.actions.ts"
+  - id: auth
+    route_root: "app/(auth)"
+    feature_root: "features/auth"
+    component_root: "components/auth"
+    read_boundary: "lib/fetchers/auth.fetchers.ts"
+    write_boundary: "lib/actions/auth.actions.ts"
+  - id: billing
+    route_root: "app/(tenant)/billing"
+    feature_root: "features/billing"
+    component_root: "components/billing"
+    read_boundary: "lib/fetchers/billing.fetchers.ts"
+    write_boundary: "lib/actions/billing.actions.ts"
+    notes:
+      - "Blueprint terminology sometimes uses invoices; live repo domain is billing."
+  - id: catalog
+    route_root: "app/(tenant)/catalog"
+    feature_root: "features/catalog"
+    component_root: "components/catalog"
+    read_boundary: "lib/fetchers/catalog.fetchers.ts"
+    write_boundary: "lib/actions/catalog.actions.ts"
+  - id: platform
+    route_root: "app/(tenant)/platform"
+    feature_root: "features/platform"
+    component_root: "components/platform"
+    read_boundary: "lib/fetchers/platform.fetchers.ts"
+    write_boundary: "lib/actions/platform.actions.ts"
+  - id: scheduling
+    route_root: "app/(tenant)/scheduling"
+    feature_root: "features/scheduling"
+    component_root: "components/scheduling"
+    read_boundary: "lib/fetchers/scheduling.fetchers.ts"
+    write_boundary: "lib/actions/scheduling.actions.ts"
+  - id: settings
+    route_root: "app/(tenant)/settings"
+    feature_root: "features/settings"
+    component_root: "components/settings"
+    read_boundary: "lib/fetchers/settings.fetchers.ts"
+    write_boundary: "lib/actions/settings.actions.ts"
+  - id: visualizer
+    route_root: "app/(tenant)/visualizer"
+    feature_root: "features/visualizer"
+    component_root: "components/visualizer"
+    read_boundary: "lib/fetchers/visualizer.fetchers.ts"
+    write_boundary: "lib/actions/visualizer.actions.ts"
+shared:
+  ui_primitives: "components/ui"
+  shared_components: "components/shared"
+  schemas: "schemas"
+  types: "types"
+  prisma: "prisma/schema.prisma"

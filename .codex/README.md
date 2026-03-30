@@ -1,23 +1,38 @@
-# .codex Directory
+# CtrlPlus Codex Scaffold
 
-This directory contains Codex-facing architecture guidance and preparatory refactor artifacts for CtrlPlus. These files define how future domain refactors should be scoped and executed without changing runtime code in advance.
+This directory turns high-context source material into repeatable agent resources for the CtrlPlus refactor program.
 
-## Active domains
+## Model
 
-- `admin`
-- `auth/authz`
-- `billing`
-- `catalog`
-- `platform`
-- `scheduling`
-- `settings`
-- `visualizer`
+- Markdown is the thinking layer.
+- YAML is the contract layer.
+- JSON is the execution layer.
 
-## Structure
+## Source Documents
 
-- `arch/`: cross-domain target architecture, refactor principles, and directory-tree specs
-- `docs/`: domain specs and cross-domain product or technical requirements
-- `instructions/`: domain-specific implementation rules and boundaries
-- `prompts/`: per-domain refactor prompts for future execution passes
+- `C:\Users\scree\Documents\DevNotes\Thinking vs Execution vs Machines.md`
+- `C:\Users\scree\Documents\DevNotes\CtrlPlus Server-First Architecture Blueprint.md`
+- [AGENTS.md](D:\CtrlPlus\AGENTS.md)
 
-Use these files to align agents on domain boundaries, server-first architecture, and refactor sequencing. This layer is preparatory guidance only and is separate from runtime implementation work.
+## Read Order
+
+1. This file
+2. `.codex/instructions/*.md`
+3. `.codex/docs/*.md`
+4. `.codex/arch/*.md`
+5. `.codex/contracts/*.yaml`
+6. `.codex/execution/*.json`
+7. `.codex/prompts/*.md`
+
+## Directory Roles
+
+- `.codex/arch/`: normalized architecture and layer-target docs
+- `.codex/docs/`: PRD, technical requirements, and gap analysis
+- `.codex/instructions/`: operating rules for agents working this repo
+- `.codex/contracts/`: machine-readable refactor contracts and wave plans
+- `.codex/execution/`: machine-readable backlog, progress, and decision state
+- `.codex/prompts/`: bounded prompts for repeated refactor passes
+
+## Operating Rule
+
+When a major refactor changes architecture, update the relevant markdown, YAML, and JSON artifacts together so the next agent inherits aligned intent, contracts, and state.

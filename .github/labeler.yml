@@ -2,83 +2,115 @@ domain:catalog:
     - changed-files:
           - any-glob-to-any-file:
                 - 'app/(tenant)/catalog/**'
+                - 'features/catalog/**'
                 - 'components/catalog/**'
                 - 'lib/actions/catalog.actions.ts'
                 - 'lib/fetchers/catalog.fetchers.ts'
-                - 'lib/utils/catalog-assets.ts'
-                - 'lib/utils/search-params.ts'
-                - 'schema/catalog.ts'
+                - 'lib/fetchers/catalog.mappers.ts'
+                - 'schemas/catalog.schemas.ts'
+                - 'types/catalog*.ts'
 
 domain:visualizer:
     - changed-files:
           - any-glob-to-any-file:
                 - 'app/(tenant)/visualizer/**'
+                - 'features/visualizer/**'
                 - 'components/visualizer/**'
                 - 'lib/actions/visualizer.actions.ts'
                 - 'lib/fetchers/visualizer.fetchers.ts'
+                - 'lib/fetchers/visualizer.mappers.ts'
                 - 'lib/integrations/huggingface.ts'
                 - 'lib/uploads/**'
                 - 'lib/cache/cache-keys.ts'
+                - 'schemas/visualizer.schemas.ts'
+                - 'types/visualizer*.ts'
 
 domain:scheduling:
     - changed-files:
           - any-glob-to-any-file:
                 - 'app/(tenant)/scheduling/**'
+                - 'features/scheduling/**'
                 - 'components/scheduling/**'
                 - 'lib/actions/scheduling.actions.ts'
                 - 'lib/fetchers/scheduling.fetchers.ts'
                 - 'lib/db/transactions/scheduling.transactions.ts'
                 - 'lib/cache/revalidate-tags.ts'
+                - 'schemas/scheduling.schemas.ts'
+                - 'types/scheduling*.ts'
 
 domain:billing:
     - changed-files:
           - any-glob-to-any-file:
                 - 'app/(tenant)/billing/**'
                 - 'app/api/stripe/**'
+                - 'features/billing/**'
                 - 'components/billing/**'
                 - 'lib/actions/billing.actions.ts'
                 - 'lib/fetchers/billing.fetchers.ts'
                 - 'lib/integrations/stripe.ts'
                 - 'lib/db/transactions/billing.transactions.ts'
+                - 'schemas/billing.schemas.ts'
+                - 'types/billing*.ts'
 
 domain:admin:
     - changed-files:
           - any-glob-to-any-file:
                 - 'app/(tenant)/admin/**'
+                - 'features/admin/**'
                 - 'components/admin/**'
                 - 'lib/actions/admin.actions.ts'
                 - 'lib/fetchers/admin.fetchers.ts'
+                - 'schemas/admin.schemas.ts'
+                - 'types/admin*.ts'
 
 domain:auth:
     - changed-files:
           - any-glob-to-any-file:
                 - 'app/(auth)/**'
                 - 'app/api/clerk/**'
+                - 'features/auth/**'
                 - 'components/auth/**'
                 - 'lib/auth/**'
+                - 'lib/authz/**'
+                - 'lib/actions/auth.actions.ts'
+                - 'lib/fetchers/auth.fetchers.ts'
+                - 'schemas/auth.schemas.ts'
+                - 'types/auth*.ts'
 
 domain:settings:
     - changed-files:
           - any-glob-to-any-file:
                 - 'app/(tenant)/settings/**'
+                - 'features/settings/**'
                 - 'components/settings/**'
                 - 'lib/actions/settings.actions.ts'
                 - 'lib/fetchers/settings.fetchers.ts'
+                - 'schemas/settings.schemas.ts'
+                - 'types/settings*.ts'
 
 domain:platform:
     - changed-files:
           - any-glob-to-any-file:
                 - 'app/(tenant)/platform/**'
+                - 'features/platform/**'
+                - 'components/platform/**'
                 - 'lib/actions/platform.actions.ts'
                 - 'lib/fetchers/platform.fetchers.ts'
+                - 'schemas/platform.schemas.ts'
+                - 'types/platform*.ts'
 
 domain:ci:
     - changed-files:
           - any-glob-to-any-file:
                 - '.github/workflows/**'
+                - '.github/CODEOWNERS'
+                - '.github/PULL_REQUEST_TEMPLATE.md'
                 - '.github/labeler.yml'
                 - '.husky/**'
                 - 'commitlint.config.mjs'
+                - 'CONTRIBUTING.md'
+                - 'README.md'
+                - 'SECURITY.md'
                 - 'eslint.config.mjs'
                 - 'package.json'
                 - 'prettier.config.mjs'

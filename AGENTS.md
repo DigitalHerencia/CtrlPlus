@@ -13,8 +13,8 @@ CtrlPlus is a single-store, tenant-scoped operations platform built on Next.js A
 
 - Treat `app/**` as orchestration only.
 - Do not import Prisma directly in `app/**` or React components.
-- All database reads go through `lib/{domain}/fetchers/**`.
-- All database writes go through `lib/{domain}/actions/**`.
+- All database reads go through `lib/fetchers/{domain}`.
+- All database writes go through `lib/actions/{domain}`.
 - Keep auth, tenancy, ownership, and capability checks server-side.
 - Never trust tenant, role, owner, booking, invoice, wrap, or preview scope from the client.
 - Validate all mutation inputs with Zod or existing domain schemas.
@@ -27,10 +27,11 @@ CtrlPlus is a single-store, tenant-scoped operations platform built on Next.js A
 - `app/(tenant)/**`: tenant routes and page orchestration
 - `app/(auth)/**`: auth surfaces
 - `app/api/**`: webhook and HTTP integration boundaries
+- `features/{domain}/**`: business logic and domain-specific orchestration, including domain-level components, fetchers, and actions
 - `components/{domain}/**`: domain UI
 - `components/ui/**`: reusable primitives only
-- `lib/{domain}/fetchers/**`: read-side domain access
-- `lib/{domain}/actions/**`: write-side domain mutations
+- `lib/fetchers/{domain}`: read-side domain access
+- `lib/actions/{domain}`: write-side domain mutations
 - `lib/auth/**`, `lib/authz/**`: identity and authorization
 - `prisma/schema.prisma`: canonical data model
 
@@ -41,7 +42,10 @@ The `.codex` directory contains domain-specific resources to guide codex agents 
 - `.codex/arch/`: Target architecture, refactor principles, and directory-tree specs.
 - `.codex/docs/`: Domain specs and cross-domain product or technical requirements.
 - `.codex/instructions/`: Domain-specific instructions and architectural notes.
+- `.codex/contracts/`: YAML contracts that agents consume as literal execution constraints.
+- `.codex/execution/`: JSON backlog, progress, decision, and validation state for active programs.
 - `.codex/prompts/`: Per-domain refactor prompts for future execution passes.
+- `.codex/README.md`: entrypoint describing precedence and how markdown, YAML, and JSON fit together.
 
 The active codex domain set is:
 
@@ -55,6 +59,38 @@ The active codex domain set is:
 - `visualizer`
 
 codex agents should consult these files for domain boundaries, implementation standards, and prompt-driven refactor orchestration. These codex artifacts are preparatory guidance and do not themselves authorize runtime refactors that are outside the current task.
+
+## Codex Resource Precedence
+
+When `.codex` resources exist, consume them in this order:
+
+1. `.codex/README.md`
+2. relevant `.codex/instructions/*.md`
+3. relevant `.codex/docs/*.md` and `.codex/arch/*.md`
+4. relevant `.codex/contracts/*.yaml`
+5. relevant `.codex/execution/*.json`
+6. relevant `.codex/prompts/*.md`
+
+## Instruction Discovery
+
+- Codex auto-discovers `AGENTS.md` files by name and scope.
+- Files under `.codex/instructions/*.md` are not auto-discovered by filename alone; they are repo-directed resources that agents must read because this `AGENTS.md` tells them to.
+- Do not rename `.codex/instructions/*.md` to `{domain}.agents.md` unless you are intentionally creating another scoped `AGENTS.md` surface.
+
+## Markdown, YAML, JSON Rules
+
+- Treat markdown as the thinking and explanation layer.
+- Treat YAML as the agent contract layer.
+- Treat JSON as the execution and progress layer.
+- If a repeated decision can be represented as a contract, add or update YAML instead of burying it in prose.
+- If a refactor spans multiple sessions or waves, update the JSON execution files so the next agent inherits real state instead of guessing.
+
+## Refactor Program Rules
+
+- For major `app`, `features`, and `components` refactors, start from the blueprint and derived technical docs before editing code.
+- Use YAML contracts to define route ownership, domain boundaries, naming, sequencing, and acceptance gates.
+- Use JSON execution files to track backlog, progress, open decisions, and validation coverage.
+- Keep markdown, YAML, and JSON aligned. If one changes materially, update the others in the same pass when feasible.
 
 For catalog or visualizer work, treat these `.codex` files as authoritative first:
 
@@ -150,5 +186,5 @@ When implementing or refactoring:
 1. inspect the relevant page, components, fetchers, actions, types, tests, and Prisma models first
 2. preserve working domain boundaries
 3. make the smallest coherent architectural change that improves production readiness
-4. update tests/docs when behavior or contracts change
+4. update tests/docs/contracts/execution artifacts when behavior, scope, or contracts change
 5. avoid speculative abstractions unless repeated patterns justify them

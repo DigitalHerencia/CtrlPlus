@@ -1,0 +1,16 @@
+{
+  "program_id": "CTRLPLUS-AFC-REF-001",
+  "updated_at": "2026-03-29",
+  "summary": {
+    "status": "in_progress",
+    "completed_tasks": 1,
+    "planned_tasks": 3,
+    "blocked_tasks": 0
+  },
+  "current_wave": "WAVE-00",
+  "next_wave": "WAVE-01",
+  "notes": [
+    "Scaffold is in place.",
+    "Naming decisions for billing versus invoices and route parameter normalization remain open."
+  ]
+}

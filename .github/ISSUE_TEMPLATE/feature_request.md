@@ -1,67 +1,59 @@
----
-name: Feature Request
-about: Suggest an idea for this project
-title: '[FEATURE] '
-labels: enhancement
-assignees: ''
+name: Feature request
+about: Propose a product or engineering improvement for CtrlPlus
+title: '[feature] '
+labels:
+
+- enhancement
+  assignees: []
+
 ---
 
-## Feature Description
+## Summary
 
-<!-- A clear and concise description of the feature you'd like -->
+Describe the requested capability in one or two sentences.
 
 ## Problem Statement
 
-<!-- What problem does this feature solve? Why is it needed? -->
+What operational or user problem does this solve?
 
 ## Proposed Solution
 
-<!-- Describe how you envision this feature working -->
+Describe the preferred solution or behavior.
 
 ## Alternative Solutions
 
-<!-- Describe any alternative solutions or features you've considered -->
+List any alternatives already considered.
+
+## Affected Area
+
+- [ ] auth
+- [ ] admin
+- [ ] billing
+- [ ] catalog
+- [ ] platform
+- [ ] scheduling
+- [ ] settings
+- [ ] visualizer
+- [ ] ci or tooling
 
 ## User Story
 
-<!-- Optional: Describe the feature from a user's perspective -->
-
-As a [type of user], I want [goal] so that [benefit].
+As a `[type of user]`, I want `[goal]` so that `[benefit]`.
 
 ## Acceptance Criteria
-
-<!-- What conditions must be met for this feature to be considered complete? -->
 
 - [ ] Criterion 1
 - [ ] Criterion 2
 - [ ] Criterion 3
 
-## Design Mockups
-
-<!-- If applicable, add mockups or wireframes -->
-
 ## Technical Considerations
 
-<!-- Any technical constraints or considerations? -->
-
-- **Affected Domains**: [e.g., catalog, scheduling, billing]
-- **Database Changes**: [Yes/No - describe if yes]
-- **API Changes**: [Yes/No - describe if yes]
-- **Breaking Changes**: [Yes/No - describe if yes]
-
-## Priority
-
-<!-- How important is this feature? -->
-
-- [ ] Critical (blocks users)
-- [ ] High (significant impact)
-- [ ] Medium (nice to have)
-- [ ] Low (future enhancement)
+- Database changes:
+- API changes:
+- Breaking changes:
+- Security or auth considerations:
+- Performance considerations:
 
 ## Additional Context
 
-<!-- Add any other context, screenshots, or examples about the feature request -->
-
-## Related Issues
-
-<!-- Link to related issues or discussions -->
+Add links, screenshots, or examples if helpful.

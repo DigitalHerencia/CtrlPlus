@@ -1,0 +1,52 @@
+rules:
+  app:
+    allowed:
+      - "route shells"
+      - "layout.tsx"
+      - "loading.tsx"
+      - "error.tsx"
+      - "not-found.tsx"
+      - "thin page.tsx"
+      - "route.ts"
+    forbidden:
+      - "Prisma access"
+      - "provider SDK orchestration"
+      - "heavy DTO shaping"
+      - "business mutations"
+  features:
+    allowed:
+      - "page orchestration"
+      - "client interaction containers"
+      - "fetcher composition"
+      - "URL and suspense orchestration"
+    forbidden:
+      - "direct Prisma access"
+      - "primitive UI ownership"
+  components:
+    allowed:
+      - "presentational blocks"
+      - "reusable field groups"
+      - "cards, tables, grids, panels, tabs"
+    forbidden:
+      - "server authority"
+      - "authz decisions"
+      - "provider adapters"
+  ui:
+    allowed:
+      - "shadcn primitives"
+      - "Radix wrappers"
+    forbidden:
+      - "domain logic"
+      - "fetchers"
+      - "actions"
+route_targets:
+  "app/(tenant)/catalog/page.tsx":
+    target_feature: "features/catalog/catalog-browse-page-feature.tsx"
+  "app/(tenant)/catalog/[id]/page.tsx":
+    target_feature: "features/catalog/catalog-detail-page-feature.tsx"
+    notes:
+      - "Parameter rename to [wrapId] remains an open migration decision."
+  "app/(tenant)/billing/page.tsx":
+    target_feature: "features/billing/billing-page-feature.tsx"
+  "app/(tenant)/visualizer/page.tsx":
+    target_feature: "features/visualizer/visualizer-page-feature.tsx"

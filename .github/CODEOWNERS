@@ -1,0 +1,16 @@
+# Default ownership
+* @DigitalHerencia
+
+# Application layers
+/app/ @DigitalHerencia
+/features/ @DigitalHerencia
+/components/ @DigitalHerencia
+/lib/ @DigitalHerencia
+/prisma/ @DigitalHerencia
+/schemas/ @DigitalHerencia
+/types/ @DigitalHerencia
+
+# Governance and automation
+/.github/ @DigitalHerencia
+/AGENTS.md @DigitalHerencia
+/.codex/ @DigitalHerencia
