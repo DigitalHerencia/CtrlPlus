@@ -1,16 +1,23 @@
 version: 1
-updated_at: "2026-03-29"
+updated_at: "2026-03-30"
 model:
   thinking: markdown
   contracts: yaml
   execution: json
 read_order:
   - ".codex/README.md"
+  - ".codex/instructions/catalog.instructions.md"
+  - ".codex/instructions/visualizer.instructions.md"
   - ".codex/instructions/refactor-execution.instructions.md"
   - ".codex/instructions/contract-lifecycle.instructions.md"
+  - ".codex/docs/catalog.md"
+  - ".codex/docs/visualizer.md"
+  - ".codex/docs/catalog-visualizer-prep-status.md"
   - ".codex/docs/ctrlplus-refactor-prd.md"
   - ".codex/docs/ctrlplus-technical-requirements.md"
   - ".codex/docs/ctrlplus-refactor-gap-analysis.md"
+  - ".codex/arch/codex_catalog_visualizer_migration_spec.md"
+  - ".codex/arch/codex_visualizer_huggingface_generation_spec.md"
   - ".codex/arch/ctrlplus-server-first-refactor-blueprint.md"
 contracts:
   - id: CONTRACT-MANIFEST
@@ -28,8 +35,27 @@ contracts:
   - id: CONTRACT-WAVES
     path: ".codex/contracts/refactor-waves.yaml"
     purpose: "Defines sequencing and acceptance by wave."
+  - id: CONTRACT-CATALOG-VISUALIZER
+    path: ".codex/contracts/catalog-visualizer.contract.yaml"
+    purpose: "Defines current live boundaries, target outcomes, and validation gates for catalog and visualizer work."
+  - id: CONTRACT-CATALOG-VISUALIZER-HANDOFF
+    path: ".codex/contracts/catalog-visualizer.handoff.contract.yaml"
+    purpose: "Defines cross-domain handoff ownership, required fields, and eligibility rules."
+  - id: CONTRACT-CATALOG-VISUALIZER-PIPELINE
+    path: ".codex/contracts/catalog-visualizer.pipeline.contract.yaml"
+    purpose: "Defines preview lifecycle, provider, storage, and fallback boundaries."
+  - id: CONTRACT-CATALOG-VISUALIZER-READINESS
+    path: ".codex/contracts/catalog-visualizer.readiness.contract.yaml"
+    purpose: "Defines readiness meaning, blocker classes, and validation order for the active program."
 execution:
   - ".codex/execution/context-map.json"
   - ".codex/execution/backlog.json"
   - ".codex/execution/progress.json"
   - ".codex/execution/decisions.json"
+  - ".codex/execution/validation.json"
+  - ".codex/execution/handoff.json"
+  - ".codex/execution/catalog-visualizer.backlog.json"
+  - ".codex/execution/catalog-visualizer.progress.json"
+  - ".codex/execution/catalog-visualizer.decisions.json"
+  - ".codex/execution/catalog-visualizer.validation.json"
+  - ".codex/execution/catalog-visualizer.handoff.json"

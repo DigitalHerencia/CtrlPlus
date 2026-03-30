@@ -1,6 +1,6 @@
 # `.codex/contracts`
 
-This directory is the YAML contract layer for the CtrlPlus refactor program.
+This directory is the YAML contract layer for the CtrlPlus refactor and catalog/visualizer delivery work.
 
 ## Purpose
 
@@ -15,6 +15,10 @@ This directory is the YAML contract layer for the CtrlPlus refactor program.
 - `domains.contract.yaml`
 - `layer-boundaries.contract.yaml`
 - `workstreams.contract.yaml`
+- `catalog-visualizer.contract.yaml`
+- `catalog-visualizer.handoff.contract.yaml`
+- `catalog-visualizer.pipeline.contract.yaml`
+- `catalog-visualizer.readiness.contract.yaml`
 - `phases/*.contract.yaml`
 
 Keep the contracts aligned to markdown intent. Do not use these files as progress logs.

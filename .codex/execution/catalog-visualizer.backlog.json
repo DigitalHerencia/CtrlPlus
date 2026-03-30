@@ -13,7 +13,6 @@
         "C:\\Users\\scree\\Documents\\DevNotes\\Vehicle Wrap Visualizer Research and Implementation Audit.md"
       ],
       "contract_refs": [
-        "CONTRACT-CATALOG-VISUALIZER",
         "CONTRACT-CATALOG-VISUALIZER-HANDOFF",
         "CONTRACT-CATALOG-VISUALIZER-PIPELINE",
         "CONTRACT-CATALOG-VISUALIZER-READINESS"
@@ -23,8 +22,7 @@
         "D:\\CtrlPlus\\.codex\\instructions",
         "D:\\CtrlPlus\\.codex\\contracts",
         "D:\\CtrlPlus\\.codex\\execution",
-        "D:\\CtrlPlus\\.codex\\prompts",
-        "D:\\CtrlPlus\\.env.example"
+        "D:\\CtrlPlus\\.codex\\prompts"
       ],
       "validation": [
         "source docs reviewed",

@@ -1,0 +1,40 @@
+{
+  "program_id": "CTRLPLUS-CATALOG-VISUALIZER-001",
+  "updated_at": "2026-03-30",
+  "open_decisions": [
+    {
+      "id": "CV-DEC-001",
+      "topic": "Route parameter rename from [id] to [wrapId]",
+      "status": "open",
+      "options": [
+        "Keep the current [id] route until broader type and import drift is repaired.",
+        "Rename to [wrapId] during a dedicated route and link migration pass."
+      ],
+      "impact": "Affects route files, route types, links, tests, and prompt scope."
+    },
+    {
+      "id": "CV-DEC-002",
+      "topic": "Current versus future domain file layout",
+      "status": "open",
+      "options": [
+        "Continue implementing within current lib/actions.* and lib/fetchers.* surfaces.",
+        "Perform a structural migration to lib/catalog/** and lib/visualizer/** as a dedicated refactor."
+      ],
+      "impact": "Affects prompt scope, touched paths, and whether future-oriented specs are implemented literally or adapted."
+    }
+  ],
+  "resolved_decisions": [
+    {
+      "id": "CV-RES-001",
+      "topic": "Authoritative storage and provider model",
+      "resolution": "Treat Cloudinary-backed durable URLs and the Hugging Face adapter plus deterministic fallback as the live implementation model for upcoming work.",
+      "rationale": "That is what the current code already implements, so future work should extend it rather than reintroduce speculative storage or provider abstractions."
+    },
+    {
+      "id": "CV-RES-002",
+      "topic": "Execution readiness framing",
+      "resolution": "Mark the program as conditional_ready rather than fully ready.",
+      "rationale": "Prisma validates, but lint, typecheck, and tests are not green. The next agent must inherit that reality explicitly."
+    }
+  ]
+}

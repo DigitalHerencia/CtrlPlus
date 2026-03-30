@@ -25,6 +25,9 @@ domains:
     component_root: "components/catalog"
     read_boundary: "lib/fetchers/catalog.fetchers.ts"
     write_boundary: "lib/actions/catalog.actions.ts"
+    notes:
+      - "Live repo currently centralizes catalog reads in lib/fetchers/catalog.fetchers.ts and asset readiness logic in lib/fetchers/catalog.mappers.ts."
+      - "Target extraction into lib/catalog/** remains explicit future work, not the current source of truth."
   - id: platform
     route_root: "app/(tenant)/platform"
     feature_root: "features/platform"
@@ -49,6 +52,9 @@ domains:
     component_root: "components/visualizer"
     read_boundary: "lib/fetchers/visualizer.fetchers.ts"
     write_boundary: "lib/actions/visualizer.actions.ts"
+    notes:
+      - "Live repo keeps prompting, preprocessing, segmentation, and deterministic fallback in lib/uploads/image-processing.ts."
+      - "Live repo keeps Hugging Face provider configuration in lib/integrations/huggingface.ts."
 shared:
   ui_primitives: "components/ui"
   shared_components: "components/shared"
