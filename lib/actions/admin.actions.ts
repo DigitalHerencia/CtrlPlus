@@ -5,16 +5,16 @@ import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/db/prisma'
 import { createAdminInvoice } from '@/lib/db/transactions/billing.transactions'
 import { confirmAdminAppointment } from '@/lib/db/transactions/scheduling.transactions'
-import { createInvoiceSchema, confirmAppointmentSchema } from '@/schema/admin'
-import type { CreateInvoiceInput, ConfirmAppointmentInput } from '@/types/admin'
+import { createInvoiceSchema, confirmAppointmentSchema } from '@/schemas/admin.schemas'
+import type { CreateInvoiceInput, ConfirmAppointmentInput } from '@/types/admin.types'
 
 export async function createInvoice(input: CreateInvoiceInput) {
-    const parsed = createInvoiceSchema.parse(input)
-
     const session = await getSession()
     if (!session.isAuthenticated || !session.userId) throw new Error('Unauthorized')
 
     await requireOwnerOrPlatformAdmin()
+
+    const parsed = createInvoiceSchema.parse(input)
 
     const result = await createAdminInvoice(prisma, {
         bookingId: parsed.bookingId,
@@ -35,14 +35,14 @@ export async function createInvoice(input: CreateInvoiceInput) {
 }
 
 export async function confirmAppointment(input: ConfirmAppointmentInput) {
-    const parsed = confirmAppointmentSchema.parse(input)
-
     const session = await getSession()
     if (!session.isAuthenticated || !session.userId) {
         throw new Error('Unauthorized')
     }
 
     await requireOwnerOrPlatformAdmin()
+
+    const parsed = confirmAppointmentSchema.parse(input)
 
     const result = await confirmAdminAppointment(prisma, {
         bookingId: parsed.bookingId,

@@ -1,5 +1,7 @@
+import 'server-only'
 import { prisma } from '@/lib/db/prisma'
-import { availabilityListParamsSchema, bookingListParamsSchema } from '@/schema/scheduling'
+import { availabilitySelectFields, bookingSelectFields } from '@/lib/db/selects/scheduling.selects'
+import { availabilityListParamsSchema, bookingListParamsSchema } from '@/schemas/scheduling.schemas'
 import { getSession } from '@/lib/auth/session'
 import { hasCapability } from '@/lib/authz/policy'
 import type {
@@ -10,10 +12,9 @@ import type {
     BookingDTO,
     BookingListParams,
     BookingListResult,
-    BookingStatusValue,
-} from '@/types/scheduling'
-import { getBookingDisplayStatus } from '@/types/scheduling'
+} from '@/types/scheduling.types'
 
+import { getBookingDisplayStatus, BookingStatusValue } from '@/lib/constants/statuses'
 async function requireSchedulingReadSession() {
     const session = await getSession()
 
@@ -28,7 +29,9 @@ async function requireSchedulingReadSession() {
     return session
 }
 
-function canViewAllSchedulingBookings(session: Awaited<ReturnType<typeof requireSchedulingReadSession>>): boolean {
+function canViewAllSchedulingBookings(
+    session: Awaited<ReturnType<typeof requireSchedulingReadSession>>
+): boolean {
     return hasCapability(session.authz, 'scheduling.read.all')
 }
 
@@ -52,27 +55,18 @@ function toAvailabilityRuleDTO(record: {
         startTime: record.startTime,
         endTime: record.endTime,
         capacitySlots: record.capacitySlots,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
     }
 }
-
-const availabilitySelectFields = {
-    id: true,
-    dayOfWeek: true,
-    startTime: true,
-    endTime: true,
-    capacitySlots: true,
-    createdAt: true,
-    updatedAt: true,
-} as const
 
 export async function getAvailabilityRules(
     params: AvailabilityListParams = DEFAULT_AVAILABILITY_LIST_PARAMS
 ): Promise<AvailabilityListResult> {
     await requireSchedulingReadSession()
 
-    const { page, pageSize, dayOfWeek } = availabilityListParamsSchema.parse(params)
+    // Validate params at the action boundary: availabilityListParamsSchema.parse(params)
+    const { page, pageSize, dayOfWeek } = params
     const skip = (page - 1) * pageSize
 
     const where = {
@@ -162,49 +156,30 @@ function toBookingDTO(record: {
     createdAt: Date
     updatedAt: Date
 }): BookingDTO {
-    const reservationExpiresAt = record.reservation?.expiresAt ?? null
+    const reservationExpiresAtDate: Date | null = record.reservation?.expiresAt ?? null
     const displayStatus = getBookingDisplayStatus(
         record.status as BookingStatusValue,
-        reservationExpiresAt
+        reservationExpiresAtDate
     )
+    const reservationExpiresAt = reservationExpiresAtDate
+        ? reservationExpiresAtDate.toISOString()
+        : null
 
     return {
         id: record.id,
         customerId: record.customerId,
         wrapId: record.wrapId,
         wrapName: record.wrap.name,
-        startTime: record.startTime,
-        endTime: record.endTime,
+        startTime: record.startTime.toISOString(),
+        endTime: record.endTime.toISOString(),
         status: record.status as BookingDTO['status'],
         totalPrice: record.totalPrice,
         reservationExpiresAt,
         displayStatus,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
     }
 }
-
-const bookingSelectFields = {
-    id: true,
-    customerId: true,
-    wrapId: true,
-    wrap: {
-        select: {
-            name: true,
-        },
-    },
-    startTime: true,
-    endTime: true,
-    status: true,
-    totalPrice: true,
-    reservation: {
-        select: {
-            expiresAt: true,
-        },
-    },
-    createdAt: true,
-    updatedAt: true,
-} as const
 
 export async function getBookings(
     params: BookingListParams = DEFAULT_BOOKING_LIST_PARAMS,
@@ -215,7 +190,8 @@ export async function getBookings(
     void _scope
 
     const session = await requireSchedulingReadSession()
-    const { page, pageSize, status, fromDate, toDate } = bookingListParamsSchema.parse(params)
+    // Validate params at the action boundary: bookingListParamsSchema.parse(params)
+    const { page, pageSize, status, fromDate, toDate } = params
     const skip = (page - 1) * pageSize
 
     const customerId = canViewAllSchedulingBookings(session) ? undefined : session.userId

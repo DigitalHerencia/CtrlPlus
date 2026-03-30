@@ -1,3 +1,4 @@
+import "server-only"
 import { prisma } from '@/lib/db/prisma'
 
 /**
@@ -6,17 +7,24 @@ import { prisma } from '@/lib/db/prisma'
  */
 
 export async function getUserByClerkUserId(clerkUserId: string) {
-    return prisma.user.findFirst({ where: { clerkUserId, deletedAt: null } })
+    const user = await prisma.user.findFirst({
+        where: { clerkUserId, deletedAt: null },
+        select: { id: true, clerkUserId: true, globalRole: true, createdAt: true, updatedAt: true },
+    })
+    if (!user) return null
+    return { ...user, createdAt: user.createdAt.toISOString(), updatedAt: user.updatedAt.toISOString() }
 }
 
 export async function getUserById(id: string) {
-    return prisma.user.findUnique({ where: { id } })
+    const user = await prisma.user.findUnique({
+        where: { id },
+        select: { id: true, clerkUserId: true, globalRole: true, createdAt: true, updatedAt: true },
+    })
+    if (!user) return null
+    return { ...user, createdAt: user.createdAt.toISOString(), updatedAt: user.updatedAt.toISOString() }
 }
 
 export async function getUserRoleByClerkId(clerkUserId: string) {
-    const user = await prisma.user.findFirst({
-        where: { clerkUserId, deletedAt: null },
-        select: { globalRole: true },
-    })
+    const user = await prisma.user.findFirst({ where: { clerkUserId, deletedAt: null }, select: { globalRole: true } })
     return user?.globalRole ?? null
 }

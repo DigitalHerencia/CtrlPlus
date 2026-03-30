@@ -7,8 +7,8 @@ import {
     requireOwnerOrAdmin,
     requirePlatformAdmin,
 } from './policy'
-import { type Capability } from '@/types/authz'
-import { type SessionContext } from '@/types/auth'
+import { type Capability } from '@/types/auth.types'
+import { type SessionContext } from '@/types/auth.types'
 
 export interface BillingAccessContext {
     session: SessionContext & { userId: string }
@@ -65,10 +65,7 @@ export async function getBillingAccessContext(): Promise<BillingAccessContext> {
     }
 }
 
-export function requireInvoiceWriteAccess(
-    access: BillingAccessContext,
-    customerId: string
-): void {
+export function requireInvoiceWriteAccess(access: BillingAccessContext, customerId: string): void {
     const canWriteOwnInvoices =
         access.canWriteAllInvoices || hasCapability(access.session.authz, 'billing.write.own')
 

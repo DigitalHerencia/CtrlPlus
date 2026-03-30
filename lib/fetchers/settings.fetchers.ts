@@ -1,10 +1,30 @@
+import 'server-only'
 import { requireAuthzCapability } from '@/lib/authz/guards'
 import { prisma } from '@/lib/db/prisma'
-import {
-    createDefaultWebsiteSettingsInput,
-    createWebsiteSettingsDTO,
-    type WebsiteSettingsDTO,
-} from '@/types/settings'
+import { type WebsiteSettingsDTO, type WebsiteSettingsInput } from '@/types/settings.types'
+import { DEFAULT_STORE_TIMEZONE } from '@/lib/constants/app'
+
+export function createDefaultWebsiteSettingsInput(): WebsiteSettingsInput {
+    return {
+        preferredContact: 'email',
+        appointmentReminders: true,
+        marketingOptIn: false,
+        timezone: DEFAULT_STORE_TIMEZONE,
+    }
+}
+
+export function createWebsiteSettingsDTO(
+    input: WebsiteSettingsInput,
+    updatedAt: Date | string | null
+): WebsiteSettingsDTO {
+    return {
+        preferredContact: input.preferredContact,
+        appointmentReminders: input.appointmentReminders,
+        marketingOptIn: input.marketingOptIn,
+        timezone: input.timezone,
+        updatedAt: updatedAt instanceof Date ? updatedAt.toISOString() : updatedAt,
+    }
+}
 
 export async function getCurrentUserWebsiteSettings(): Promise<WebsiteSettingsDTO> {
     const session = await requireAuthzCapability('settings.manage.own')

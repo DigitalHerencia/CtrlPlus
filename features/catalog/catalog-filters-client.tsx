@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { wrapFilterFormSchema } from '@/schema/catalog/search-schemas'
-import { zodResolver } from '@/lib/utils/forms'
+import { zodResolver } from '@/components/ui/forms'
 import type { WrapFilterFormValues, WrapFilterProps } from '@/types/catalog/route-types'
 import type { ReadonlyURLSearchParams } from 'next/navigation'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'

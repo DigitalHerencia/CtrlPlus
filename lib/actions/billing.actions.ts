@@ -4,7 +4,10 @@ import { revalidatePath } from 'next/cache'
 
 import { getAppBaseUrl, getStripeClient } from '@/lib/integrations/stripe'
 import { prisma } from '@/lib/db/prisma'
-import { createCheckoutSessionSchema, ensureInvoiceForBookingSchema } from '@/schema/billing'
+import {
+    createCheckoutSessionSchema,
+    ensureInvoiceForBookingSchema,
+} from '@/schemas/billing.schemas'
 import {
     type CheckoutSessionDTO,
     type CreateCheckoutSessionInput,
@@ -12,12 +15,13 @@ import {
     type EnsureInvoiceForBookingInput,
     type EnsureInvoiceResult,
     type ConfirmPaymentResult,
-    isInvoicePayable,
-} from '@/types/billing'
+} from '@/types/billing.types'
 import { getBillingAccessContext, requireInvoiceWriteAccess } from '@/lib/authz/guards'
 import { getSession } from '@/lib/auth/session'
 import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
 import type { Prisma } from '@prisma/client'
+import type Stripe from 'stripe'
+import { isInvoicePayable } from '../constants/statuses'
 
 type InvoiceLineItemRow = Pick<InvoiceLineItemDTO, 'description' | 'quantity' | 'unitPrice'>
 
@@ -281,7 +285,7 @@ export type ProcessStripeWebhookEventResult =
       }
 
 interface ProcessStripeWebhookEventInput {
-    event: any
+    event: Stripe.Event
     payload: Prisma.InputJsonValue
 }
 
@@ -390,8 +394,9 @@ async function finalizeStripeWebhookEvent(
     })
 }
 
-function resolveInvoiceId(session: any): string {
-    const invoiceId = session.client_reference_id ?? session.metadata?.invoiceId ?? null
+function resolveInvoiceId(session: Stripe.Checkout.Session | Record<string, unknown>): string {
+    const s = session as Partial<Stripe.Checkout.Session>
+    const invoiceId = s.client_reference_id ?? s.metadata?.invoiceId ?? null
     if (!invoiceId) {
         throw new Error(
             'Stripe session is missing invoiceId (client_reference_id or metadata.invoiceId)'
@@ -401,11 +406,13 @@ function resolveInvoiceId(session: any): string {
     return invoiceId
 }
 
-function resolveStripePaymentIntentId(session: any): string {
+function resolveStripePaymentIntentId(
+    session: Stripe.Checkout.Session | Record<string, unknown>
+): string {
+    const s = session as Partial<Stripe.Checkout.Session>
+    const paymentIntent = s.payment_intent as string | { id?: string } | undefined
     const stripePaymentIntentId =
-        typeof session.payment_intent === 'string'
-            ? session.payment_intent
-            : (session.payment_intent?.id ?? null)
+        typeof paymentIntent === 'string' ? paymentIntent : (paymentIntent?.id ?? null)
 
     if (!stripePaymentIntentId) {
         throw new Error('Stripe session is missing payment_intent')
@@ -439,10 +446,10 @@ async function buildDuplicatePaymentResult(
 }
 
 async function processCheckoutSessionCompleted(
-    event: any,
+    event: Stripe.Event,
     webhookState: WebhookEventState
 ): Promise<ConfirmPaymentResult> {
-    const session = event.data.object
+    const session = event.data.object as Partial<Stripe.Checkout.Session>
     const invoiceId = resolveInvoiceId(session)
     const stripePaymentIntentId = resolveStripePaymentIntentId(session)
 

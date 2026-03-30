@@ -84,7 +84,9 @@ async function readRemoteImage(url: URL): Promise<{ buffer: Buffer; contentType:
     return { buffer, contentType }
 }
 
-async function readLocalWrapImage(urlPath: string): Promise<{ buffer: Buffer; contentType: string }> {
+async function readLocalWrapImage(
+    urlPath: string
+): Promise<{ buffer: Buffer; contentType: string }> {
     if (!urlPath.startsWith('/uploads/wraps/')) {
         throw new Error('Unsupported local texture path')
     }
@@ -153,6 +155,50 @@ export async function normalizeVehicleUpload(file: File): Promise<NormalizedVehi
     }
 
     const inputBuffer = Buffer.from(await file.arrayBuffer())
+    const normalizedBuffer = await sharp(inputBuffer)
+        .rotate()
+        .resize(NORMALIZED_MAX_DIMENSION, NORMALIZED_MAX_DIMENSION, {
+            fit: 'inside',
+            withoutEnlargement: true,
+        })
+        .png()
+        .toBuffer()
+
+    const metadata = await sharp(normalizedBuffer).metadata()
+    if (!metadata.width || !metadata.height) {
+        throw new Error('Invalid photo dimensions')
+    }
+
+    if (metadata.width < MIN_DIMENSION || metadata.height < MIN_DIMENSION) {
+        throw new Error('Image too small (min 512x512)')
+    }
+
+    if (metadata.width > MAX_DIMENSION || metadata.height > MAX_DIMENSION) {
+        throw new Error('Image too large (max 4096x4096)')
+    }
+
+    return {
+        buffer: normalizedBuffer,
+        contentType: 'image/png',
+        width: metadata.width,
+        height: metadata.height,
+        hash: crypto.createHash('sha256').update(normalizedBuffer).digest('hex'),
+    }
+}
+
+export async function normalizeVehicleBuffer(
+    inputBuffer: Buffer,
+    contentType: string
+): Promise<NormalizedVehicleUpload> {
+    const mimeType = contentType.toLowerCase()
+    if (!visualizerConfig.supportedMimeTypes.includes(mimeType)) {
+        throw new Error('Unsupported image type')
+    }
+
+    if (inputBuffer.length > visualizerConfig.maxUploadSizeBytes) {
+        throw new Error('Uploaded image exceeds max size')
+    }
+
     const normalizedBuffer = await sharp(inputBuffer)
         .rotate()
         .resize(NORMALIZED_MAX_DIMENSION, NORMALIZED_MAX_DIMENSION, {

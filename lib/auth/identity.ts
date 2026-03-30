@@ -1,4 +1,5 @@
-import { type GlobalRole } from '@/types/authz'
+import 'server-only'
+import { type GlobalRole } from '@/types/auth.types'
 import { prisma } from '@/lib/db/prisma'
 
 function readOptionalEnv(name: 'STORE_OWNER_CLERK_USER_ID' | 'PLATFORM_DEV_CLERK_USER_ID') {

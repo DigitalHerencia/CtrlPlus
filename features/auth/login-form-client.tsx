@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { sanitizePostAuthRedirect } from '@/lib/auth/redirect'
-import { loginSchema, verificationSchema } from '@/schema/auth'
+import { loginSchema, verificationSchema } from '@/schemas/auth'
 import { type LoginFormProps, type LoginFormValues } from '@/types/auth'
 import { cn } from '@/lib/utils/cn'
 

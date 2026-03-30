@@ -1,18 +1,21 @@
+import 'server-only'
 import type { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/db/prisma'
-import { invoiceListParamsSchema } from '@/schema/billing'
+import { invoiceListParamsSchema } from '@/schemas/billing.schemas'
 import {
     invoiceDTOFields,
     invoiceLineItemDTOFields,
     paymentDTOFields,
-    type InvoiceDTO,
-    type InvoiceListParams,
-    type InvoiceListResult,
-    type InvoiceDetailDTO,
-    type InvoiceLineItemDTO,
-    type PaymentDTO,
-} from '@/types/billing'
+} from '@/lib/db/selects/billing.selects'
+import type {
+    InvoiceDTO,
+    InvoiceListParams,
+    InvoiceListResult,
+    InvoiceDetailDTO,
+    InvoiceLineItemDTO,
+    PaymentDTO,
+} from '@/types/billing.types'
 import { getBillingAccessContext } from '@/lib/authz/guards'
 
 function buildInvoiceReadWhere(
@@ -43,8 +46,8 @@ function toInvoiceDTO(row: {
         bookingId: row.bookingId,
         status: row.status as InvoiceDTO['status'],
         totalAmount: row.totalAmount,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
+        createdAt: row.createdAt.toISOString(),
+        updatedAt: row.updatedAt.toISOString(),
     }
 }
 
@@ -52,7 +55,8 @@ export async function getInvoices(
     params: InvoiceListParams = { page: 1, pageSize: 20 }
 ): Promise<InvoiceListResult> {
     const access = await getBillingAccessContext()
-    const { page, pageSize, status } = invoiceListParamsSchema.parse(params)
+    // Validate params at the action boundary: invoiceListParamsSchema.parse(params)
+    const { page, pageSize, status } = params
     const skip = (page - 1) * pageSize
 
     const where: Prisma.InvoiceWhereInput = {
@@ -110,8 +114,8 @@ export async function getInvoiceById(invoiceId: string): Promise<InvoiceDetailDT
         bookingId: row.bookingId,
         status: row.status as InvoiceDetailDTO['status'],
         totalAmount: row.totalAmount,
-        createdAt: row.createdAt,
-        updatedAt: row.updatedAt,
+        createdAt: row.createdAt.toISOString(),
+        updatedAt: row.updatedAt.toISOString(),
         lineItems: (
             row.lineItems as unknown as Array<{
                 id: string
@@ -143,7 +147,7 @@ export async function getInvoiceById(invoiceId: string): Promise<InvoiceDetailDT
                 stripePaymentIntentId: p.stripePaymentIntentId,
                 status: p.status as PaymentDTO['status'],
                 amount: p.amount,
-                createdAt: p.createdAt,
+                createdAt: p.createdAt.toISOString(),
                 invoiceId,
             })
         ),
@@ -180,7 +184,7 @@ export async function getPaymentStatusForInvoice(invoiceId: string): Promise<Pay
             stripePaymentIntentId: p.stripePaymentIntentId,
             status: p.status as PaymentDTO['status'],
             amount: p.amount,
-            createdAt: p.createdAt,
+            createdAt: p.createdAt.toISOString(),
         })
     )
 

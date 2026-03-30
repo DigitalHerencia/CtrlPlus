@@ -3,11 +3,11 @@ import { mkdir, unlink, writeFile } from 'fs/promises'
 import path from 'path'
 
 import {
-    buildCloudinarySignature,
+    buildBlobSignature,
     cloudinary,
-    extractCloudinaryPublicId,
-    getCloudinaryCredentials,
-} from '@/lib/integrations/cloudinary'
+    extractBlobPublicId,
+    getBlobCredentials,
+} from '@/lib/integrations/blob'
 import { validateWrapImageFile } from '@/lib/uploads/file-validation'
 
 const IMAGE_EXT_BY_TYPE: Record<string, string> = {
@@ -53,7 +53,7 @@ async function uploadWrapImageToCloudinary(params: {
     buffer: Buffer
     contentHash: string
 }): Promise<PersistedWrapImage> {
-    const credentials = getCloudinaryCredentials()
+    const credentials = getBlobCredentials()
     if (!credentials) {
         return persistWrapImageLocally(params)
     }
@@ -76,7 +76,7 @@ async function uploadWrapImageToCloudinary(params: {
         formData.set('public_id', publicId)
     } else {
         const timestamp = Math.floor(Date.now() / 1000).toString()
-        const signature = buildCloudinarySignature(
+        const signature = buildBlobSignature(
             { public_id: publicId, timestamp },
             credentials.apiSecret
         )
@@ -116,7 +116,7 @@ export async function persistWrapImage(params: {
     const buffer = Buffer.from(await params.file.arrayBuffer())
     const contentHash = computeContentHash(buffer)
 
-    if (getCloudinaryCredentials()) {
+    if (getBlobCredentials()) {
         return uploadWrapImageToCloudinary({
             wrapId: params.wrapId,
             file: params.file,
@@ -133,14 +133,90 @@ export async function persistWrapImage(params: {
     })
 }
 
+export async function persistWrapImageFromBuffer(params: {
+    wrapId: string
+    buffer: Buffer
+    contentType: string
+}): Promise<PersistedWrapImage> {
+    const contentHash = computeContentHash(params.buffer)
+
+    if (getBlobCredentials()) {
+        // upload buffer to cloud provider via blob adapter
+        const credentials = getBlobCredentials()!
+        const uploadPreset = process.env.CLOUDINARY_WRAP_UPLOAD_PRESET?.trim() ?? null
+        const folder = process.env.CLOUDINARY_WRAP_FOLDER?.trim() || 'ctrlplus/wraps'
+        const publicId = `${folder}/${params.wrapId}-${randomUUID()}`
+        const ext = IMAGE_EXT_BY_TYPE[params.contentType] ?? 'png'
+        const endpoint = `https://api.cloudinary.com/v1_1/${credentials.cloudName}/image/upload`
+        const formData = new FormData()
+
+        formData.set(
+            'file',
+            new Blob([new Uint8Array(params.buffer)], { type: params.contentType }),
+            `${publicId}.${ext}`
+        )
+
+        if (uploadPreset) {
+            formData.set('upload_preset', uploadPreset)
+            formData.set('public_id', publicId)
+        } else {
+            const timestamp = Math.floor(Date.now() / 1000).toString()
+            const signature = buildBlobSignature(
+                { public_id: publicId, timestamp },
+                credentials.apiSecret
+            )
+
+            formData.set('public_id', publicId)
+            formData.set('timestamp', timestamp)
+            formData.set('api_key', credentials.apiKey)
+            formData.set('signature', signature)
+        }
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+        })
+
+        if (!response.ok) {
+            throw new Error('Cloudinary upload failed')
+        }
+
+        const payload = (await response.json()) as { secure_url?: string }
+        if (!payload.secure_url) {
+            throw new Error('Cloudinary upload did not return a secure URL')
+        }
+
+        return {
+            url: payload.secure_url,
+            contentHash,
+        }
+    }
+
+    // fallback to local persistence
+    const ext = IMAGE_EXT_BY_TYPE[params.contentType] ?? 'png'
+    const fileName = `${params.wrapId}-${randomUUID()}.${ext}`
+    const relativeDir = path.join('uploads', 'wraps')
+    const relativePath = path.join(relativeDir, fileName)
+    const absoluteDir = path.join(process.cwd(), 'public', relativeDir)
+    const absolutePath = path.join(process.cwd(), 'public', relativePath)
+
+    await mkdir(absoluteDir, { recursive: true })
+    await writeFile(absolutePath, params.buffer)
+
+    return {
+        url: `/${relativePath.replaceAll(path.sep, '/')}`,
+        contentHash,
+    }
+}
+
 export async function deletePersistedWrapImage(url: string): Promise<void> {
-    const credentials = getCloudinaryCredentials()
-    const publicId = extractCloudinaryPublicId(url)
+    const credentials = getBlobCredentials()
+    const publicId = extractBlobPublicId(url)
 
     if (credentials && publicId) {
         try {
             const timestamp = Math.floor(Date.now() / 1000).toString()
-            const signature = buildCloudinarySignature(
+            const signature = buildBlobSignature(
                 { public_id: publicId, timestamp },
                 credentials.apiSecret
             )

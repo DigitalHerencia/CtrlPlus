@@ -5,7 +5,7 @@
  * Call these helpers from server components, API routes, or other server actions.
  */
 import { prisma } from '@/lib/db/prisma'
-import type { GlobalRole } from '@/types/authz'
+import type { GlobalRole } from '@/types/auth.types'
 
 export async function upsertUserFromClerk(payload: {
     clerkUserId: string

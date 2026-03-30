@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CatalogManagerClient } from '@/features/catalog/catalog-manager-client'
-import type { CatalogManagerItemDTO } from '@/types/catalog/domain'
+import type { CatalogManagerItemDTO } from '@/types/catalog.types'
 
 const mocks = vi.hoisted(() => ({
     refresh: vi.fn(),
@@ -26,7 +26,7 @@ vi.mock('next/navigation', () => ({
     }),
 }))
 
-vi.mock('@/lib/catalog/actions/wraps', () => ({
+vi.mock('@/lib/catalog/actions/catalog.actions', () => ({
     createWrap: mocks.createWrap,
     updateWrap: mocks.updateWrap,
     publishWrap: mocks.publishWrap,

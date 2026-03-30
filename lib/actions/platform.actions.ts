@@ -6,13 +6,13 @@ import { prisma } from '@/lib/db/prisma'
 
 import { requirePlatformDeveloperAdmin } from '@/lib/authz/guards'
 import { processStripeWebhookEvent } from '@/lib/actions/billing.actions'
-import { resetWebhookLocksSchema } from '@/schema/platform'
-import type { ResetWebhookLocksInput } from '@/types/platform'
+import { resetWebhookLocksSchema } from '@/schemas/platform.schemas'
+import type { ResetWebhookLocksInput } from '@/types/platform.types'
 import type { Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import type Stripe from 'stripe'
 
-import type { WebhookMutationResultDTO, WebhookReplayResultDTO } from '@/types/platform'
+import type { WebhookMutationResultDTO, WebhookReplayResultDTO } from '@/types/platform.types'
 
 export async function pruneOldPreviews(): Promise<void> {
     const session = await getSession()
@@ -224,6 +224,12 @@ export async function resetFailedWebhookLocks(rawInput: {
     source: 'clerk' | 'stripe'
     eventIds: string[]
 }): Promise<WebhookMutationResultDTO> {
+    const session = await requirePlatformDeveloperAdmin()
+
+    if (!session.userId) {
+        throw new Error('Unauthorized: not authenticated')
+    }
+
     const input = resetWebhookLocksSchema.parse(rawInput as ResetWebhookLocksInput)
 
     if (input.source === 'clerk') {

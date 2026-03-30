@@ -5,24 +5,21 @@ import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { toCatalogAssetImage } from '@/lib/catalog/asset-resolution'
-import {
-    WrapImageKind,
-    type WrapImageKind as WrapImageKindValue,
-} from '@/types/catalog/constants'
-import type { CatalogAssetReadinessDTO, WrapImageDTO } from '@/types/catalog/domain'
+import { toCatalogAssetImage } from '@/lib/fetchers/catalog.mappers'
+import type { CatalogAssetReadinessDTO, WrapImageDTO } from '@/types/catalog.types'
+import  { wrapImageKindValues } from '@/lib/constants/statuses'
 
 interface WrapImageManagerProps {
     wrapId: string
     images: WrapImageDTO[]
     readiness?: CatalogAssetReadinessDTO
     isPending?: boolean
-    onAddImage: (file: File, kind: WrapImageKindValue, isActive: boolean) => Promise<void> | void
+    onAddImage: (file: File, kind: wrapImageKindValues, isActive: boolean) => Promise<void> | void
     onRemoveImage: (imageId: string) => Promise<void> | void
     onReorderImages: (orderedIds: string[]) => Promise<void> | void
     onUpdateImageMetadata: (
         imageId: string,
-        kind: WrapImageKindValue,
+        kind: wrapImageKindValues,
         isActive: boolean
     ) => Promise<void> | void
 }

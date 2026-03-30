@@ -1,4 +1,4 @@
-import { type Capability, type GlobalRole } from '@/types/authz'
+import { type Capability, type GlobalRole } from '@/types/auth.types'
 
 export const ROLE_CAPABILITIES: Record<GlobalRole, Set<Capability>> = {
     customer: new Set<Capability>([

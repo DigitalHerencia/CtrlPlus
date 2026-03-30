@@ -8,6 +8,7 @@ import { neonConfig } from '@neondatabase/serverless'
 import { PrismaNeon } from '@prisma/adapter-neon'
 import { PrismaClient } from '@prisma/client'
 import ws from 'ws'
+import { assertNeonPooledRuntimeUrl } from '@/lib/utils/assertions'
 
 if (typeof WebSocket === 'undefined') {
     neonConfig.webSocketConstructor = ws
@@ -18,24 +19,7 @@ const globalForPrisma = globalThis as unknown as {
     prismaSignalHandlersAttached?: boolean
 }
 
-function assertNeonPooledRuntimeUrl(connectionString: string): void {
-    let hostname: string
-
-    try {
-        hostname = new URL(connectionString).hostname.toLowerCase()
-    } catch {
-        throw new Error('DATABASE_URL must be a valid PostgreSQL connection string.')
-    }
-
-    const isNeonHost = hostname.includes('neon.tech')
-
-    if (isNeonHost && !hostname.includes('-pooler')) {
-        throw new Error(
-            "DATABASE_URL must use Neon's pooled hostname (-pooler) for application traffic. " +
-                'Use the direct connection only for Prisma CLI operations in prisma.config.ts.'
-        )
-    }
-}
+// moved assertNeonPooledRuntimeUrl into lib/utils/assertions to avoid duplication
 
 export const prisma =
     globalForPrisma.prisma ||

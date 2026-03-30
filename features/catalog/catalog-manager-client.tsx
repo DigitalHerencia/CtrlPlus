@@ -28,7 +28,7 @@ import {
     publishWrap,
     unpublishWrap,
     updateWrap,
-} from '@/lib/catalog/actions/wraps'
+} from '@/lib/actions/catalog.actions'
 import { formatPrice } from '@/lib/utils/currency'
 import { WrapImageManager } from '@/components/catalog/WrapImageManager'
 import type { WrapImageKind } from '@/types/catalog/constants'

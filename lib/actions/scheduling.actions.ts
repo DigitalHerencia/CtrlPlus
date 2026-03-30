@@ -3,10 +3,13 @@
 import { getSession } from '@/lib/auth/session'
 import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
-import { reserveSlotSchema, updateBookingSchema } from '@/schema/scheduling'
+import { reserveSlotSchema, updateBookingSchema } from '@/schemas/scheduling.schemas'
 import { assertSlotHasCapacity } from '@/lib/db/transactions/scheduling.transactions'
 import { ensureInvoiceForBooking } from '@/lib/actions/billing.actions'
-import { revalidateBillingBookingRoute, revalidateSchedulingPages } from '@/lib/cache/revalidate-tags'
+import {
+    revalidateBillingBookingRoute,
+    revalidateSchedulingPages,
+} from '@/lib/cache/revalidate-tags'
 import type {
     ReserveSlotInput,
     ReservedBookingDTO,
@@ -14,8 +17,8 @@ import type {
     CreatedBookingDTO,
     UpdateBookingInput,
     BookingActionDTO,
-} from '@/types/scheduling'
-import { getBookingDisplayStatus } from '@/types/scheduling'
+} from '@/types/scheduling.types'
+import { getBookingDisplayStatus } from '@/lib/constants/statuses'
 import { Prisma } from '@prisma/client'
 
 // Reservation TTL (minutes)
@@ -116,11 +119,11 @@ export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBook
                 id: booking.id,
                 wrapId: booking.wrapId,
                 wrapName: wrap.name,
-                startTime: booking.startTime,
-                endTime: booking.endTime,
+                startTime: booking.startTime.toISOString(),
+                endTime: booking.endTime.toISOString(),
                 status: booking.status as ReservedBookingDTO['status'],
                 totalPrice: booking.totalPrice,
-                reservationExpiresAt: expiresAt,
+                reservationExpiresAt: expiresAt.toISOString(),
                 displayStatus: 'reserved',
             }
         },
@@ -144,8 +147,8 @@ export async function createBooking(input: ReserveSlotInput): Promise<CreatedBoo
         endTime: booking.endTime,
         status: booking.status,
         totalPrice: booking.totalPrice,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         reservationExpiresAt: booking.reservationExpiresAt,
         displayStatus: booking.displayStatus,
     }
@@ -233,17 +236,19 @@ export async function updateBooking(
         customerId: booking.customerId,
         wrapId: booking.wrapId,
         wrapName: existing.wrap.name,
-        startTime: booking.startTime,
-        endTime: booking.endTime,
+        startTime: booking.startTime.toISOString(),
+        endTime: booking.endTime.toISOString(),
         status: booking.status as BookingActionDTO['status'],
         totalPrice: booking.totalPrice,
-        reservationExpiresAt: existing.reservation?.expiresAt ?? null,
+        reservationExpiresAt: existing.reservation?.expiresAt
+            ? existing.reservation.expiresAt.toISOString()
+            : null,
         displayStatus: getBookingDisplayStatus(
             booking.status as BookingActionDTO['status'],
             existing.reservation?.expiresAt ?? null
         ),
-        createdAt: booking.createdAt,
-        updatedAt: booking.updatedAt,
+        createdAt: booking.createdAt.toISOString(),
+        updatedAt: booking.updatedAt.toISOString(),
     }
 }
 
@@ -405,14 +410,14 @@ export async function cancelBooking(bookingId: string) {
         customerId: booking.customerId,
         wrapId: booking.wrapId,
         wrapName: existing.wrap.name,
-        startTime: booking.startTime,
-        endTime: booking.endTime,
+        startTime: booking.startTime.toISOString(),
+        endTime: booking.endTime.toISOString(),
         status: booking.status,
         totalPrice: booking.totalPrice,
         reservationExpiresAt: null,
         displayStatus: 'cancelled',
-        createdAt: booking.createdAt,
-        updatedAt: booking.updatedAt,
+        createdAt: booking.createdAt.toISOString(),
+        updatedAt: booking.updatedAt.toISOString(),
     }
 }
 

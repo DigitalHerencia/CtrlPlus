@@ -34,7 +34,7 @@ vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
-vi.mock('@/lib/visualizer/fetchers/selection', () => ({
+vi.mock('@/lib/visualizer/fetchers/visualizer.fetchers', () => ({
     getVisualizerWrapSelectionById: mocks.getVisualizerWrapSelectionById,
 }))
 
@@ -61,7 +61,7 @@ vi.mock('@/lib/uploads/storage', () => ({
     storePreviewImage: mocks.storePreviewImage,
 }))
 
-import { processVisualizerPreview } from '@/lib/visualizer/actions/previews'
+import { processVisualizerPreview } from '@/lib/actions/visualizer.actions'
 
 function makeSession() {
     return {
@@ -171,9 +171,7 @@ describe('processVisualizerPreview', () => {
         const result = await processVisualizerPreview({ previewId: 'preview-1' })
 
         expect(mocks.readPhotoBuffer).toHaveBeenCalledWith('data:image/png;base64,ZmFrZQ==')
-        expect(mocks.readImageBufferFromUrl).toHaveBeenCalledWith(
-            'https://example.com/texture.png'
-        )
+        expect(mocks.readImageBufferFromUrl).toHaveBeenCalledWith('https://example.com/texture.png')
         expect(mocks.buildPreviewConditioningBoard).toHaveBeenCalledWith(
             expect.objectContaining({
                 vehicleBuffer: Buffer.from('vehicle-bytes'),

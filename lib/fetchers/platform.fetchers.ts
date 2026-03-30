@@ -1,3 +1,4 @@
+import "server-only"
 import { prisma } from '@/lib/db/prisma'
 import { requirePlatformDeveloperAdmin } from '@/lib/authz/guards'
 import type {
@@ -5,7 +6,7 @@ import type {
     WebhookOperationsOverviewDTO,
     WebhookSource,
     PlatformStatusOverviewDTO,
-} from '@/types/platform'
+} from '@/types/platform.types'
 
 const STALE_THRESHOLD_MINUTES = 5
 const RECENT_FAILURE_LIMIT = 25

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { WorkspaceEmptyState, WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { getWraps } from '@/lib/catalog/fetchers/wraps'
+import { getWraps } from '@/lib/fetchers/catalog.fetchers'
 import { getAvailabilityWindows } from '@/lib/fetchers/scheduling.fetchers'
 
 import { SchedulingBookingFormClient } from './scheduling-booking-form-client'

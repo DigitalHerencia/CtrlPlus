@@ -1,11 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('@/lib/visualizer/fetchers/previews', () => ({
+vi.mock('@/lib/visualizer/fetchers/visualizer.fetchers', () => ({
     getPreviewById: vi.fn(),
 }))
 
 import { GET } from '@/app/(tenant)/visualizer/previews/[id]/route'
-import { getPreviewById } from '@/lib/visualizer/fetchers/previews'
+import { getPreviewById } from '@/lib/fetchers/visualizer.fetchers'
 
 describe('visualizer previews route', () => {
     it('returns 404 when preview not found', async () => {

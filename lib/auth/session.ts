@@ -1,6 +1,7 @@
+import 'server-only'
 import { resolveGlobalRoleForClerkUserId } from '@/lib/auth/identity'
-import { type AuthzContext } from '@/types/authz'
-import { type Session, type SessionContext, type SessionUser } from '@/types/auth'
+import { type AuthzContext } from '@/types/auth.types'
+import { type Session, type SessionContext, type SessionUser } from '@/types/auth.types'
 import { auth } from '@clerk/nextjs/server'
 import { cache } from 'react'
 

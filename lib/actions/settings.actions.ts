@@ -3,12 +3,9 @@
 import { requireAuthzCapability } from '@/lib/authz/guards'
 import { prisma } from '@/lib/db/prisma'
 import { revalidatePath } from 'next/cache'
-import { websiteSettingsSchema } from '@/schema/settings'
-import {
-    createWebsiteSettingsDTO,
-    type WebsiteSettingsDTO,
-    type WebsiteSettingsInput,
-} from '@/types/settings'
+import { websiteSettingsSchema } from '@/schemas/settings.schemas'
+import { type WebsiteSettingsDTO, type WebsiteSettingsInput } from '@/types/settings.types'
+import { createWebsiteSettingsDTO } from '@/lib/fetchers/settings.fetchers'
 
 export async function updateUserWebsiteSettings(
     input: WebsiteSettingsInput

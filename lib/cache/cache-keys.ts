@@ -1,17 +1,5 @@
 import crypto from 'crypto'
-
-export interface PreviewCacheKeyInput {
-    wrapId: string
-    ownerUserId: string
-    customerPhotoHash: string
-    sourceWrapImageId: string
-    sourceAssetVersion: number
-    generationMode: string
-    generationModel: string
-    promptVersion: string
-    blendMode?: 'multiply' | 'overlay'
-    opacity?: number
-}
+import type { PreviewCacheKeyInput } from '@/types/visualizer.types'
 
 export function buildVisualizerCacheKey(input: PreviewCacheKeyInput): string {
     const normalized = {

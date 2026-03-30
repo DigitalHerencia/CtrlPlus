@@ -3,12 +3,12 @@
 import { useMemo, useRef, useState, useTransition } from 'react'
 
 import { VisualizerClient } from '@/components/visualizer/VisualizerClient'
-import type { VisualizerWrapSelectionDTO } from '@/types/catalog/domain'
+import type { VisualizerWrapSelectionDTO } from '@/types/catalog.types'
 import {
     createVisualizerPreview,
     processVisualizerPreview,
     regenerateVisualizerPreview,
-} from '@/lib/visualizer/actions/previews'
+} from '@/lib/actions/visualizer.actions'
 import { PreviewStatus } from '@/types/visualizer/constants'
 import type { VisualizerPreviewDTO } from '@/types/visualizer/domain'
 import { VisualizerPreviewPollerClient } from './visualizer-preview-poller-client'

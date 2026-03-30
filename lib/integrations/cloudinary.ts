@@ -1,3 +1,14 @@
+/**
+ * Provider-specific Cloudinary integration.
+ *
+ * This file contains direct Cloudinary SDK initialization and utility helpers.
+ * It is considered provider-specific and should not be imported directly by
+ * higher-level upload/storage code. Use `lib/integrations/blob.ts` as the
+ * canonical, provider-agnostic adapter surface instead.
+ *
+ * NOTE: This module intentionally keeps a tiny surface of helpers that the
+ * `blob` adapter re-exports. Keep behavior unchanged when editing.
+ */
 import { v2 as cloudinary } from 'cloudinary'
 import { createHash } from 'crypto'
 
@@ -64,10 +75,7 @@ export function extractCloudinaryPublicId(url: string): string | null {
         }
 
         const lastSegment = publicIdSegments[publicIdSegments.length - 1] ?? ''
-        publicIdSegments[publicIdSegments.length - 1] = lastSegment.replace(
-            /\.[a-zA-Z0-9]+$/,
-            ''
-        )
+        publicIdSegments[publicIdSegments.length - 1] = lastSegment.replace(/\.[a-zA-Z0-9]+$/, '')
 
         return publicIdSegments.join('/')
     } catch {

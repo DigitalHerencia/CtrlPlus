@@ -5,9 +5,9 @@ import { useForm, useWatch } from 'react-hook-form'
 import { ZodError } from 'zod'
 
 import { WebsiteSettingsForm } from '@/components/settings/website-settings-form'
-import { applyZodErrors, zodResolver } from '@/lib/utils/forms'
+import { applyZodErrors, zodResolver } from '@/components/ui/forms'
 import { updateUserWebsiteSettings } from '@/lib/actions/settings.actions'
-import { websiteSettingsSchema } from '@/schema/settings'
+import { websiteSettingsSchema } from '@/schemas/settings'
 import { type WebsiteSettingsDTO, type WebsiteSettingsInput } from '@/types/settings'
 
 interface WebsiteSettingsFormClientProps {

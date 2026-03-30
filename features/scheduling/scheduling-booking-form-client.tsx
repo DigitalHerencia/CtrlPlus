@@ -7,7 +7,7 @@ import { useForm, useWatch } from 'react-hook-form'
 
 import { BookingForm } from '@/components/scheduling/booking-form'
 import { createBooking } from '@/lib/actions/scheduling.actions'
-import { bookingFormSchema } from '@/schema/scheduling'
+import { bookingFormSchema } from '@/schemas/scheduling'
 import { type BookingFormValues, type SchedulingBookingFormClientProps } from '@/types/scheduling'
 
 function buildDateTime(date: Date, time: string): Date {

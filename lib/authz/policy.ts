@@ -1,4 +1,4 @@
-import { type AuthzContext, type Capability } from '@/types/authz'
+import { type AuthzContext, type Capability } from '@/types/auth.types'
 import { ROLE_CAPABILITIES } from '@/lib/authz/capabilities'
 
 export function hasCapability(context: AuthzContext, capability: Capability): boolean {

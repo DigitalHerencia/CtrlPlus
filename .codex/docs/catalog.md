@@ -18,8 +18,8 @@ Refactor catalog browsing and wrap management into a storefront-grade wrap produ
 - `components/catalog/WrapGrid.tsx`
 - `components/catalog/WrapCard.tsx`
 - `components/catalog/WrapDetail.tsx`
-- `lib/catalog/actions/wraps.ts`
-- `lib/catalog/fetchers/wraps.ts`
+- `lib/catalog/actions/catalog.actions.ts`
+- `lib/catalog/fetchers/catalog.fetchers.ts`
 - `lib/catalog/asset-resolution.ts`
 - `lib/catalog/search-params.ts`
 - `schema/catalog/**`

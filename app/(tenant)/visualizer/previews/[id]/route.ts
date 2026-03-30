@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { getPreviewById } from '@/lib/visualizer/fetchers/previews'
+import { getPreviewById } from '@/lib/fetchers/visualizer.fetchers'
 
 interface PreviewRouteProps {
     params: Promise<{ id: string }>

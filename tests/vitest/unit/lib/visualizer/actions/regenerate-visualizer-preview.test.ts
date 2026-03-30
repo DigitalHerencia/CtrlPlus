@@ -27,11 +27,11 @@ vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
-vi.mock('@/lib/visualizer/fetchers/selection', () => ({
+vi.mock('@/lib/visualizer/fetchers/visualizer.fetchers', () => ({
     getVisualizerWrapSelectionById: mocks.getVisualizerWrapSelectionById,
 }))
 
-import { regenerateVisualizerPreview } from '@/lib/visualizer/actions/previews'
+import { regenerateVisualizerPreview } from '@/lib/actions/visualizer.actions'
 
 function makeSession() {
     return {
