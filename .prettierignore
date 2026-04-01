@@ -35,6 +35,6 @@ public/**/*.map
 .env
 .env.*
 
-# codex artifacts
-.codex/**
-.codex-global-edit/**
+# copilot artifacts
+.copilot/**
+.copilot-global-edit/**

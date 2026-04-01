@@ -1,0 +1,34 @@
+program:
+  id: CTR-REF-001
+  name: ctrlplus-server-first-refactor
+  status: active
+  sources:
+    markdown:
+      - .copilot/docs/refactor-prd.md
+      - .copilot/docs/refactor-technical-requirements.md
+      - .copilot/docs/refactor-domain-map.md
+      - .copilot/arch/server-first-refactor-architecture.md
+    instructions:
+      - .copilot/instructions/refactor-operating-model.instructions.md
+  contract_dependencies:
+    - .copilot/contracts/artifact-pipeline.contract.yaml
+    - .copilot/contracts/domains.contract.yaml
+    - .copilot/contracts/layer-boundaries.contract.yaml
+    - .copilot/contracts/workstreams.contract.yaml
+  execution_dependencies:
+    - .copilot/execution/manifest.json
+    - .copilot/execution/refactor-backlog.json
+    - .copilot/execution/refactor-progress.json
+  goals:
+    - establish a durable markdown-yaml-json artifact pipeline for the refactor
+    - thin route shells in app without moving server authority upward
+    - normalize page orchestration inside features
+    - clean component boundaries between domain, shared, and primitive ui
+    - preserve read, write, authz, validation, dto, and provider boundaries on the server
+  acceptance:
+    - id: PRA-001
+      statement: Every future refactor pass can identify its scope, contract, and execution state from .copilot artifacts alone.
+    - id: PRA-002
+      statement: Task and workstream progress is updated in JSON whenever execution status materially changes.
+    - id: PRA-003
+      statement: Program scope changes are justified in markdown before contract or execution state expands.

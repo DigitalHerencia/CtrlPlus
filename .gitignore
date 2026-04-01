@@ -55,8 +55,8 @@ yarn-error.log*
 /lib/generated/prisma
 
 # agent
-/.codex/examples/
-/.codex/profiles/
+/.copilot/examples/
+/.copilot/profiles/
 
 # old test locations (migrated to tests/)
 /test/

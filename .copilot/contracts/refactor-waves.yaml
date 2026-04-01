@@ -1,0 +1,41 @@
+waves:
+  - id: WAVE-00
+    name: "Scaffold and planning"
+    status: complete
+    outputs:
+      - ".copilot/README.md"
+      - ".copilot/docs/*"
+      - ".copilot/contracts/*"
+      - ".copilot/execution/*"
+  - id: WAVE-01
+    name: "Route shell normalization"
+    status: planned
+    depends_on:
+      - WAVE-00
+    acceptance:
+      - "Every major page delegates to a single page feature."
+      - "Open param naming decisions are resolved or documented."
+  - id: WAVE-02
+    name: "Feature normalization"
+    status: planned
+    depends_on:
+      - WAVE-01
+    acceptance:
+      - "Page features follow a stable naming pattern."
+      - "Interactive containers use explicit client suffixes."
+  - id: WAVE-03
+    name: "Component normalization"
+    status: planned
+    depends_on:
+      - WAVE-02
+    acceptance:
+      - "Presentational blocks live under domain or shared components."
+      - "Workflow ownership no longer lives in presentational files."
+  - id: WAVE-04
+    name: "Validation and cleanup"
+    status: planned
+    depends_on:
+      - WAVE-03
+    acceptance:
+      - "Affected lint, typecheck, build, and tests pass."
+      - "Docs, contracts, and execution state match the delivered structure."

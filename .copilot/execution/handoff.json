@@ -1,0 +1,53 @@
+{
+  "program_id": "CTRLPLUS-CATALOG-VISUALIZER-001",
+  "updated_at": "2026-03-30",
+  "next_actions": [
+    {
+      "id": "RUN-CV-001",
+      "title": "Start with catalog asset-contract hardening",
+      "master_prompt": ".copilot/prompts/catalog.refactor.prompt.md",
+      "phase_prompt": ".copilot/prompts/catalog.phase-01.asset-contract.prompt.md",
+      "backlog_task_ids": [
+        "CV-101",
+        "CV-201"
+      ]
+    },
+    {
+      "id": "RUN-CV-002",
+      "title": "Align visualizer handoff, selection, and persistence",
+      "master_prompt": ".copilot/prompts/visualizer.refactor.prompt.md",
+      "phase_prompt": ".copilot/prompts/visualizer.phase-01.selection-and-persistence.prompt.md",
+      "backlog_task_ids": [
+        "CV-301"
+      ]
+    },
+    {
+      "id": "RUN-CV-003",
+      "title": "Run funnel validation and E2E after bounded fixes land",
+      "master_prompt": ".copilot/prompts/catalog-visualizer.integration-e2e.prompt.md",
+      "phase_prompt": ".copilot/prompts/catalog-visualizer.phase-03.validation-and-e2e.prompt.md",
+      "backlog_task_ids": [
+        "CV-401"
+      ]
+    }
+  ],
+  "monitoring": {
+    "execution_files": [
+      ".copilot/execution/backlog.json",
+      ".copilot/execution/progress.json",
+      ".copilot/execution/decisions.json",
+      ".copilot/execution/validation.json"
+    ],
+    "required_updates_per_pass": [
+      "mark the task ids being advanced",
+      "record new risks or blockers",
+      "record validation outcomes",
+      "record resolved or newly opened decisions"
+    ]
+  },
+  "operator_notes": [
+    "Prefer one bounded phase prompt per pass.",
+    "Do not start broad extraction into lib/catalog/** or lib/visualizer/** without preserving the current live entrypoints first.",
+    "Load the required runtime secrets before attempting full preview-generation verification."
+  ]
+}

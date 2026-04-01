@@ -1,0 +1,156 @@
+program:
+  id: CTRLPLUS-CATALOG-VISUALIZER-001
+  name: "catalog-visualizer implementation prep"
+  updated_at: "2026-03-30"
+  source_documents:
+    - "C:\\Users\\scree\\Documents\\DevNotes\\Copilot Implementation Spec Catalog Wrap-Driven Visualizer Migration.md"
+    - "C:\\Users\\scree\\Documents\\DevNotes\\Copilot Implementation Spec Visualizer Generation Pipeline Catalog-Driven Hugging Face Cloudinary.md"
+    - "C:\\Users\\scree\\Documents\\DevNotes\\Vehicle Wrap Visualizer Research and Implementation Audit.md"
+    - "D:\\CtrlPlus\\AGENTS.md"
+current_live_layout:
+  catalog:
+    routes:
+      - "app/(tenant)/catalog/page.tsx"
+      - "app/(tenant)/catalog/[id]/page.tsx"
+      - "app/(tenant)/catalog/manage/page.tsx"
+    features:
+      - "features/catalog/catalog-browse-page-feature.tsx"
+      - "features/catalog/catalog-detail-page-feature.tsx"
+      - "features/catalog/catalog-manager-page-feature.tsx"
+      - "features/catalog/catalog-manager-client.tsx"
+      - "features/catalog/catalog-wrap-assets-client.tsx"
+    components:
+      - "components/catalog/WrapCard.tsx"
+      - "components/catalog/WrapDetail.tsx"
+      - "components/catalog/WrapImageManager.tsx"
+      - "components/catalog/WrapGrid.tsx"
+    read_boundary:
+      - "lib/fetchers/catalog.fetchers.ts"
+      - "lib/fetchers/catalog.mappers.ts"
+    write_boundary:
+      - "lib/actions/catalog.actions.ts"
+    contracts:
+      - "schemas/catalog.schemas.ts"
+      - "types/catalog.types.ts"
+  visualizer:
+    routes:
+      - "app/(tenant)/visualizer/page.tsx"
+    features:
+      - "features/visualizer/visualizer-page-feature.tsx"
+      - "features/visualizer/visualizer-workspace-client.tsx"
+      - "features/visualizer/visualizer-preview-poller-client.tsx"
+    components:
+      - "components/visualizer/VisualizerClient.tsx"
+      - "components/visualizer/UploadForm.tsx"
+      - "components/visualizer/WrapSelector.tsx"
+      - "components/visualizer/PreviewCanvas.tsx"
+    read_boundary:
+      - "lib/fetchers/visualizer.fetchers.ts"
+      - "lib/fetchers/visualizer.mappers.ts"
+    write_boundary:
+      - "lib/actions/visualizer.actions.ts"
+    runtime_support:
+      - "lib/uploads/image-processing.ts"
+      - "lib/uploads/storage.ts"
+      - "lib/integrations/huggingface.ts"
+      - "lib/cache/cache-keys.ts"
+    contracts:
+      - "schemas/visualizer.schemas.ts"
+      - "types/visualizer.types.ts"
+target_outcomes:
+  catalog:
+    - "Deterministic asset-role resolution for hero, gallery, visualizer texture, and optional mask hint."
+    - "DTO-based browse, detail, manager, and visualizer-selection surfaces."
+    - "Server-authoritative publish readiness and handoff eligibility."
+  visualizer:
+    - "Server-authoritative wrap selection, upload normalization, preview lifecycle, and ownership."
+    - "Primary Hugging Face image-to-image generation with deterministic fallback composite."
+    - "Durable preview storage and explainable preview metadata."
+handoff_contract:
+  route: "/visualizer?wrapId={wrapId}"
+  selector_fetcher: "lib/fetchers/visualizer.fetchers.ts#getVisualizerWrapSelectionById"
+  requirements:
+    - "wrap exists"
+    - "wrap not deleted"
+    - "caller scope allows hidden wrap only for owner/platform admin"
+    - "wrap has active hero image"
+    - "wrap has active visualizer texture"
+    - "wrap readiness is suitable for preview use"
+catalog_rules:
+  asset_roles:
+    - "hero"
+    - "gallery"
+    - "visualizer_texture"
+    - "visualizer_mask_hint"
+  must_not:
+    - "derive meaning from unordered images arrays"
+    - "perform readiness or asset grouping in route files"
+    - "bypass lib/fetchers/catalog.fetchers.ts or lib/actions/catalog.actions.ts"
+  publish_requires:
+    - "non-empty wrap name"
+    - "positive price"
+    - "active hero image"
+    - "active visualizer texture image"
+visualizer_rules:
+  statuses:
+    - "pending"
+    - "processing"
+    - "complete"
+    - "failed"
+  lifecycle:
+    - "create preview row"
+    - "process preview on server"
+    - "poll preview state"
+    - "allow regenerate"
+  cache_key_inputs:
+    - "wrapId"
+    - "ownerUserId"
+    - "customerPhotoHash"
+    - "sourceWrapImageId"
+    - "sourceAssetVersion"
+    - "generationMode"
+    - "generationModel"
+    - "promptVersion"
+    - "blendMode"
+    - "opacity"
+  runtime_must_not:
+    - "move provider secrets or provider calls into client code"
+    - "trust client-provided wrap asset URLs"
+    - "drop fallback preview generation"
+known_risks:
+  - id: "RISK-CV-001"
+    severity: "high"
+    statement: "The current upload contract is split between fileKey-based schemas and File-based client calls."
+  - id: "RISK-CV-002"
+    severity: "high"
+    statement: "Wrap image persistence still has a local filesystem fallback when Cloudinary credentials are incomplete."
+  - id: "RISK-CV-003"
+    severity: "medium"
+    statement: "The current shell session does not expose the secrets required for full preview generation."
+  - id: "RISK-CV-004"
+    severity: "medium"
+    statement: "GitHub Actions workflow files are not present in the repo, so checked-in CI enforcement is not visible from the workspace."
+phase_sequence:
+  - id: "PHASE-CAT-01"
+    prompt: ".copilot/prompts/catalog.phase-01.asset-contract.prompt.md"
+    outcome: "Asset contract and upload boundary hardening"
+  - id: "PHASE-CAT-02"
+    prompt: ".copilot/prompts/catalog.phase-02.storefront-and-manager.prompt.md"
+    outcome: "Public storefront and manager correctness"
+  - id: "PHASE-VIZ-01"
+    prompt: ".copilot/prompts/visualizer.phase-01.selection-and-persistence.prompt.md"
+    outcome: "Visualizer handoff and selection integrity"
+  - id: "PHASE-VIZ-02"
+    prompt: ".copilot/prompts/visualizer.phase-02.generation-and-recovery.prompt.md"
+    outcome: "Generation pipeline and storage hardening"
+  - id: "PHASE-CV-03"
+    prompt: ".copilot/prompts/catalog-visualizer.integration-e2e.prompt.md"
+    outcome: "Validation and funnel verification"
+validation:
+  commands:
+    - "pnpm lint"
+    - "pnpm typecheck"
+    - "pnpm prisma:validate"
+    - "pnpm test"
+    - "pnpm build"
+    - "pnpm test:e2e --project=chromium --reporter=line"

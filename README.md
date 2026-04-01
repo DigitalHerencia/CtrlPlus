@@ -7,7 +7,7 @@ CtrlPlus is a single-store vehicle wrap operations platform built with Next.js 1
 - Tenant-facing wrap catalog and visualizer flows
 - Scheduling and billing workflows
 - Admin and platform operational surfaces
-- A server-first architecture scaffold under `.codex/` for large refactor work
+- A server-first architecture scaffold under `.copilot/` for large refactor work
 
 ## Quick Start
 
@@ -28,14 +28,14 @@ pnpm dev
 
 ## Engineering Docs
 
-Project-facing engineering workflow docs live under `.codex/`:
+Project-facing engineering workflow docs live under `.copilot/`:
 
-- `.codex/README.md`
-- `.codex/docs/`
-- `.codex/contracts/`
-- `.codex/execution/`
-- `.codex/instructions/`
-- `.codex/prompts/`
+- `.copilot/README.md`
+- `.copilot/docs/`
+- `.copilot/contracts/`
+- `.copilot/execution/`
+- `.copilot/instructions/`
+- `.copilot/prompts/`
 
 `docs/` is reserved for end-user and operational product documentation.
 

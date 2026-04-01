@@ -1,0 +1,61 @@
+version: 1
+updated_at: "2026-03-30"
+model:
+  thinking: markdown
+  contracts: yaml
+  execution: json
+read_order:
+  - ".copilot/README.md"
+  - ".copilot/instructions/catalog.instructions.md"
+  - ".copilot/instructions/visualizer.instructions.md"
+  - ".copilot/instructions/refactor-execution.instructions.md"
+  - ".copilot/instructions/contract-lifecycle.instructions.md"
+  - ".copilot/docs/catalog.md"
+  - ".copilot/docs/visualizer.md"
+  - ".copilot/docs/catalog-visualizer-prep-status.md"
+  - ".copilot/docs/ctrlplus-refactor-prd.md"
+  - ".copilot/docs/ctrlplus-technical-requirements.md"
+  - ".copilot/docs/ctrlplus-refactor-gap-analysis.md"
+  - ".copilot/arch/copilot_catalog_visualizer_migration_spec.md"
+  - ".copilot/arch/copilot_visualizer_huggingface_generation_spec.md"
+  - ".copilot/arch/ctrlplus-server-first-refactor-blueprint.md"
+contracts:
+  - id: CONTRACT-MANIFEST
+    path: ".copilot/contracts/manifest.yaml"
+    purpose: "Defines precedence and artifact roles."
+  - id: CONTRACT-PROGRAM
+    path: ".copilot/contracts/refactor-program.yaml"
+    purpose: "Defines program goals, domains, and guardrails."
+  - id: CONTRACT-DOMAINS
+    path: ".copilot/contracts/domain-map.yaml"
+    purpose: "Defines live domains and target responsibilities."
+  - id: CONTRACT-ROUTES
+    path: ".copilot/contracts/route-layer-contract.yaml"
+    purpose: "Defines route-to-layer ownership expectations."
+  - id: CONTRACT-WAVES
+    path: ".copilot/contracts/refactor-waves.yaml"
+    purpose: "Defines sequencing and acceptance by wave."
+  - id: CONTRACT-CATALOG-VISUALIZER
+    path: ".copilot/contracts/catalog-visualizer.contract.yaml"
+    purpose: "Defines current live boundaries, target outcomes, and validation gates for catalog and visualizer work."
+  - id: CONTRACT-CATALOG-VISUALIZER-HANDOFF
+    path: ".copilot/contracts/catalog-visualizer.handoff.contract.yaml"
+    purpose: "Defines cross-domain handoff ownership, required fields, and eligibility rules."
+  - id: CONTRACT-CATALOG-VISUALIZER-PIPELINE
+    path: ".copilot/contracts/catalog-visualizer.pipeline.contract.yaml"
+    purpose: "Defines preview lifecycle, provider, storage, and fallback boundaries."
+  - id: CONTRACT-CATALOG-VISUALIZER-READINESS
+    path: ".copilot/contracts/catalog-visualizer.readiness.contract.yaml"
+    purpose: "Defines readiness meaning, blocker classes, and validation order for the active program."
+execution:
+  - ".copilot/execution/context-map.json"
+  - ".copilot/execution/backlog.json"
+  - ".copilot/execution/progress.json"
+  - ".copilot/execution/decisions.json"
+  - ".copilot/execution/validation.json"
+  - ".copilot/execution/handoff.json"
+  - ".copilot/execution/catalog-visualizer.backlog.json"
+  - ".copilot/execution/catalog-visualizer.progress.json"
+  - ".copilot/execution/catalog-visualizer.decisions.json"
+  - ".copilot/execution/catalog-visualizer.validation.json"
+  - ".copilot/execution/catalog-visualizer.handoff.json"

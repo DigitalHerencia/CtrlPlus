@@ -1,0 +1,134 @@
+{
+    "program_id": "CTRLPLUS-CATALOG-VISUALIZER-001",
+    "updated_at": "2026-03-30",
+    "source_documents": [
+        "C:\\Users\\scree\\Documents\\DevNotes\\Copilot Implementation Spec Catalog Wrap-Driven Visualizer Migration.md",
+        "C:\\Users\\scree\\Documents\\DevNotes\\Copilot Implementation Spec Visualizer Generation Pipeline Catalog-Driven Hugging Face Cloudinary.md",
+        "C:\\Users\\scree\\Documents\\DevNotes\\Vehicle Wrap Visualizer Research and Implementation Audit.md",
+        "D:\\CtrlPlus\\AGENTS.md"
+    ],
+    "focus_areas": [
+        {
+            "id": "CTX-APP",
+            "path": "D:\\CtrlPlus\\app",
+            "purpose": "Route shells and Next.js file conventions"
+        },
+        {
+            "id": "CTX-FEATURES",
+            "path": "D:\\CtrlPlus\\features",
+            "purpose": "Page orchestration and interactive containers"
+        },
+        {
+            "id": "CTX-COMPONENTS",
+            "path": "D:\\CtrlPlus\\components",
+            "purpose": "Presentational UI blocks and shadcn primitives"
+        },
+        {
+            "id": "CTX-LIB",
+            "path": "D:\\CtrlPlus\\lib",
+            "purpose": "Server authority boundaries to preserve during refactor"
+        }
+    ],
+    "catalog": {
+        "routes": [
+            "D:\\CtrlPlus\\app\\(tenant)\\catalog\\page.tsx",
+            "D:\\CtrlPlus\\app\\(tenant)\\catalog\\[id]\\page.tsx",
+            "D:\\CtrlPlus\\app\\(tenant)\\catalog\\manage\\page.tsx"
+        ],
+        "features": [
+            "D:\\CtrlPlus\\features\\catalog\\catalog-browse-page-feature.tsx",
+            "D:\\CtrlPlus\\features\\catalog\\catalog-detail-page-feature.tsx",
+            "D:\\CtrlPlus\\features\\catalog\\catalog-manager-page-feature.tsx",
+            "D:\\CtrlPlus\\features\\catalog\\catalog-manager-client.tsx",
+            "D:\\CtrlPlus\\features\\catalog\\catalog-wrap-assets-client.tsx"
+        ],
+        "server_boundaries": [
+            "D:\\CtrlPlus\\lib\\fetchers\\catalog.fetchers.ts",
+            "D:\\CtrlPlus\\lib\\fetchers\\catalog.mappers.ts",
+            "D:\\CtrlPlus\\lib\\actions\\catalog.actions.ts"
+        ],
+        "types_and_schemas": [
+            "D:\\CtrlPlus\\types\\catalog.types.ts",
+            "D:\\CtrlPlus\\schemas\\catalog.schemas.ts"
+        ],
+        "tests": [
+            "D:\\CtrlPlus\\tests\\vitest\\unit\\lib\\catalog\\assets.test.ts",
+            "D:\\CtrlPlus\\tests\\vitest\\unit\\lib\\catalog\\image-storage.test.ts",
+            "D:\\CtrlPlus\\tests\\vitest\\unit\\components\\catalog\\CatalogManager.test.tsx",
+            "D:\\CtrlPlus\\tests\\vitest\\unit\\components\\catalog\\WrapImageManager.test.tsx"
+        ]
+    },
+    "visualizer": {
+        "routes": [
+            "D:\\CtrlPlus\\app\\(tenant)\\visualizer\\page.tsx"
+        ],
+        "features": [
+            "D:\\CtrlPlus\\features\\visualizer\\visualizer-page-feature.tsx",
+            "D:\\CtrlPlus\\features\\visualizer\\visualizer-workspace-client.tsx",
+            "D:\\CtrlPlus\\features\\visualizer\\visualizer-preview-poller-client.tsx"
+        ],
+        "server_boundaries": [
+            "D:\\CtrlPlus\\lib\\fetchers\\visualizer.fetchers.ts",
+            "D:\\CtrlPlus\\lib\\actions\\visualizer.actions.ts",
+            "D:\\CtrlPlus\\lib\\uploads\\image-processing.ts",
+            "D:\\CtrlPlus\\lib\\uploads\\storage.ts",
+            "D:\\CtrlPlus\\lib\\integrations\\huggingface.ts",
+            "D:\\CtrlPlus\\lib\\cache\\cache-keys.ts"
+        ],
+        "types_and_schemas": [
+            "D:\\CtrlPlus\\types\\visualizer.types.ts",
+            "D:\\CtrlPlus\\schemas\\visualizer.schemas.ts"
+        ],
+        "tests": [
+            "D:\\CtrlPlus\\tests\\vitest\\unit\\lib\\visualizer\\actions\\create-visualizer-preview.test.ts",
+            "D:\\CtrlPlus\\tests\\vitest\\unit\\lib\\visualizer\\actions\\process-visualizer-preview.test.ts",
+            "D:\\CtrlPlus\\tests\\vitest\\unit\\lib\\visualizer\\actions\\regenerate-visualizer-preview.test.ts"
+        ]
+    },
+    "risks": [
+        {
+            "id": "RISK-CV-001",
+            "severity": "high",
+            "summary": "Schemas expect fileKey-based upload references while client flows still pass File objects.",
+            "paths": [
+                "D:\\CtrlPlus\\schemas\\catalog.schemas.ts",
+                "D:\\CtrlPlus\\schemas\\visualizer.schemas.ts",
+                "D:\\CtrlPlus\\features\\catalog\\catalog-manager-client.tsx",
+                "D:\\CtrlPlus\\features\\visualizer\\visualizer-workspace-client.tsx"
+            ]
+        },
+        {
+            "id": "RISK-CV-002",
+            "severity": "high",
+            "summary": "Wrap asset persistence falls back to local filesystem storage when Cloudinary credentials are incomplete.",
+            "paths": [
+                "D:\\CtrlPlus\\lib\\uploads\\storage.ts"
+            ]
+        },
+        {
+            "id": "RISK-CV-003",
+            "severity": "medium",
+            "summary": "Prompting, conditioning board generation, segmentation, and fallback compositing are still concentrated in lib/uploads/image-processing.ts rather than explicit lib/visualizer modules.",
+            "paths": [
+                "D:\\CtrlPlus\\lib\\uploads\\image-processing.ts",
+                "D:\\CtrlPlus\\lib\\integrations\\huggingface.ts"
+            ]
+        },
+        {
+            "id": "RISK-CV-004",
+            "severity": "medium",
+            "summary": "Checked-in GitHub Actions workflow files are not present, so CI enforcement is not visible from the workspace.",
+            "paths": [
+                "D:\\CtrlPlus\\.github"
+            ]
+        }
+    ],
+    "validation_targets": [
+        "pnpm lint",
+        "pnpm typecheck",
+        "pnpm prisma:validate",
+        "pnpm test",
+        "pnpm build",
+        "pnpm test:e2e --project=chromium --reporter=line"
+    ]
+}

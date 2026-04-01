@@ -26,7 +26,7 @@ Run the smallest relevant checks first, then broader checks when the change warr
 ## Documentation
 
 - Put end-user and operational product docs in `docs/`.
-- Put internal engineering workflow, contracts, prompts, and execution state in `.codex/`.
+- Put internal engineering workflow, contracts, prompts, and execution state in `.copilot/`.
 - Keep `AGENTS.md` and `.github/copilot-instructions.md` aligned when repo-wide rules change.
 
 ## Architecture Expectations
