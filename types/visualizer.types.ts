@@ -1,5 +1,4 @@
 import type { SearchParamRecord, Timestamp } from '@/types/common.types'
-import type { VisualizerWrapSelectionDTO } from '@/types/catalog.types'
 import type { PreviewStatus } from '@/lib/constants/statuses'
 
 export interface VisualizerPreviewDTO {

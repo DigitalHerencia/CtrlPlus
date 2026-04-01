@@ -1,6 +1,5 @@
 import type { PreviewStatus } from '@/lib/constants/statuses'
 import type { VisualizerPreviewDTO } from '@/types/visualizer.types'
-import { visualizerPreviewDTOFields } from '@/lib/db/selects/visualizer.selects'
 
 type VisualizerPreviewRecord = {
     id: string

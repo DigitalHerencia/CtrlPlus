@@ -13,7 +13,6 @@ import {
 import type {
     ReserveSlotInput,
     ReservedBookingDTO,
-    BookingDTO,
     CreatedBookingDTO,
     UpdateBookingInput,
     BookingActionDTO,

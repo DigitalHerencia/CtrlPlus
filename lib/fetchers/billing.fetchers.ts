@@ -2,7 +2,6 @@ import 'server-only'
 import type { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/db/prisma'
-import { invoiceListParamsSchema } from '@/schemas/billing.schemas'
 import {
     invoiceDTOFields,
     invoiceLineItemDTOFields,

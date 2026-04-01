@@ -1,7 +1,7 @@
 'use client'
 
 import { useSignIn } from '@clerk/nextjs'
-import { LoaderCircle, ShieldCheck } from 'lucide-react'
+import { LoaderCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'

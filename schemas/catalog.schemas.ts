@@ -1,7 +1,6 @@
 import { z } from 'zod'
 
 import { wrapImageKindValues, WrapImageKind } from '@/lib/constants/statuses'
-import type { CatalogAssetReadinessDTO } from '@/types/catalog.types'
 
 export const createWrapCategorySchema = z.object({
     name: z.string().min(1).max(80),

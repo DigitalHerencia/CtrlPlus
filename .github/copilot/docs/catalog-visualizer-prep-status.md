@@ -24,7 +24,7 @@ This document captures the final prep-pass status before resuming planned catalo
 
 ## Why This Prep Pass Was Needed
 
-The implementation is ahead of the `.copilot` scaffold. Before this pass, the agent-facing docs and prompts were still high-level and generic, which increased the risk that the next implementation run would:
+The implementation is ahead of the `.github/copilot` scaffold. Before this pass, the agent-facing docs and prompts were still high-level and generic, which increased the risk that the next implementation run would:
 
 - ignore the current file layout
 - duplicate logic that already exists
@@ -39,12 +39,12 @@ Current readiness position:
 
 - Catalog and visualizer domain direction is clear.
 - The architecture boundaries are strong enough to continue work.
-- The `.copilot` guidance is now aligned to the external specs and the live codebase.
+- The `.github/copilot` guidance is now aligned to the external specs and the live codebase.
 - Local quality gates are currently failing, so future implementation should treat the repo as conditionally ready rather than fully green.
 
 ## Verified Command Outcomes
 
-See `.copilot/execution/catalog-visualizer.validation.json` for machine-readable results.
+See `.github/copilot/execution/catalog-visualizer.validation.json` for machine-readable results.
 
 Summary:
 
@@ -65,8 +65,8 @@ Summary:
 
 ## How The Next Implementation Pass Should Proceed
 
-1. Read the current execution files under `.copilot/execution/catalog-visualizer*.json`.
-2. Pick one bounded prompt from `.copilot/prompts/`.
+1. Read the current execution files under `.github/copilot/execution/catalog-visualizer*.json`.
+2. Pick one bounded prompt from `.github/copilot/prompts/`.
 3. Keep work inside one catalog or visualizer phase unless explicitly broadening to integration.
 4. Repair shared blockers only when they directly block the selected phase.
 5. Update the execution JSON artifacts after each meaningful pass so the next agent inherits current state.

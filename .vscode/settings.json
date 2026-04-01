@@ -1,18 +1,6 @@
 {
     "editor.formatOnSave": true,
     "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "search.exclude": {
-        "**/.github/copilot/docs/**": true,
-        "**/.github/copilot/contracts/**": true,
-        "**/.github/copilot/json/**": true,
-        "**/.github/copilot/prompts/**": true
-    },
-    "files.exclude": {
-        ".github/copilot/docs": true,
-        ".github/copilot/contracts": true,
-        ".github/copilot/json": true,
-        ".github/copilot/prompts": true
-    },
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "explicit"
     },
@@ -48,5 +36,6 @@
     },
     "[sql]": {
         "editor.defaultFormatter": "ms-ossdata.vscode-pgsql"
-    }
+    },
+    "chatgpt.openOnStartup": false
 }

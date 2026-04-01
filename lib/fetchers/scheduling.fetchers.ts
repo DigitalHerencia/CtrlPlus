@@ -1,7 +1,6 @@
 import 'server-only'
 import { prisma } from '@/lib/db/prisma'
 import { availabilitySelectFields, bookingSelectFields } from '@/lib/db/selects/scheduling.selects'
-import { availabilityListParamsSchema, bookingListParamsSchema } from '@/schemas/scheduling.schemas'
 import { getSession } from '@/lib/auth/session'
 import { hasCapability } from '@/lib/authz/policy'
 import type {

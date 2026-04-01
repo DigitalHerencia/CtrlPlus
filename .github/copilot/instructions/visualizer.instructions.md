@@ -1,6 +1,6 @@
 ---
 description: 'Domain instructions for the vehicle visualizer'
-applyTo: 'app/(tenant)/visualizer/**,components/visualizer/**,features/visualizer/**,lib/visualizer/**,lib/integrations/huggingface.ts,lib/uploads/**,lib/cache/**,schemas/visualizer/**,types/visualizer/**'
+applyTo: 'app/(tenant)/visualizer/**,components/visualizer/**,features/visualizer/**,lib/visualizer/**,lib/integrations/huggingface.ts,lib/uploads/**,lib/cache/**,schema/visualizer/**,types/visualizer/**'
 ---
 
 # Visualizer Domain Instructions

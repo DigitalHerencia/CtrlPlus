@@ -14,16 +14,8 @@ import {
     revalidateCatalogAndVisualizerPaths,
     revalidateCatalogPaths,
 } from '@/lib/cache/revalidate-tags'
-import {
-    deletePersistedWrapImage,
-    persistWrapImage,
-    persistWrapImageFromBuffer,
-} from '@/lib/uploads/storage'
-import {
-    validateWrapImageFile,
-    MAX_WRAP_IMAGE_BYTES,
-    ALLOWED_WRAP_IMAGE_MIME_TYPES,
-} from '@/lib/uploads/file-validation'
+import { deletePersistedWrapImage, persistWrapImageFromBuffer } from '@/lib/uploads/storage'
+import { MAX_WRAP_IMAGE_BYTES, ALLOWED_WRAP_IMAGE_MIME_TYPES } from '@/lib/uploads/file-validation'
 import { readPhotoBuffer } from '@/lib/uploads/image-processing'
 import { getCatalogWrapById, getWrapById } from '@/lib/fetchers/catalog.fetchers'
 import {

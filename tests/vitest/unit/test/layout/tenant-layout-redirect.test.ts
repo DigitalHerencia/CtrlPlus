@@ -44,7 +44,7 @@ describe('TenantLayout', () => {
             // call and ignore returned React nodes
             // call as a plain async function
             await TenantLayout({ children: 'child' } as unknown as { children: ReactNode })
-        } catch (err) {
+        } catch {
             // Some implementations of redirect may throw; ignore
         }
 

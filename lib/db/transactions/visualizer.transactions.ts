@@ -11,5 +11,8 @@ export async function createPreviewTx(
     _previewData: unknown
 ): Promise<unknown> {
     // Implement domain-specific preview persistence here when schema is known
+    // Reference params to avoid unused-variable lint warnings in the scaffold.
+    void _tx
+    void _previewData
     return Promise.resolve(null)
 }

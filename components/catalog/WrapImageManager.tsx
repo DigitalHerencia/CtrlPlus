@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toCatalogAssetImage } from '@/lib/fetchers/catalog.mappers'
 import type { CatalogAssetReadinessDTO, WrapImageDTO } from '@/types/catalog.types'
-import { wrapImageKindValues, WrapImageKind as WrapImageKindConst } from '@/lib/constants/statuses'
+import { WrapImageKind as WrapImageKindConst } from '@/lib/constants/statuses'
 import type { WrapImageKind as WrapImageKindType } from '@/lib/constants/statuses'
 
 interface WrapImageManagerProps {

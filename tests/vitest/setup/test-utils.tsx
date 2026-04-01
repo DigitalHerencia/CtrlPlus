@@ -1,4 +1,3 @@
-import React from 'react'
 import { render as rtlRender, type RenderOptions } from '@testing-library/react'
 import type { ReactElement } from 'react'
 

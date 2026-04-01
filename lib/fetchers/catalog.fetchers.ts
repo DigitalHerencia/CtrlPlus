@@ -25,7 +25,7 @@ import type {
     WrapImageDTO,
     WrapListDTO,
 } from '@/types/catalog.types'
-import type { searchWrapsSchema } from '@/schemas/catalog.schemas'
+
 import { WrapImageKind } from '../constants/statuses'
 
 export interface WrapVisibilityScope {
