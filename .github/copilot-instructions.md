@@ -7,6 +7,7 @@ applyTo: "**/*"
 
 - Use `AGENTS.md` as the primary repo-wide contract.
 - Keep prompt context lean. Do not preload the full `.copilot` tree by default.
+ - Avoid placing a `.copilot` folder at the root of a drive or in parent directories of your workspace; some Copilot clients may scan parent directories and auto-load large instruction trees into the prompt context. Keep large archives behind explicit gates or inside plugin packages.
 - Do not auto-load `.copilot/README.md`, `.copilot/docs/**`, `.copilot/contracts/**`, `.copilot/execution/**`, or `.copilot/prompts/**` unless the current task clearly needs them.
 - Do not auto-load external notes under `C:\Users\scree\Documents\DevNotes\**`. Treat them as manual reference only.
 - Load at most one matching scoped instruction file from `.copilot/instructions/` for the active domain:

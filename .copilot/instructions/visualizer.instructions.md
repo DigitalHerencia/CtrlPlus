@@ -1,64 +1,122 @@
 ---
-description: Domain instructions for visualizer delivery work
-applyTo: app/(tenant)/visualizer/**,features/visualizer/**,components/visualizer/**,lib/actions/visualizer.actions.ts,lib/fetchers/visualizer.fetchers.ts,lib/fetchers/visualizer.mappers.ts,lib/uploads/**,lib/integrations/**,schemas/visualizer.schemas.ts,types/visualizer/**,lib/cache/cache-keys.ts
+description: 'Domain instructions for the vehicle visualizer'
+applyTo: 'app/(tenant)/visualizer/**,components/visualizer/**,features/visualizer/**,lib/visualizer/**,lib/integrations/huggingface.ts,lib/uploads/**,lib/cache/**,schema/visualizer/**,types/visualizer/**'
 ---
 
-# Visualizer Instructions
+# Visualizer Domain Instructions
 
-- Keep visualizer routes thin and status-driven.
-- Preserve preview generation, uploads, provider access, and fallback behavior on the server.
-- Do not move storage or provider semantics into client modules or presentational components.
-- Preserve the current two-step lifecycle where preview creation and preview processing remain explicit server actions unless a dedicated refactor updates the contract and tests together.
-- Selected wraps must come from the catalog handoff fetcher, not from client-provided image URLs or ad hoc wrap metadata.
-- Keep provider logic behind `lib/integrations/huggingface.ts` and storage behind `lib/uploads/storage.ts`.
-- Preserve preview traceability through `cacheKey`, `sourceWrapImageId`, and `sourceWrapImageVersion`.
+## Domain purpose
 
-## Locked Visualizer Invariants
+The visualizer lets an authenticated user enter with a catalog-approved wrap, upload a vehicle image, generate an AI concept preview, and view or regenerate the resulting render with clear lifecycle state and ownership boundaries.
 
-- Preview statuses remain `pending`, `processing`, `complete`, and `failed`.
-- The uploaded vehicle image is the structural base. The catalog-selected visualizer texture is the design reference.
-- Hugging Face remains the primary generation path, and deterministic compositing remains the fallback path.
-- Vehicle uploads and generated previews must resolve to durable URLs. Do not introduce new inline base64 persistence.
-- Preview ownership stays scoped by `ownerClerkUserId`, and all reads or writes remain server-authoritative.
+## Scope boundaries
 
-## Current High-Risk Files
+This domain owns:
 
-- `lib/actions/visualizer.actions.ts`
-- `lib/uploads/image-processing.ts`
-- `lib/uploads/storage.ts`
-- `lib/integrations/huggingface.ts`
-- `features/visualizer/visualizer-workspace-client.tsx`
-- `components/visualizer/VisualizerClient.tsx`
-- `components/visualizer/UploadForm.tsx`
-- `components/visualizer/PreviewCanvas.tsx`
+- visualizer page orchestration
+- catalog-backed wrap selection consumption
+- vehicle upload flow
+- preview creation and retrieval
+- Hugging Face preview generation adapter
+- fallback composite generation
+- preview caching and storage
+- visualizer-specific UI state
 
-## Environment-Sensitive Surfaces
+This domain does not own:
 
-- `CLOUDINARY_CLOUD_NAME`
-- `CLOUDINARY_API_KEY`
-- `CLOUDINARY_API_SECRET`
-- `CLOUDINARY_WRAP_UPLOAD_PRESET`
-- `CLOUDINARY_WRAP_FOLDER`
-- `HUGGINGFACE_API_TOKEN`
-- `HUGGINGFACE_VISUALIZER_MODEL`
-- `HUGGINGFACE_VISUALIZER_PREVIEW_MODEL`
-- `HUGGINGFACE_TIMEOUT_MS`
-- `HUGGINGFACE_RETRIES`
-- `VISUALIZER_MAX_UPLOAD_SIZE_BYTES`
-- `VISUALIZER_BLEND_MODE`
-- `VISUALIZER_OVERLAY_OPACITY`
-- `VISUALIZER_ALLOWED_IMAGE_HOSTS`
+- catalog CRUD
+- wrap category management
+- catalog publish-readiness rules
+- billing creation
+- scheduling workflows
+- platform recovery tooling
 
-## Required Validation When Visualizer Changes
+## Required patterns
 
-- `pnpm lint`
-- `pnpm typecheck`
-- `pnpm prisma:validate`
-- targeted Vitest coverage for prompt construction, cache-key behavior, preview status transitions, and ownership
-- `pnpm build` when route or action code changes
-- `pnpm test:e2e --project=chromium --reporter=line` when the `/visualizer` entry flow, polling, or catalog handoff changes
+- Keep `app/(tenant)/visualizer/page.tsx` thin.
+- Put reads in `lib/visualizer/fetchers/**`.
+- Put writes in `lib/visualizer/actions/**`.
+- Future refactors should move page composition into `features/visualizer/**`.
+- Keep image processing, uploads, cache keys, and provider integrations inside `lib/uploads/**`, `lib/cache/**`, and `lib/integrations/**`.
+- Keep interactive UI in `components/visualizer/**`.
+- Use catalog-backed visualizer selection fetchers rather than reading raw wrap/image lists in the page.
+- Keep Hugging Face behind an adapter boundary so model changes do not leak into actions or UI.
 
-## Execution Discipline
+## Hard product requirements
 
-- Update `.copilot/execution/backlog.json`, `.copilot/execution/progress.json`, and `.copilot/execution/validation.json` when visualizer scope or runtime assumptions change materially.
-- Record any change to storage provider assumptions, preview lifecycle, or handoff inputs in `.copilot/contracts/catalog-visualizer.contract.yaml`.
+- Selecting a wrap must use catalog-approved deterministic asset resolution, not incidental image ordering.
+- Customer-facing selection must exclude wraps that are not visualizer-ready.
+- Preview generation must have a clear `PreviewStatus` lifecycle: `pending`, `processing`, `complete`, `failed`.
+- Cloudinary is the system of record for original vehicle uploads and generated preview outputs.
+- Preview generation should attempt Hugging Face first and automatically fall back to `fallback_composite` when generation is unavailable or unstable.
+- UI copy and behavior must frame the result as an AI preview or concept render, not an exact production proof.
+
+## Catalog handoff contract
+
+- The primary entry path is `/visualizer?wrapId=...`.
+- Selected wraps must be loaded server-side before the client shell renders.
+- Never trust client-provided wrap asset ids or URLs.
+- Preserve or introduce catalog-backed DTOs such as `VisualizerWrapSelectionDTO` with the active visualizer texture and optional prompt metadata.
+- Hidden or invalid wraps must stay blocked at the server boundary unless elevated access is explicitly intended.
+
+## Lifecycle and persistence contract
+
+- `createVisualizerPreview` and `regenerateVisualizerPreview` must enforce auth, capability, ownership, and wrap validity server-side.
+- Preview rows must preserve `sourceWrapImageId` and `sourceWrapImageVersion`.
+- Use deterministic cache keys that incorporate owner identity, wrap metadata, normalized vehicle image input, generation mode, model, and prompt version.
+- Avoid storing heavy inline payloads in database rows.
+- Cloudinary uploads should retain metadata needed for audit and debugging.
+
+## Provider and environment requirements
+
+- Support `HF_API_KEY`, `HF_IMAGE_TO_IMAGE_MODEL`, and `HF_TIMEOUT_MS`.
+- Keep model-specific assumptions out of UI code.
+- Normalize provider errors into domain-level failure behavior.
+- Preserve a clean fallback path so HF instability does not break the feature outright.
+
+## Security requirements
+
+- Enforce `visualizer.use` capability server-side.
+- Never trust client-provided wrap ownership or preview ownership.
+- Preview records must be scoped to the authenticated owner/user identity already used by the repo.
+- Treat uploaded vehicle images and generated previews as sensitive user content.
+- Avoid exposing raw storage internals to the client.
+- Harden remote image fetch behavior and MIME/size validation.
+
+## UI requirements
+
+- `VisualizerClient` is the feature shell, not the pipeline implementation.
+- `WrapSelector` should make it obvious which catalog wrap drives generation.
+- `UploadForm` should validate file type, size, and intent before submit.
+- `PreviewCanvas` should privilege final output and render explicit loading, failed, and recovery states.
+- Include explicit empty states and retry paths.
+- Prefer status-driven UX over pretending long-running work is instant.
+
+## Performance requirements
+
+- Do not block the UI on long-running inference if status-based polling is feasible.
+- Reuse preview cache keys deterministically.
+- Avoid duplicate generation for the same effective input set.
+- Prefer storage references over inline base64 strings.
+- Preserve room for background processing and signed or short-lived preview delivery when the runtime implementation evolves.
+
+## Testing requirements
+
+Add or update tests when changing:
+
+- catalog-backed wrap selection
+- upload validation and normalization
+- preview generation behavior
+- preview lifecycle transitions
+- cache-key behavior
+- preview ownership rules
+- fallback rendering behavior
+- visualizer page happy path and failure path
+
+## Refactor priorities
+
+1. make catalog handoff and wrap selection deterministic
+2. move photo ingestion to durable storage references
+3. make preview generation resilient and status-driven
+4. tighten server-side validation and ownership checks
+5. improve visualizer usability and operational clarity
