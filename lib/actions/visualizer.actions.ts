@@ -108,20 +108,28 @@ async function executeVisualizerPreviewGeneration(params: {
     }
 }
 
-export async function createVisualizerPreview(
-    input: RegenerateVisualizerPreviewInput
-): Promise<VisualizerPreviewDTO> {
+export async function createVisualizerPreview(input: {
+    wrapId: string
+    fileKey?: string
+    file?: File
+}): Promise<VisualizerPreviewDTO> {
     const session = await getSession()
     const userId = session.userId
     if (!session.isAuthenticated || !userId) {
         throw new Error('Unauthorized: not authenticated')
     }
     requireCapability(session.authz, 'visualizer.use')
-
     const parsed = createVisualizerPreviewSchema.parse(input)
-    const photo = await readPhotoBuffer(parsed.fileKey)
-    const normalizedVehicle = await normalizeVehicleBuffer(photo.buffer, photo.contentType)
     const includeHidden = session.isOwner || session.isPlatformAdmin
+
+    // Normalize the provided photo input. Support either a browser File (uploaded from client)
+    // or a server-side fileKey that refers to a previously stored image URL.
+    const normalizedVehicle = parsed.file
+        ? await normalizeVehicleUpload(parsed.file)
+        : await (async () => {
+              const photo = await readPhotoBuffer(parsed.fileKey!)
+              return normalizeVehicleBuffer(photo.buffer, photo.contentType)
+          })()
 
     const wrap = await getVisualizerWrapSelectionById(parsed.wrapId, { includeHidden })
     if (!wrap) {
@@ -384,4 +392,9 @@ export async function processVisualizerPreview(
 
         throw new Error(error instanceof Error ? error.message : 'Preview generation failed.')
     }
+}
+
+// Client helper: accept a File-based upload and delegate to createVisualizerPreview.
+export async function uploadAndGeneratePreview(input: { wrapId: string; file: File }) {
+    return createVisualizerPreview(input)
 }

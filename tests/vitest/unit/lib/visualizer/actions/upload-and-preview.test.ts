@@ -4,10 +4,20 @@ const mocks = vi.hoisted(() => ({
     createVisualizerPreview: vi.fn(),
 }))
 
-vi.mock('@/lib/visualizer/actions/visualizer.actions', () => ({
+vi.mock('@/lib/actions/visualizer.actions', () => ({
     createVisualizerPreview: mocks.createVisualizerPreview,
     uploadAndGeneratePreview: (input: import('@/types/visualizer/inputs').UploadPhotoInput) =>
         mocks.createVisualizerPreview(input),
+}))
+
+vi.mock('@/lib/auth/session', () => ({
+    getSession: vi.fn().mockResolvedValue({
+        isAuthenticated: true,
+        userId: 'user-1',
+        authz: {},
+        isOwner: false,
+        isPlatformAdmin: false,
+    }),
 }))
 
 import { uploadAndGeneratePreview } from '@/lib/actions/visualizer.actions'
@@ -25,10 +35,10 @@ describe('uploadAndGeneratePreview', () => {
             cacheKey: 'cache-key',
             sourceWrapImageId: 'texture-1',
             sourceWrapImageVersion: 4,
-            expiresAt: new Date('2026-03-19T00:00:00Z'),
-            createdAt: new Date('2026-03-18T23:00:00Z'),
-            updatedAt: new Date('2026-03-19T00:00:00Z'),
-        } as VisualizerPreviewDTO
+            expiresAt: new Date('2026-03-19T00:00:00Z').toISOString(),
+            createdAt: new Date('2026-03-18T23:00:00Z').toISOString(),
+            updatedAt: new Date('2026-03-19T00:00:00Z').toISOString(),
+        } as unknown as VisualizerPreviewDTO
 
         mocks.createVisualizerPreview.mockResolvedValue(preview)
 

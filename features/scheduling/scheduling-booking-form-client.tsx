@@ -2,13 +2,17 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
+import type { Resolver } from 'react-hook-form'
 import { useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
 import { BookingForm } from '@/components/scheduling/booking-form'
 import { createBooking } from '@/lib/actions/scheduling.actions'
 import { bookingFormSchema } from '@/schemas/scheduling'
-import { type BookingFormValues, type SchedulingBookingFormClientProps } from '@/types/scheduling'
+import {
+    type BookingFormValues,
+    type SchedulingBookingFormClientProps,
+} from '@/types/scheduling.client.types'
 
 function buildDateTime(date: Date, time: string): Date {
     const [hourPart, minutePart = '0'] = time.split(':')
@@ -32,7 +36,8 @@ export function SchedulingBookingFormClient({
     const [serverError, setServerError] = useState<string | null>(null)
     const form = useForm<BookingFormValues>({
         mode: 'onBlur',
-        resolver: zodResolver(bookingFormSchema),
+        // Provide the resolver and coerce the type to the expected Resolver to satisfy TS
+        resolver: zodResolver(bookingFormSchema) as unknown as Resolver<BookingFormValues>,
         defaultValues: {
             date: undefined,
             windowId: '',
@@ -84,8 +89,8 @@ export function SchedulingBookingFormClient({
         try {
             const booking = await createBooking({
                 wrapId: values.wrapId,
-                startTime,
-                endTime,
+                startTime: startTime.toISOString(),
+                endTime: endTime.toISOString(),
             })
 
             router.push(`/billing/${booking.invoiceId}`)

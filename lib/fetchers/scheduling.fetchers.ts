@@ -46,17 +46,22 @@ function toAvailabilityRuleDTO(record: {
     startTime: string
     endTime: string
     capacitySlots: number
-    createdAt: Date
-    updatedAt: Date
+    createdAt: Date | string
+    updatedAt: Date | string
 }): AvailabilityRuleDTO {
+    const createdAt =
+        typeof record.createdAt === 'string' ? record.createdAt : record.createdAt?.toISOString()
+    const updatedAt =
+        typeof record.updatedAt === 'string' ? record.updatedAt : record.updatedAt?.toISOString()
+
     return {
         id: record.id,
         dayOfWeek: record.dayOfWeek,
         startTime: record.startTime,
         endTime: record.endTime,
         capacitySlots: record.capacitySlots,
-        createdAt: record.createdAt.toISOString(),
-        updatedAt: record.updatedAt.toISOString(),
+        createdAt,
+        updatedAt,
     }
 }
 
@@ -146,38 +151,53 @@ function toBookingDTO(record: {
     wrap: {
         name: string
     }
-    startTime: Date
-    endTime: Date
+    startTime: Date | string
+    endTime: Date | string
     status: string
     totalPrice: number
     reservation: {
-        expiresAt: Date
+        expiresAt: Date | string
     } | null
-    createdAt: Date
-    updatedAt: Date
+    createdAt: Date | string
+    updatedAt: Date | string
 }): BookingDTO {
-    const reservationExpiresAtDate: Date | null = record.reservation?.expiresAt ?? null
+    const reservationExpiresAtDate: Date | string | null = record.reservation?.expiresAt ?? null
     const displayStatus = getBookingDisplayStatus(
         record.status as BookingStatusValue,
-        reservationExpiresAtDate
+        typeof reservationExpiresAtDate === 'string'
+            ? reservationExpiresAtDate
+                ? new Date(reservationExpiresAtDate)
+                : null
+            : (reservationExpiresAtDate as Date | null)
     )
     const reservationExpiresAt = reservationExpiresAtDate
-        ? reservationExpiresAtDate.toISOString()
+        ? typeof reservationExpiresAtDate === 'string'
+            ? reservationExpiresAtDate
+            : reservationExpiresAtDate.toISOString()
         : null
+
+    const startTime =
+        typeof record.startTime === 'string' ? record.startTime : record.startTime.toISOString()
+    const endTime =
+        typeof record.endTime === 'string' ? record.endTime : record.endTime.toISOString()
+    const createdAt =
+        typeof record.createdAt === 'string' ? record.createdAt : record.createdAt.toISOString()
+    const updatedAt =
+        typeof record.updatedAt === 'string' ? record.updatedAt : record.updatedAt.toISOString()
 
     return {
         id: record.id,
         customerId: record.customerId,
         wrapId: record.wrapId,
         wrapName: record.wrap.name,
-        startTime: record.startTime.toISOString(),
-        endTime: record.endTime.toISOString(),
+        startTime,
+        endTime,
         status: record.status as BookingDTO['status'],
         totalPrice: record.totalPrice,
         reservationExpiresAt,
         displayStatus,
-        createdAt: record.createdAt.toISOString(),
-        updatedAt: record.updatedAt.toISOString(),
+        createdAt,
+        updatedAt,
     }
 }
 

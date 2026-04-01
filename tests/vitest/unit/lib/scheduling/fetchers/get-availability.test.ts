@@ -94,8 +94,8 @@ describe('scheduling availability fetchers', () => {
                 startTime: '09:00',
                 endTime: '12:00',
                 capacitySlots: 2,
-                createdAt: new Date('2026-03-20T10:00:00.000Z'),
-                updatedAt: new Date('2026-03-20T10:00:00.000Z'),
+                createdAt: new Date('2026-03-20T10:00:00.000Z').toISOString(),
+                updatedAt: new Date('2026-03-20T10:00:00.000Z').toISOString(),
             },
         ])
     })
@@ -123,8 +123,8 @@ describe('scheduling availability fetchers', () => {
             startTime: '10:00',
             endTime: '14:00',
             capacitySlots: 3,
-            createdAt: new Date('2026-03-20T10:00:00.000Z'),
-            updatedAt: new Date('2026-03-20T10:00:00.000Z'),
+            createdAt: new Date('2026-03-20T10:00:00.000Z').toISOString(),
+            updatedAt: new Date('2026-03-20T10:00:00.000Z').toISOString(),
         })
     })
 })

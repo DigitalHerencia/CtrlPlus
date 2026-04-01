@@ -68,8 +68,8 @@ describe('SchedulingBookingFormClient', () => {
         await waitFor(() =>
             expect(mocks.createBooking).toHaveBeenCalledWith({
                 wrapId: 'wrap-1',
-                startTime: new Date(2026, 2, 1, 9, 0, 0, 0),
-                endTime: new Date(2026, 2, 1, 10, 0, 0, 0),
+                startTime: new Date(2026, 2, 1, 9, 0, 0, 0).toISOString(),
+                endTime: new Date(2026, 2, 1, 10, 0, 0, 0).toISOString(),
             })
         )
         expect(mocks.push).toHaveBeenCalledWith('/billing/invoice-1')

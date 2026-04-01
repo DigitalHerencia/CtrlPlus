@@ -8,7 +8,7 @@ import {
     TableRow,
 } from '@/components/ui/table'
 
-import { type WebhookFailureDTO } from '@/types/platform'
+import { type WebhookFailureDTO } from '@/types/platform.types'
 
 interface PlatformFailureTableProps {
     failures: WebhookFailureDTO[]

@@ -19,21 +19,24 @@ function toBookingCardItem(
         id: booking.id,
         wrapId: booking.wrapId,
         wrapName: booking.wrapName,
-        startTime: booking.startTime,
-        endTime: booking.endTime,
+        startTime: new Date(booking.startTime),
+        endTime: new Date(booking.endTime),
         status: booking.status,
         displayStatus: booking.displayStatus,
-        reservationExpiresAt: booking.reservationExpiresAt,
+        reservationExpiresAt: booking.reservationExpiresAt
+            ? new Date(booking.reservationExpiresAt)
+            : null,
         totalPrice: booking.totalPrice,
     }
 }
 
 export async function SchedulingBookingsPageFeature({ tab }: SchedulingBookingsPageFeatureProps) {
     const now = new Date()
+    const nowIso = now.toISOString()
     const bookingsResult = await getBookings(
         tab === 'upcoming'
-            ? { page: 1, pageSize: 20, fromDate: now }
-            : { page: 1, pageSize: 20, toDate: now }
+            ? { page: 1, pageSize: 20, fromDate: nowIso }
+            : { page: 1, pageSize: 20, toDate: nowIso }
     )
 
     const bookings = bookingsResult.items.map(toBookingCardItem)

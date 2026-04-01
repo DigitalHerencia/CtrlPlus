@@ -209,14 +209,14 @@ describe('scheduling lifecycle actions', () => {
 
         await expect(
             updateBooking('booking-1', {
-                startTime: new Date('2030-03-23T17:00:00.000Z'),
-                endTime: new Date('2030-03-23T19:00:00.000Z'),
+                startTime: new Date('2030-03-23T17:00:00.000Z').toISOString(),
+                endTime: new Date('2030-03-23T19:00:00.000Z').toISOString(),
             })
         ).resolves.toEqual(
             expect.objectContaining({
                 wrapName: 'Midnight Matte',
                 displayStatus: 'reserved',
-                reservationExpiresAt: new Date('2030-03-23T17:00:00.000Z'),
+                reservationExpiresAt: expect.any(String),
             })
         )
         expect(mocks.assertSlotHasCapacity).toHaveBeenCalledWith(

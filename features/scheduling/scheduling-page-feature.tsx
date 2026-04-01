@@ -26,11 +26,13 @@ function toBookingCardItem(
         id: booking.id,
         wrapId: booking.wrapId,
         wrapName: booking.wrapName,
-        startTime: booking.startTime,
-        endTime: booking.endTime,
+        startTime: new Date(booking.startTime),
+        endTime: new Date(booking.endTime),
         status: booking.status,
         displayStatus: booking.displayStatus,
-        reservationExpiresAt: booking.reservationExpiresAt,
+        reservationExpiresAt: booking.reservationExpiresAt
+            ? new Date(booking.reservationExpiresAt)
+            : null,
         totalPrice: booking.totalPrice,
     }
 }
@@ -44,12 +46,13 @@ function getAvailableWeekdays(
 
 export async function SchedulingPageFeature() {
     const now = new Date()
+    const nowIso = now.toISOString()
     const [availabilityResult, bookingsResult] = await Promise.all([
         getAvailabilityWindows(),
         getBookings({
             page: 1,
             pageSize: 3,
-            fromDate: now,
+            fromDate: nowIso,
         }),
     ])
 

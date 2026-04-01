@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils/cn'
-import { type InvoiceStatus } from '@/types/billing'
+import { type InvoiceStatus } from '@/lib/constants/statuses'
 
 interface InvoiceStatusBadgeProps {
     status: InvoiceStatus

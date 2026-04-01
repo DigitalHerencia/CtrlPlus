@@ -82,15 +82,15 @@ describe('createBooking', () => {
         await expect(
             createBooking({
                 wrapId: 'wrap-1',
-                startTime: new Date('2026-03-23T16:00:00.000Z'),
-                endTime: new Date('2026-03-23T18:00:00.000Z'),
+                startTime: new Date('2026-03-23T16:00:00.000Z').toISOString(),
+                endTime: new Date('2026-03-23T18:00:00.000Z').toISOString(),
             })
         ).resolves.toEqual(
             expect.objectContaining({
                 id: 'booking-1',
                 invoiceId: 'invoice-1',
                 wrapName: 'Midnight Matte',
-                reservationExpiresAt: expect.any(Date),
+                reservationExpiresAt: expect.any(String),
             })
         )
 

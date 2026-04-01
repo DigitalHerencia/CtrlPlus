@@ -7,7 +7,7 @@ import { type UseFormRegisterReturn } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { FieldDescription, FieldError } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { type WebsiteSettingsInput } from '@/types/settings'
+import { type WebsiteSettingsInput } from '@/types/settings.types'
 
 interface WebsiteSettingsFormProps {
     values: WebsiteSettingsInput

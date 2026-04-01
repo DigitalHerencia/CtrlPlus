@@ -35,10 +35,7 @@
         "test:e2e:report": "playwright show-report",
         "prisma:validate": "prisma validate",
         "db:migrate": "prisma migrate dev",
-        "db:migrate:deploy": "prisma migrate deploy",
-        "check:prompts": "node ./scripts/estimate-prompt-tokens.mjs --threshold=120000",
-        "copilot:enforce": "node ./.copilot/tools/enforce-instruction-scope.mjs",
-        "copilot:import": "powershell -NoProfile -Command \"if (Test-Path 'D:\\\\.copilot') { New-Item -ItemType Directory -Path .\\.copilot -Force; Copy-Item -Path 'D:\\\\.copilot\\\\*' -Destination .\\.copilot -Recurse -Force } else { Write-Error 'D:\\\\.copilot not found'; exit 2 }\""
+        "db:migrate:deploy": "prisma migrate deploy"
     },
     "dependencies": {
         "@clerk/nextjs": "7.0.5",

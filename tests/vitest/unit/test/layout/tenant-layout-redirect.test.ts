@@ -1,4 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
+import type { ReactNode } from 'react'
+import type { SessionContext } from '@/types/auth.types'
 
 vi.mock('@/lib/auth/session', () => ({
     getSession: vi.fn(),
@@ -10,7 +12,7 @@ vi.mock('next/navigation', () => ({
 
 // Avoid importing real client TenantSidebar during the test
 vi.mock('@/components/shared/tenant-sidebar', () => ({
-    TenantSidebar: ({ children }: any) => children,
+    TenantSidebar: ({ children }: { children?: ReactNode }) => children,
 }))
 
 import TenantLayout from '@/app/(tenant)/layout'
@@ -23,16 +25,25 @@ describe('TenantLayout', () => {
         mockedSession.mockResolvedValueOnce({
             isAuthenticated: false,
             userId: null,
-            authz: {},
-        } as any)
+            authz: {
+                userId: null,
+                role: 'customer',
+                isAuthenticated: false,
+                isOwner: false,
+                isPlatformAdmin: false,
+            },
+            role: 'customer',
+            isOwner: false,
+            isPlatformAdmin: false,
+        } as SessionContext)
 
         const mockedRedirect = vi.mocked(redirect)
 
         // Call the layout function directly; it should call redirect
         try {
             // call and ignore returned React nodes
-            // @ts-ignore - call as a plain async function
-            await TenantLayout({ children: 'child' })
+            // call as a plain async function
+            await TenantLayout({ children: 'child' } as unknown as { children: ReactNode })
         } catch (err) {
             // Some implementations of redirect may throw; ignore
         }

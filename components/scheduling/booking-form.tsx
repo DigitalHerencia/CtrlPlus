@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import {
     type BookingFormAvailabilityWindow,
     type BookingFormProps,
-} from '@/types/scheduling'
+} from '@/types/scheduling.client.types'
 
 import { CalendarClient } from './calendar-client'
 import { TimeSlot } from './time-slot'
@@ -101,9 +101,7 @@ export function BookingForm({
                                     ))
                                 )}
                                 {errors?.windowId ? (
-                                    <span className="text-xs text-red-500">
-                                        {errors.windowId}
-                                    </span>
+                                    <span className="text-xs text-red-500">{errors.windowId}</span>
                                 ) : null}
                             </CardContent>
                         </Card>

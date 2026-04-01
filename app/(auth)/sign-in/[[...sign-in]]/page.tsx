@@ -1,5 +1,5 @@
 import { LoginForm } from '@/features/auth/login-form-client'
-import { type LoginPageProps } from '@/types/auth'
+import { type LoginPageProps } from '@/types/auth.types'
 import Image from 'next/image'
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {

@@ -56,8 +56,8 @@ describe('reserveSlot', () => {
         await expect(
             reserveSlot({
                 wrapId: 'wrap-1',
-                startTime: new Date('2030-03-23T16:00:00.000Z'),
-                endTime: new Date('2030-03-23T18:00:00.000Z'),
+                startTime: new Date('2030-03-23T16:00:00.000Z').toISOString(),
+                endTime: new Date('2030-03-23T18:00:00.000Z').toISOString(),
             })
         ).rejects.toThrow('Unauthorized: not authenticated')
     })
@@ -83,8 +83,8 @@ describe('reserveSlot', () => {
         await expect(
             reserveSlot({
                 wrapId: 'wrap-1',
-                startTime: new Date('2030-03-23T16:00:00.000Z'),
-                endTime: new Date('2030-03-23T18:00:00.000Z'),
+                startTime: new Date('2030-03-23T16:00:00.000Z').toISOString(),
+                endTime: new Date('2030-03-23T18:00:00.000Z').toISOString(),
             })
         ).rejects.toThrow('You already have an active reservation')
         expect(tx.booking.create).not.toHaveBeenCalled()
@@ -114,8 +114,8 @@ describe('reserveSlot', () => {
         await expect(
             reserveSlot({
                 wrapId: 'wrap-1',
-                startTime: new Date('2030-03-23T16:00:00.000Z'),
-                endTime: new Date('2030-03-23T18:00:00.000Z'),
+                startTime: new Date('2030-03-23T16:00:00.000Z').toISOString(),
+                endTime: new Date('2030-03-23T18:00:00.000Z').toISOString(),
             })
         ).rejects.toThrow('The requested time slot is fully booked - no remaining capacity')
         expect(tx.booking.create).not.toHaveBeenCalled()
@@ -152,14 +152,14 @@ describe('reserveSlot', () => {
         await expect(
             reserveSlot({
                 wrapId: 'wrap-1',
-                startTime: new Date('2030-03-23T16:00:00.000Z'),
-                endTime: new Date('2030-03-23T18:00:00.000Z'),
+                startTime: new Date('2030-03-23T16:00:00.000Z').toISOString(),
+                endTime: new Date('2030-03-23T18:00:00.000Z').toISOString(),
             })
         ).resolves.toEqual(
             expect.objectContaining({
                 id: 'booking-1',
                 wrapName: 'Midnight Matte',
-                reservationExpiresAt: expect.any(Date),
+                reservationExpiresAt: expect.any(String),
                 displayStatus: 'reserved',
             })
         )

@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
-import { WebhookOperationsOverviewDTO } from '@/types/platform'
+import { WebhookOperationsOverviewDTO } from '@/types/platform.types'
 
 interface PlatformWebhookDiagnosticsProps {
     overview: WebhookOperationsOverviewDTO

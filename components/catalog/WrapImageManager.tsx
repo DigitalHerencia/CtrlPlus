@@ -7,28 +7,29 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { toCatalogAssetImage } from '@/lib/fetchers/catalog.mappers'
 import type { CatalogAssetReadinessDTO, WrapImageDTO } from '@/types/catalog.types'
-import  { wrapImageKindValues } from '@/lib/constants/statuses'
+import { wrapImageKindValues, WrapImageKind as WrapImageKindConst } from '@/lib/constants/statuses'
+import type { WrapImageKind as WrapImageKindType } from '@/lib/constants/statuses'
 
 interface WrapImageManagerProps {
     wrapId: string
     images: WrapImageDTO[]
     readiness?: CatalogAssetReadinessDTO
     isPending?: boolean
-    onAddImage: (file: File, kind: wrapImageKindValues, isActive: boolean) => Promise<void> | void
+    onAddImage: (file: File, kind: WrapImageKindType, isActive: boolean) => Promise<void> | void
     onRemoveImage: (imageId: string) => Promise<void> | void
     onReorderImages: (orderedIds: string[]) => Promise<void> | void
     onUpdateImageMetadata: (
         imageId: string,
-        kind: wrapImageKindValues,
+        kind: WrapImageKindType,
         isActive: boolean
     ) => Promise<void> | void
 }
 
-const kindOptions: Array<{ value: WrapImageKindValue; label: string }> = [
-    { value: WrapImageKind.HERO, label: 'Hero / display' },
-    { value: WrapImageKind.GALLERY, label: 'Gallery' },
-    { value: WrapImageKind.VISUALIZER_TEXTURE, label: 'Visualizer texture' },
-    { value: WrapImageKind.VISUALIZER_MASK_HINT, label: 'Mask hint' },
+const kindOptions: Array<{ value: WrapImageKindType; label: string }> = [
+    { value: WrapImageKindConst.HERO, label: 'Hero / display' },
+    { value: WrapImageKindConst.GALLERY, label: 'Gallery' },
+    { value: WrapImageKindConst.VISUALIZER_TEXTURE, label: 'Visualizer texture' },
+    { value: WrapImageKindConst.VISUALIZER_MASK_HINT, label: 'Mask hint' },
 ]
 
 export function WrapImageManager({
@@ -46,10 +47,10 @@ export function WrapImageManager({
         [images]
     )
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
-    const [uploadKind, setUploadKind] = useState<WrapImageKindValue>(WrapImageKind.GALLERY)
+    const [uploadKind, setUploadKind] = useState<WrapImageKindType>(WrapImageKindConst.GALLERY)
     const [uploadIsActive, setUploadIsActive] = useState(true)
     const [drafts, setDrafts] = useState<
-        Record<string, { kind: WrapImageKindValue; isActive: boolean }>
+        Record<string, { kind: WrapImageKindType; isActive: boolean }>
     >(() =>
         Object.fromEntries(
             orderedImages.map((image) => [image.id, { kind: image.kind, isActive: image.isActive }])
@@ -65,7 +66,7 @@ export function WrapImageManager({
 
         void onAddImage(selectedFile, uploadKind, uploadIsActive)
         setSelectedFile(null)
-        setUploadKind(WrapImageKind.GALLERY)
+        setUploadKind(WrapImageKindConst.GALLERY)
         setUploadIsActive(true)
         event.currentTarget.reset()
     }
@@ -136,7 +137,7 @@ export function WrapImageManager({
                                 value={uploadKind}
                                 disabled={isPending}
                                 onChange={(event) =>
-                                    setUploadKind(event.target.value as WrapImageKindValue)
+                                    setUploadKind(event.target.value as WrapImageKindType)
                                 }
                                 className="h-11 w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100"
                             >
@@ -210,7 +211,7 @@ export function WrapImageManager({
                                                         [image.id]: {
                                                             ...draft,
                                                             kind: event.target
-                                                                .value as WrapImageKindValue,
+                                                                .value as WrapImageKindType,
                                                         },
                                                     }))
                                                 }

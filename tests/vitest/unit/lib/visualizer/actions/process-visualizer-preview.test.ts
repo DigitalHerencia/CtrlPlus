@@ -34,7 +34,7 @@ vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
-vi.mock('@/lib/visualizer/fetchers/visualizer.fetchers', () => ({
+vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
     getVisualizerWrapSelectionById: mocks.getVisualizerWrapSelectionById,
 }))
 

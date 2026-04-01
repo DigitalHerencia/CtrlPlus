@@ -1,12 +1,13 @@
-#!/usr/bin/env node
 import { promises as fs } from 'fs'
 import path from 'path'
 
-// Simple heuristic token estimator for large instruction sets.
-// Tokens ~= Math.ceil(chars / 4) (approx. for GPT-family models)
+// TypeScript version of the prompt token estimator (source-only).
+// Runtime uses the compiled ESM at scripts/estimate-prompt-tokens.mjs
+
+type Args = { [k: string]: string | boolean }
 
 const argv = process.argv.slice(2)
-const args = {}
+const args: Args = {}
 for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
     if (a.startsWith('--')) {
@@ -15,9 +16,8 @@ for (let i = 0; i < argv.length; i++) {
     }
 }
 
-// Default to scanning only the repository-local agent directories to avoid
-// unintentionally scanning parent-drive or user-level instruction trees.
-const defaultPaths = ['.copilot']
+// Default to repository-local agent dirs only (idiot-proof: avoid parent drives)
+const defaultPaths = ['.github/copilot']
 const paths = (args.paths ? String(args.paths).split(',') : defaultPaths)
     .map((p) => p.trim())
     .filter(Boolean)
@@ -36,7 +36,7 @@ const textExt = new Set([
     'SKILL.md',
 ])
 
-function isTextFile(file) {
+function isTextFile(file: string) {
     const name = path.basename(file).toLowerCase()
     if (
         name.endsWith('.prompt.md') ||
@@ -49,15 +49,15 @@ function isTextFile(file) {
     return textExt.has(ext)
 }
 
-async function walkAndCollect(root) {
+async function walkAndCollect(root: string) {
     const stats = {
         files: 0,
         bytes: 0,
         tokenEstimate: 0,
-        entries: [],
+        entries: [] as Array<{ path: string; bytes: number; tokens: number }>,
     }
 
-    async function visit(p) {
+    async function visit(p: string) {
         try {
             const st = await fs.stat(p)
             if (st.isFile()) {
@@ -110,7 +110,6 @@ async function analyze() {
                 totalTokens += stats.tokenEstimate
             }
         } catch (err) {
-            // path doesn't exist or inaccessible
             results.push({ path: p, missing: true })
         }
     }

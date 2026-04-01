@@ -79,7 +79,7 @@ describe('scheduling booking fetchers', () => {
         const result = await getBookings({
             page: 1,
             pageSize: 20,
-            fromDate: new Date('2026-03-01T00:00:00.000Z'),
+            fromDate: new Date('2026-03-01T00:00:00.000Z').toISOString(),
         })
 
         expect(mocks.prisma.booking.findMany).toHaveBeenCalledWith(
@@ -93,13 +93,13 @@ describe('scheduling booking fetchers', () => {
             expect.objectContaining({
                 id: 'booking-1',
                 wrapName: 'Midnight Matte',
-                reservationExpiresAt: new Date('2030-03-23T15:30:00.000Z'),
+                reservationExpiresAt: new Date('2030-03-23T15:30:00.000Z').toISOString(),
                 displayStatus: 'reserved',
             }),
             expect.objectContaining({
                 id: 'booking-2',
                 wrapName: 'Signal Red',
-                reservationExpiresAt: new Date('2020-03-20T09:00:00.000Z'),
+                reservationExpiresAt: new Date('2020-03-20T09:00:00.000Z').toISOString(),
                 displayStatus: 'expired',
             }),
         ])

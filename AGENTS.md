@@ -1,9 +1,9 @@
 ---
-description: 'Repo-specific Codex instructions for CtrlPlus'
+description: 'Repo-specific Agent instructions for CtrlPlus'
 applyTo: '**/*'
 ---
 
-# CtrlPlus Codex Instructions
+# CtrlPlus Agent Instructions
 
 ## Project intent
 
@@ -35,17 +35,17 @@ CtrlPlus is a single-store, tenant-scoped operations platform built on Next.js A
 - `lib/auth/**`, `lib/authz/**`: identity and authorization
 - `prisma/schema.prisma`: canonical data model
 
-## Codex Domain Resources
+## Agent Domain Resources
 
-The `.codex` directory contains domain-specific resources to guide codex agents and automate workflows:
+The `.github/copilot` directory contains domain-specific resources to guide codex agents and automate workflows:
 
-- `.codex/arch/`: Target architecture, refactor principles, and directory-tree specs.
-- `.codex/docs/`: Domain specs and cross-domain product or technical requirements.
-- `.codex/instructions/`: Domain-specific instructions and architectural notes.
-- `.codex/contracts/`: YAML contracts that agents consume as literal execution constraints.
-- `.codex/execution/`: JSON backlog, progress, decision, and validation state for active programs.
-- `.codex/prompts/`: Per-domain refactor prompts for future execution passes.
-- `.codex/README.md`: entrypoint describing precedence and how markdown, YAML, and JSON fit together.
+- `.github/copilot/resource/`: Target architecture, refactor principles, and directory-tree specs.
+- `.github/copilot/docs/`: Domain specs and cross-domain product or technical requirements.
+- `.github/copilot/instructions/`: Domain-specific instructions and architectural notes.
+- `.github/copilot/contracts/`: YAML contracts that agents consume as literal execution constraints.
+- `.github/copilot/json/`: JSON backlog, progress, decision, and validation state for active programs.
+- `.github/copilot/prompts/`: Per-domain refactor prompts for future execution passes.
+- `.github/copilot/README.md`: entrypoint describing precedence and how markdown, YAML, and JSON fit together.
 
 The active codex domain set is:
 
@@ -60,22 +60,22 @@ The active codex domain set is:
 
 codex agents should consult these files for domain boundaries, implementation standards, and prompt-driven refactor orchestration. These codex artifacts are preparatory guidance and do not themselves authorize runtime refactors that are outside the current task.
 
-## Codex Resource Precedence
+## Agent Resource Precedence
 
-When `.codex` resources exist, consume them in this order:
+When `.github/copilot` resources exist, consume them in this order:
 
-1. `.codex/README.md`
-2. relevant `.codex/instructions/*.md`
-3. relevant `.codex/docs/*.md` and `.codex/arch/*.md`
-4. relevant `.codex/contracts/*.yaml`
-5. relevant `.codex/execution/*.json`
-6. relevant `.codex/prompts/*.md`
+1. `.github/copilot/README.md`
+2. relevant `.github/copilot/instructions/*.md`
+3. relevant `.github/copilot/docs/*.md` and `.github/copilot/resource/*.md`
+4. relevant `.github/copilot/contracts/*.yaml`
+5. relevant `.github/copilot/json/*.json`
+6. relevant `.github/copilot/prompts/*.md`
 
 ## Instruction Discovery
 
-- Codex auto-discovers `AGENTS.md` files by name and scope.
-- Files under `.codex/instructions/*.md` are not auto-discovered by filename alone; they are repo-directed resources that agents must read because this `AGENTS.md` tells them to.
-- Do not rename `.codex/instructions/*.md` to `{domain}.agents.md` unless you are intentionally creating another scoped `AGENTS.md` surface.
+- Agent auto-discovers `AGENTS.md` files by name and scope.
+- Files under `.github/copilot/instructions/*.md` are not auto-discovered by filename alone; they are repo-directed resources that agents must read because this `AGENTS.md` tells them to.
+- Do not rename `.github/copilot/instructions/*.md` to `{domain}.agents.md` unless you are intentionally creating another scoped `AGENTS.md` surface.
 
 ## Markdown, YAML, JSON Rules
 
@@ -92,20 +92,20 @@ When `.codex` resources exist, consume them in this order:
 - Use JSON execution files to track backlog, progress, open decisions, and validation coverage.
 - Keep markdown, YAML, and JSON aligned. If one changes materially, update the others in the same pass when feasible.
 
-For catalog or visualizer work, treat these `.codex` files as authoritative first:
+-For catalog or visualizer work, treat these `.github/copilot` files as authoritative first:
 
-- `.codex/arch/codex_catalog_visualizer_migration_spec.md`
-- `.codex/arch/codex_visualizer_huggingface_generation_spec.md`
-- `.codex/docs/catalog.md`
-- `.codex/docs/visualizer.md`
-- `.codex/instructions/catalog.instructions.md`
-- `.codex/instructions/visualizer.instructions.md`
+- `.github/copilot/resource/copilot_catalog_visualizer_migration_spec.md`
+- `.github/copilot/resource/copilot_visualizer_huggingface_generation_spec.md`
+- `.github/copilot/docs/catalog.md`
+- `.github/copilot/docs/visualizer.md`
+- `.github/copilot/instructions/catalog.instructions.md`
+- `.github/copilot/instructions/visualizer.instructions.md`
 
 Catalog and visualizer prompt work now follows a `master + phases` model:
 
-- use `.codex/prompts/catalog.refactor.prompt.md` or `.codex/prompts/visualizer.refactor.prompt.md` as the domain-level entrypoint
-- pair the master prompt with the relevant phase prompt under `.codex/prompts/` for bounded implementation passes
-- use `.codex/prompts/catalog-visualizer.integration-e2e.prompt.md` when the storefront funnel spans both domains
+- use `.github/copilot/prompts/catalog.refactor.prompt.md` or `.github/copilot/prompts/visualizer.refactor.prompt.md` as the domain-level entrypoint
+- pair the master prompt with the relevant phase prompt under `.github/copilot/prompts/` for bounded implementation passes
+- use `.github/copilot/prompts/catalog-visualizer.integration-e2e.prompt.md` when the storefront funnel spans both domains
 
 ## Catalog and visualizer directives
 
@@ -179,7 +179,7 @@ Use existing labels and template style:
 - Bugs should align with `bug` style.
 - PRs must satisfy security and code quality checklists already used in repo.
 
-## Codex operating mode
+## Agent operating mode
 
 When implementing or refactoring:
 

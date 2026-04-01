@@ -208,7 +208,7 @@ export function PreviewCanvas({
                         year: 'numeric',
                         month: 'short',
                         day: 'numeric',
-                    }).format(preview.expiresAt)}
+                    }).format(new Date(preview.expiresAt))}
                 </p>
             </div>
         </div>

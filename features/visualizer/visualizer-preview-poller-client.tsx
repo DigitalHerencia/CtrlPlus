@@ -25,12 +25,8 @@ function deserializePreview(
         return null
     }
 
-    return {
-        ...preview,
-        expiresAt: new Date(preview.expiresAt),
-        createdAt: new Date(preview.createdAt),
-        updatedAt: new Date(preview.updatedAt),
-    }
+    // Keep timestamp fields as ISO strings to match VisualizerPreviewDTO (Timestamp = string)
+    return { ...preview }
 }
 
 export function VisualizerPreviewPollerClient({

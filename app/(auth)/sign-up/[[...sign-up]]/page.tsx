@@ -1,5 +1,5 @@
 import { SignupForm } from '@/features/auth/signup-form-client'
-import { type SignupPageProps } from '@/types/auth'
+import { type SignupPageProps } from '@/types/auth.types'
 import Image from 'next/image'
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {

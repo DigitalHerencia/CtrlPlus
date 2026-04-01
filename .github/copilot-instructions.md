@@ -1,18 +1,18 @@
 ---
-description: "Lean repo-wide Copilot instructions for CtrlPlus"
-applyTo: "**/*"
+description: 'Lean repo-wide Copilot instructions for CtrlPlus'
+applyTo: '**/*'
 ---
 
 # CtrlPlus Copilot Instructions
 
 - Use `AGENTS.md` as the primary repo-wide contract.
 - Keep prompt context lean. Do not preload the full `.copilot` tree by default.
- - Avoid placing a `.copilot` folder at the root of a drive or in parent directories of your workspace; some Copilot clients may scan parent directories and auto-load large instruction trees into the prompt context. Keep large archives behind explicit gates or inside plugin packages.
-- Do not auto-load `.copilot/README.md`, `.copilot/docs/**`, `.copilot/contracts/**`, `.copilot/execution/**`, or `.copilot/prompts/**` unless the current task clearly needs them.
 - Do not auto-load external notes under `C:\Users\scree\Documents\DevNotes\**`. Treat them as manual reference only.
-- Load at most one matching scoped instruction file from `.copilot/instructions/` for the active domain:
-  - catalog work: `.copilot/instructions/catalog.instructions.md`
-  - visualizer work: `.copilot/instructions/visualizer.instructions.md`
+- Keep prompt context lean. Do not preload the full `.github/copilot` tree by default.
+- Avoid placing a `.copilot` folder at the root of a drive or in parent directories of your workspace; some Copilot clients may scan parent directories and auto-load large instruction trees into the prompt context. Keep large archives behind explicit gates or inside plugin packages.
+- Do not auto-load `.github/copilot/README.md`, `.github/copilot/docs/**`, `.github/copilot/contracts/**`, `.github/copilot/json/**`, or `.github/copilot/prompts/**` (or any drive-root `.copilot` archive such as `D:\.copilot`) unless the current task clearly needs them.
+- catalog work: `.copilot/instructions/catalog.instructions.md`
+- visualizer work: `.copilot/instructions/visualizer.instructions.md`
 - Treat `app/**` as orchestration only.
 - Do not import Prisma directly in `app/**` or React components.
 - Route database reads through `lib/fetchers/{domain}`.

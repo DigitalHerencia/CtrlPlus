@@ -26,7 +26,7 @@ vi.mock('next/navigation', () => ({
     }),
 }))
 
-vi.mock('@/lib/catalog/actions/catalog.actions', () => ({
+vi.mock('@/lib/actions/catalog.actions', () => ({
     createWrap: mocks.createWrap,
     updateWrap: mocks.updateWrap,
     publishWrap: mocks.publishWrap,
@@ -65,8 +65,8 @@ const mockWraps: CatalogManagerItemDTO[] = [
             },
         ],
         categories: mockCategories,
-        createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-02T00:00:00Z'),
+        createdAt: new Date('2024-01-01T00:00:00Z').toISOString(),
+        updatedAt: new Date('2024-01-02T00:00:00Z').toISOString(),
         displayImage: {
             id: 'img1',
             url: 'https://example.com/hero.jpg',

@@ -10,7 +10,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { type InvoiceDTO } from '@/types/billing'
+import { type InvoiceDTO } from '@/types/billing.types'
 
 import { InvoiceStatusBadge } from './InvoiceStatusBadge'
 
@@ -66,7 +66,7 @@ export function InvoiceListCard({ invoices }: InvoiceListCardProps) {
                                     {currencyFormatter.format(invoice.totalAmount / 100)}
                                 </TableCell>
                                 <TableCell className="py-4 text-neutral-400">
-                                    {invoice.createdAt.toLocaleDateString()}
+                                    {invoice.createdAt}
                                 </TableCell>
                                 <TableCell className="py-4 text-right">
                                     <Button

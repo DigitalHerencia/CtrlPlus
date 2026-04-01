@@ -1,7 +1,11 @@
 import { describe, it, expect, vi } from 'vitest'
 
-vi.mock('@/lib/visualizer/fetchers/visualizer.fetchers', () => ({
+const mocks = vi.hoisted(() => ({
     getPreviewById: vi.fn(),
+}))
+
+vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
+    getPreviewById: mocks.getPreviewById,
 }))
 
 import { GET } from '@/app/(tenant)/visualizer/previews/[id]/route'

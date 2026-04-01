@@ -11,7 +11,7 @@ import {
     reorderWrapImages,
     updateWrapImageMetadata,
 } from '@/lib/actions/catalog.actions'
-import type { WrapImageKind } from '@/types/catalog/constants'
+import type { WrapImageKind } from '@/lib/constants/statuses'
 import type { CatalogDetailDTO } from '@/types/catalog.types'
 
 interface CatalogWrapAssetsClientProps {

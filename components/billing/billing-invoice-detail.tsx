@@ -14,7 +14,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import { type InvoiceDetailDTO } from '@/types/billing'
+import { type InvoiceDetailDTO } from '@/types/billing.types'
 
 interface BillingInvoiceDetailProps {
     invoice: InvoiceDetailDTO
@@ -60,7 +60,7 @@ export function BillingInvoiceDetail({
                 />
                 <WorkspaceMetricCard
                     label="Created"
-                    value={invoice.createdAt.toLocaleDateString()}
+                    value={invoice.createdAt}
                     description="Issue date for this invoice."
                 />
                 <WorkspaceMetricCard
@@ -83,11 +83,11 @@ export function BillingInvoiceDetail({
                     </div>
                     <div className="flex justify-between gap-4">
                         <span className="text-neutral-400">Created</span>
-                        <span>{invoice.createdAt.toLocaleDateString()}</span>
+                        <span>{invoice.createdAt}</span>
                     </div>
                     <div className="flex justify-between gap-4">
                         <span className="text-neutral-400">Last updated</span>
-                        <span>{invoice.updatedAt.toLocaleDateString()}</span>
+                        <span>{invoice.updatedAt}</span>
                     </div>
                     <div className="flex justify-between gap-4 border-t border-neutral-800 pt-3 text-base font-semibold">
                         <span>Total</span>
@@ -169,7 +169,7 @@ export function BillingInvoiceDetail({
                                         {paymentItem.stripePaymentIntentId}
                                     </p>
                                     <p className="mt-0.5 text-xs text-neutral-500">
-                                        {paymentItem.createdAt.toLocaleDateString()}
+                                        {paymentItem.createdAt}
                                     </p>
                                 </div>
                                 <div className="text-right">
