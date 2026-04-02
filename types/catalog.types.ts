@@ -242,3 +242,11 @@ export interface CatalogManagerProps {
     wraps: CatalogManagerItemDTO[]
     categories: WrapCategoryDTO[]
 }
+
+export interface WrapManagerDetailPageProps {
+    wrap: CatalogDetailDTO
+}
+
+export interface WrapManagerRowItemProps {
+    wrap: CatalogManagerItemDTO
+}

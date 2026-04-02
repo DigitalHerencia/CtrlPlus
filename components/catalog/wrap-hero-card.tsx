@@ -1,10 +1,11 @@
 import type { CatalogBrowseCardDTO } from '@/types/catalog.types'
+
 import { WrapGalleryCard } from './wrap-gallery-card'
 
-interface WrapCardProps {
+interface WrapHeroCardProps {
     wrap: CatalogBrowseCardDTO
 }
 
-export function WrapCard({ wrap }: WrapCardProps) {
+export function WrapHeroCard({ wrap }: WrapHeroCardProps) {
     return <WrapGalleryCard wrap={wrap} />
 }

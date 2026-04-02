@@ -1,11 +1,11 @@
 import Link from 'next/link'
 
 import { CatalogPagination } from '@/components/catalog/CatalogPagination'
-import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
+import { CatalogManagerHeader } from '@/components/catalog/manage/catalog-manager-header'
 import { Button } from '@/components/ui/button'
 import { getCatalogManagerWraps, getWrapCategories } from '@/lib/fetchers/catalog.fetchers'
-import { createCatalogQueryString } from '@/lib/catalog/search-params'
-import type { CatalogManagerPageFeatureProps } from '@/types/catalog/route-types'
+import { createCatalogQueryString } from '@/lib/utils/search-params'
+import type { CatalogManagerPageFeatureProps } from '@/types/catalog.types'
 import { CatalogFiltersClient } from './catalog-filters-client'
 import { CatalogManagerClient } from './catalog-manager-client'
 
@@ -17,22 +17,12 @@ export async function CatalogManagerPageFeature({ filters }: CatalogManagerPageF
 
     return (
         <div className="space-y-6">
-            <WorkspacePageIntro
-                label="Catalog Manager"
-                title="Catalog CMS"
-                description="Manage wrap metadata, categories, asset roles, and publish readiness from a single operational workspace."
+            <CatalogManagerHeader
+                total={data.total}
                 actions={
                     <Button asChild variant="outline">
                         <Link href="/catalog">Back to Gallery</Link>
                     </Button>
-                }
-                detail={
-                    <div className="text-right">
-                        <p className="text-xs uppercase tracking-[0.24em] text-neutral-500">
-                            Managed Wraps
-                        </p>
-                        <p className="text-3xl font-black text-neutral-100">{data.total}</p>
-                    </div>
                 }
             />
             <CatalogFiltersClient categories={categories} />

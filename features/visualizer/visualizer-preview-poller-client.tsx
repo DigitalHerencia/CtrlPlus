@@ -2,9 +2,9 @@
 
 import { useEffect, useEffectEvent } from 'react'
 
-import { PreviewStatus } from '@/types/visualizer/constants'
-import type { VisualizerPreviewDTO } from '@/types/visualizer/domain'
-import type { SerializedVisualizerPreview } from '@/types/visualizer/route-types'
+import { PreviewStatus } from '@/lib/constants/statuses'
+import type { VisualizerPreviewDTO } from '@/types/visualizer.types'
+import type { SerializedVisualizerPreview } from '@/types/visualizer.types'
 
 interface PreviewPollResponse {
     preview: SerializedVisualizerPreview | null

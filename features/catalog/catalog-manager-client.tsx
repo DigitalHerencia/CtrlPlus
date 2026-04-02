@@ -31,8 +31,8 @@ import {
 } from '@/lib/actions/catalog.actions'
 import { formatPrice } from '@/lib/utils/currency'
 import { WrapImageManager } from '@/components/catalog/WrapImageManager'
-import type { WrapImageKind } from '@/types/catalog/constants'
-import type { CatalogManagerProps } from '@/types/catalog/route-types'
+import type { WrapImageKind } from '@/lib/constants/statuses'
+import type { CatalogManagerProps } from '@/types/catalog.types'
 import { fileToDataUrl } from './file-key.client'
 
 function slugifyCategory(value: string): string {

@@ -1,12 +1,12 @@
 import Link from 'next/link'
 
-import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
+import { CatalogPageHeader } from '@/components/catalog/catalog-page-header'
 import { Button } from '@/components/ui/button'
 import { CatalogPagination } from '@/components/catalog/CatalogPagination'
 import { WrapGrid } from '@/components/catalog/WrapGrid'
 import { getWrapCategories, searchCatalogWraps } from '@/lib/fetchers/catalog.fetchers'
-import { createCatalogPageHref } from '@/lib/catalog/search-params'
-import type { CatalogBrowsePageFeatureProps } from '@/types/catalog/route-types'
+import { createCatalogPageHref } from '@/lib/utils/search-params'
+import type { CatalogBrowsePageFeatureProps } from '@/types/catalog.types'
 import { CatalogFiltersClient } from './catalog-filters-client'
 
 export async function CatalogBrowsePageFeature({
@@ -20,7 +20,7 @@ export async function CatalogBrowsePageFeature({
 
     return (
         <div className="space-y-6">
-            <WorkspacePageIntro
+            <CatalogPageHeader
                 label="Catalog"
                 title="Vehicle Wrap Gallery"
                 description="Browse professionally managed wrap packages with deterministic product imagery, category filtering, and direct detail access."

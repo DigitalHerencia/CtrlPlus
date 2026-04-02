@@ -2,7 +2,7 @@ import { getSession } from '@/lib/auth/session'
 import { hasCapability, requireCapability } from '@/lib/authz/policy'
 import { VisualizerPageFeature } from '@/features/visualizer/visualizer-page-feature'
 import { parseVisualizerSearchParams } from '@/lib/utils/search-params'
-import type { VisualizerPageProps } from '@/types/visualizer/route-types'
+import type { VisualizerPageProps } from '@/types/visualizer.types'
 import { redirect } from 'next/navigation'
 
 export default async function VisualizerPage({ searchParams }: VisualizerPageProps) {

@@ -9,8 +9,8 @@ import {
     processVisualizerPreview,
     regenerateVisualizerPreview,
 } from '@/lib/actions/visualizer.actions'
-import { PreviewStatus } from '@/types/visualizer/constants'
-import type { VisualizerPreviewDTO } from '@/types/visualizer/domain'
+import { PreviewStatus } from '@/lib/constants/statuses'
+import type { VisualizerPreviewDTO } from '@/types/visualizer.types'
 import { VisualizerPreviewPollerClient } from './visualizer-preview-poller-client'
 
 interface VisualizerWorkspaceClientProps {

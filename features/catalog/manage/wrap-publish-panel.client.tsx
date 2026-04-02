@@ -1,0 +1,134 @@
+'use client'
+
+import { useTransition } from 'react'
+
+import { CatalogCommandPanel } from '@/components/catalog/manage/catalog-command-panel'
+import { WrapAssetReadinessPanel } from '@/components/catalog/manage/wrap-asset-readiness-panel'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { publishWrap, unpublishWrap } from '@/lib/actions/catalog.actions'
+import type { CatalogDetailDTO } from '@/types/catalog.types'
+import { AlertCircle, CheckCircle2, Clock } from 'lucide-react'
+
+export interface WrapPublishPanelProps {
+    wrap: CatalogDetailDTO
+}
+
+export function WrapPublishPanel({ wrap }: WrapPublishPanelProps) {
+    const [isPending, startTransition] = useTransition()
+    const { canPublish, isVisualizerReady, issues } = wrap.readiness
+
+    const handleTogglePublish = () => {
+        startTransition(async () => {
+            try {
+                if (wrap.isHidden) {
+                    await publishWrap(wrap.id)
+                    console.log('Wrap published successfully')
+                } else {
+                    await unpublishWrap(wrap.id)
+                    console.log('Wrap hidden successfully')
+                }
+            } catch (error) {
+                console.error('Failed to update publish state', error)
+            }
+        })
+    }
+
+    return (
+        <div className="space-y-4">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Publish Status</CardTitle>
+                    <CardDescription>Control visibility and readiness</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center gap-2">
+                        {wrap.isHidden ? (
+                            <>
+                                <Clock className="h-5 w-5 text-yellow-500" />
+                                <span className="text-sm font-medium">Hidden</span>
+                            </>
+                        ) : (
+                            <>
+                                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                <span className="text-sm font-medium">Published</span>
+                            </>
+                        )}
+                    </div>
+
+                    <Button
+                        onClick={handleTogglePublish}
+                        disabled={isPending}
+                        variant={wrap.isHidden ? 'default' : 'destructive'}
+                        className="w-full"
+                    >
+                        {isPending ? 'Updating...' : wrap.isHidden ? 'Publish Wrap' : 'Hide Wrap'}
+                    </Button>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Readiness</CardTitle>
+                    <CardDescription>Publication requirements</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    <WrapAssetReadinessPanel readiness={wrap.readiness} />
+
+                    {issues.length > 0 && (
+                        <div className="space-y-2">
+                            <p className="text-xs font-semibold text-neutral-400">Issues:</p>
+                            {issues.map((issue, idx) => (
+                                <div
+                                    key={idx}
+                                    className="flex items-start gap-2 text-xs text-neutral-400"
+                                >
+                                    <span className="mt-0.5 text-red-500">•</span>
+                                    <span>{issue.message}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Asset Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                            <span className="text-neutral-400">Hero Images:</span>
+                            <Badge variant="outline">{wrap.readiness.activeHeroCount}</Badge>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-neutral-400">Gallery Images:</span>
+                            <Badge variant="outline">{wrap.readiness.activeGalleryCount}</Badge>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-neutral-400">Visualizer Texture:</span>
+                            <Badge variant="outline">
+                                {wrap.readiness.activeVisualizerTextureCount}
+                            </Badge>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <CatalogCommandPanel title="Actions Required">
+                <ul className="space-y-2 text-sm text-neutral-300">
+                    {canPublish ? (
+                        <li>Wrap is publishable and ready for customer visibility.</li>
+                    ) : (
+                        <li>Resolve readiness issues before publishing this wrap.</li>
+                    )}
+                    {!isVisualizerReady ? (
+                        <li>Attach one active visualizer texture asset.</li>
+                    ) : null}
+                </ul>
+            </CatalogCommandPanel>
+        </div>
+    )
+}
