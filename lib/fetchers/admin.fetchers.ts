@@ -1,4 +1,4 @@
-import "server-only"
+import 'server-only'
 import { prisma } from '@/lib/db/prisma'
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 
@@ -34,7 +34,7 @@ export async function getOwnerDashboardStats(): Promise<OwnerDashboardStatsDTO> 
                 startTime: { gte: now },
             },
         }),
-        prisma.invoice.count({ where: { deletedAt: null, status: { in: ['draft', 'sent'] } } }),
+        prisma.invoice.count({ where: { deletedAt: null, status: { in: ['draft', 'issued'] } } }),
         prisma.invoice.aggregate({
             where: { status: 'paid', deletedAt: null },
             _sum: { totalAmount: true },

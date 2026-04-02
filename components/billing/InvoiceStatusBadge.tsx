@@ -15,17 +15,25 @@ const STATUS_CONFIG: Record<
     }
 > = {
     draft: { label: 'Draft', variant: 'secondary' },
-    sent: { label: 'Sent', variant: 'outline', className: 'border-blue-600 text-neutral-100' },
+    issued: {
+        label: 'Issued',
+        variant: 'outline',
+        className: 'border-blue-600 text-neutral-100',
+    },
     paid: {
         label: 'Paid',
         variant: 'outline',
         className: 'border-blue-600 bg-neutral-900 text-neutral-100',
     },
-    failed: { label: 'Failed', variant: 'destructive' },
     refunded: {
         label: 'Refunded',
         variant: 'outline',
         className: 'border-neutral-700 bg-neutral-800/60 text-neutral-200',
+    },
+    void: {
+        label: 'Void',
+        variant: 'outline',
+        className: 'border-neutral-700 text-neutral-300',
     },
 }
 

@@ -1,13 +1,17 @@
-import { BillingPageFeature } from '@/features/billing/billing-page-feature'
+import { InvoicesDashboardPageFeature } from '@/features/billing/invoices-dashboard-page-feature'
 import { getSession } from '@/lib/auth/session'
 import { redirect } from 'next/navigation'
 
-export default async function BillingPage() {
+interface BillingPageProps {
+    searchParams?: Promise<{ page?: string; pageSize?: string }>
+}
+
+export default async function BillingPage({ searchParams }: BillingPageProps) {
     const { userId } = await getSession()
 
     if (!userId) {
         redirect('/sign-in')
     }
 
-    return <BillingPageFeature />
+    return <InvoicesDashboardPageFeature searchParams={searchParams} />
 }

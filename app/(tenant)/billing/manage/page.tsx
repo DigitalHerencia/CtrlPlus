@@ -1,0 +1,12 @@
+import { InvoiceManagerPageFeature } from '@/features/billing/manage/invoice-manager-page-feature'
+import { getSession } from '@/lib/auth/session'
+import { redirect } from 'next/navigation'
+
+export default async function InvoiceManagePage() {
+    const { userId } = await getSession()
+    if (!userId) {
+        redirect('/sign-in')
+    }
+
+    return <InvoiceManagerPageFeature />
+}

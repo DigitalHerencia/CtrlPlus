@@ -3,13 +3,50 @@ import { z } from 'zod'
 import { paginationParamsSchema } from '@/schemas/common.schemas'
 
 export const invoiceListParamsSchema = paginationParamsSchema.extend({
-    status: z.enum(['draft', 'sent', 'paid', 'failed', 'refunded']).optional(),
+    status: z.enum(['draft', 'issued', 'paid', 'refunded', 'void']).optional(),
 })
 
-export const ensureInvoiceForBookingSchema = z.object({
+export const createInvoiceSchema = z.object({
     bookingId: z.string().min(1),
+    tenantId: z.string().min(1).optional(),
 })
+
+export const ensureInvoiceSchema = createInvoiceSchema.pick({
+    bookingId: true,
+})
+
+export const ensureInvoiceForBookingSchema = ensureInvoiceSchema
 
 export const createCheckoutSessionSchema = z.object({
     invoiceId: z.string().min(1),
+})
+
+export const processPaymentSchema = z.object({
+    invoiceId: z.string().min(1),
+    paymentMethod: z.string().min(1).optional(),
+    amount: z.number().int().positive().optional(),
+})
+
+export const applyCreditSchema = z.object({
+    invoiceId: z.string().min(1),
+    amount: z.number().int().positive(),
+    notes: z.string().max(500).optional(),
+})
+
+export const voidInvoiceSchema = z.object({
+    invoiceId: z.string().min(1),
+    notes: z.string().max(500).optional(),
+})
+
+export const refundInvoiceSchema = z.object({
+    invoiceId: z.string().min(1),
+    amount: z.number().int().positive().optional(),
+    notes: z.string().max(500).optional(),
+})
+
+export const invoiceFilterSchema = z.object({
+    status: z.enum(['draft', 'issued', 'paid', 'refunded', 'void']).optional(),
+    query: z.string().max(120).optional(),
+    from: z.coerce.date().optional(),
+    to: z.coerce.date().optional(),
 })

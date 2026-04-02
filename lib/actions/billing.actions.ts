@@ -5,18 +5,32 @@ import { revalidatePath } from 'next/cache'
 import { getAppBaseUrl, getStripeClient } from '@/lib/integrations/stripe'
 import { prisma } from '@/lib/db/prisma'
 import {
+    applyCreditSchema,
     createCheckoutSessionSchema,
+    createInvoiceSchema,
     ensureInvoiceForBookingSchema,
+    processPaymentSchema,
+    refundInvoiceSchema,
+    voidInvoiceSchema,
 } from '@/schemas/billing.schemas'
 import {
+    type ApplyCreditInput,
     type CheckoutSessionDTO,
+    type CreateInvoiceInput,
     type CreateCheckoutSessionInput,
     type InvoiceLineItemDTO,
+    type ProcessPaymentInput,
+    type RefundInvoiceInput,
     type EnsureInvoiceForBookingInput,
     type EnsureInvoiceResult,
     type ConfirmPaymentResult,
+    type VoidInvoiceInput,
 } from '@/types/billing.types'
-import { getBillingAccessContext, requireInvoiceWriteAccess } from '@/lib/authz/guards'
+import {
+    getBillingAccessContext,
+    requireInvoiceWriteAccess,
+    requireOwnerOrPlatformAdmin,
+} from '@/lib/authz/guards'
 import { getSession } from '@/lib/auth/session'
 import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
 import type { Prisma } from '@prisma/client'
@@ -117,7 +131,7 @@ export async function createCheckoutSession(
     if (invoice.status === 'draft') {
         await prisma.invoice.update({
             where: { id: invoice.id },
-            data: { status: 'sent' },
+            data: { status: 'issued' },
         })
     }
 
@@ -266,6 +280,181 @@ export async function ensureInvoiceForBooking(
             created: false,
         }
     }
+}
+
+export async function createInvoice(rawInput: CreateInvoiceInput): Promise<EnsureInvoiceResult> {
+    const parsed = createInvoiceSchema.parse(rawInput)
+    return ensureInvoiceForBooking({ bookingId: parsed.bookingId })
+}
+
+export async function ensureInvoice(
+    rawInput: EnsureInvoiceForBookingInput
+): Promise<EnsureInvoiceResult> {
+    return ensureInvoiceForBooking(rawInput)
+}
+
+export async function processPayment(rawInput: ProcessPaymentInput): Promise<CheckoutSessionDTO> {
+    const { invoiceId } = processPaymentSchema.parse(rawInput)
+    return createCheckoutSession({ invoiceId })
+}
+
+export async function applyCredit(
+    rawInput: ApplyCreditInput
+): Promise<{ invoiceId: string; status: string }> {
+    const session = await requireOwnerOrPlatformAdmin()
+    const userId = session.userId
+    if (!userId) {
+        throw new Error('Unauthorized')
+    }
+    const { invoiceId, amount, notes } = applyCreditSchema.parse(rawInput)
+
+    const invoice = await prisma.invoice.findFirst({
+        where: { id: invoiceId, deletedAt: null },
+        select: { id: true, status: true, totalAmount: true },
+    })
+
+    if (!invoice) {
+        throw new Error('Invoice not found')
+    }
+
+    if (invoice.status === 'paid' || invoice.status === 'refunded' || invoice.status === 'void') {
+        throw new Error(`Cannot apply credit to invoice in ${invoice.status} status`)
+    }
+
+    const nextAmount = Math.max(0, invoice.totalAmount - amount)
+
+    await prisma.$transaction([
+        prisma.invoice.update({
+            where: { id: invoice.id },
+            data: {
+                totalAmount: nextAmount,
+                lineItems: {
+                    create: {
+                        description: 'Credit adjustment',
+                        quantity: 1,
+                        unitPrice: -amount,
+                        totalPrice: -amount,
+                    },
+                },
+            },
+        }),
+        prisma.auditLog.create({
+            data: {
+                userId,
+                action: 'APPLY_INVOICE_CREDIT',
+                resourceType: 'Invoice',
+                resourceId: invoice.id,
+                details: JSON.stringify({ amount, notes: notes ?? null }),
+            },
+        }),
+    ])
+
+    revalidatePath('/billing')
+    revalidatePath(`/billing/${invoice.id}`)
+
+    return { invoiceId: invoice.id, status: 'issued' }
+}
+
+export async function voidInvoice(
+    rawInput: VoidInvoiceInput
+): Promise<{ invoiceId: string; status: string }> {
+    const session = await requireOwnerOrPlatformAdmin()
+    const userId = session.userId
+    if (!userId) {
+        throw new Error('Unauthorized')
+    }
+    const { invoiceId, notes } = voidInvoiceSchema.parse(rawInput)
+
+    const invoice = await prisma.invoice.findFirst({
+        where: { id: invoiceId, deletedAt: null },
+        select: { id: true, status: true },
+    })
+
+    if (!invoice) {
+        throw new Error('Invoice not found')
+    }
+
+    if (invoice.status === 'paid' || invoice.status === 'refunded') {
+        throw new Error(`Cannot void invoice in ${invoice.status} status`)
+    }
+
+    await prisma.$transaction([
+        prisma.invoice.update({
+            where: { id: invoice.id },
+            data: { status: 'void' },
+        }),
+        prisma.auditLog.create({
+            data: {
+                userId,
+                action: 'VOID_INVOICE',
+                resourceType: 'Invoice',
+                resourceId: invoice.id,
+                details: JSON.stringify({ notes: notes ?? null }),
+            },
+        }),
+    ])
+
+    revalidatePath('/billing')
+    revalidatePath(`/billing/${invoice.id}`)
+
+    return { invoiceId: invoice.id, status: 'void' }
+}
+
+export async function refundInvoice(
+    rawInput: RefundInvoiceInput
+): Promise<{ invoiceId: string; status: string }> {
+    const session = await requireOwnerOrPlatformAdmin()
+    const userId = session.userId
+    if (!userId) {
+        throw new Error('Unauthorized')
+    }
+    const { invoiceId, amount, notes } = refundInvoiceSchema.parse(rawInput)
+
+    const invoice = await prisma.invoice.findFirst({
+        where: { id: invoiceId, deletedAt: null },
+        select: { id: true, totalAmount: true, status: true },
+    })
+
+    if (!invoice) {
+        throw new Error('Invoice not found')
+    }
+
+    if (invoice.status !== 'paid') {
+        throw new Error(`Cannot refund invoice in ${invoice.status} status`)
+    }
+
+    const refundAmount = Math.min(amount ?? invoice.totalAmount, invoice.totalAmount)
+
+    const providerReference = `manual_refund_${invoice.id}_${Date.now()}`
+
+    await prisma.$transaction([
+        prisma.payment.create({
+            data: {
+                invoiceId: invoice.id,
+                stripePaymentIntentId: providerReference,
+                status: 'succeeded',
+                amount: -refundAmount,
+            },
+        }),
+        prisma.invoice.update({
+            where: { id: invoice.id },
+            data: { status: 'refunded' },
+        }),
+        prisma.auditLog.create({
+            data: {
+                userId,
+                action: 'REFUND_INVOICE',
+                resourceType: 'Invoice',
+                resourceId: invoice.id,
+                details: JSON.stringify({ amount: refundAmount, notes: notes ?? null }),
+            },
+        }),
+    ])
+
+    revalidatePath('/billing')
+    revalidatePath(`/billing/${invoice.id}`)
+
+    return { invoiceId: invoice.id, status: 'refunded' }
 }
 
 // --- webhook processor (kept here so callers import a single domain actions file)

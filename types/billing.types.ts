@@ -11,17 +11,37 @@ export interface InvoiceLineItemDTO {
 
 export interface InvoiceDTO {
     id: string
+    customerId?: string
     bookingId: string
     status: InvoiceStatus
     totalAmount: number
+    subtotalAmount?: number | null
+    taxAmount?: number | null
+    dueDate?: Timestamp | null
     createdAt: Timestamp
     updatedAt: Timestamp
 }
 
-export interface InvoiceDetailDTO extends InvoiceDTO {
+export interface InvoicePaymentEventDTO {
+    id: string
+    type: 'payment' | 'refund' | 'credit' | 'void'
+    amount: number
+    createdAt: Timestamp
+    providerReference: string | null
+    notes: string | null
+}
+
+export interface InvoiceDetailViewDTO extends InvoiceDTO {
     lineItems: InvoiceLineItemDTO[]
+    paymentHistory: InvoicePaymentEventDTO[]
+}
+
+export interface InvoiceDetailDTO extends InvoiceDetailViewDTO {
+    // Backwards-compatible alias for existing components/tests.
     payments: PaymentDTO[]
 }
+
+export interface InvoiceManagerRowDTO extends InvoiceDTO {}
 
 export interface PaymentDTO {
     id: string
@@ -58,8 +78,19 @@ export interface ConfirmPaymentResult {
     status: 'pending' | 'succeeded' | 'failed'
 }
 
+export interface BillingBalanceDTO {
+    outstandingAmount: number
+    creditAmount: number
+    currency: string
+}
+
 export interface EnsureInvoiceForBookingInput {
     bookingId: string
+}
+
+export interface CreateInvoiceInput {
+    bookingId: string
+    tenantId?: string
 }
 
 export interface EnsureInvoiceResult {
@@ -69,4 +100,27 @@ export interface EnsureInvoiceResult {
 
 export interface CreateCheckoutSessionInput {
     invoiceId: string
+}
+
+export interface ProcessPaymentInput {
+    invoiceId: string
+    paymentMethod?: string
+    amount?: number
+}
+
+export interface ApplyCreditInput {
+    invoiceId: string
+    amount: number
+    notes?: string
+}
+
+export interface VoidInvoiceInput {
+    invoiceId: string
+    notes?: string
+}
+
+export interface RefundInvoiceInput {
+    invoiceId: string
+    amount?: number
+    notes?: string
 }

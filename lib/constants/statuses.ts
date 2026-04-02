@@ -91,10 +91,10 @@ export function getBookingDisplayStatus(
 
 export const InvoiceStatus = {
     DRAFT: 'draft',
-    SENT: 'sent',
+    ISSUED: 'issued',
     PAID: 'paid',
-    FAILED: 'failed',
     REFUNDED: 'refunded',
+    VOID: 'void',
 } as const
 
 export type InvoiceStatus = (typeof InvoiceStatus)[keyof typeof InvoiceStatus]
@@ -109,10 +109,14 @@ export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
 
 export const PAYABLE_INVOICE_STATUSES = new Set<InvoiceStatus>([
     InvoiceStatus.DRAFT,
-    InvoiceStatus.SENT,
-    InvoiceStatus.FAILED,
+    InvoiceStatus.ISSUED,
 ])
 
-export function isInvoicePayable(status: InvoiceStatus): boolean {
-    return PAYABLE_INVOICE_STATUSES.has(status)
+export function isInvoicePayable(status: string): boolean {
+    return (
+        PAYABLE_INVOICE_STATUSES.has(status as InvoiceStatus) ||
+        // Legacy statuses kept for backwards compatibility with older persisted rows.
+        status === 'sent' ||
+        status === 'failed'
+    )
 }

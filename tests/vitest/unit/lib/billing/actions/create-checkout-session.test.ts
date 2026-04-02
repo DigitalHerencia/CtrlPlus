@@ -72,7 +72,7 @@ describe('createCheckoutSession', () => {
         mocks.prisma.invoice.findFirst.mockResolvedValue({
             id: 'inv_123',
             totalAmount: 120000,
-            status: 'sent',
+            status: 'issued',
             updatedAt,
             booking: {
                 customerId: 'user_123',

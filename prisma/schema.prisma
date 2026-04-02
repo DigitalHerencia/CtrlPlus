@@ -319,7 +319,7 @@ model VisualizerPreview {
 model Invoice {
   id          String    @id @default(cuid())
   bookingId   String    @unique
-  status      String    @default("draft") // "draft" | "sent" | "paid" | "failed" | "refunded"
+  status      String    @default("draft") // "draft" | "issued" | "paid" | "refunded" | "void"
   totalAmount Int // in cents
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
