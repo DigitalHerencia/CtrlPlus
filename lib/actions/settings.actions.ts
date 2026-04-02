@@ -1,37 +1,65 @@
 'use server'
 
 import { requireAuthzCapability } from '@/lib/authz/guards'
+import { requireOwnerOrAdmin } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
 import { revalidatePath } from 'next/cache'
-import { websiteSettingsSchema } from '@/schemas/settings.schemas'
-import { type WebsiteSettingsDTO, type WebsiteSettingsInput } from '@/types/settings.types'
-import { createWebsiteSettingsDTO } from '@/lib/fetchers/settings.fetchers'
+import {
+    exportDataSchema,
+    updateTenantSettingsSchema,
+    updateUserPreferencesSchema,
+    websiteSettingsSchema,
+} from '@/schemas/settings.schemas'
+import {
+    type ExportDataRequestDTO,
+    type ExportDataResultDTO,
+    type TenantSettingsViewDTO,
+    type UpdateTenantSettingsInputDTO,
+    type UpdateUserPreferencesInputDTO,
+    type UserSettingsViewDTO,
+    type WebsiteSettingsDTO,
+    type WebsiteSettingsInput,
+} from '@/types/settings.types'
+import {
+    createWebsiteSettingsDTO,
+    getTenantSettingsView,
+    getUserSettingsView,
+} from '@/lib/fetchers/settings.fetchers'
 
-export async function updateUserWebsiteSettings(
-    input: WebsiteSettingsInput
-): Promise<WebsiteSettingsDTO> {
+export async function updateUserPreferences(
+    input: UpdateUserPreferencesInputDTO
+): Promise<UserSettingsViewDTO> {
     const session = await requireAuthzCapability('settings.manage.own')
 
     if (!session.userId) {
         throw new Error('Unauthorized: not authenticated')
     }
 
-    const userId = session.userId
-    const parsed = websiteSettingsSchema.parse(input)
+    const parsed = updateUserPreferencesSchema.parse(input)
+    const current = await getUserSettingsView()
+
+    const preferredContact =
+        parsed.preferredContact ??
+        (parsed.notifications?.sms
+            ? 'sms'
+            : parsed.notifications?.email
+              ? 'email'
+              : current.preferredContact)
+
     const updated = await prisma.websiteSettings.upsert({
-        where: { clerkUserId: userId },
+        where: { clerkUserId: session.userId },
         create: {
-            clerkUserId: userId,
-            preferredContact: parsed.preferredContact,
-            appointmentReminders: parsed.appointmentReminders,
-            marketingOptIn: parsed.marketingOptIn,
-            timezone: parsed.timezone,
+            clerkUserId: session.userId,
+            preferredContact,
+            appointmentReminders: parsed.appointmentReminders ?? current.appointmentReminders,
+            marketingOptIn: parsed.marketingOptIn ?? current.marketingOptIn,
+            timezone: parsed.timezone ?? current.timezone ?? 'America/Denver',
         },
         update: {
-            preferredContact: parsed.preferredContact,
-            appointmentReminders: parsed.appointmentReminders,
-            marketingOptIn: parsed.marketingOptIn,
-            timezone: parsed.timezone,
+            preferredContact,
+            appointmentReminders: parsed.appointmentReminders ?? current.appointmentReminders,
+            marketingOptIn: parsed.marketingOptIn ?? current.marketingOptIn,
+            timezone: parsed.timezone ?? current.timezone ?? 'America/Denver',
         },
         select: {
             preferredContact: true,
@@ -44,24 +72,129 @@ export async function updateUserWebsiteSettings(
 
     await prisma.auditLog.create({
         data: {
-            userId,
-            action: 'WEBSITE_SETTINGS_UPDATED',
-            resourceType: 'WebsiteSettings',
-            resourceId: userId,
+            userId: session.userId,
+            action: 'USER_PREFERENCES_UPDATED',
+            resourceType: 'UserSettings',
+            resourceId: session.userId,
             details: JSON.stringify(parsed),
             timestamp: new Date(),
         },
     })
 
     revalidatePath('/settings')
+    revalidatePath('/settings/profile')
+
+    return {
+        userId: session.userId,
+        theme: parsed.theme ?? current.theme,
+        language: parsed.language ?? current.language,
+        timezone: updated.timezone,
+        notifications: {
+            email: updated.preferredContact === 'email',
+            sms: updated.preferredContact === 'sms',
+            push: updated.marketingOptIn,
+        },
+        preferredContact: updated.preferredContact as 'email' | 'sms',
+        appointmentReminders: updated.appointmentReminders,
+        marketingOptIn: updated.marketingOptIn,
+        updatedAt: updated.updatedAt.toISOString(),
+    }
+}
+
+export async function updateTenantSettings(
+    tenantId: string,
+    input: UpdateTenantSettingsInputDTO
+): Promise<TenantSettingsViewDTO> {
+    const session = await requireAuthzCapability('settings.manage.own')
+    requireOwnerOrAdmin(session.authz)
+
+    if (!session.userId) {
+        throw new Error('Unauthorized: not authenticated')
+    }
+
+    const parsed = updateTenantSettingsSchema.parse(input)
+
+    await prisma.auditLog.create({
+        data: {
+            userId: session.userId,
+            action: 'TENANT_SETTINGS_UPDATED',
+            resourceType: 'TenantSettings',
+            resourceId: tenantId,
+            details: JSON.stringify(parsed),
+            timestamp: new Date(),
+        },
+    })
+
+    revalidatePath('/settings')
+    revalidatePath('/settings/account')
+
+    return getTenantSettingsView(tenantId)
+}
+
+export async function exportData(input: ExportDataRequestDTO): Promise<ExportDataResultDTO> {
+    const session = await requireAuthzCapability('settings.manage.own')
+    requireOwnerOrAdmin(session.authz)
+
+    if (!session.userId) {
+        throw new Error('Unauthorized: not authenticated')
+    }
+
+    const parsed = exportDataSchema.parse(input)
+
+    const row = await prisma.auditLog.create({
+        data: {
+            userId: session.userId,
+            action: 'SETTINGS_DATA_EXPORT_REQUESTED',
+            resourceType: 'TenantSettings',
+            resourceId: parsed.tenantId,
+            details: JSON.stringify({ format: parsed.format }),
+            timestamp: new Date(),
+        },
+        select: {
+            id: true,
+            resourceId: true,
+            timestamp: true,
+        },
+    })
+
+    revalidatePath('/settings/data')
+
+    return {
+        requestId: row.id,
+        tenantId: row.resourceId,
+        format: parsed.format,
+        createdAt: row.timestamp.toISOString(),
+        status: 'queued',
+    }
+}
+
+export async function updateUserWebsiteSettings(
+    input: WebsiteSettingsInput
+): Promise<WebsiteSettingsDTO> {
+    const parsed = websiteSettingsSchema.parse(input)
+    const result = await updateUserPreferences(parsed)
+
+    const session = await requireAuthzCapability('settings.manage.own')
+    if (session.userId) {
+        await prisma.auditLog.create({
+            data: {
+                userId: session.userId,
+                action: 'WEBSITE_SETTINGS_UPDATED',
+                resourceType: 'WebsiteSettings',
+                resourceId: session.userId,
+                details: JSON.stringify(parsed),
+                timestamp: new Date(),
+            },
+        })
+    }
 
     return createWebsiteSettingsDTO(
         {
-            preferredContact: updated.preferredContact as 'email' | 'sms',
-            appointmentReminders: updated.appointmentReminders,
-            marketingOptIn: updated.marketingOptIn,
-            timezone: updated.timezone,
+            preferredContact: result.preferredContact,
+            appointmentReminders: result.appointmentReminders,
+            marketingOptIn: result.marketingOptIn,
+            timezone: result.timezone ?? 'America/Denver',
         },
-        updated.updatedAt
+        result.updatedAt
     )
 }

@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
     revalidatePath: vi.fn(),
     prisma: {
         websiteSettings: {
+            findFirst: vi.fn(),
             upsert: vi.fn(),
         },
         auditLog: {
@@ -39,6 +40,7 @@ describe('updateUserWebsiteSettings', () => {
             isOwner: false,
             isPlatformAdmin: false,
         })
+        mocks.prisma.websiteSettings.findFirst.mockResolvedValue(null)
         mocks.prisma.websiteSettings.upsert.mockResolvedValue({
             preferredContact: 'sms',
             appointmentReminders: false,
