@@ -33,6 +33,7 @@ import { formatPrice } from '@/lib/utils/currency'
 import { WrapImageManager } from '@/components/catalog/WrapImageManager'
 import type { WrapImageKind } from '@/types/catalog/constants'
 import type { CatalogManagerProps } from '@/types/catalog/route-types'
+import { fileToDataUrl } from './file-key.client'
 
 function slugifyCategory(value: string): string {
     return value
@@ -211,7 +212,8 @@ export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps)
         if (!selectedWrap) return Promise.resolve()
         return new Promise<void>((resolve) =>
             runMutation('Asset uploaded.', async () => {
-                await addWrapImage({ wrapId: selectedWrap.id, file, kind, isActive })
+                const fileKey = await fileToDataUrl(file)
+                await addWrapImage({ wrapId: selectedWrap.id, fileKey, kind, isActive })
                 resolve()
             })
         )

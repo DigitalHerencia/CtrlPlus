@@ -167,12 +167,10 @@ function getWrapWhere(
     }
 }
 
-function mapWrapImage(image: WrapRecord['images'][number], index: number): WrapImageDTO {
+function mapWrapImage(image: WrapRecord['images'][number]): WrapImageDTO {
     return {
         ...image,
-        kind:
-            (image.kind as WrapImageKind) ??
-            (index === 0 ? WrapImageKind.HERO : WrapImageKind.GALLERY),
+        kind: image.kind as WrapImageKind,
     }
 }
 
@@ -207,6 +205,7 @@ function getWrapReadiness(wrap: WrapDTO) {
 function toCatalogBrowseCard(wrap: WrapDTO): CatalogBrowseCardDTO {
     const readiness = getWrapReadiness(wrap)
     const heroImage = resolveHeroAsset(wrap.images)
+    const displayImage = resolvePrimaryDisplayAsset(wrap.images)
 
     return {
         id: wrap.id,
@@ -217,7 +216,7 @@ function toCatalogBrowseCard(wrap: WrapDTO): CatalogBrowseCardDTO {
         installationMinutes: wrap.installationMinutes,
         categories: wrap.categories,
         heroImage,
-        displayImage: heroImage,
+        displayImage,
         previewHref: isExampleCatalogWrapId(wrap.id)
             ? `/catalog/${wrap.id}`
             : `/visualizer?wrapId=${wrap.id}`,

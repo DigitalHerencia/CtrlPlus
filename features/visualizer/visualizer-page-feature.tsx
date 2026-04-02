@@ -6,7 +6,7 @@ import {
     getVisualizerWrapSelectionById,
     listVisualizerWrapSelections,
 } from '@/lib/fetchers/visualizer.fetchers'
-import type { VisualizerPageFeatureProps } from '@/types/visualizer.types'
+import type { VisualizerPageFeatureProps } from '@/types/visualizer/route-types'
 import { VisualizerWorkspaceClient } from './visualizer-workspace-client'
 
 export async function VisualizerPageFeature({

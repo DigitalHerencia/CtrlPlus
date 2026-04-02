@@ -555,7 +555,8 @@ async function handlePaymentAttemptEvent(eventType: string, data: unknown): Prom
 /**
  * POST /api/clerk/webhook-handler
  * Receives webhook events from Clerk and syncs user data to Neon database.
- * Verifies webhook signature using CLERK_WEBHOOK_SECRET from environment.
+ * Verifies webhook signature using CLERK_WEBHOOK_SIGNING_SECRET
+ * (or legacy CLERK_WEBHOOK_SECRET fallback) from environment.
  */
 export async function POST(req: NextRequest) {
     try {

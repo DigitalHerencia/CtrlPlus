@@ -1,0 +1,136 @@
+{
+  "refactorName": "Visualizer Async Preview Generation",
+  "purpose": "Replace synchronous preview generation with async polling to handle HF timeouts and concurrent generation",
+  "status": "not-started",
+  "createdAt": "2026-02-01T00:00:00Z",
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Status Lifecycle Formalization",
+      "description": "Formally define preview status state machine",
+      "tasks": [
+        {
+          "id": "viz-1-1",
+          "title": "Document preview status state machine",
+          "description": "pending → processing → complete|failed; include transitions and validation",
+          "status": "not-started",
+          "priority": "high"
+        },
+        {
+          "id": "viz-1-2",
+          "title": "Add status validation in updatePreview checks",
+          "description": "Prevent invalid state transitions",
+          "status": "not-started",
+          "priority": "high"
+        }
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Async Generation Pipeline",
+      "description": "Extract preview generation into background task (via serverless timeout or queue)",
+      "tasks": [
+        {
+          "id": "viz-2-1",
+          "title": "Refactor generatePreview to mark status: processing then return",
+          "description": "Don't wait for generation; return immediately with status:processing",
+          "status": "not-started",
+          "priority": "high"
+        },
+        {
+          "id": "viz-2-2",
+          "title": "Extract runPreviewGeneration as standalone function",
+          "description": "Can be called from serverless, queue, or timeout handler",
+          "status": "not-started",
+          "priority": "high"
+        },
+        {
+          "id": "viz-2-3",
+          "title": "Implement retry logic for HF timeouts",
+          "description": "Exponential backoff + fallback rectangular mask",
+          "status": "not-started",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Polling UI + WebSocket (optional)",
+      "description": "Front-end UI for status polling during generation",
+      "tasks": [
+        {
+          "id": "viz-3-1",
+          "title": "Create PreviewStatus component with polling",
+          "description": "Poll getPreview() every 2 seconds, show status badge",
+          "status": "not-started",
+          "priority": "high"
+        },
+        {
+          "id": "viz-3-2",
+          "title": "Add regenerate button for failed previews",
+          "description": "User-triggered retry if generation failed",
+          "status": "not-started",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "Photo Storage Migration",
+      "description": "Move from base64 customerPhotoUrl to remote HTTPS URL",
+      "tasks": [
+        {
+          "id": "viz-4-1",
+          "title": "Migrate customerPhotoUrl from data: URL to Cloudinary",
+          "description": "Upload to /visualizer/uploads/{previewId}, store HTTPS URL",
+          "status": "not-started",
+          "priority": "high"
+        },
+        {
+          "id": "viz-4-2",
+          "title": "Generate customerPhotoHash from downloaded bytes",
+          "description": "Hash used for cache key computation",
+          "status": "not-started",
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "phase": 5,
+      "name": "E2E Testing",
+      "description": "Comprehensive testing of async preview flow",
+      "tasks": [
+        {
+          "id": "viz-5-1",
+          "title": "E2E: Upload photo → get processing status → poll until complete",
+          "description": "Full async workflow",
+          "status": "not-started",
+          "priority": "high"
+        },
+        {
+          "id": "viz-5-2",
+          "title": "E2E: Verify cache reuse (same photo + wrap)",
+          "description": "Second upload should return cached preview",
+          "status": "not-started",
+          "priority": "medium"
+        }
+      ]
+    }
+  ],
+  "blockers": [
+    "Requires catalog asset role consolidation (phase 1) to be complete first"
+  ],
+  "notes": [
+    "This refactor is required for production reliability",
+    "HF inference can timeout under high concurrency; async is critical",
+    "Cache reuse is performant win (avoids redundant generations)"
+  ],
+  "acceptance_criteria": [
+    "generatePreview returns immediately with status:processing",
+    "UI polls and shows real-time status updates",
+    "HF timeout handled gracefully (retry + fallback)",
+    "Photos stored as HTTPS URLs, not base64",
+    "Cache key prevents duplicate generations",
+    "E2E tests cover success, timeout, and cache-hit paths"
+  ]
+}

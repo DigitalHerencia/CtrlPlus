@@ -5,7 +5,7 @@ import { defineConfig, devices } from '@playwright/test'
  * When not set, playwright.config.ts will start a local Next.js dev server instead.
  */
 const explicitBaseUrl = process.env.BASE_URL?.trim()
-const BASE_URL = explicitBaseUrl || 'http://localhost:3000'
+const BASE_URL = explicitBaseUrl || 'http://127.0.0.1:3000'
 
 /**
  * By default we boot a local Next.js server for E2E runs.
@@ -17,7 +17,7 @@ const webServer = shouldSkipWebServer
     ? undefined
     : {
           command: 'pnpm dev',
-          url: 'http://localhost:3000',
+          url: 'http://127.0.0.1:3000',
           reuseExistingServer: !process.env.CI,
           timeout: 120_000,
           env: {

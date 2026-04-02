@@ -28,7 +28,7 @@ export const prisma =
 
         if (!connectionString) {
             throw new Error(
-                'DATABASE_URL is not defined. Please set it in your .env.local file.\n' +
+                'DATABASE_URL is not defined. Please set it in your .env file (or .env.local for local overrides).\n' +
                     'Get connection string from: https://console.neon.tech/\n' +
                     'Use the POOLED connection (with -pooler suffix) for optimal performance.'
             )

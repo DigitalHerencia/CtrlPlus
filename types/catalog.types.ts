@@ -175,11 +175,8 @@ export interface WrapImageUploadInput {
     wrapId: string
     kind: WrapImageKind
     isActive: boolean
-    // client may pass a File when calling server actions; keep optional to
-    // preserve compatibility. Prefer using `types/catalog.client.types.ts` on
-    // the client and converting uploads to FormData/streams for server-side
-    // processing when possible.
-    file?: File
+    // server-side upload reference (data URL or approved remote URL)
+    fileKey: string
 }
 
 export interface UpdateWrapImageMetadataInput {

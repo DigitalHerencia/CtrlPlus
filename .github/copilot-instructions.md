@@ -37,9 +37,8 @@ CtrlPlus is a single-store, tenant-scoped operations platform built on Next.js A
 
 ## Agent Domain Resources
 
-The `.github/copilot` directory contains domain-specific resources to guide codex agents and automate workflows:
+The `.github/copilot` directory contains domain-specific resources to guide agents and automate workflows:
 
-- `.github/copilot/resource/`: Target architecture, refactor principles, and directory-tree specs.
 - `.github/copilot/docs/`: Domain specs and cross-domain product or technical requirements.
 - `.github/copilot/instructions/`: Domain-specific instructions and architectural notes.
 - `.github/copilot/contracts/`: YAML contracts that agents consume as literal execution constraints.
@@ -47,7 +46,7 @@ The `.github/copilot` directory contains domain-specific resources to guide code
 - `.github/copilot/prompts/`: Per-domain refactor prompts for future execution passes.
 - `.github/copilot/README.md`: entrypoint describing precedence and how markdown, YAML, and JSON fit together.
 
-The active codex domain set is:
+The active domain set is:
 
 - `admin`
 - `auth/authz`
@@ -58,7 +57,7 @@ The active codex domain set is:
 - `settings`
 - `visualizer`
 
-codex agents should consult these files for domain boundaries, implementation standards, and prompt-driven refactor orchestration. These codex artifacts are preparatory guidance and do not themselves authorize runtime refactors that are outside the current task.
+Agents should consult these files for domain boundaries, implementation standards, and prompt-driven refactor orchestration. These artifacts are preparatory guidance and do not themselves authorize runtime refactors that are outside the current task.
 
 ## Agent Resource Precedence
 
@@ -66,7 +65,7 @@ When `.github/copilot` resources exist, consume them in this order:
 
 1. `.github/copilot/README.md`
 2. relevant `.github/copilot/instructions/*.md`
-3. relevant `.github/copilot/docs/*.md` and `.github/copilot/resource/*.md`
+3. relevant `.github/copilot/docs/*.md`
 4. relevant `.github/copilot/contracts/*.yaml`
 5. relevant `.github/copilot/json/*.json`
 6. relevant `.github/copilot/prompts/*.md`
@@ -92,20 +91,14 @@ When `.github/copilot` resources exist, consume them in this order:
 - Use JSON execution files to track backlog, progress, open decisions, and validation coverage.
 - Keep markdown, YAML, and JSON aligned. If one changes materially, update the others in the same pass when feasible.
 
--For catalog or visualizer work, treat these `.github/copilot` files as authoritative first:
+- For catalog or visualizer work, treat these `.github/copilot` files as authoritative first:
 
-- `.github/copilot/resource/copilot_catalog_visualizer_migration_spec.md`
-- `.github/copilot/resource/copilot_visualizer_huggingface_generation_spec.md`
-- `.github/copilot/docs/catalog.md`
-- `.github/copilot/docs/visualizer.md`
+- `.github/copilot/docs/PRD.md`
+- `.github/copilot/docs/ARCHITECTURE.md`
+- `.github/copilot/docs/DATA-MODEL.md`
+- `.github/copilot/docs/ROADMAP.md`
 - `.github/copilot/instructions/catalog.instructions.md`
 - `.github/copilot/instructions/visualizer.instructions.md`
-
-Catalog and visualizer prompt work now follows a `master + phases` model:
-
-- use `.github/copilot/prompts/catalog.refactor.prompt.md` or `.github/copilot/prompts/visualizer.refactor.prompt.md` as the domain-level entrypoint
-- pair the master prompt with the relevant phase prompt under `.github/copilot/prompts/` for bounded implementation passes
-- use `.github/copilot/prompts/catalog-visualizer.integration-e2e.prompt.md` when the storefront funnel spans both domains
 
 ## Catalog and visualizer directives
 

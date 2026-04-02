@@ -1,85 +1,57 @@
 ---
-description: 'Domain instructions for scheduling and bookings'
-applyTo: 'app/(tenant)/scheduling/**,components/scheduling/**,lib/actions/scheduling.actions.ts,lib/fetchers/scheduling.fetchers.ts,lib/db/transactions/scheduling.transactions.ts,lib/cache/revalidate-tags.ts'
+description: "Scheduling domain: booking creation, availability rules, conflict detection, appointment management."
+applyTo: "lib/scheduling/**, features/scheduling/**, components/scheduling/**"
 ---
 
-# Scheduling Domain Instructions
+# Scheduling Domain Quick Reference
 
-## Domain purpose
+## Core Entities
 
-The scheduling domain handles availability, slot reservation, booking creation, booking confirmation, updates, cancellation, and booking views.
+- **Booking** - Appointment record with status (pending, confirmed, completed, cancelled)
+- **AvailabilityRule** - Recurring availability slots with capacity
 
-## Scope boundaries
+## Core Patterns
 
-This domain owns:
+| Operation | Path | Auth | Zod Schema | Action |
+|-----------|------|------|-----------|--------|
+| Get availability | fetcher | public | — | `getAvailability(tenantId, days)` |
+| Create booking | action | tenant user | `createBookingSchema` | `createBooking(input)` |
+| Cancel booking | action | owner | `cancelBookingSchema` | `cancelBooking(bookingId)` |
 
-- scheduling pages
-- booking form and calendar UI
-- availability lookup
-- reservation lifecycle
-- booking lifecycle
-- booking status presentation
+## Fetchers: `lib/fetchers/scheduling/`
 
-This domain does not own:
+- `getAvailability(tenantId, startDate, endDate)` - Available slots
+- `getBooking(bookingId, userId)` - Fetch booking (customer or admin)
+- `getBookings(tenantId, filters)` - List bookings for admin view
 
-- invoice/payment processing logic
-- platform recovery tooling
-- wrap catalog management
-- visualizer rendering pipeline
+## Actions: `lib/actions/scheduling/`
 
-## Required patterns
+- `createBooking(wrap, dateTime, customer)` - Create appointment
+- `updateBooking(bookingId, updates)` - Reschedule or modify
+- `cancelBooking(bookingId, reason)` - Cancel with reason logging
+- Emits event: "booking.created" → triggers Billing to create invoice
 
-- Keep page files orchestration-only.
-- Reads go through `lib/fetchers/scheduling.fetchers.ts`.
-- Writes go through `lib/actions/scheduling.actions.ts`.
-- Future refactors should move route composition into `features/scheduling/**`.
-- Capacity and slot logic belongs in `lib/db/transactions/scheduling.transactions.ts` and related server-side helpers.
-- Booking form behavior should stay aligned with existing domain typing and validation patterns.
+## Booking State Machine
 
-## Product requirements
+```
+pending → confirmed → completed
+       ↘  ↙
+        cancelled (from any state)
+```
 
-- Availability must be deterministic and server-authoritative.
-- Reservation and confirmation must avoid double-booking behavior.
-- Booking status transitions must be explicit.
-- Scheduling UI must clearly distinguish available, reserved, confirmed, cancelled, and expired states.
-- Future refactors must keep timezone handling and cleanup execution explicit.
+## Key Rules
 
-## Security requirements
+- Only one booking per customer per time slot
+- Availability capacity cannot be exceeded
+- Cancellations audit-logged
+- On booking confirmed: trigger `createInvoice(bookingId)` in Billing domain
 
-- Enforce ownership and capability checks server-side.
-- Never trust client-submitted booking status or slot authority.
-- Validate date/time inputs and booking payloads.
-- Cleanup and expiration logic must be safe and idempotent.
+## Public Routes
 
-## UI requirements
+- `/(tenant)/scheduling` - Book appointment
+- `/(tenant)/bookings` - View bookings
 
-- Booking flow must be simple, clear, and conversion-friendly.
-- Calendar and slot UI must prioritize clarity over visual novelty.
-- Include loading, unavailable, conflict, success, and cancellation states.
-- Keep form errors specific and actionable.
+## Admin Routes (owner-only)
 
-## Performance requirements
-
-- Avoid repeated availability fetches in the same flow.
-- Keep slot calculations server-consistent.
-- Prevent race-prone client-only booking assumptions.
-- Avoid optimistic UI for contested slot reservation or confirmation behavior.
-
-## Testing requirements
-
-Add or update tests when changing:
-
-- availability logic
-- reservation flow
-- booking creation/confirmation/cancellation
-- expiration cleanup
-- scheduling UI flow
-- conflict handling
-
-## Refactor priorities
-
-1. harden slot reservation lifecycle
-2. simplify booking flow UI
-3. tighten availability consistency
-4. improve domain status modeling and display
-5. ensure billing handoff stays explicit and reliable
+- `/(tenant)/admin/schedule` - Availability management
+- `/(tenant)/admin/bookings` - All bookings list

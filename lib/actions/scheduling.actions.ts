@@ -21,7 +21,7 @@ import { getBookingDisplayStatus } from '@/lib/constants/statuses'
 import { Prisma } from '@prisma/client'
 
 // Reservation TTL (minutes)
-export const RESERVATION_TTL_MINUTES = 15
+const RESERVATION_TTL_MINUTES = 15
 
 export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBookingDTO> {
     const session = await getSession()

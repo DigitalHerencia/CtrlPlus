@@ -2,7 +2,10 @@ import { notFound } from 'next/navigation'
 
 import { WrapDetail } from '@/components/catalog/WrapDetail'
 import { getCatalogWrapById, isExampleCatalogWrapId } from '@/lib/fetchers/catalog.fetchers'
-import type { CatalogDetailPageFeatureProps, WrapDetailPageParams } from '@/types/catalog.types'
+import type {
+    CatalogDetailPageFeatureProps,
+    WrapDetailPageParams,
+} from '@/types/catalog/route-types'
 
 import { CatalogWrapAssetsClient } from './catalog-wrap-assets-client'
 

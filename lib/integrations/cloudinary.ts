@@ -9,14 +9,7 @@
  * NOTE: This module intentionally keeps a tiny surface of helpers that the
  * `blob` adapter re-exports. Keep behavior unchanged when editing.
  */
-import { v2 as cloudinary } from 'cloudinary'
 import { createHash } from 'crypto'
-
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-})
 
 export interface CloudinaryCredentials {
     cloudName: string
@@ -24,10 +17,42 @@ export interface CloudinaryCredentials {
     apiSecret: string
 }
 
+function parseCloudinaryUrl(value: string): {
+    cloudName: string
+    apiKey: string
+    apiSecret: string
+} | null {
+    try {
+        const parsed = new URL(value)
+        if (parsed.protocol !== 'cloudinary:') {
+            return null
+        }
+
+        const apiKey = parsed.username?.trim() ?? ''
+        const apiSecret = parsed.password?.trim() ?? ''
+        const cloudNameFromHost = parsed.hostname?.trim() ?? ''
+
+        return {
+            cloudName: cloudNameFromHost,
+            apiKey,
+            apiSecret,
+        }
+    } catch {
+        return null
+    }
+}
+
 export function getCloudinaryCredentials(): CloudinaryCredentials | null {
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim() ?? ''
-    const apiKey = process.env.CLOUDINARY_API_KEY?.trim() ?? ''
-    const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim() ?? ''
+    const parsedCloudinaryUrl = parseCloudinaryUrl(process.env.CLOUDINARY_URL?.trim() ?? '')
+
+    const cloudName =
+        process.env.CLOUDINARY_CLOUD_NAME?.trim() ??
+        process.env.CLOUD_NAME?.trim() ??
+        parsedCloudinaryUrl?.cloudName ??
+        ''
+    const apiKey = process.env.CLOUDINARY_API_KEY?.trim() ?? parsedCloudinaryUrl?.apiKey ?? ''
+    const apiSecret =
+        process.env.CLOUDINARY_API_SECRET?.trim() ?? parsedCloudinaryUrl?.apiSecret ?? ''
 
     if (!cloudName || !apiKey || !apiSecret) {
         return null
@@ -82,5 +107,3 @@ export function extractCloudinaryPublicId(url: string): string | null {
         return null
     }
 }
-
-export { cloudinary }

@@ -245,4 +245,16 @@ describe('createVisualizerPreview', () => {
             includeHidden: true,
         })
     })
+
+    it('rejects non-File uploads when fileKey is not provided', async () => {
+        await expect(
+            createVisualizerPreview({
+                wrapId: 'wrap-1',
+                file: { name: 'vehicle.png' } as unknown as File,
+            })
+        ).rejects.toThrow('File must be a browser File upload.')
+
+        expect(mocks.normalizeVehicleUpload).not.toHaveBeenCalled()
+        expect(mocks.prisma.visualizerPreview.create).not.toHaveBeenCalled()
+    })
 })

@@ -8,14 +8,10 @@
  * underlying provider can be replaced with minimal changes.
  */
 import {
-    cloudinary as _cloudinary,
     getCloudinaryCredentials,
     buildCloudinarySignature,
     extractCloudinaryPublicId,
 } from '@/lib/integrations/cloudinary'
-
-// Re-export cloudinary instance (kept name `cloudinary` for downstream compatibility)
-export const cloudinary = _cloudinary
 
 // Generic adapter-facing names
 export const getBlobCredentials = getCloudinaryCredentials

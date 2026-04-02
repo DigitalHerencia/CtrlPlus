@@ -4,7 +4,7 @@ import { CatalogDetailPageFeature } from '@/features/catalog/catalog-detail-page
 import { getSession } from '@/lib/auth/session'
 import { hasCapability } from '@/lib/authz/policy'
 import { generateCatalogWrapMetadata } from '@/features/catalog/catalog-detail-page-feature'
-import type { WrapDetailPageParams } from '@/types/catalog.types'
+import type { WrapDetailPageParams } from '@/types/catalog/route-types'
 
 export async function generateMetadata({ params }: WrapDetailPageParams) {
     return generateCatalogWrapMetadata(params)

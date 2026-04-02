@@ -1,0 +1,334 @@
+# Server Action / Mutation Pipeline - Required Pattern
+
+All server actions in CtrlPlus follow a strict 6-step security and audit pipeline.
+
+## Pattern Template
+
+```typescript
+"use server";
+
+import { getSession } from "@/lib/auth/session";
+import { assertTenantMembership } from "@/lib/authz/assert";
+import { {EntitySchema} } from "@/schemas/{domain}.schemas";
+import { prisma } from "@/lib/db/prisma";
+import { auditLog } from "@/lib/integrations/audit-log";
+import { revalidateTag } from "next/cache";
+
+export async function {actionName}(input: unknown) {
+  // ========== STEP 1: AUTHENTICATE ==========
+  const session = await getSession();
+  if (!session) {
+    throw new Error("Unauthorized: Not authenticated");
+  }
+
+  const userId = session.userId;
+  const clerkUserId = session.clerkUserId;
+
+  // ========== STEP 2: AUTHORIZE ==========
+  // Extract and validate tenantId from input or session
+  const { tenantId, ...payload } = input as any; // parsed below
+
+  // Verify user is member of tenant with required role
+  await assertTenantMembership(tenantId, userId, "owner"); // or "admin", "member"
+
+  // ========== STEP 3: VALIDATE ==========
+  // Parse and validate input against Zod schema
+  const validated = {EntitySchema}.parse(payload);
+
+  // Optional: Additional domain-specific validation
+  // Example: ensure entity exists before update
+  const existing = await prisma.{entity}.findUnique({
+    where: { id_tenantId: { id: validated.id, tenantId } },
+  });
+  if (!existing) {
+    throw new Error("Entity not found");
+  }
+
+  // ========== STEP 4: MUTATE ==========
+  // Write to database with STRICT tenantId scope
+  const result = await prisma.{entity}.update({
+    where: { id_tenantId: { id: validated.id, tenantId } }, // ← ALWAYS include tenantId
+    data: validated,
+  });
+
+  // ========== STEP 5: AUDIT ==========
+  // Log the action for compliance and debugging
+  await auditLog.create({
+    tenantId,
+    userId,
+    action: "{entity}.{verb}", // e.g., "wrap.created", "booking.cancelled"
+    resourceType: "{Entity}", // e.g., "Wrap", "Booking"
+    resourceId: result.id,
+    details: JSON.stringify({
+      before: existing, // if update
+      after: result,
+      changes: { /* selective diff if large */ },
+    }),
+  });
+
+  // ========== STEP 6: REVALIDATE & RETURN ==========
+  // Invalidate related cache tags (use revalidateTag, not revalidatePath)
+  revalidateTag(`{domain}:{entity}:${result.id}`);
+  revalidateTag(`{domain}:{entities}`);
+
+  // Return DTO (never raw Prisma model)
+  return map{Entity}ToDTO(result);
+}
+```
+
+## Step Breakdown
+
+### Step 1: Authenticate
+```typescript
+const session = await getSession();
+if (!session) throw new Error("Unauthorized");
+
+// session contains:
+// - userId (internal ID)
+// - clerkUserId (Clerk user ID)
+// - email
+// - tenantIds (array of tenant IDs user belongs to)
+```
+
+**Validation:**
+- Session exists (user logged in via Clerk)
+- No other checks at this level (role checks happen in Step 2)
+
+---
+
+### Step 2: Authorize
+```typescript
+const { tenantId, ...payload } = input as any;
+
+// Verify user is member of this tenant with required role
+await assertTenantMembership(tenantId, userId, "owner");
+// Accepts: "owner" | "admin" | "member" (role hierarchy)
+```
+
+**Signature:**
+```typescript
+async function assertTenantMembership(
+  tenantId: string,
+  userId: string,
+  requiredRole: "owner" | "admin" | "member"
+): Promise<void>;
+// Throws if user is not member, or role is insufficient
+```
+
+**Validation:**
+- User is member of tenant
+- User's role meets minimum requirement (e.g., "owner" satisfies all; "member" satisfies only "member" checks)
+- `tenantId` is never trusted from untrusted input; must be validated against session
+
+---
+
+### Step 3: Validate
+```typescript
+const validated = createWrapSchema.parse(payload);
+// Zod throws on invalid input
+// Returns typed object
+
+// Optional: additional validation (e.g., entity existence)
+const existing = await prisma.wrap.findUnique({
+  where: { id_tenantId: { id: wrapId, tenantId } },
+});
+if (!existing) throw new Error("Wrap not found");
+```
+
+**Validation:**
+- All input fields match schema (type, length, format)
+- Zod ensures type safety from this point forward
+- Domain-specific checks (FK references, state machine validity, etc.)
+
+---
+
+### Step 4: Mutate
+```typescript
+const result = await prisma.{entity}.update({
+  where: { id_tenantId: { id: validated.id, tenantId } },
+  //                     ↑ ALWAYS include tenantId ↑
+  data: validated,
+});
+```
+
+**Critical Requirement:**
+- Every WHERE clause must include `tenantId` scope
+- Pattern: `{ id_tenantId: { id: X, tenantId: Y } }` or `{ id: X, tenantId: Y }` depending on model
+- Never query without tenantId (would leak data across tenants)
+
+**Validation:**
+- Database write succeeds without constraint violations
+- Optional: check affected rows (`result` is not null/empty)
+
+---
+
+### Step 5: Audit
+```typescript
+await auditLog.create({
+  tenantId,             // Tenant scoped
+  userId,               // Who did it
+  action: "wrap.created", // What action (must be specific)
+  resourceType: "Wrap", // Type of resource
+  resourceId: result.id, // Which resource
+  details: JSON.stringify({
+    before: existing,
+    after: result,
+  }),                   // What changed
+});
+```
+
+**Audit Schema:**
+```typescript
+interface AuditLogEntry {
+  id: string;
+  tenantId: string;
+  userId: string;
+  action: string;      // Lowercase: entity.verb (wrap.created, booking.cancelled)
+  resourceType: string; // Pascal: Wrap, Booking, Invoice
+  resourceId: string;  // ID of affected resource
+  details: string;     // JSON string (not JSONB object)
+  timestamp: Date;     // Auto
+  createdAt: Date;     // Auto
+}
+```
+
+**Validation:**
+- Log entry created successfully
+- details is JSON string (not object)
+- timestamp recorded
+
+---
+
+### Step 6: Return & Revalidate
+```typescript
+// Invalidate precise tags (use revalidateTag)
+revalidateTag(`catalog:wrap:${result.id}`);
+revalidateTag(`catalog:wraps`);
+
+// Never use revalidatePath (too broad)
+// revalidatePath("/catalog"); // ❌ Don't do this
+
+// Return DTO (mapped from Prisma model, not raw)
+return mapWrapToDTO(result);
+```
+
+**Validation:**
+- Cache tags invalidated (allows re-rendering dependent pages)
+- DTO returned (no Prisma types exposed to client)
+
+---
+
+## Variations by Action Type
+
+### CREATE
+```typescript
+// Step 4: Create (no "before" to compare)
+const result = await prisma.wrap.create({
+  data: validated,
+  // ← Auto-generates ID
+});
+
+// Step 5: Audit
+await auditLog.create({
+  action: "wrap.created",
+  details: JSON.stringify({ created: result }),
+});
+```
+
+### UPDATE
+```typescript
+// Step 4: Update (has "before")
+const result = await prisma.wrap.update({
+  where: { id_tenantId: { id: validated.id, tenantId } },
+  data: validated,
+});
+
+// Step 5: Audit (include before/after)
+await auditLog.create({
+  action: "wrap.updated",
+  details: JSON.stringify({ before: existing, after: result }),
+});
+```
+
+### DELETE (Soft)
+```typescript
+// Step 4: Soft-delete (set deletedAt)
+const result = await prisma.wrap.update({
+  where: { id_tenantId: { id: validated.id, tenantId } },
+  data: { deletedAt: new Date() },
+});
+
+// Step 5: Audit
+await auditLog.create({
+  action: "wrap.deleted",
+  details: JSON.stringify({ deletedAt: result.deletedAt }),
+});
+```
+
+### BULK or CONDITIONAL
+```typescript
+// Step 4: Multiple mutations (e.g., setWrapCategories atomically replaces)
+// Use transaction if needed
+const result = await prisma.$transaction(async (tx) => {
+  await tx.wrapCategory.deleteMany({
+    where: { wrapId: validated.wrapId },
+  });
+
+  const created = await tx.wrapCategory.createMany({
+    data: validated.categoryIds.map((cid) => ({
+      wrapId: validated.wrapId,
+      categoryId: cid,
+    })),
+  });
+
+  return created;
+});
+
+// Step 5: Single audit entry for the operation
+await auditLog.create({
+  action: "wrap.categories.updated",
+  details: JSON.stringify({
+    wrapId: validated.wrapId,
+    categories: validated.categoryIds,
+  }),
+});
+```
+
+---
+
+## Error Handling
+
+```typescript
+try {
+  // All 6 steps above
+} catch (error: unknown) {
+  // Log error with context
+  console.error(`Error in {actionName}:`, error);
+
+  // Audit the failure (optional, for compliance)
+  // await auditLog.create({ action: "wrap.{verb}.failed", details: ... });
+
+  // Re-throw or wrap in application error
+  if (error instanceof ValidationError) {
+    throw new Error(`Validation failed: ${error.message}`);
+  }
+
+  throw new Error("Internal server error");
+}
+```
+
+---
+
+## Validation Checklist
+
+Before merging any server action:
+
+- [ ] Step 1: Calls `getSession()` and throws if null
+- [ ] Step 2: Calls `assertTenantMembership()` with required role
+- [ ] Step 3: Uses `schema.parse(input)` to validate
+- [ ] Step 4: All Prisma queries include tenantId in WHERE clause
+- [ ] Step 5: Calls `auditLog.create()` with action, resourceType, resourceId, details
+- [ ] Step 6: Calls `revalidateTag()` with specific cache tags
+- [ ] Returns DTO (not raw Prisma model)
+- [ ] Error handling in place
+- [ ] Tests cover success and all error paths

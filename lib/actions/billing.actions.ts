@@ -269,7 +269,7 @@ export async function ensureInvoiceForBooking(
 }
 
 // --- webhook processor (kept here so callers import a single domain actions file)
-export const STRIPE_WEBHOOK_ACTOR = 'system:stripe-webhook'
+const STRIPE_WEBHOOK_ACTOR = 'system:stripe-webhook'
 
 type WebhookEventState = 'process' | 'processed' | 'processing'
 

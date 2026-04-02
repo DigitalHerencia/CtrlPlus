@@ -13,6 +13,8 @@ CtrlPlus is a single-store vehicle wrap operations platform built with Next.js 1
 
 ```powershell
 pnpm install
+Copy-Item .env.example .env
+# Optional local override layer (takes precedence over .env)
 Copy-Item .env.example .env.local
 pnpm exec prisma generate
 pnpm dev

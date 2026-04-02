@@ -37,5 +37,4 @@
     "[sql]": {
         "editor.defaultFormatter": "ms-ossdata.vscode-pgsql"
     },
-    "chatgpt.openOnStartup": false
 }

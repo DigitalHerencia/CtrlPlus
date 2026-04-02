@@ -1,86 +1,50 @@
 ---
-description: 'Domain instructions for billing, invoices, and Stripe flows'
-applyTo: 'app/(tenant)/billing/**,app/api/stripe/**,components/billing/**,lib/actions/billing.actions.ts,lib/fetchers/billing.fetchers.ts,lib/integrations/stripe.ts,lib/db/transactions/billing.transactions.ts'
+description: "Billing domain essentials: Stripe integration, invoices, payments, tax calculation. Use when building checkout, payment processing, or subscription features."
+applyTo: "lib/billing/**, features/billing/**, components/billing/**"
 ---
 
-# Billing Domain Instructions
+# Billing Domain Quick Reference
 
-## Domain purpose
+## Core Entities & Operations
 
-The billing domain handles invoice reads, checkout session creation, payment confirmation, payment status, and Stripe webhook-aligned billing state.
+| Entity | Owner Actions | Customer Actions |
+|--------|---|---|
+| Invoice | Create (on booking), void | View, download |
+| Payment | Process (Stripe), refund | View history |
+| Subscription (future) | Create, modify terms | Cancel, update card |
 
-## Scope boundaries
+## Fetchers: `lib/fetchers/billing/`
 
-This domain owns:
+- `getInvoice(invoiceId, userId)` - Fetch single invoice
+- `getInvoices(tenantId, pagination)` - List tenant invoices
+- `getBalance(tenantId)` - Account balance/credits
 
-- billing pages
-- invoice status display
-- checkout initiation
-- payment confirmation
-- billing fetchers and Stripe integration helpers
-- invoice creation for booking handoff
+## Actions: `lib/actions/billing/`
 
-This domain does not own:
+- `createInvoice(bookingId)` - On booking confirmed (called from scheduling)
+- `processPayment(invoiceId, paymentMethod)` - Charge customer (Stripe)
+- `applyCredit(invoiceId, amount)` - Apply discount/credit
+- `voidInvoice(invoiceId)` - Soft-delete invoice
 
-- booking capacity logic
-- platform-wide recovery operations
-- auth identity model
-- catalog CRUD
+## Stripe Integration
 
-## Required patterns
+- Webhook endpoint: `app/api/stripe/webhook/route.ts`
+- Card tokenization: Clerk handles for marketplace model
+- Tax: Stripe Tax API integration (if enabled)
 
-- Keep `app/(tenant)/billing/**` read/orchestration focused.
-- Reads go through `lib/fetchers/billing.fetchers.ts`.
-- Writes go through `lib/actions/billing.actions.ts`.
-- Future refactors should move page composition into `features/billing/**` instead of growing `app/**`.
-- Stripe integration details belong in `lib/integrations/stripe.ts` and webhook routes.
-- Billing state must remain server-authoritative.
+## Public Routes
 
-## Security requirements
+- `/(tenant)/billing` - History
+- `/(tenant)/billing/{invoiceId}` - Invoice detail
 
-- Never trust client-reported payment success.
-- Stripe webhook processing must remain authoritative for final payment state transitions where applicable.
-- Enforce invoice ownership server-side.
-- Do not leak secrets, raw webhook payload secrets, or internal provider identifiers.
-- Validate all IDs and mutation payloads.
+## Schema: `schemas/billing.schemas.ts`
 
-## Product requirements
+- `createInvoiceSchema`: bookingId, tenantId
+- `processPaymentSchema`: invoiceId, paymentMethod, amount
 
-- Billing pages must clearly show invoice status and next actions.
-- Checkout initiation must be explicit and safe.
-- Booking-to-invoice handoff must be deterministic.
-- Payment confirmation must handle retry, pending, success, and failure states cleanly.
-- Future refactors must preserve room for failed-payment, refund, and reconciliation flows identified in `DOMAIN_AUDIT.md`.
+## Key Constraints
 
-## UI requirements
-
-- Billing UI should feel trustworthy and minimal.
-- Status badges and action buttons must be unambiguous.
-- Avoid confusing state duplication between booking and invoice screens.
-- Keep invoice detail surfaces concise and operational.
-
-## Performance requirements
-
-- Avoid repeated status polling unless necessary.
-- Prevent duplicate checkout session creation for the same unresolved invoice when possible.
-- Keep billing fetches focused and server-side.
-- Prefer dynamic or short-lived reads when stale payment state would mislead users.
-
-## Testing requirements
-
-Add or update tests when changing:
-
-- checkout session creation
-- payment confirmation flow
-- invoice ownership rules
-- invoice fetchers
-- Stripe webhook route behavior
-- invoice status rendering
-
-## Refactor priorities
-
-1. tighten invoice/payment state model
-2. improve checkout safety and idempotency
-3. improve clarity of billing page UX
-4. harden webhook-driven state updates
-5. keep booking and billing boundaries explicit
+- All mutations require `assertTenantMembership(..., "owner")`
+- Never expose full payment methods to UI (use Stripe token)
+- Tax is calculated server-side via Stripe Tax
+- Invoices are immutable after creation (void instead of delete)

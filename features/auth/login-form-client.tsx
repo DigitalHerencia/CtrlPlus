@@ -246,7 +246,7 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
                                 inputMode="numeric"
                                 autoComplete="one-time-code"
                                 placeholder="Enter the code you received"
-                                className="h-12 border-neutral-800 bg-neutral-900 text-neutral-50 placeholder:text-neutral-500"
+                                className="h-12 border-neutral-800 bg-neutral-900 px-3 text-neutral-50 placeholder:text-neutral-500"
                                 disabled={isBusy}
                                 {...form.register('verificationCode', {
                                     setValueAs: (value: string) =>

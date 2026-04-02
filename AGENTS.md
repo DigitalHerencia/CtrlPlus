@@ -37,45 +37,143 @@ CtrlPlus is a single-store, tenant-scoped operations platform built on Next.js A
 
 ## Agent Domain Resources
 
-The `.github/copilot` directory contains domain-specific resources to guide codex agents and automate workflows:
+The `.github/copilot` directory contains domain-specific resources to guide agents and automate workflows:
 
-- `.github/copilot/resource/`: Target architecture, refactor principles, and directory-tree specs.
-- `.github/copilot/docs/`: Domain specs and cross-domain product or technical requirements.
-- `.github/copilot/instructions/`: Domain-specific instructions and architectural notes.
-- `.github/copilot/contracts/`: YAML contracts that agents consume as literal execution constraints.
-- `.github/copilot/json/`: JSON backlog, progress, decision, and validation state for active programs.
-- `.github/copilot/prompts/`: Per-domain refactor prompts for future execution passes.
-- `.github/copilot/README.md`: entrypoint describing precedence and how markdown, YAML, and JSON fit together.
+- `.github/copilot/instructions/`: Domain-specific architectural guidance (canonical patterns, naming, testing strategy for each domain)
+- `.github/copilot/contracts/`: YAML contracts defining naming, boundaries, data access patterns, mutation pipelines, and asset lifecycles
+- `.github/copilot/json/`: Execution state tracks (backlog, progress, blockers) for multi-session refactoring efforts
+- `.github/copilot/prompts/`: One-shot refactor prompts (bounded, specific tasks with acceptance criteria)
+- `.github/copilot/README.md`: Navigation and precedence guide
 
-The active codex domain set is:
+**Domain-Specific Instruction Files** (read in this order for context):
 
-- `admin`
-- `auth/authz`
-- `billing`
-- `catalog`
-- `platform`
-- `scheduling`
-- `settings`
-- `visualizer`
+| Domain         | Instruction File                                                                                  | Primary Patterns                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Foundation** | [`server-first.instructions.md`](./.github/copilot/instructions/server-first.instructions.md)     | Layer separation, data access, caching, validation, auth enforcement       |
+| **Catalog**    | [`catalog.instructions.md`](./.github/copilot/instructions/catalog.instructions.md)               | Asset roles, image management, publish workflows, form structure           |
+| **Visualizer** | [`visualizer.instructions.md`](./.github/copilot/instructions/visualizer.instructions.md)         | Preview pipeline, status lifecycle, HF integration, async design           |
+| **Auth**       | [`authentication.instructions.md`](./.github/copilot/instructions/authentication.instructions.md) | Session extraction, capability guards, role enforcement, Clerk integration |
+| **Billing**    | [`billing.instructions.md`](./.github/copilot/instructions/billing.instructions.md)               | Stripe integration, invoices, payments, tax calculation                    |
+| **Scheduling** | [`scheduling.instructions.md`](./.github/copilot/instructions/scheduling.instructions.md)         | Booking state machine, availability, notifications, calendar               |
+| **Settings**   | [`settings.instructions.md`](./.github/copilot/instructions/settings.instructions.md)             | User preferences, tenant config, data export                               |
+| **Admin**      | [`admin.instructions.md`](./.github/copilot/instructions/admin.instructions.md)                   | Moderation, analytics, audit logs, platform operations                     |
+| **Platform**   | [`platform.instructions.md`](./.github/copilot/instructions/platform.instructions.md)             | Health checks, integrations, error handling, observability                 |
 
-codex agents should consult these files for domain boundaries, implementation standards, and prompt-driven refactor orchestration. These codex artifacts are preparatory guidance and do not themselves authorize runtime refactors that are outside the current task.
+**Contract Files** (machine-readable constraints):
+
+| Contract                                                                                       | Purpose                                                                          |
+| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| [`naming.yaml`](./.github/copilot/contracts/naming.yaml)                                       | Export names (DTO/Schema suffixes), component naming, file organization          |
+| [`domain-boundaries.yaml`](./.github/copilot/contracts/domain-boundaries.yaml)                 | Domain ownership, forbidden cross-domain calls                                   |
+| [`mutations.yaml`](./.github/copilot/contracts/mutations.yaml)                                 | 6-step mutation pipeline (auth → authz → validate → mutate → audit → revalidate) |
+| [`domain-map.yaml`](./.github/copilot/contracts/domain-map.yaml)                               | Canonical domain-to-path map for route, feature, component, and boundary files   |
+| [`layer-boundaries.contract.yaml`](./.github/copilot/contracts/layer-boundaries.contract.yaml) | Layer responsibilities, forbidden behaviors, and import direction rules          |
+| [`route-layer-contract.yaml`](./.github/copilot/contracts/route-layer-contract.yaml)           | Route-to-feature mapping for thin App Router page orchestration                  |
+
+**Execution JSON Tracks** (progress across sessions):
+
+| Refactor                    | File                                                                          | Status      | Next Step                               |
+| --------------------------- | ----------------------------------------------------------------------------- | ----------- | --------------------------------------- |
+| Catalog Unification         | [`catalog-refactor.json`](./.github/copilot/json/catalog-refactor.json)       | not-started | Phase 1: Asset role consolidation       |
+| Visualizer Async Generation | [`visualizer-refactor.json`](./.github/copilot/json/visualizer-refactor.json) | not-started | Phase 1: Status lifecycle formalization |
+
+**Focused Refactor Prompts** (one-shot task prompts):
+
+| Prompt                                                                                             | Objective                                             |
+| -------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| [`catalog-asset-role-unification.md`](./.github/copilot/prompts/catalog-asset-role-unification.md) | Replace all `images[0]` with explicit role resolution |
+
+Agents should consult these files in precedence order for domain boundaries, implementation standards, and prompt-driven refactor orchestration.
 
 ## Agent Resource Precedence
 
 When `.github/copilot` resources exist, consume them in this order:
 
-1. `.github/copilot/README.md`
-2. relevant `.github/copilot/instructions/*.md`
-3. relevant `.github/copilot/docs/*.md` and `.github/copilot/resource/*.md`
-4. relevant `.github/copilot/contracts/*.yaml`
-5. relevant `.github/copilot/json/*.json`
-6. relevant `.github/copilot/prompts/*.md`
+1. **Instruction file for your domain** (e.g., `catalog.instructions.md` if working on catalog)
+2. **Foundational instruction** (`server-first.instructions.md`) - for patterns that apply across domains
+3. **Relevant contracts** (e.g., `naming.yaml`, `mutations.yaml`) - for constraints and rules
+4. **Execution JSON** (e.g., `catalog-refactor.json`) - to understand progress and blockers
+5. **Focused prompts** (e.g., `catalog-asset-role-unification.md`) - for specific, bounded tasks
 
-## Instruction Discovery
+## Using These Resources as an Agent
 
-- Agent auto-discovers `AGENTS.md` files by name and scope.
-- Files under `.github/copilot/instructions/*.md` are not auto-discovered by filename alone; they are repo-directed resources that agents must read because this `AGENTS.md` tells them to.
-- Do not rename `.github/copilot/instructions/*.md` to `{domain}.agents.md` unless you are intentionally creating another scoped `AGENTS.md` surface.
+**When implementing a feature or refactor, follow this workflow:**
+
+1. **Read the foundational instruction** (`server-first.instructions.md`):
+    - Understand layer separation (app → features → components → lib)
+    - Understand data access patterns (lib/fetchers for reads, lib/actions for writes)
+    - Understand caching strategy (revalidateTag, not revalidatePath)
+    - Understand mutation pipeline (6-step: auth → authz → validate → mutate → audit → revalidate)
+
+2. **Read the domain instruction** (e.g., `catalog.instructions.md`):
+    - Understand what the domain owns and forbids (from contracts/domain-boundaries.yaml)
+    - Understand DTOs and schemas for your domain
+    - Understand which routes are public vs admin-only
+    - Understand naming conventions for your domain
+
+3. **Check the execution JSON** (e.g., `catalog-refactor.json`):
+    - Understand what phases are in progress or blocked
+    - Identify dependencies (e.g., "Phase 1 must complete before Phase 2 starts")
+    - Find open decisions and blockers that affect your work
+
+4. **Consult contracts for specific questions**:
+    - `naming.yaml`: How should I name this DTO? This component? This action?
+    - `domain-boundaries.yaml`: Can visualization call catalog.getWrap directly? Or must it use lib/fetchers?
+    - `mutations.yaml`: What are the 6 steps for this server action? Which step am I implementing?
+
+5. **For bounded, specific tasks**, use the focused prompts:
+    - These are one-shot tasks with clear acceptance criteria
+    - Example: `catalog-asset-role-unification.md` → "Replace all images[0] with explicit role resolution"
+
+**Example: Implementing a new catalog feature**
+
+```
+1. Read server-first.instructions.md → understand layers and data access
+2. Read catalog.instructions.md → understand asset roles, publish workflow, form expectations
+3. Check catalog-refactor.json → see which phases are in progress (blocked on asset role unification?)
+4. Check contracts/naming.yaml → what should I name my new DTO? (WrapDetailDTO pattern)
+5. Start implementation, following 6-step mutation pipeline from contracts/mutations.yaml
+6. If stuck on specific task, check prompts/ for relevant one-shot prompt
+```
+
+**Key Principle**: These resources guide without mandating. If a resource says "prefer," balance against project constraints. If it says "must," follow it (security, boundary, or architectural invariant).
+
+- Understand data access patterns (lib/fetchers for reads, lib/actions for writes)
+- Understand caching strategy (revalidateTag, not revalidatePath)
+- Understand mutation pipeline (6-step: auth → authz → validate → mutate → audit → revalidate)
+
+2. **Read the domain instruction** (e.g., `catalog.instructions.md`):
+    - Understand what the domain owns and forbids (from contracts/domain-boundaries.yaml)
+    - Understand DTOs and schemas for your domain
+    - Understand which routes are public vs admin-only
+    - Understand naming conventions for your domain
+
+3. **Check the execution JSON** (e.g., `catalog-refactor.json`):
+    - Understand what phases are in progress or blocked
+    - Identify dependencies (e.g., "Phase 1 must complete before Phase 2 starts")
+    - Find open decisions and blockers that affect your work
+
+4. **Consult contracts for specific questions**:
+    - `naming.yaml`: How should I name this DTO? This component? This action?
+    - `domain-boundaries.yaml`: Can visualization call catalog.getWrap directly? Or must it use lib/fetchers?
+    - `mutations.yaml`: What are the 6 steps for this server action? Which step am I implementing?
+
+5. **For bounded, specific tasks**, use the focused prompts:
+    - These are one-shot tasks with clear acceptance criteria
+    - Example: `catalog-asset-role-unification.md` → "Replace all images[0] with explicit role resolution"
+
+**Example: Implementing a new catalog feature**
+
+```
+1. Read server-first.instructions.md → understand layers and data access
+2. Read catalog.instructions.md → understand asset roles, publish workflow, form expectations
+3. Check catalog-refactor.json → see which phases are in progress (blocked on asset role unification?)
+4. Check contracts/naming.yaml → what should I name my new DTO? (WrapDetailDTO pattern)
+5. Start implementation, following 6-step mutation pipeline from contracts/mutations.yaml
+6. If stuck on specific task, check prompts/ for relevant one-shot prompt
+```
+
+**Key Principle**: These resources guide without mandating. If a resource says "prefer," balance against project constraints. If it says "must," follow it (security, boundary, or architectural invariant).
 
 ## Markdown, YAML, JSON Rules
 
@@ -92,20 +190,18 @@ When `.github/copilot` resources exist, consume them in this order:
 - Use JSON execution files to track backlog, progress, open decisions, and validation coverage.
 - Keep markdown, YAML, and JSON aligned. If one changes materially, update the others in the same pass when feasible.
 
--For catalog or visualizer work, treat these `.github/copilot` files as authoritative first:
+- For catalog or visualizer work, treat these `.github/copilot` files as authoritative first:
 
-- `.github/copilot/resource/copilot_catalog_visualizer_migration_spec.md`
-- `.github/copilot/resource/copilot_visualizer_huggingface_generation_spec.md`
-- `.github/copilot/docs/catalog.md`
-- `.github/copilot/docs/visualizer.md`
+- `.github/copilot/docs/PRD.md`
+- `.github/copilot/docs/ARCHITECTURE.md`
+- `.github/copilot/docs/DATA-MODEL.md`
+- `.github/copilot/docs/ROADMAP.md`
 - `.github/copilot/instructions/catalog.instructions.md`
 - `.github/copilot/instructions/visualizer.instructions.md`
 
-Catalog and visualizer prompt work now follows a `master + phases` model:
+Catalog and visualizer prompt work currently uses this focused prompt:
 
-- use `.github/copilot/prompts/catalog.refactor.prompt.md` or `.github/copilot/prompts/visualizer.refactor.prompt.md` as the domain-level entrypoint
-- pair the master prompt with the relevant phase prompt under `.github/copilot/prompts/` for bounded implementation passes
-- use `.github/copilot/prompts/catalog-visualizer.integration-e2e.prompt.md` when the storefront funnel spans both domains
+- `.github/copilot/prompts/catalog-asset-role-unification.md`
 
 ## Catalog and visualizer directives
 

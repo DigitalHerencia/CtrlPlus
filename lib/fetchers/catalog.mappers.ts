@@ -70,18 +70,16 @@ export function resolvePrimaryDisplayAsset(images: WrapImageDTO[]): CatalogAsset
 
     const heroImage =
         displayCandidates.find((image) => image.kind === WrapImageKind.HERO) ??
-        displayCandidates.find((image) => image.kind === WrapImageKind.GALLERY) ??
-        orderedImages.find((image) => image.kind === WrapImageKind.HERO) ??
-        orderedImages.find((image) => image.kind === WrapImageKind.GALLERY)
+        displayCandidates.find((image) => image.kind === WrapImageKind.GALLERY)
 
     return heroImage ? toCatalogAssetImage(heroImage) : null
 }
 
 export function resolveHeroAsset(images: WrapImageDTO[]): CatalogAssetImageDTO | null {
     const orderedImages = sortImages(images)
-    const heroImage =
-        orderedImages.find((image) => image.isActive && image.kind === WrapImageKind.HERO) ??
-        orderedImages.find((image) => image.kind === WrapImageKind.HERO)
+    const heroImage = orderedImages.find(
+        (image) => image.isActive && image.kind === WrapImageKind.HERO
+    )
 
     return heroImage ? toCatalogAssetImage(heroImage) : null
 }
@@ -91,13 +89,8 @@ export function resolveCatalogGalleryImages(images: WrapImageDTO[]): CatalogAsse
     const activeDisplayImages = orderedImages.filter(
         (image) => image.isActive && image.kind === WrapImageKind.GALLERY
     )
-    const fallbackDisplayImages = orderedImages.filter(
-        (image) => image.kind === WrapImageKind.GALLERY
-    )
 
-    return (activeDisplayImages.length > 0 ? activeDisplayImages : fallbackDisplayImages).map(
-        toCatalogAssetImage
-    )
+    return activeDisplayImages.map(toCatalogAssetImage)
 }
 
 export function resolveDisplayImages(images: WrapImageDTO[]): CatalogAssetImageDTO[] {
@@ -109,10 +102,9 @@ export function resolveDisplayImages(images: WrapImageDTO[]): CatalogAssetImageD
 
 export function resolveVisualizerTextureAsset(images: WrapImageDTO[]): CatalogAssetImageDTO | null {
     const orderedImages = sortImages(images)
-    const textureImage =
-        orderedImages.find(
-            (image) => image.isActive && image.kind === WrapImageKind.VISUALIZER_TEXTURE
-        ) ?? orderedImages.find((image) => image.kind === WrapImageKind.VISUALIZER_TEXTURE)
+    const textureImage = orderedImages.find(
+        (image) => image.isActive && image.kind === WrapImageKind.VISUALIZER_TEXTURE
+    )
 
     return textureImage ? toCatalogAssetImage(textureImage) : null
 }
@@ -121,10 +113,9 @@ export function resolveVisualizerMaskHintAsset(
     images: WrapImageDTO[]
 ): CatalogAssetImageDTO | null {
     const orderedImages = sortImages(images)
-    const maskHintImage =
-        orderedImages.find(
-            (image) => image.isActive && image.kind === WrapImageKind.VISUALIZER_MASK_HINT
-        ) ?? orderedImages.find((image) => image.kind === WrapImageKind.VISUALIZER_MASK_HINT)
+    const maskHintImage = orderedImages.find(
+        (image) => image.isActive && image.kind === WrapImageKind.VISUALIZER_MASK_HINT
+    )
 
     return maskHintImage ? toCatalogAssetImage(maskHintImage) : null
 }

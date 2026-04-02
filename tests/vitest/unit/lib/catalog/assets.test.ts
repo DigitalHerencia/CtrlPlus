@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { getCatalogAssetReadiness, resolvePrimaryDisplayAsset } from '@/lib/fetchers/catalog.mappers'
-import { WrapImageKind } from '@/types/catalog/constants'
+import {
+    getCatalogAssetReadiness,
+    resolveCatalogGalleryImages,
+    resolveHeroAsset,
+    resolvePrimaryDisplayAsset,
+    resolveVisualizerTextureAsset,
+} from '@/lib/fetchers/catalog.mappers'
+import { WrapImageKind } from '@/lib/constants/statuses'
 import type { WrapImageDTO } from '@/types/catalog.types'
 
 function createImage(overrides: Partial<WrapImageDTO>): WrapImageDTO {
@@ -35,6 +41,63 @@ describe('resolvePrimaryDisplayAsset', () => {
         ])
 
         expect(asset).toBeNull()
+    })
+
+    it('does not use inactive hero or gallery assets as display candidates', () => {
+        const asset = resolvePrimaryDisplayAsset([
+            createImage({
+                id: 'inactive-hero',
+                kind: WrapImageKind.HERO,
+                isActive: false,
+            }),
+            createImage({
+                id: 'inactive-gallery',
+                kind: WrapImageKind.GALLERY,
+                isActive: false,
+                displayOrder: 1,
+            }),
+        ])
+
+        expect(asset).toBeNull()
+    })
+})
+
+describe('role-specific resolvers', () => {
+    it('returns only active hero assets', () => {
+        const hero = resolveHeroAsset([
+            createImage({ id: 'inactive-hero', kind: WrapImageKind.HERO, isActive: false }),
+            createImage({ id: 'active-hero', kind: WrapImageKind.HERO, isActive: true }),
+        ])
+
+        expect(hero?.id).toBe('active-hero')
+    })
+
+    it('returns only active gallery assets', () => {
+        const gallery = resolveCatalogGalleryImages([
+            createImage({ id: 'inactive-gallery', kind: WrapImageKind.GALLERY, isActive: false }),
+            createImage({ id: 'active-gallery', kind: WrapImageKind.GALLERY, isActive: true }),
+        ])
+
+        expect(gallery).toHaveLength(1)
+        expect(gallery[0]?.id).toBe('active-gallery')
+    })
+
+    it('returns only active visualizer texture assets', () => {
+        const texture = resolveVisualizerTextureAsset([
+            createImage({
+                id: 'inactive-texture',
+                kind: WrapImageKind.VISUALIZER_TEXTURE,
+                isActive: false,
+            }),
+            createImage({
+                id: 'active-texture',
+                kind: WrapImageKind.VISUALIZER_TEXTURE,
+                isActive: true,
+                displayOrder: 1,
+            }),
+        ])
+
+        expect(texture?.id).toBe('active-texture')
     })
 })
 

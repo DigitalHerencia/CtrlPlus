@@ -1,0 +1,209 @@
+# Naming Contracts for CtrlPlus
+
+Canonical naming conventions for exports, types, components, and files.
+
+## Export Naming
+
+### Data Transfer Objects (DTOs)
+- **Suffix:** `DTO`
+- **Pattern:** `{Entity}{Purpose}DTO`
+- **Examples:**
+  - `WrapListDTO` - list/grid view of wrap
+  - `WrapDetailDTO` - full wrap with all fields
+  - `WrapImageDTO` - single image asset
+  - `VisualizerPreviewDTO` - preview record
+  - `WrapCategoryDTO` - category with wraps
+
+**Rule:** Never export Prisma model types directly. Always create a DTO.
+
+### Zod Validators
+- **Prefix:** `{lowercase}{Entity}Schema`
+- **Pattern:** `create{Entity}Schema`, `update{Entity}Schema`, `upsert{Entity}Schema`
+- **Examples:**
+  - `createWrapSchema` - validation for wrap creation
+  - `updateWrapSchema` - for updates (usually partial)
+  - `addWrapImageSchema` - for image uploads
+  - `createBookingSchema` - for booking creation
+
+**Rule:** Schema names should match the input parameter shape, not the entity.
+
+### Type Definitions
+- **Suffix:** (typically no suffix; live in `types/{domain}.types.ts`)
+- **Pattern:** `{Entity}{Purpose}` (enum/interface/type)
+- **Examples:**
+  - `AssetRole` - enum: hero, gallery, visualizer_texture, etc.
+  - `PreviewStatus` - enum: pending, processing, complete, failed
+  - `BookingStatus` - enum: pending, confirmed, completed, cancelled
+  - `CreateWrapInput` - type for createWrap() input (matches createWrapSchema)
+
+**Rule:** Never use `any`. Always type explicitly.
+
+### Server Actions
+- **Pattern:** {verb}{Entity}
+- **Examples:**
+  - `createWrap()`
+  - `updateWrap()`
+  - `deleteWrap()` (soft-delete)
+  - `publishWrap()`
+  - `addWrapImage()`
+  - `generatePreview()`
+
+**Rule:** Action names must match mutation intent. Use domain-specific action names, not generic CRUD.
+
+### Fetchers / Read Functions
+- **Pattern:** get{Entity}{Optional Qualifier}()
+- **Examples:**
+  - `getCatalogWraps()` - list for catalog view
+  - `getWrapDetail(wrapId)` - full wrap detail
+  - `getWrapsByCategory(categoryId)` - filter by category
+  - `getWrapAssets(wrapId, role?)` - assets with optional role filter
+  - `getPreview(previewId)` - fetch single preview record
+
+**Rule:** Fetchers return DTOs. Never return raw Prisma models.
+
+### Components
+- **Pattern:** PascalCase{Entity}{Purpose}
+- **Examples:**
+  - `WrapCard` - component for wrap in grid
+  - `WrapDetail` - full wrap detail view
+  - `WrapImageManager` - owner-facing asset manager
+  - `CatalogFilters` - filter/search component
+  - `PhotoUploader` - visualizer photo uploader
+
+**Rule:** Component names match their primary entity or purpose. Avoid generic names like `Card`, `Manager`, `Form` without qualifier.
+
+###Features / Page Blocks
+- **Pattern:** PascalCase{Domain}{Purpose}Feature
+- **Examples:**
+  - `CatalogBrowseFeature` - public wrap browsing
+  - `CatalogDetailFeature` - wrap detail + CTA
+  - `WrapManagerFeature` - owner management admin
+  - `VisualizerFlowFeature` - main visualizer experience
+
+**Rule:** Feature names signal that they own orchestration + client state, not just presentation.
+
+## File Naming & Organization
+
+### Directories
+- `lib/actions/{domain}/` - server mutations
+- `lib/fetchers/{domain}/` - server reads
+- `lib/integrations/{domain}/` - external service adapters
+- `lib/auth/` - auth helpers (not domain-scoped)
+- `lib/authz/` - authorization helpers (not domain-scoped)
+- `types/{domain}.types.ts` - all DTOs and types for domain
+- `schemas/{domain}.schemas.ts` - all Zod validators for domain
+- `features/{domain}/{view}/` - page-level orchestration (browse, detail, manager, etc.)
+- `components/{domain}/` - domain UI components
+- `components/ui/` - shadcn primitives ONLY
+
+**Rule:** No barrel index exports. Every import is explicit: `import { WrapListDTO } from "@/types/catalog.types"` not `import { WrapListDTO } from "@/types"`.
+
+### Files
+- `actions/{domain}.ts` or `actions/{domain}/{action}.ts` - group related or one per file depending on size
+- `fetchers/{domain}.ts` or `fetchers/{domain}/{entity}.ts` - group related or one per file
+- `types/{domain}.types.ts` - monolithic per domain
+- `schemas/{domain}.schemas.ts` - monolithic per domain
+- `{domain}.ts` (utilities) - if small; otherwise `lib/{domain}/utils/{utility}.ts`
+
+**Example:**
+```
+lib/
+  actions/
+    catalog/
+      wrap.ts (createWrap, updateWrap, deleteWrap, publishWrap)
+      image.ts (addWrapImage, updateWrapImage, deleteWrapImage)
+      category.ts (setWrapCategories)
+  fetchers/
+    catalog/
+      wrap.ts (getCatalogWraps, getWrapDetail, getWrapsByCategory, getWrapAssets)
+      category.ts (getCategories, getCategoryWraps)
+  integrations/
+    catalog/
+      cloudinary.ts (upload, cleanup)
+```
+
+## Imports: No Barrel Exports
+
+**Rule:** Never use barrel index exports (`index.ts`). Always import from specific files.
+
+**❌ Don't:**
+```typescript
+import { createWrap, updateWrap } from "@/lib/actions";
+```
+
+**✅ Do:**
+```typescript
+import { createWrap } from "@/lib/actions/catalog/wrap";
+import { updateWrap } from "@/lib/actions/catalog/wrap";
+```
+
+This makes static analysis easier and keeps dependency graphs clear.
+
+## Comments & Documentation
+
+### Function Comments
+- **Comment:** JSDoc for public exports only
+- **Example:**
+```typescript
+/**
+ * Fetch all published wraps for catalog browsing.
+ * @param filters Optional filters (name, category, price range)
+ * @returns Array of WrapListDTO for grid display
+ */
+export async function getCatalogWraps(filters?: CatalogFilters): Promise<WrapListDTO[]>
+```
+
+### Inline Comments
+- **Rule:** Prefer self-explanatory code over comments
+- **Use comments for:** Why (not what), non-obvious logic, security notes
+- **Example (good):**
+```typescript
+// Security: Always scope by tenantId to prevent data leakage across tenants
+const wrap = await prisma.wrap.findUnique({
+  where: { id_tenantId: { id: wrapId, tenantId } },
+});
+```
+
+- **Example (bad):**
+```typescript
+// Get the wrap
+const wrap = await prisma.wrap.findUnique(...); // Comments should explain why
+```
+
+## Constants
+
+- **Location:** `lib/constants/{domain}.constants.ts` or inline in config
+- **Naming:** UPPER_SNAKE_CASE
+- **Examples:**
+  - `PREVIEW_TTL_DAYS = 30`
+  - `HF_MAX_RETRIES = 2`
+  - `WRAP_MIN_PRICE_CENTS = 100`
+  - `MAX_ASSET_BYTES = 10_000_000` (10MB)
+
+**Rule:** Never magic numbers. Always use named constants.
+
+## Environment Variables
+
+- **Prefix:** `{DOMAIN}_{SERVICE}_{KEY}` or `{SERVICE}_{KEY}`
+- **Examples:**
+  - `CLOUDINARY_CLOUD_NAME`
+  - `HF_API_KEY` (Hugging Face)
+  - `STRIPE_SECRET_KEY`
+  - `DATABASE_URL`
+  - `CLERK_SECRET_KEY`
+
+**Rule:** Document in `.env.example`. Never commit actual values. Use GitHub Secrets for CI/CD.
+
+## Testing Files
+
+- **Suffix:** `.test.ts`, `.spec.ts`
+- **Location:** Same directory as source or `tests/{domain}/{entity}.test.ts`
+- **Names:** `{describe("function name", () => { it("should ...")})}`
+
+**Example:**
+```typescript
+describe("createWrap", () => {
+  it("should create a wrap with valid input", async () => { ... });
+  it("should throw on invalid price", async () => { ... });
+});
+```

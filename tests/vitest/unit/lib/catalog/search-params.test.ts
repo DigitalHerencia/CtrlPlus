@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { parseCatalogSearchParams } from '@/lib/catalog/search-params'
+import { parseCatalogSearchParams } from '@/lib/utils/search-params'
 
 describe('parseCatalogSearchParams', () => {
     it('normalizes empty input into the default browse state', () => {

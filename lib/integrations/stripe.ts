@@ -5,7 +5,12 @@ const STRIPE_API_VERSION: Stripe.LatestApiVersion = '2026-02-25.clover'
 let stripeClient: Stripe | null = null
 
 function getRequiredEnv(name: 'STRIPE_SECRET_KEY' | 'STRIPE_WEBHOOK_SECRET'): string {
-    const value = process.env[name]?.trim()
+    const value =
+        name === 'STRIPE_SECRET_KEY'
+            ? (process.env.STRIPE_SECRET_KEY?.trim() ??
+              process.env.ctrl_plus_STRIPE_SECRET_KEY?.trim())
+            : process.env.STRIPE_WEBHOOK_SECRET?.trim()
+
     if (!value) {
         throw new Error(`${name} environment variable is not set`)
     }

@@ -4,7 +4,6 @@ import path from 'path'
 
 import {
     buildBlobSignature,
-    cloudinary,
     extractBlobPublicId,
     getBlobCredentials,
 } from '@/lib/integrations/blob'
@@ -257,28 +256,65 @@ export function storePreviewImage(params: {
     buffer: Buffer
     contentType?: string
 }): Promise<string> {
-    void params.contentType
+    return (async () => {
+        const contentType = params.contentType ?? 'image/png'
+        const credentials = getBlobCredentials()
 
-    return new Promise((resolve, reject) => {
-        const publicId = `visualizer/previews/${params.previewId}-${randomUUID()}`
-        const uploadStream = cloudinary.uploader.upload_stream(
-            {
-                public_id: publicId,
-                folder: 'visualizer/previews',
-                resource_type: 'image',
-                overwrite: true,
-                format: 'png',
-            },
-            (error, result) => {
-                if (error || !result?.secure_url) {
-                    reject(error ?? new Error('Preview image storage failed.'))
-                    return
-                }
+        if (credentials) {
+            const uploadPreset = process.env.CLOUDINARY_VISUALIZER_UPLOAD_PRESET?.trim() ?? null
+            const folder = process.env.CLOUDINARY_VISUALIZER_FOLDER?.trim() || 'visualizer/previews'
+            const publicId = `${folder}/${params.previewId}-${randomUUID()}`
+            const endpoint = `https://api.cloudinary.com/v1_1/${credentials.cloudName}/image/upload`
+            const formData = new FormData()
 
-                resolve(result.secure_url)
+            formData.set(
+                'file',
+                new Blob([new Uint8Array(params.buffer)], { type: contentType }),
+                `${publicId}.png`
+            )
+
+            if (uploadPreset) {
+                formData.set('upload_preset', uploadPreset)
+                formData.set('public_id', publicId)
+            } else {
+                const timestamp = Math.floor(Date.now() / 1000).toString()
+                const signature = buildBlobSignature(
+                    { public_id: publicId, timestamp },
+                    credentials.apiSecret
+                )
+
+                formData.set('public_id', publicId)
+                formData.set('timestamp', timestamp)
+                formData.set('api_key', credentials.apiKey)
+                formData.set('signature', signature)
             }
-        )
 
-        uploadStream.end(params.buffer)
-    })
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                body: formData,
+            })
+
+            if (!response.ok) {
+                throw new Error('Preview image storage failed.')
+            }
+
+            const payload = (await response.json()) as { secure_url?: string }
+            if (!payload.secure_url) {
+                throw new Error('Preview image storage failed.')
+            }
+
+            return payload.secure_url
+        }
+
+        const fileName = `${params.previewId}-${randomUUID()}.png`
+        const relativeDir = path.join('uploads', 'visualizer-previews')
+        const relativePath = path.join(relativeDir, fileName)
+        const absoluteDir = path.join(process.cwd(), 'public', relativeDir)
+        const absolutePath = path.join(process.cwd(), 'public', relativePath)
+
+        await mkdir(absoluteDir, { recursive: true })
+        await writeFile(absolutePath, params.buffer)
+
+        return `/${relativePath.replaceAll(path.sep, '/')}`
+    })()
 }

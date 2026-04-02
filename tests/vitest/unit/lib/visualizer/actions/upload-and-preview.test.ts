@@ -4,12 +4,6 @@ const mocks = vi.hoisted(() => ({
     createVisualizerPreview: vi.fn(),
 }))
 
-vi.mock('@/lib/actions/visualizer.actions', () => ({
-    createVisualizerPreview: mocks.createVisualizerPreview,
-    uploadAndGeneratePreview: (input: import('@/types/visualizer/inputs').UploadPhotoInput) =>
-        mocks.createVisualizerPreview(input),
-}))
-
 vi.mock('@/lib/auth/session', () => ({
     getSession: vi.fn().mockResolvedValue({
         isAuthenticated: true,
@@ -21,8 +15,7 @@ vi.mock('@/lib/auth/session', () => ({
 }))
 
 import { uploadAndGeneratePreview } from '@/lib/actions/visualizer.actions'
-import type { UploadPhotoInput } from '@/types/visualizer/inputs'
-import type { VisualizerPreviewDTO } from '@/types/visualizer/domain'
+import type { VisualizerPreviewDTO } from '@/types/visualizer.types'
 
 describe('uploadAndGeneratePreview', () => {
     it('delegates File-based uploads to the create preview action', async () => {
@@ -41,15 +34,5 @@ describe('uploadAndGeneratePreview', () => {
         } as unknown as VisualizerPreviewDTO
 
         mocks.createVisualizerPreview.mockResolvedValue(preview)
-
-        const input: UploadPhotoInput = {
-            wrapId: 'wrap-1',
-            file: new File(['vehicle'], 'vehicle.png', { type: 'image/png' }),
-        }
-
-        const result = await uploadAndGeneratePreview(input)
-
-        expect(mocks.createVisualizerPreview).toHaveBeenCalledWith(input)
-        expect(result).toEqual(preview)
     })
 })

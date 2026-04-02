@@ -13,6 +13,7 @@ import {
 } from '@/lib/actions/catalog.actions'
 import type { WrapImageKind } from '@/lib/constants/statuses'
 import type { CatalogDetailDTO } from '@/types/catalog.types'
+import { fileToDataUrl } from './file-key.client'
 
 interface CatalogWrapAssetsClientProps {
     wrap: CatalogDetailDTO
@@ -60,7 +61,8 @@ export function CatalogWrapAssetsClient({ wrap }: CatalogWrapAssetsClientProps) 
                     onAddImage={(file, kind, isActive) =>
                         new Promise<void>((resolve) => {
                             runMutation(async () => {
-                                await addWrapImage({ wrapId: wrap.id, file, kind, isActive })
+                                const fileKey = await fileToDataUrl(file)
+                                await addWrapImage({ wrapId: wrap.id, fileKey, kind, isActive })
                                 resolve()
                             })
                         })
