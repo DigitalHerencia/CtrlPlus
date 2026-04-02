@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { pruneOldPreviews } from '@/lib/actions/platform.actions'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ClipboardList, Grid3x3, Layers } from 'lucide-react'
 
@@ -91,15 +90,6 @@ export default function AdminManagementTools({
                         </button>
                     </form>
                 )}
-
-                <form action={pruneOldPreviews} className="inline">
-                    <button
-                        type="submit"
-                        className="rounded bg-neutral-800 px-3 py-2 text-sm font-medium text-neutral-100 hover:bg-neutral-700"
-                    >
-                        Run maintenance (prune previews)
-                    </button>
-                </form>
             </div>
         </Card>
     )
