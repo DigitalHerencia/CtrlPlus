@@ -26,7 +26,7 @@ function extractHostFromUrl(url: string | undefined): string | null {
 
 export const visualizerConfig = {
     maxUploadSizeBytes: Number(process.env.VISUALIZER_MAX_UPLOAD_SIZE_BYTES ?? 10 * 1024 * 1024),
-    supportedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'],
+    supportedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
     previewTtlMs: 24 * 60 * 60 * 1000,
     maskModel: process.env.HUGGINGFACE_VISUALIZER_MODEL ?? 'keras/segformer_b1_cityscapes_1024',
     huggingFaceModelRevision: process.env.HUGGINGFACE_VISUALIZER_REVISION ?? 'main',
@@ -119,7 +119,8 @@ export async function createVehicleMask(imageBuffer: Buffer): Promise<Buffer> {
             const results = await callHf(imageBuffer)
             const candidate = results
                 .filter(
-                    (item) => item.mask && item.label && VEHICLE_LABELS.has(item.label.toLowerCase())
+                    (item) =>
+                        item.mask && item.label && VEHICLE_LABELS.has(item.label.toLowerCase())
                 )
                 .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))[0]
 

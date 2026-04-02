@@ -46,7 +46,7 @@ export function UploadForm({
                 <div className="space-y-1">
                     <h2 className="text-xl font-semibold text-neutral-50">Upload Your Vehicle</h2>
                     <p className="text-sm text-neutral-400">
-                        Use a clean side profile. JPEG, PNG, WebP, or HEIC up to 10MB.
+                        Use a clean side profile. JPEG, PNG, or WebP up to 10MB.
                     </p>
                 </div>
                 {error || localError ? (
@@ -66,7 +66,7 @@ export function UploadForm({
                     </div>
                     <input
                         type="file"
-                        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                        accept="image/jpeg,image/png,image/webp"
                         className="hidden"
                         onChange={(event) => {
                             const file = event.target.files?.[0] ?? null

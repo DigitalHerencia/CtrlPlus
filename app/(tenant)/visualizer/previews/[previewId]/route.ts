@@ -3,13 +3,13 @@ import { NextResponse } from 'next/server'
 import { getPreviewById } from '@/lib/fetchers/visualizer.fetchers'
 
 interface PreviewRouteProps {
-    params: Promise<{ id: string }>
+    params: Promise<{ previewId: string }>
 }
 
 export async function GET(_: Request, { params }: PreviewRouteProps) {
     try {
-        const { id } = await params
-        const preview = await getPreviewById(id)
+        const { previewId } = await params
+        const preview = await getPreviewById(previewId)
 
         if (!preview) {
             return NextResponse.json({ error: 'Preview not found' }, { status: 404 })
@@ -20,7 +20,6 @@ export async function GET(_: Request, { params }: PreviewRouteProps) {
             {
                 status: 200,
                 headers: {
-                    // short cache for previews; allow stale-while-revalidate
                     'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
                 },
             }

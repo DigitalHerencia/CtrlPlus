@@ -8,7 +8,7 @@ vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
     getPreviewById: mocks.getPreviewById,
 }))
 
-import { GET } from '@/app/(tenant)/visualizer/previews/[id]/route'
+import { GET } from '@/app/(tenant)/visualizer/previews/[previewId]/route'
 import { getPreviewById } from '@/lib/fetchers/visualizer.fetchers'
 
 describe('visualizer previews route', () => {
@@ -17,7 +17,7 @@ describe('visualizer previews route', () => {
         mocked.mockResolvedValueOnce(null)
 
         const context: Parameters<typeof GET>[1] = {
-            params: Promise.resolve({ id: 'missing' }),
+            params: Promise.resolve({ previewId: 'missing' }),
         }
 
         const res = await GET(new Request('https://example.test'), context)

@@ -15,6 +15,8 @@ export interface VisualizerPreviewDTO {
     updatedAt: Timestamp
 }
 
+export type SerializedVisualizerPreview = VisualizerPreviewDTO
+
 export type RegenerateVisualizerPreviewInput = {
     previewId: string
 }

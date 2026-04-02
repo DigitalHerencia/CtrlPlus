@@ -1,4 +1,4 @@
-import "server-only"
+import 'server-only'
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
@@ -68,4 +68,72 @@ export async function getPreviewsByWrap(wrapId: string): Promise<VisualizerPrevi
     })
 
     return previews.map(toVisualizerPreviewDTO)
+}
+
+export async function listMyVisualizerPreviews(limit = 50): Promise<VisualizerPreviewDTO[]> {
+    const session = await getSession()
+    const userId = session.userId
+    if (!session.isAuthenticated || !userId) {
+        return []
+    }
+
+    requireCapability(session.authz, 'visualizer.use')
+
+    const previews = await prisma.visualizerPreview.findMany({
+        where: {
+            ownerClerkUserId: userId,
+            deletedAt: null,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: visualizerPreviewDTOFields,
+    })
+
+    return previews.map(toVisualizerPreviewDTO)
+}
+
+export interface VisualizerUploadSnapshot {
+    id: string
+    customerPhotoUrl: string
+    wrapId: string
+    createdAt: string
+    updatedAt: string
+}
+
+export async function listMyVisualizerUploads(limit = 50): Promise<VisualizerUploadSnapshot[]> {
+    const previews = await listMyVisualizerPreviews(limit)
+
+    const uploadsById = new Map<string, VisualizerUploadSnapshot>()
+
+    for (const preview of previews) {
+        if (!uploadsById.has(preview.id)) {
+            uploadsById.set(preview.id, {
+                id: preview.id,
+                customerPhotoUrl: preview.customerPhotoUrl,
+                wrapId: preview.wrapId,
+                createdAt: preview.createdAt,
+                updatedAt: preview.updatedAt,
+            })
+        }
+    }
+
+    return [...uploadsById.values()]
+}
+
+export async function getMyVisualizerUploadById(
+    uploadId: string
+): Promise<VisualizerUploadSnapshot | null> {
+    const preview = await getPreviewById(uploadId)
+
+    if (!preview) {
+        return null
+    }
+
+    return {
+        id: preview.id,
+        customerPhotoUrl: preview.customerPhotoUrl,
+        wrapId: preview.wrapId,
+        createdAt: preview.createdAt,
+        updatedAt: preview.updatedAt,
+    }
 }

@@ -255,6 +255,8 @@ export function storePreviewImage(params: {
     previewId: string
     buffer: Buffer
     contentType?: string
+    folder?: string
+    metadata?: Record<string, string | number | null | undefined>
 }): Promise<string> {
     return (async () => {
         const contentType = params.contentType ?? 'image/png'
@@ -262,7 +264,10 @@ export function storePreviewImage(params: {
 
         if (credentials) {
             const uploadPreset = process.env.CLOUDINARY_VISUALIZER_UPLOAD_PRESET?.trim() ?? null
-            const folder = process.env.CLOUDINARY_VISUALIZER_FOLDER?.trim() || 'visualizer/previews'
+            const folder =
+                params.folder?.trim() ||
+                process.env.CLOUDINARY_VISUALIZER_FOLDER?.trim() ||
+                'ctrlplus/visualizer/previews'
             const publicId = `${folder}/${params.previewId}-${randomUUID()}`
             const endpoint = `https://api.cloudinary.com/v1_1/${credentials.cloudName}/image/upload`
             const formData = new FormData()
@@ -272,6 +277,19 @@ export function storePreviewImage(params: {
                 new Blob([new Uint8Array(params.buffer)], { type: contentType }),
                 `${publicId}.png`
             )
+
+            const metadata = Object.entries(params.metadata ?? {}).filter(
+                ([, value]) => value !== null && value !== undefined && `${value}`.trim().length > 0
+            )
+            if (metadata.length > 0) {
+                const context = metadata
+                    .map(
+                        ([key, value]) =>
+                            `${key}=${String(value).replaceAll('|', '/').replaceAll('=', ':')}`
+                    )
+                    .join('|')
+                formData.set('context', context)
+            }
 
             if (uploadPreset) {
                 formData.set('upload_preset', uploadPreset)
@@ -307,7 +325,9 @@ export function storePreviewImage(params: {
         }
 
         const fileName = `${params.previewId}-${randomUUID()}.png`
-        const relativeDir = path.join('uploads', 'visualizer-previews')
+        const relativeDir = params.folder
+            ? path.join(...params.folder.split('/'))
+            : path.join('uploads', 'visualizer-previews')
         const relativePath = path.join(relativeDir, fileName)
         const absoluteDir = path.join(process.cwd(), 'public', relativeDir)
         const absolutePath = path.join(process.cwd(), 'public', relativePath)

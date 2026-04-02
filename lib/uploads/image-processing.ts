@@ -14,7 +14,7 @@ import { storePreviewImage } from '@/lib/uploads/storage'
 
 const MIN_DIMENSION = 512
 const MAX_DIMENSION = 4096
-const NORMALIZED_MAX_DIMENSION = 2048
+const NORMALIZED_MAX_DIMENSION = 1536
 
 export interface NormalizedVehicleUpload {
     buffer: Buffer

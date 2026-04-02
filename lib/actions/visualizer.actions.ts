@@ -4,23 +4,20 @@ import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
 import { buildVisualizerCacheKey } from '@/lib/cache/cache-keys'
 import { prisma } from '@/lib/db/prisma'
-import {
-    createWrapPreviewGeneratorAdapter,
-    HuggingFacePreviewUnavailableError,
-    visualizerConfig,
-} from '@/lib/integrations/huggingface'
 import { getVisualizerWrapSelectionById } from '@/lib/fetchers/visualizer.fetchers'
 import { toVisualizerPreviewDTO } from '@/lib/fetchers/visualizer.mappers'
 import {
-    buildPreviewConditioningBoard,
-    buildWrapPreviewPrompt,
-    generateDeterministicCompositePreview,
     normalizeVehicleUpload,
     normalizeVehicleBuffer,
     readImageBufferFromUrl,
     readPhotoBuffer,
 } from '@/lib/uploads/image-processing'
 import { storePreviewImage } from '@/lib/uploads/storage'
+import { buildSimpleWrapPreview } from '@/lib/visualizer/fallback/build-simple-wrap-preview'
+import { getHfModelName } from '@/lib/visualizer/huggingface/client'
+import { generateWrapPreview } from '@/lib/visualizer/huggingface/generate-wrap-preview'
+import { buildGenerationInputBoard } from '@/lib/visualizer/preprocessing/build-generation-input-board'
+import { buildWrapPreviewPrompt } from '@/lib/visualizer/prompting/build-wrap-preview-prompt'
 import {
     createVisualizerPreviewSchema,
     processVisualizerPreviewSchema,
@@ -33,8 +30,9 @@ function buildVisualizerPromptForWrap(
     wrap: NonNullable<Awaited<ReturnType<typeof getVisualizerWrapSelectionById>>>
 ) {
     return buildWrapPreviewPrompt({
-        name: wrap.name,
-        description: wrap.description,
+        wrapName: wrap.name,
+        wrapDescription: wrap.description,
+        wrapTextureUrl: wrap.visualizerTextureImage.url,
         aiPromptTemplate: wrap.aiPromptTemplate,
         aiNegativePrompt: wrap.aiNegativePrompt,
     })
@@ -56,24 +54,38 @@ async function resolveVisualizerGenerationAssets(
 
 async function executeVisualizerPreviewGeneration(params: {
     previewId: string
+    ownerClerkUserId: string
     vehicleBuffer: Buffer
+    baseVehicleImageUrl: string
     textureBuffer: Buffer
     wrap: NonNullable<Awaited<ReturnType<typeof getVisualizerWrapSelectionById>>>
     prompt: ReturnType<typeof buildWrapPreviewPrompt>
 }): Promise<{
     processedImageUrl: string
     promptVersion: string
+    model: string
     generationFallbackReason: string | null
 }> {
+    const model = getHfModelName()
+    const previewMetadata = {
+        wrapId: params.wrap.id,
+        clerkUserId: params.ownerClerkUserId,
+        sourceWrapImageId: params.wrap.visualizerTextureImage.id,
+        sourceWrapImageVersion: params.wrap.visualizerTextureImage.version,
+        mode: 'ai_preview',
+        model,
+    }
+
     try {
-        const adapter = createWrapPreviewGeneratorAdapter()
-        const boardBuffer = await buildPreviewConditioningBoard({
+        const boardBuffer = await buildGenerationInputBoard({
             vehicleBuffer: params.vehicleBuffer,
-            textureBuffer: params.textureBuffer,
-            wrapName: params.wrap.name,
-            wrapDescription: params.wrap.description,
+            wrapTextureBuffer: params.textureBuffer,
         })
-        const generatedBuffer = await adapter.generate({
+        const result = await generateWrapPreview({
+            model,
+            baseVehicleImageUrl: params.baseVehicleImageUrl,
+            wrapTextureUrl: params.wrap.visualizerTextureImage.url,
+            generationBoardUrl: 'in-memory://generation-board',
             boardBuffer,
             prompt: params.prompt.prompt,
             negativePrompt: params.prompt.negativePrompt,
@@ -82,27 +94,37 @@ async function executeVisualizerPreviewGeneration(params: {
         return {
             processedImageUrl: await storePreviewImage({
                 previewId: params.previewId,
-                buffer: generatedBuffer,
+                buffer: result.imageBuffer,
                 contentType: 'image/png',
+                folder: `ctrlplus/visualizer/previews/${params.ownerClerkUserId}`,
+                metadata: previewMetadata,
             }),
             promptVersion: params.prompt.promptVersion,
+            model,
             generationFallbackReason: null,
         }
     } catch (error) {
         const fallbackReason =
-            error instanceof HuggingFacePreviewUnavailableError
-                ? error.message
-                : error instanceof Error
-                  ? error.message
-                  : 'Hugging Face preview generation failed.'
+            error instanceof Error ? error.message : 'Hugging Face preview generation failed.'
+
+        const fallbackBuffer = await buildSimpleWrapPreview({
+            vehicleBuffer: params.vehicleBuffer,
+            textureBuffer: params.textureBuffer,
+        })
 
         return {
-            processedImageUrl: await generateDeterministicCompositePreview({
+            processedImageUrl: await storePreviewImage({
                 previewId: params.previewId,
-                photoBuffer: params.vehicleBuffer,
-                textureBuffer: params.textureBuffer,
+                buffer: fallbackBuffer,
+                contentType: 'image/png',
+                folder: `ctrlplus/visualizer/previews/${params.ownerClerkUserId}`,
+                metadata: {
+                    ...previewMetadata,
+                    mode: 'fallback_preview',
+                },
             }),
             promptVersion: params.prompt.promptVersion,
+            model,
             generationFallbackReason: fallbackReason,
         }
     }
@@ -137,6 +159,7 @@ export async function createVisualizerPreview(input: {
     }
 
     const prompt = buildVisualizerPromptForWrap(wrap)
+    const generationModel = getHfModelName()
 
     const cacheKey = buildVisualizerCacheKey({
         wrapId: wrap.id,
@@ -144,11 +167,9 @@ export async function createVisualizerPreview(input: {
         customerPhotoHash: normalizedVehicle.hash,
         sourceWrapImageId: wrap.visualizerTextureImage.id,
         sourceAssetVersion: wrap.visualizerTextureImage.version,
-        generationMode: 'hf-primary-with-deterministic-fallback',
-        generationModel: visualizerConfig.previewModel || 'deterministic-fallback',
+        generationMode: 'ai-preview-v1',
+        generationModel,
         promptVersion: prompt.promptVersion,
-        blendMode: visualizerConfig.blendMode,
-        opacity: visualizerConfig.overlayOpacity,
     })
 
     const reusablePreview = await prisma.visualizerPreview.findFirst({
@@ -174,6 +195,15 @@ export async function createVisualizerPreview(input: {
         previewId: `vehicle-${cacheKey}`,
         buffer: normalizedVehicle.buffer,
         contentType: normalizedVehicle.contentType,
+        folder: `ctrlplus/visualizer/uploads/${userId}`,
+        metadata: {
+            wrapId: wrap.id,
+            clerkUserId: userId,
+            sourceWrapImageId: wrap.visualizerTextureImage.id,
+            sourceWrapImageVersion: wrap.visualizerTextureImage.version,
+            mode: 'vehicle_upload',
+            model: generationModel,
+        },
     })
 
     const preview = await prisma.visualizerPreview.create({
@@ -186,7 +216,7 @@ export async function createVisualizerPreview(input: {
             cacheKey,
             sourceWrapImageId: wrap.visualizerTextureImage.id,
             sourceWrapImageVersion: wrap.visualizerTextureImage.version,
-            expiresAt: new Date(Date.now() + visualizerConfig.previewTtlMs),
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         },
     })
 
@@ -202,6 +232,7 @@ export async function createVisualizerPreview(input: {
                 promptVersion: prompt.promptVersion,
                 sourceWrapImageId: wrap.visualizerTextureImage.id,
                 sourceWrapImageVersion: wrap.visualizerTextureImage.version,
+                model: generationModel,
             }),
             timestamp: new Date(),
         },
@@ -245,7 +276,7 @@ export async function regenerateVisualizerPreview(
         data: {
             status: 'pending',
             processedImageUrl: null,
-            expiresAt: new Date(Date.now() + visualizerConfig.previewTtlMs),
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
             sourceWrapImageId: wrap.visualizerTextureImage.id,
             sourceWrapImageVersion: wrap.visualizerTextureImage.version,
         },
@@ -262,6 +293,7 @@ export async function regenerateVisualizerPreview(
                 cacheKey: preview.cacheKey,
                 sourceWrapImageId: wrap.visualizerTextureImage.id,
                 sourceWrapImageVersion: wrap.visualizerTextureImage.version,
+                model: getHfModelName(),
             }),
             timestamp: new Date(),
         },
@@ -329,7 +361,9 @@ export async function processVisualizerPreview(
 
         const result = await executeVisualizerPreviewGeneration({
             previewId: preview.id,
+            ownerClerkUserId: userId,
             vehicleBuffer,
+            baseVehicleImageUrl: preview.customerPhotoUrl,
             textureBuffer,
             wrap,
             prompt,
@@ -340,7 +374,7 @@ export async function processVisualizerPreview(
             data: {
                 status: 'complete',
                 processedImageUrl: result.processedImageUrl,
-                expiresAt: new Date(Date.now() + visualizerConfig.previewTtlMs),
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
                 sourceWrapImageId: wrap.visualizerTextureImage.id,
                 sourceWrapImageVersion: wrap.visualizerTextureImage.version,
             },
@@ -358,6 +392,7 @@ export async function processVisualizerPreview(
                     promptVersion: result.promptVersion,
                     sourceWrapImageId: wrap.visualizerTextureImage.id,
                     sourceWrapImageVersion: wrap.visualizerTextureImage.version,
+                    model: result.model,
                     generationFallbackReason: result.generationFallbackReason,
                 }),
                 timestamp: new Date(),

@@ -54,8 +54,8 @@ export function VisualizerClient({
                 <p className="text-xs uppercase tracking-[0.32em] text-blue-400">Preview</p>
                 <h1 className="mt-3 text-5xl font-black tracking-tight">Wrap Visualizer</h1>
                 <p className="mt-4 max-w-3xl text-lg leading-8 text-neutral-300">
-                    Upload a vehicle photo, select a visualizer-ready wrap, and generate a preview
-                    with a Hugging Face primary path backed by a deterministic fallback.
+                    Upload a vehicle photo, select a visualizer-ready wrap, and generate an AI
+                    concept preview that approximates how the branding could look on your vehicle.
                 </p>
             </section>
 
@@ -89,13 +89,11 @@ export function VisualizerClient({
                             </div>
                             <div className="flex items-center justify-between gap-4">
                                 <span>Generation path</span>
-                                <span className="text-neutral-100">
-                                    HF primary / deterministic fallback
-                                </span>
+                                <span className="text-neutral-100">AI preview / fallback</span>
                             </div>
                             <div className="flex items-center justify-between gap-4">
                                 <span>Accepted uploads</span>
-                                <span className="text-neutral-100">JPG, PNG, WebP, HEIC</span>
+                                <span className="text-neutral-100">JPG, PNG, WebP</span>
                             </div>
                         </CardContent>
                     </Card>
