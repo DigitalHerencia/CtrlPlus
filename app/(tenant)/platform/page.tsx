@@ -1,5 +1,5 @@
-import { PlatformPageFeature } from '@/features/platform/platform-page-feature'
+import { PlatformDashboardPageFeature } from '@/features/platform/platform-dashboard-page-feature'
 
 export default function PlatformPage() {
-    return <PlatformPageFeature />
+    return <PlatformDashboardPageFeature />
 }
