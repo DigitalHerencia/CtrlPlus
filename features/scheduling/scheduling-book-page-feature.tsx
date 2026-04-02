@@ -5,8 +5,7 @@ import Link from 'next/link'
 import { WorkspaceEmptyState, WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { getWraps } from '@/lib/fetchers/catalog.fetchers'
-import { getAvailabilityWindows } from '@/lib/fetchers/scheduling.fetchers'
+import { getWrapsForScheduling, getAvailabilityWindows } from '@/lib/fetchers/scheduling.fetchers'
 
 import { SchedulingBookingFormClient } from './scheduling-booking-form-client'
 
@@ -19,7 +18,7 @@ export async function SchedulingBookPageFeature({
 }: SchedulingBookPageFeatureProps) {
     const [availabilityResult, wrapsResult] = await Promise.all([
         getAvailabilityWindows(),
-        getWraps({ includeHidden: canViewHiddenWraps }),
+        getWrapsForScheduling({ includeHidden: canViewHiddenWraps }),
     ])
 
     const availabilityWindows = availabilityResult.items.map((window) => ({

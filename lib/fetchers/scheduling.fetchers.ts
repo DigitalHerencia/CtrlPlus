@@ -1,5 +1,7 @@
 import 'server-only'
 import { prisma } from '@/lib/db/prisma'
+import { getWraps } from '@/lib/fetchers/catalog.fetchers'
+import type { WrapDTO } from '@/types/catalog.types'
 import { availabilitySelectFields, bookingSelectFields } from '@/lib/db/selects/scheduling.selects'
 import { getSession } from '@/lib/auth/session'
 import { hasCapability } from '@/lib/authz/policy'
@@ -473,4 +475,14 @@ export async function getUpcomingBookingCount(from: Date = new Date()): Promise<
             startTime: { gte: from },
         },
     })
+}
+
+/**
+ * Returns the published wrap catalog as needed by scheduling booking forms.
+ * Keeps the scheduling domain decoupled from a direct catalog fetcher import.
+ */
+export async function getWrapsForScheduling(opts?: {
+    includeHidden?: boolean
+}): Promise<WrapDTO[]> {
+    return getWraps({ includeHidden: opts?.includeHidden ?? false })
 }

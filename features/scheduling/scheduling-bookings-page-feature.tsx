@@ -2,32 +2,15 @@ import 'server-only'
 
 import Link from 'next/link'
 
-import { BookingCard, type BookingCardItem } from '@/components/scheduling/booking-card'
+import { BookingCard } from '@/components/scheduling/booking-card'
 import { WorkspaceEmptyState, WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getBookings } from '@/lib/fetchers/scheduling.fetchers'
+import { toBookingCardItem } from './booking.mappers'
 
 interface SchedulingBookingsPageFeatureProps {
     tab: 'upcoming' | 'past'
-}
-
-function toBookingCardItem(
-    booking: Awaited<ReturnType<typeof getBookings>>['items'][number]
-): BookingCardItem {
-    return {
-        id: booking.id,
-        wrapId: booking.wrapId,
-        wrapName: booking.wrapName,
-        startTime: new Date(booking.startTime),
-        endTime: new Date(booking.endTime),
-        status: booking.status,
-        displayStatus: booking.displayStatus,
-        reservationExpiresAt: booking.reservationExpiresAt
-            ? new Date(booking.reservationExpiresAt)
-            : null,
-        totalPrice: booking.totalPrice,
-    }
 }
 
 export async function SchedulingBookingsPageFeature({ tab }: SchedulingBookingsPageFeatureProps) {

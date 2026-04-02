@@ -25,3 +25,20 @@ export function revalidateSchedulingPages(): void {
 export function revalidateBillingBookingRoute(invoiceId: string): void {
     revalidatePath(`/billing/${invoiceId}`)
 }
+
+export function revalidateAdminPaths(): void {
+    revalidatePath('/admin')
+    revalidatePath('/admin/moderation')
+    revalidatePath('/admin/audit')
+}
+
+export function revalidateSettingsPaths(): void {
+    revalidatePath('/settings')
+    revalidatePath('/settings/profile')
+    revalidatePath('/settings/account')
+    revalidatePath('/settings/data')
+}
+
+export function revalidatePlatformPaths(): void {
+    revalidatePath('/platform')
+}

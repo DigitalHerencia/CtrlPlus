@@ -1,6 +1,7 @@
 import { SettingsPageHeader } from '@/components/settings/settings-page-header'
 import { SettingsEmptyState } from '@/components/settings/settings-empty-state'
 import { getExportOptionsView } from '@/lib/fetchers/settings.fetchers'
+import { exportData } from '@/lib/actions/settings.actions'
 
 import { ExportDataActionsClient } from './export-data-actions.client'
 import { SettingsTabsClient } from './settings-tabs.client'
@@ -32,12 +33,6 @@ export async function DataExportPageFeature({
         )
     }
 
-    async function onExport(input: { tenantId: string; format: 'json' | 'csv' }) {
-        'use server'
-        const { exportData } = await import('@/lib/actions/settings.actions')
-        return exportData(input)
-    }
-
     return (
         <div className="space-y-6">
             <SettingsPageHeader
@@ -48,7 +43,7 @@ export async function DataExportPageFeature({
             <ExportDataActionsClient
                 tenantId={tenantId}
                 history={exportOptions.history}
-                onExport={onExport}
+                onExport={exportData}
             />
         </div>
     )

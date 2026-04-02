@@ -1,4 +1,4 @@
-import type { VisualizerUploadSnapshot } from '@/lib/fetchers/visualizer.fetchers'
+import type { VisualizerUploadSnapshot } from '@/types/visualizer.types'
 
 export function UploadDetailPreview({ upload }: { upload: VisualizerUploadSnapshot }) {
     return (

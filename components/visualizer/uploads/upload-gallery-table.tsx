@@ -1,4 +1,4 @@
-import type { VisualizerUploadSnapshot } from '@/lib/fetchers/visualizer.fetchers'
+import type { VisualizerUploadSnapshot } from '@/types/visualizer.types'
 
 import { UploadCard } from './upload-card'
 import { UploadGalleryGrid } from './upload-gallery-grid'

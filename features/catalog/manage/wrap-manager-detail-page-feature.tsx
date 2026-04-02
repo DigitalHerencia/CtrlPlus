@@ -2,14 +2,18 @@ import Link from 'next/link'
 
 import { CatalogManagerHeader } from '@/components/catalog/manage/catalog-manager-header'
 import { Button } from '@/components/ui/button'
-import type { CatalogDetailDTO } from '@/types/catalog.types'
+import { notFound } from 'next/navigation'
+import { getCatalogWrapById } from '@/lib/fetchers/catalog.fetchers'
 import { WrapManagerDetailPageClient } from './wrap-manager-detail-page.client'
 
 export interface WrapManagerDetailPageProps {
-    wrap: CatalogDetailDTO
+    id: string
 }
 
-export function WrapManagerDetailPage({ wrap }: WrapManagerDetailPageProps) {
+export async function WrapManagerDetailPage({ id }: WrapManagerDetailPageProps) {
+    const wrap = await getCatalogWrapById(id, { includeHidden: true })
+    if (!wrap) notFound()
+
     return (
         <div className="space-y-6">
             <CatalogManagerHeader

@@ -1,7 +1,7 @@
 import { SchedulingDashboardHeader } from '@/components/scheduling/scheduling-dashboard-header'
 import { SchedulingDashboardStats } from '@/components/scheduling/scheduling-dashboard-stats'
 import { SchedulingDashboardToolbar } from '@/components/scheduling/scheduling-dashboard-toolbar'
-import { BookingStatusValue } from '@/lib/constants/statuses'
+import { BookingStatusValue, VALID_BOOKING_STATUSES } from '@/lib/constants/statuses'
 import { getBookings, getBookingManagerRows } from '@/lib/fetchers/scheduling.fetchers'
 
 import { SchedulingDashboardFiltersClient } from './scheduling-dashboard-filters.client'
@@ -11,15 +11,15 @@ interface SchedulingDashboardPageFeatureProps {
     searchParams: Promise<{ status?: string | string[]; page?: string | string[] }>
 }
 
-const VALID_STATUSES = new Set(['pending', 'confirmed', 'completed', 'cancelled'])
-
 export async function SchedulingDashboardPageFeature({
     searchParams,
 }: SchedulingDashboardPageFeatureProps) {
     const params = await searchParams
     const rawStatus = Array.isArray(params.status) ? params.status[0] : params.status
     const status: BookingStatusValue | undefined =
-        rawStatus && VALID_STATUSES.has(rawStatus) ? (rawStatus as BookingStatusValue) : undefined
+        rawStatus && VALID_BOOKING_STATUSES.has(rawStatus as BookingStatusValue)
+            ? (rawStatus as BookingStatusValue)
+            : undefined
     const pageRaw = Array.isArray(params.page) ? params.page[0] : params.page
     const page = pageRaw ? Math.max(1, Number(pageRaw) || 1) : 1
 

@@ -7,6 +7,7 @@ import { InvoiceManagerStats } from '@/components/billing/manage/invoice-manager
 import { InvoiceNotificationPanel } from '@/components/billing/manage/invoice-notification-panel'
 import { Button } from '@/components/ui/button'
 import { getBalance, getInvoices } from '@/lib/fetchers/billing.fetchers'
+import { voidInvoice } from '@/lib/actions/billing.actions'
 
 import { InvoiceLifecycleActionsClient } from './invoice-lifecycle-actions.client'
 import { InvoiceManagerTableClient } from './invoice-manager-table.client'
@@ -15,12 +16,6 @@ import { InvoiceNotificationControlsClient } from './invoice-notification-contro
 
 export async function InvoiceManagerPageFeature() {
     const [{ invoices, total }, balance] = await Promise.all([getInvoices(), getBalance()])
-
-    async function onVoid(input: { invoiceId: string }) {
-        'use server'
-        const { voidInvoice } = await import('@/lib/actions/billing.actions')
-        return voidInvoice(input)
-    }
 
     return (
         <div className="space-y-6">
@@ -50,7 +45,10 @@ export async function InvoiceManagerPageFeature() {
 
                 <InvoiceLifecyclePanel>
                     {invoices[0] ? (
-                        <InvoiceLifecycleActionsClient invoiceId={invoices[0].id} onVoid={onVoid} />
+                        <InvoiceLifecycleActionsClient
+                            invoiceId={invoices[0].id}
+                            onVoid={voidInvoice}
+                        />
                     ) : (
                         <p className="text-sm text-neutral-400">No invoices available.</p>
                     )}

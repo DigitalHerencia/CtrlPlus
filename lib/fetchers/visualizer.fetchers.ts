@@ -10,6 +10,9 @@ import {
 import { toVisualizerPreviewDTO } from '@/lib/fetchers/visualizer.mappers'
 import { visualizerPreviewDTOFields } from '@/lib/db/selects/visualizer.selects'
 import type { VisualizerPreviewDTO } from '@/types/visualizer.types'
+import type { VisualizerUploadSnapshot } from '@/types/visualizer.types'
+
+export type { VisualizerUploadSnapshot } from '@/types/visualizer.types'
 
 export { type WrapVisibilityScope } from '@/lib/fetchers/catalog.fetchers'
 
@@ -90,14 +93,6 @@ export async function listMyVisualizerPreviews(limit = 50): Promise<VisualizerPr
     })
 
     return previews.map(toVisualizerPreviewDTO)
-}
-
-export interface VisualizerUploadSnapshot {
-    id: string
-    customerPhotoUrl: string
-    wrapId: string
-    createdAt: string
-    updatedAt: string
 }
 
 export async function listMyVisualizerUploads(limit = 50): Promise<VisualizerUploadSnapshot[]> {

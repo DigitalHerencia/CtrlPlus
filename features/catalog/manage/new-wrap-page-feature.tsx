@@ -32,11 +32,10 @@ export function NewWrapPageFeature() {
         resolver: zodResolver(createWrapSchema),
     })
 
-    const onSubmit = async (data: unknown) => {
-        const validated = createWrapSchema.parse(data)
+    const onSubmit = (data: CreateWrapInput) => {
         startTransition(async () => {
             try {
-                const wrap = await createWrap(validated)
+                const wrap = await createWrap(data)
                 console.log('Wrap created successfully', wrap.id)
                 router.push(`/catalog/manage/${wrap.id}`)
             } catch (error) {

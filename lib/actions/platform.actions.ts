@@ -14,7 +14,7 @@ import {
 } from '@/schemas/platform.schemas'
 import type { ResetWebhookLocksInput } from '@/types/platform.types'
 import type { Prisma } from '@prisma/client'
-import { revalidatePath } from 'next/cache'
+import { revalidatePlatformPaths } from '@/lib/cache/revalidate-tags'
 import type Stripe from 'stripe'
 
 import { WEBHOOK_STALE_THRESHOLD_MINUTES } from '@/lib/constants/app'
@@ -56,7 +56,7 @@ export async function pruneVisualizerPreviews(rawInput?: {
         },
     })
 
-    revalidatePath('/platform')
+    revalidatePlatformPaths()
 
     return { affectedCount: result.count }
 }
@@ -142,7 +142,7 @@ export async function clearStuckWebhookProcessingEvents(): Promise<WebhookMutati
             },
         })
 
-        revalidatePath('/platform')
+        revalidatePlatformPaths()
 
         return {
             affectedCount: releasedClerk.count + releasedStripe.count,
@@ -238,7 +238,7 @@ export async function replayStripeWebhookFailures(rawInput: {
         },
     })
 
-    revalidatePath('/platform')
+    revalidatePlatformPaths()
 
     return {
         requestedCount: input.eventIds.length,

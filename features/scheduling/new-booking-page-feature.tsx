@@ -1,5 +1,4 @@
-import { getWraps } from '@/lib/fetchers/catalog.fetchers'
-import { getAvailabilityWindows } from '@/lib/fetchers/scheduling.fetchers'
+import { getWrapsForScheduling, getAvailabilityWindows } from '@/lib/fetchers/scheduling.fetchers'
 
 import { BookingFormClient } from './booking-form.client'
 
@@ -10,7 +9,7 @@ interface NewBookingPageFeatureProps {
 export async function NewBookingPageFeature({ canViewHiddenWraps }: NewBookingPageFeatureProps) {
     const [availabilityResult, wrapsResult] = await Promise.all([
         getAvailabilityWindows(),
-        getWraps({ includeHidden: canViewHiddenWraps }),
+        getWrapsForScheduling({ includeHidden: canViewHiddenWraps }),
     ])
 
     const availabilityWindows = availabilityResult.items.map((window) => ({

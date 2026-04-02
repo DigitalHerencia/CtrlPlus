@@ -19,6 +19,16 @@ function first(value: string | string[] | undefined): string | undefined {
     return Array.isArray(value) ? value[0] : value
 }
 
+/**
+ * Normalises a Next.js search-param value that may be a string, an array of
+ * strings, or undefined into a single nullable string.  Suitable for any page
+ * whose `searchParams` object is typed as `Record<string, string | string[] | undefined>`.
+ */
+export function getSingleSearchParam(param: string | string[] | undefined): string | null {
+    if (!param) return null
+    return Array.isArray(param) ? (param[0] ?? null) : param
+}
+
 export function createCatalogQueryString(filters: SearchWrapsInput): string {
     const params = new URLSearchParams()
 

@@ -1,6 +1,7 @@
 import { SettingsPageHeader } from '@/components/settings/settings-page-header'
 import { SettingsEmptyState } from '@/components/settings/settings-empty-state'
 import { getTenantSettingsView } from '@/lib/fetchers/settings.fetchers'
+import { updateTenantSettings } from '@/lib/actions/settings.actions'
 
 import { SettingsTabsClient } from './settings-tabs.client'
 import { TenantSettingsFormClient } from './tenant-settings-form.client'
@@ -40,7 +41,6 @@ export async function AccountSettingsPageFeature({
         logoUrl?: string | null
     }) {
         'use server'
-        const { updateTenantSettings } = await import('@/lib/actions/settings.actions')
         return updateTenantSettings(tenantId, input)
     }
 

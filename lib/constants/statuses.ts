@@ -66,6 +66,8 @@ export type BookingStatus = (typeof BookingStatus)[keyof typeof BookingStatus]
 
 export type BookingStatusValue = (typeof BookingStatus)[keyof typeof BookingStatus]
 
+export const VALID_BOOKING_STATUSES = new Set(Object.values(BookingStatus))
+
 export type SchedulingBookingDisplayStatus =
     | 'reserved'
     | 'confirmed'

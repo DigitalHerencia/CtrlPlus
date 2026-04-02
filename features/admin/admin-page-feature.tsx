@@ -6,6 +6,7 @@ import {
     getOwnerDashboardStats,
 } from '@/lib/fetchers/admin.fetchers'
 import { getSession } from '@/lib/auth/session'
+import { hasCapability } from '@/lib/authz/policy'
 import { confirmAppointment, createInvoice } from '@/lib/actions/admin.actions'
 
 export default async function AdminPageFeature() {
@@ -37,9 +38,9 @@ export default async function AdminPageFeature() {
 
     // capability flags - computed server-side and passed to UI (no client-only gating)
     const capabilityFlags = {
-        canManageCatalog: true,
-        canManageScheduling: true,
-        canManageBilling: true,
+        canManageCatalog: hasCapability(session.authz, 'catalog.manage'),
+        canManageScheduling: hasCapability(session.authz, 'scheduling.write.all'),
+        canManageBilling: hasCapability(session.authz, 'billing.write.all'),
     }
 
     async function confirmExampleAppointmentAction() {

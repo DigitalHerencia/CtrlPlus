@@ -3,7 +3,7 @@
 import { requireAuthzCapability } from '@/lib/authz/guards'
 import { requireOwnerOrAdmin } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
-import { revalidatePath } from 'next/cache'
+import { revalidateSettingsPaths } from '@/lib/cache/revalidate-tags'
 import {
     exportDataSchema,
     updateTenantSettingsSchema,
@@ -81,9 +81,7 @@ export async function updateUserPreferences(
         },
     })
 
-    revalidatePath('/settings')
-    revalidatePath('/settings/profile')
-
+    revalidateSettingsPaths()
     return {
         userId: session.userId,
         theme: parsed.theme ?? current.theme,
@@ -125,9 +123,7 @@ export async function updateTenantSettings(
         },
     })
 
-    revalidatePath('/settings')
-    revalidatePath('/settings/account')
-
+    revalidateSettingsPaths()
     return getTenantSettingsView(tenantId)
 }
 
@@ -157,8 +153,7 @@ export async function exportData(input: ExportDataRequestDTO): Promise<ExportDat
         },
     })
 
-    revalidatePath('/settings/data')
-
+    revalidateSettingsPaths()
     return {
         requestId: row.id,
         tenantId: row.resourceId,

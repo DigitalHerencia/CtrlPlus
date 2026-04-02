@@ -39,6 +39,15 @@ export interface VisualizerPageFeatureProps {
     includeHidden: boolean
 }
 
+/** Projection of a visualizer preview used as an "upload" view model. */
+export interface VisualizerUploadSnapshot {
+    id: string
+    customerPhotoUrl: string
+    wrapId: string
+    createdAt: string
+    updatedAt: string
+}
+
 export interface PreviewCacheKeyInput {
     wrapId: string
     ownerUserId: string

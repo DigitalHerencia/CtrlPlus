@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 import { Card, CardContent } from '@/components/ui/card'
-import type { VisualizerUploadSnapshot } from '@/lib/fetchers/visualizer.fetchers'
+import type { VisualizerUploadSnapshot } from '@/types/visualizer.types'
 
 export function UploadCard({ upload }: { upload: VisualizerUploadSnapshot }) {
     return (

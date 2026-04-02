@@ -1,12 +1,11 @@
-import { getWraps } from '@/lib/fetchers/catalog.fetchers'
-import { getAvailabilityWindows } from '@/lib/fetchers/scheduling.fetchers'
+import { getWrapsForScheduling, getAvailabilityWindows } from '@/lib/fetchers/scheduling.fetchers'
 
 import { ManagedBookingFormClient } from './managed-booking-form.client'
 
 export async function NewManagedBookingPageFeature() {
     const [availabilityResult, wrapsResult] = await Promise.all([
         getAvailabilityWindows(),
-        getWraps({ includeHidden: true }),
+        getWrapsForScheduling({ includeHidden: true }),
     ])
 
     const availabilityWindows = availabilityResult.items.map((window) => ({

@@ -17,7 +17,7 @@ import type {
     FlagContentInput,
     ResolveFlagInput,
 } from '@/types/admin.types'
-import { revalidatePath } from 'next/cache'
+import { revalidateAdminPaths } from '@/lib/cache/revalidate-tags'
 
 function createFlagId(): string {
     return `flag_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`
@@ -56,8 +56,7 @@ export async function flagContent(rawInput: unknown): Promise<{ flagId: string }
         },
     })
 
-    revalidatePath('/admin/moderation')
-    revalidatePath('/admin')
+    revalidateAdminPaths()
 
     return { flagId }
 }
@@ -97,8 +96,7 @@ export async function resolveFlag(rawInput: unknown): Promise<{ resolved: boolea
         },
     })
 
-    revalidatePath('/admin/moderation')
-    revalidatePath('/admin/audit')
+    revalidateAdminPaths()
 
     return { resolved: true }
 }

@@ -3,26 +3,13 @@ import { CredentialManagementPanel } from '@/components/settings/security/creden
 import { SecuritySettingsPanel } from '@/components/settings/security/security-settings-panel'
 import { SecurityStatusCard } from '@/components/settings/security/security-status-card'
 import { getUserSettingsView } from '@/lib/fetchers/settings.fetchers'
+import { updateUserPreferences } from '@/lib/actions/settings.actions'
 
 import { SettingsTabsClient } from './settings-tabs.client'
 import { UserSettingsFormClient } from './user-settings-form.client'
 
 export async function ProfileSettingsPageFeature() {
     const userSettings = await getUserSettingsView()
-
-    async function onSave(input: {
-        theme: 'light' | 'dark' | 'system'
-        language: string | null
-        timezone: string | null
-        notifications: { email: boolean; sms: boolean; push: boolean }
-        preferredContact: 'email' | 'sms'
-        appointmentReminders: boolean
-        marketingOptIn: boolean
-    }) {
-        'use server'
-        const { updateUserPreferences } = await import('@/lib/actions/settings.actions')
-        return updateUserPreferences(input)
-    }
 
     return (
         <div className="space-y-6">
@@ -31,7 +18,7 @@ export async function ProfileSettingsPageFeature() {
                 description="Manage personal preferences, notifications, and account-level defaults."
             />
             <SettingsTabsClient active="profile" />
-            <UserSettingsFormClient initialSettings={userSettings} onSave={onSave} />
+            <UserSettingsFormClient initialSettings={userSettings} onSave={updateUserPreferences} />
 
             <SecuritySettingsPanel>
                 <div className="grid gap-3 sm:grid-cols-2">

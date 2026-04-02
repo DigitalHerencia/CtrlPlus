@@ -1,12 +1,8 @@
 import { AdminAuditPageFeature } from '@/features/admin/admin-audit-page-feature'
+import { getSingleSearchParam } from '@/lib/utils/search-params'
 
 interface AdminAuditPageProps {
     searchParams: Promise<{ eventType?: string | string[]; resourceType?: string | string[] }>
-}
-
-function getSingleSearchParam(param: string | string[] | undefined): string | null {
-    if (!param) return null
-    return Array.isArray(param) ? (param[0] ?? null) : param
 }
 
 export default async function AdminAuditPage({ searchParams }: AdminAuditPageProps) {

@@ -11,15 +11,10 @@ interface InvoiceRefundPageFeatureProps {
 export async function InvoiceRefundPageFeature({ invoiceId }: InvoiceRefundPageFeatureProps) {
     const invoice = (await getInvoice(invoiceId)) ?? notFound()
 
-    async function onRefund(input: { invoiceId: string; amount: number; notes?: string }) {
-        'use server'
-        return refundInvoice(input)
-    }
-
     return (
         <div className="space-y-4">
             <h1 className="text-2xl font-semibold text-neutral-100">Refund {invoice.id}</h1>
-            <InvoiceRefundFormClient invoiceId={invoice.id} onRefund={onRefund} />
+            <InvoiceRefundFormClient invoiceId={invoice.id} onRefund={refundInvoice} />
         </div>
     )
 }
