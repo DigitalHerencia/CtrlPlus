@@ -3,7 +3,11 @@
 import { getSession } from '@/lib/auth/session'
 import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
-import { reserveSlotSchema, updateBookingSchema } from '@/schemas/scheduling.schemas'
+import {
+    cancelBookingSchema,
+    reserveSlotSchema,
+    updateBookingSchema,
+} from '@/schemas/scheduling.schemas'
 import { assertSlotHasCapacity } from '@/lib/db/transactions/scheduling.transactions'
 import { ensureInvoiceForBooking } from '@/lib/actions/billing.actions'
 import {
@@ -15,6 +19,7 @@ import type {
     ReservedBookingDTO,
     CreatedBookingDTO,
     UpdateBookingInput,
+    CancelBookingInput,
     BookingActionDTO,
 } from '@/types/scheduling.types'
 import { getBookingDisplayStatus } from '@/lib/constants/statuses'
@@ -22,6 +27,44 @@ import { Prisma } from '@prisma/client'
 
 // Reservation TTL (minutes)
 const RESERVATION_TTL_MINUTES = 15
+
+async function assertNoCustomerSlotConflict(
+    tx: Prisma.TransactionClient,
+    input: {
+        customerId: string
+        startTime: Date
+        endTime: Date
+        now: Date
+        excludeBookingId?: string
+    }
+): Promise<void> {
+    const existing = await tx.booking.findFirst({
+        where: {
+            deletedAt: null,
+            customerId: input.customerId,
+            id: input.excludeBookingId ? { not: input.excludeBookingId } : undefined,
+            startTime: { lt: input.endTime },
+            endTime: { gt: input.startTime },
+            OR: [
+                { status: 'confirmed' },
+                { status: 'completed' },
+                {
+                    status: 'pending',
+                    reservation: {
+                        is: {
+                            expiresAt: { gt: input.now },
+                        },
+                    },
+                },
+            ],
+        },
+        select: { id: true },
+    })
+
+    if (existing) {
+        throw new Error('You already have a booking in this time slot')
+    }
+}
 
 export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBookingDTO> {
     const session = await getSession()
@@ -52,6 +95,13 @@ export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBook
             }
 
             await assertSlotHasCapacity(tx, {
+                startTime: parsed.startTime,
+                endTime: parsed.endTime,
+                now,
+            })
+
+            await assertNoCustomerSlotConflict(tx, {
+                customerId: userId,
                 startTime: parsed.startTime,
                 endTime: parsed.endTime,
                 now,
@@ -196,9 +246,19 @@ export async function updateBooking(
 
     const booking = await prisma.$transaction(
         async (tx: Prisma.TransactionClient) => {
+            const now = new Date()
+
             await assertSlotHasCapacity(tx, {
                 startTime,
                 endTime,
+                excludeBookingId: bookingId,
+            })
+
+            await assertNoCustomerSlotConflict(tx, {
+                customerId: existing.customerId,
+                startTime,
+                endTime,
+                now,
                 excludeBookingId: bookingId,
             })
 
@@ -329,7 +389,7 @@ export async function confirmBooking(bookingId: string) {
             },
         })
 
-        return {
+        const confirmedResult = {
             id: confirmed.id,
             customerId: confirmed.customerId,
             wrapId: confirmed.wrapId,
@@ -343,20 +403,27 @@ export async function confirmBooking(bookingId: string) {
             createdAt: confirmed.createdAt,
             updatedAt: confirmed.updatedAt,
         }
+
+        return confirmedResult
     })
 
+    const { invoiceId } = await ensureInvoiceForBooking({ bookingId: result.id })
+
     revalidateSchedulingPages()
+    revalidateBillingBookingRoute(invoiceId)
 
     return result
 }
 
-export async function cancelBooking(bookingId: string) {
+export async function cancelBooking(bookingId: string, input: CancelBookingInput) {
     const session = await getSession()
     const userId = session.userId
 
     if (!session.isAuthenticated || !userId) {
         throw new Error('Unauthorized: not authenticated')
     }
+
+    const parsed = cancelBookingSchema.parse(input)
 
     const existing = await prisma.booking.findFirst({
         where: { id: bookingId, deletedAt: null },
@@ -378,6 +445,14 @@ export async function cancelBooking(bookingId: string) {
 
     requireCustomerOwnedResourceAccess(session.authz, existing.customerId)
 
+    if (existing.status === 'completed') {
+        throw new Error('Completed bookings cannot be cancelled')
+    }
+
+    if (existing.status === 'cancelled') {
+        throw new Error('Booking is already cancelled')
+    }
+
     const booking = await prisma.$transaction(async (tx) => {
         await tx.bookingReservation.deleteMany({ where: { bookingId } })
 
@@ -394,7 +469,10 @@ export async function cancelBooking(bookingId: string) {
                 action: 'CANCEL_BOOKING',
                 resourceType: 'Booking',
                 resourceId: updated.id,
-                details: JSON.stringify({ previousStatus: existing.status }),
+                details: JSON.stringify({
+                    previousStatus: existing.status,
+                    reason: parsed.reason,
+                }),
                 timestamp: new Date(),
             },
         })

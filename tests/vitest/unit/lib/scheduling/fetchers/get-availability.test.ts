@@ -9,6 +9,9 @@ const mocks = vi.hoisted(() => ({
             count: vi.fn(),
             findFirst: vi.fn(),
         },
+        booking: {
+            findMany: vi.fn(),
+        },
     },
 }))
 
@@ -25,6 +28,7 @@ vi.mock('@/lib/db/prisma', () => ({
 }))
 
 import {
+    getAvailability,
     getAvailabilityRuleById,
     getAvailabilityRules,
     getAvailabilityRulesByDay,
@@ -126,5 +130,45 @@ describe('scheduling availability fetchers', () => {
             createdAt: new Date('2026-03-20T10:00:00.000Z').toISOString(),
             updatedAt: new Date('2026-03-20T10:00:00.000Z').toISOString(),
         })
+    })
+
+    it('returns server-shaped availability slots with capacity and remaining capacity', async () => {
+        mocks.getSession.mockResolvedValue({
+            isAuthenticated: true,
+            userId: 'user-1',
+            authz: { role: 'customer' },
+        })
+
+        mocks.prisma.availabilityRule.findMany.mockResolvedValue([
+            {
+                id: 'rule-1',
+                dayOfWeek: 1,
+                startTime: '09:00',
+                endTime: '10:00',
+                capacitySlots: 2,
+                createdAt: new Date('2026-03-20T10:00:00.000Z'),
+                updatedAt: new Date('2026-03-20T10:00:00.000Z'),
+            },
+        ])
+
+        mocks.prisma.booking.findMany.mockResolvedValue([
+            {
+                startTime: new Date(2026, 2, 30, 9, 0, 0, 0),
+                endTime: new Date(2026, 2, 30, 10, 0, 0, 0),
+            },
+        ])
+
+        const result = await getAvailability(
+            new Date('2026-03-30T00:00:00.000Z'),
+            new Date('2026-03-30T23:59:59.000Z')
+        )
+
+        expect(result).toEqual([
+            expect.objectContaining({
+                capacity: 2,
+                remainingCapacity: 1,
+                isAvailable: true,
+            }),
+        ])
     })
 })

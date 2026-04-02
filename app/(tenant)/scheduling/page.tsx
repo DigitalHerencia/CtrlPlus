@@ -1,14 +1,18 @@
 import { redirect } from 'next/navigation'
 
-import { SchedulingPageFeature } from '@/features/scheduling/scheduling-page-feature'
+import { SchedulingDashboardPageFeature } from '@/features/scheduling/scheduling-dashboard-page-feature'
 import { getSession } from '@/lib/auth/session'
 
-export default async function SchedulingPage() {
+interface SchedulingPageProps {
+    searchParams: Promise<{ status?: string | string[]; page?: string | string[] }>
+}
+
+export default async function SchedulingPage({ searchParams }: SchedulingPageProps) {
     const session = await getSession()
 
     if (!session.isAuthenticated || !session.userId) {
         redirect('/sign-in')
     }
 
-    return <SchedulingPageFeature />
+    return <SchedulingDashboardPageFeature searchParams={searchParams} />
 }

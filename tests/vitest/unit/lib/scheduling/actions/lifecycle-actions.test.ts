@@ -5,6 +5,8 @@ const mocks = vi.hoisted(() => ({
     requireCustomerOwnedResourceAccess: vi.fn(),
     assertSlotHasCapacity: vi.fn(),
     revalidateSchedulingPages: vi.fn(),
+    ensureInvoiceForBooking: vi.fn(),
+    revalidateBillingBookingRoute: vi.fn(),
     prisma: {
         $transaction: vi.fn(),
         booking: {
@@ -42,7 +44,11 @@ vi.mock('@/lib/db/prisma', () => ({
 
 vi.mock('@/lib/cache/revalidate-tags', () => ({
     revalidateSchedulingPages: mocks.revalidateSchedulingPages,
-    revalidateBillingBookingRoute: vi.fn(),
+    revalidateBillingBookingRoute: mocks.revalidateBillingBookingRoute,
+}))
+
+vi.mock('@/lib/actions/billing.actions', () => ({
+    ensureInvoiceForBooking: mocks.ensureInvoiceForBooking,
 }))
 
 import { cancelBooking, confirmBooking, updateBooking } from '@/lib/actions/scheduling.actions'
@@ -69,6 +75,7 @@ function createTx() {
 describe('scheduling lifecycle actions', () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        mocks.ensureInvoiceForBooking.mockResolvedValue({ invoiceId: 'invoice-1' })
         mocks.getSession.mockResolvedValue({
             isAuthenticated: true,
             userId: 'user-1',
@@ -144,6 +151,8 @@ describe('scheduling lifecycle actions', () => {
                 displayStatus: 'confirmed',
             })
         )
+        expect(mocks.ensureInvoiceForBooking).toHaveBeenCalledWith({ bookingId: 'booking-1' })
+        expect(mocks.revalidateBillingBookingRoute).toHaveBeenCalledWith('invoice-1')
         expect(mocks.revalidateSchedulingPages).toHaveBeenCalledTimes(1)
     })
 
@@ -168,7 +177,9 @@ describe('scheduling lifecycle actions', () => {
             updatedAt: new Date('2026-03-23T12:00:00.000Z'),
         })
 
-        await expect(cancelBooking('booking-1')).resolves.toEqual(
+        await expect(
+            cancelBooking('booking-1', { reason: 'Customer requested cancellation' })
+        ).resolves.toEqual(
             expect.objectContaining({
                 wrapName: 'Midnight Matte',
                 status: 'cancelled',
@@ -179,6 +190,13 @@ describe('scheduling lifecycle actions', () => {
         expect(tx.bookingReservation.deleteMany).toHaveBeenCalledWith({
             where: { bookingId: 'booking-1' },
         })
+        expect(tx.auditLog.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    details: expect.stringContaining('Customer requested cancellation'),
+                }),
+            })
+        )
         expect(mocks.revalidateSchedulingPages).toHaveBeenCalledTimes(1)
     })
 

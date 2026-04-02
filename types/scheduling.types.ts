@@ -24,6 +24,42 @@ export interface BookingDTO {
     updatedAt: Timestamp
 }
 
+export interface BookingTimelineEventDTO {
+    id: string
+    type: string
+    label: string
+    createdAt: Timestamp
+    actorName: string | null
+    notes: string | null
+}
+
+export interface BookingDetailViewDTO {
+    id: string
+    wrapId: string | null
+    scheduledAt: Timestamp
+    durationMinutes: number
+    status: BookingStatus
+    customerName: string
+    customerEmail: string
+    customerPhone: string | null
+    notes: string | null
+    timeline: BookingTimelineEventDTO[]
+    createdAt: Timestamp
+    updatedAt: Timestamp
+}
+
+export interface BookingManagerRowDTO {
+    id: string
+    wrapId: string | null
+    scheduledAt: Timestamp
+    durationMinutes: number
+    status: BookingStatus
+    customerName: string
+    customerEmail: string
+    createdAt: Timestamp
+    updatedAt: Timestamp
+}
+
 export interface CreatedBookingDTO extends BookingDTO {
     invoiceId: string
 }
@@ -55,6 +91,14 @@ export interface AvailabilityRuleDTO {
 }
 
 export type AvailabilityWindowDTO = AvailabilityRuleDTO
+
+export interface AvailabilitySlotDTO {
+    start: Timestamp
+    end: Timestamp
+    capacity: number
+    remainingCapacity: number
+    isAvailable: boolean
+}
 
 export interface AvailabilityListResult {
     items: AvailabilityRuleDTO[]
@@ -91,6 +135,10 @@ export interface ReservedBookingDTO {
 export interface UpdateBookingInput {
     startTime: Timestamp
     endTime: Timestamp
+}
+
+export interface CancelBookingInput {
+    reason: string
 }
 
 export interface BookingActionDTO {

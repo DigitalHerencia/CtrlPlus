@@ -46,7 +46,7 @@ describe('createBooking', () => {
         const tx = {
             wrap: { findFirst: vi.fn() },
             bookingReservation: { findFirst: vi.fn() },
-            booking: { create: vi.fn(), count: vi.fn() },
+            booking: { findFirst: vi.fn(), create: vi.fn(), count: vi.fn() },
             auditLog: { create: vi.fn() },
             availabilityRule: { findMany: vi.fn() },
         }
@@ -59,6 +59,7 @@ describe('createBooking', () => {
             price: 100000,
             isHidden: false,
         })
+        tx.booking.findFirst.mockResolvedValue(null)
         tx.bookingReservation.findFirst.mockResolvedValue(null)
         tx.availabilityRule.findMany.mockResolvedValue([
             {

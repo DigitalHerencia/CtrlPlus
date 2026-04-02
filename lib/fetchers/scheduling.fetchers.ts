@@ -3,17 +3,41 @@ import { prisma } from '@/lib/db/prisma'
 import { availabilitySelectFields, bookingSelectFields } from '@/lib/db/selects/scheduling.selects'
 import { getSession } from '@/lib/auth/session'
 import { hasCapability } from '@/lib/authz/policy'
+import { availabilityQuerySchema } from '@/schemas/scheduling.schemas'
 import type {
+    AvailabilitySlotDTO,
     AvailabilityListParams,
     AvailabilityListResult,
     AvailabilityRuleDTO,
     AvailabilityWindowDTO,
     BookingDTO,
+    BookingDetailViewDTO,
     BookingListParams,
     BookingListResult,
+    BookingManagerRowDTO,
+    BookingTimelineEventDTO,
 } from '@/types/scheduling.types'
 
 import { getBookingDisplayStatus, BookingStatusValue } from '@/lib/constants/statuses'
+
+function parseHHmmToDate(baseDate: Date, hhmm: string): Date {
+    const [hours, minutes = '0'] = hhmm.split(':')
+    const date = new Date(baseDate)
+    date.setHours(Number(hours), Number(minutes), 0, 0)
+    return date
+}
+
+function rangesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
+    return aStart < bEnd && aEnd > bStart
+}
+
+function formatAuditActionLabel(action: string): string {
+    return action
+        .toLowerCase()
+        .split('_')
+        .map((token) => token.charAt(0).toUpperCase() + token.slice(1))
+        .join(' ')
+}
 async function requireSchedulingReadSession() {
     const session = await getSession()
 
@@ -136,6 +160,88 @@ export async function getAvailabilityRulesByDay(
 }
 
 export const getAvailabilityWindowsByDay = getAvailabilityRulesByDay
+
+export async function getAvailability(
+    startDate: Date,
+    endDate: Date
+): Promise<AvailabilitySlotDTO[]> {
+    await requireSchedulingReadSession()
+
+    const parsed = availabilityQuerySchema.parse({ startDate, endDate })
+    const rangeStart = parsed.startDate
+    const rangeEnd = parsed.endDate
+    const now = new Date()
+
+    const [rules, bookings] = await Promise.all([
+        prisma.availabilityRule.findMany({
+            where: {
+                deletedAt: null,
+            },
+            select: availabilitySelectFields,
+            orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+        }),
+        prisma.booking.findMany({
+            where: {
+                deletedAt: null,
+                startTime: { lte: rangeEnd },
+                endTime: { gte: rangeStart },
+                OR: [
+                    { status: 'confirmed' },
+                    { status: 'completed' },
+                    {
+                        status: 'pending',
+                        reservation: {
+                            is: {
+                                expiresAt: { gt: now },
+                            },
+                        },
+                    },
+                ],
+            },
+            select: {
+                startTime: true,
+                endTime: true,
+            },
+        }),
+    ])
+
+    const slots: AvailabilitySlotDTO[] = []
+    const cursor = new Date(rangeStart)
+    cursor.setHours(0, 0, 0, 0)
+    const max = new Date(rangeEnd)
+    max.setHours(23, 59, 59, 999)
+
+    while (cursor <= max) {
+        const dayRules = rules.filter((rule) => rule.dayOfWeek === cursor.getDay())
+
+        for (const rule of dayRules) {
+            const slotStart = parseHHmmToDate(cursor, rule.startTime)
+            const slotEnd = parseHHmmToDate(cursor, rule.endTime)
+
+            if (slotEnd <= rangeStart || slotStart >= rangeEnd) {
+                continue
+            }
+
+            const overlappingCount = bookings.filter((booking) =>
+                rangesOverlap(slotStart, slotEnd, booking.startTime, booking.endTime)
+            ).length
+
+            const remainingCapacity = Math.max(0, rule.capacitySlots - overlappingCount)
+
+            slots.push({
+                start: slotStart.toISOString(),
+                end: slotEnd.toISOString(),
+                capacity: rule.capacitySlots,
+                remainingCapacity,
+                isAvailable: remainingCapacity > 0,
+            })
+        }
+
+        cursor.setDate(cursor.getDate() + 1)
+    }
+
+    return slots.sort((a, b) => a.start.localeCompare(b.start))
+}
 
 // Bookings
 const DEFAULT_BOOKING_LIST_PARAMS: BookingListParams = {
@@ -261,6 +367,98 @@ export async function getBookingById(bookingId: string): Promise<BookingDTO | nu
     })
 
     return record ? toBookingDTO(record) : null
+}
+
+export async function getBookingTimeline(bookingId: string): Promise<BookingTimelineEventDTO[]> {
+    await requireSchedulingReadSession()
+
+    const events = await prisma.auditLog.findMany({
+        where: {
+            deletedAt: null,
+            resourceType: 'Booking',
+            resourceId: bookingId,
+        },
+        select: {
+            id: true,
+            action: true,
+            timestamp: true,
+            userId: true,
+            details: true,
+        },
+        orderBy: {
+            timestamp: 'desc',
+        },
+    })
+
+    return events.map((event) => ({
+        id: event.id,
+        type: event.action,
+        label: formatAuditActionLabel(event.action),
+        createdAt: event.timestamp.toISOString(),
+        actorName: event.userId ?? null,
+        notes: event.details ?? null,
+    }))
+}
+
+export async function getBooking(
+    bookingId: string,
+    _userId?: string
+): Promise<BookingDetailViewDTO | null> {
+    void _userId
+
+    const booking = await getBookingById(bookingId)
+    if (!booking) {
+        return null
+    }
+
+    const timeline = await getBookingTimeline(bookingId)
+
+    const scheduledAt = booking.startTime
+    const durationMinutes = Math.max(
+        0,
+        Math.round(
+            (new Date(booking.endTime).getTime() - new Date(booking.startTime).getTime()) / 60000
+        )
+    )
+
+    return {
+        id: booking.id,
+        wrapId: booking.wrapId,
+        scheduledAt,
+        durationMinutes,
+        status: booking.status,
+        customerName: 'Customer',
+        customerEmail: booking.customerId ?? 'unknown@ctrlplus.local',
+        customerPhone: null,
+        notes: null,
+        timeline,
+        createdAt: booking.createdAt,
+        updatedAt: booking.updatedAt,
+    }
+}
+
+export async function getBookingManagerRows(
+    params: BookingListParams = DEFAULT_BOOKING_LIST_PARAMS
+): Promise<BookingManagerRowDTO[]> {
+    const result = await getBookings(params)
+
+    return result.items.map((booking) => ({
+        id: booking.id,
+        wrapId: booking.wrapId,
+        scheduledAt: booking.startTime,
+        durationMinutes: Math.max(
+            0,
+            Math.round(
+                (new Date(booking.endTime).getTime() - new Date(booking.startTime).getTime()) /
+                    60000
+            )
+        ),
+        status: booking.status,
+        customerName: 'Customer',
+        customerEmail: booking.customerId ?? 'unknown@ctrlplus.local',
+        createdAt: booking.createdAt,
+        updatedAt: booking.updatedAt,
+    }))
 }
 
 export async function getUpcomingBookingCount(from: Date = new Date()): Promise<number> {

@@ -31,6 +31,7 @@ function createTx() {
             findFirst: vi.fn(),
         },
         booking: {
+            findFirst: vi.fn(),
             create: vi.fn(),
         },
         auditLog: {
@@ -78,6 +79,7 @@ describe('reserveSlot', () => {
             price: 100000,
             isHidden: false,
         })
+        tx.booking.findFirst.mockResolvedValue(null)
         tx.bookingReservation.findFirst.mockResolvedValue({ id: 'reservation-1' })
 
         await expect(
@@ -109,6 +111,7 @@ describe('reserveSlot', () => {
             price: 100000,
             isHidden: false,
         })
+        tx.booking.findFirst.mockResolvedValue(null)
         tx.bookingReservation.findFirst.mockResolvedValue(null)
 
         await expect(
@@ -138,6 +141,7 @@ describe('reserveSlot', () => {
             price: 100000,
             isHidden: false,
         })
+        tx.booking.findFirst.mockResolvedValue(null)
         tx.bookingReservation.findFirst.mockResolvedValue(null)
         tx.booking.create.mockResolvedValue({
             id: 'booking-1',

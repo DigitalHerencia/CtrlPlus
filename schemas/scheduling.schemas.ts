@@ -13,6 +13,16 @@ export const availabilityListParamsSchema = paginationParamsSchema.extend({
     dayOfWeek: z.number().int().min(0).max(6).optional(),
 })
 
+export const availabilityQuerySchema = z
+    .object({
+        startDate: z.coerce.date(),
+        endDate: z.coerce.date(),
+    })
+    .refine((data) => data.endDate >= data.startDate, {
+        message: 'End date must be on or after start date',
+        path: ['endDate'],
+    })
+
 export const reserveSlotSchema = z
     .object({
         wrapId: z.string().min(1, 'Wrap is required'),
@@ -33,6 +43,10 @@ export const updateBookingSchema = z
         message: 'End time must be after start time',
         path: ['endTime'],
     })
+
+export const cancelBookingSchema = z.object({
+    reason: z.string().trim().min(3, 'Cancellation reason is required'),
+})
 
 export const bookingFormSchema = z
     .object({
