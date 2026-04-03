@@ -20,6 +20,14 @@ import { createWrapSchema } from '@/schemas/catalog.schemas'
 import type { CreateWrapInput } from '@/types/catalog.types'
 import { useRouter } from 'next/navigation'
 
+function parsePriceInput(value: number): number {
+    if (!Number.isFinite(value) || value <= 0) {
+        throw new Error('Price must be a positive number.')
+    }
+
+    return Math.round(value * 100)
+}
+
 export function NewWrapPageFeature() {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
@@ -37,7 +45,10 @@ export function NewWrapPageFeature() {
         setSubmitError(null)
         startTransition(async () => {
             try {
-                const wrap = await createWrap(data)
+                const wrap = await createWrap({
+                    ...data,
+                    price: parsePriceInput(data.price),
+                })
                 router.push(`/catalog/manage/${wrap.id}`)
             } catch (error) {
                 setSubmitError(error instanceof Error ? error.message : 'Failed to create wrap.')
@@ -89,11 +100,13 @@ export function NewWrapPageFeature() {
 
                         <WrapPricingFields>
                             <div className="space-y-2">
-                                <Label htmlFor="price">Price (cents) *</Label>
+                                <Label htmlFor="price">Price (USD) *</Label>
                                 <Input
                                     id="price"
                                     type="number"
-                                    placeholder="e.g., 25000 for $250"
+                                    min="0.01"
+                                    step="0.01"
+                                    placeholder="e.g., 2500 for $2,500"
                                     {...register('price', { valueAsNumber: true })}
                                 />
                                 {errors.price && (

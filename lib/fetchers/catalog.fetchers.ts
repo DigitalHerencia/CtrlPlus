@@ -37,95 +37,8 @@ export type WrapRecord = Prisma.WrapGetPayload<{
     select: typeof wrapDTOFields
 }>
 
-const EXAMPLE_WRAP_ID = 'demo-lorem-ipsum-phoenix'
-const EXAMPLE_WRAP_CATEGORY_ID = 'demo-showcase'
-// Example fixture times are transport-safe ISO strings
-const EXAMPLE_CREATED_AT = '2026-03-21T12:00:00.000Z'
-
-const EXAMPLE_WRAP_CATEGORY: WrapCategoryDTO = {
-    id: EXAMPLE_WRAP_CATEGORY_ID,
-    name: 'Demo Showcase',
-    slug: 'demo-showcase',
-}
-
-const EXAMPLE_WRAP_IMAGES: WrapImageDTO[] = [
-    {
-        id: 'demo-lorem-ipsum-hero',
-        url: '/catalog-demo/lorem-ipsum-hero.png',
-        kind: WrapImageKind.HERO,
-        isActive: true,
-        version: 1,
-        contentHash: 'demo-lorem-ipsum-hero',
-        displayOrder: 0,
-    },
-    {
-        id: 'demo-lorem-ipsum-texture',
-        url: '/catalog-demo/lorem-ipsum-alt.png',
-        kind: WrapImageKind.VISUALIZER_TEXTURE,
-        isActive: true,
-        version: 1,
-        contentHash: 'demo-lorem-ipsum-texture',
-        displayOrder: 1,
-    },
-    {
-        id: 'demo-lorem-ipsum-gallery-hero',
-        url: '/catalog-demo/lorem-ipsum-hero.png',
-        kind: WrapImageKind.GALLERY,
-        isActive: true,
-        version: 1,
-        contentHash: 'demo-lorem-ipsum-gallery-hero',
-        displayOrder: 2,
-    },
-    {
-        id: 'demo-lorem-ipsum-gallery-alt',
-        url: '/catalog-demo/lorem-ipsum-alt.png',
-        kind: WrapImageKind.GALLERY,
-        isActive: true,
-        version: 1,
-        contentHash: 'demo-lorem-ipsum-gallery-alt',
-        displayOrder: 3,
-    },
-    {
-        id: 'demo-lorem-ipsum-gallery-logo',
-        url: '/catalog-demo/lorem-ipsum-logo.png',
-        kind: WrapImageKind.GALLERY,
-        isActive: true,
-        version: 1,
-        contentHash: 'demo-lorem-ipsum-gallery-logo',
-        displayOrder: 4,
-    },
-]
-
-const EXAMPLE_WRAP: WrapDTO = {
-    id: EXAMPLE_WRAP_ID,
-    name: 'Lorem Ipsum Phoenix',
-    description:
-        'Demo-ready showcase wrap with a clickable hero card, alternate vehicle angles, and logo artwork for product-gallery walkthroughs.',
-    price: 265000,
-    isHidden: false,
-    installationMinutes: 300,
-    aiPromptTemplate: null,
-    aiNegativePrompt: null,
-    images: EXAMPLE_WRAP_IMAGES,
-    categories: [EXAMPLE_WRAP_CATEGORY],
-    createdAt: EXAMPLE_CREATED_AT,
-    updatedAt: EXAMPLE_CREATED_AT,
-}
-
-function getExampleCatalogWraps(): WrapDTO[] {
-    return [EXAMPLE_WRAP]
-}
-
-function getExampleCatalogWrapById(wrapId: string): WrapDTO | null {
-    return wrapId === EXAMPLE_WRAP_ID ? EXAMPLE_WRAP : null
-}
-
-function getExampleWrapCategories(): WrapCategoryDTO[] {
-    return [EXAMPLE_WRAP_CATEGORY]
-}
-
-export function isExampleCatalogWrapId(wrapId: string): boolean {
-    return wrapId === EXAMPLE_WRAP_ID
+export function isExampleCatalogWrapId(_wrapId: string): boolean {
+    return false
 }
 
 function normalizePriceInCents(value: number): number {
@@ -332,7 +245,7 @@ export async function getWraps(scope: WrapVisibilityScope = {}): Promise<WrapDTO
         select: wrapDTOFields,
     })
 
-    return [...wraps.map((wrap) => toWrapDTO(wrap)), ...getExampleCatalogWraps()]
+    return wraps.map((wrap) => toWrapDTO(wrap))
 }
 
 export async function getCatalogManagerWraps(
@@ -350,12 +263,6 @@ export async function getWrapById(
     wrapId: string,
     scope: WrapVisibilityScope = {}
 ): Promise<WrapDTO | null> {
-    const exampleWrap = getExampleCatalogWrapById(wrapId)
-
-    if (exampleWrap && (scope.includeHidden || !exampleWrap.isHidden)) {
-        return exampleWrap
-    }
-
     const wrap = await prisma.wrap.findFirst({
         where: {
             id: wrapId,
@@ -481,10 +388,6 @@ export async function getVisualizerSelectableWrapById(
     wrapId: string,
     scope: WrapVisibilityScope = {}
 ): Promise<VisualizerWrapSelectionDTO | null> {
-    if (isExampleCatalogWrapId(wrapId)) {
-        return null
-    }
-
     const wrap = await getWrapById(wrapId, scope)
 
     if (!wrap) {
@@ -502,23 +405,14 @@ export async function listVisualizerSelectableWraps(
     })
 
     return wraps
-        .filter((wrap) => !isExampleCatalogWrapId(wrap.id))
         .map(toVisualizerWrapSelection)
         .filter((wrap): wrap is VisualizerWrapSelectionDTO => wrap !== null)
 }
 
 export async function getWrapCategories(): Promise<WrapCategoryDTO[]> {
-    const categories = await prisma.wrapCategory.findMany({
+    return prisma.wrapCategory.findMany({
         where: { deletedAt: null },
         orderBy: { name: 'asc' },
         select: { id: true, name: true, slug: true },
     })
-
-    const mergedCategories = [...categories, ...getExampleWrapCategories()]
-
-    return mergedCategories
-        .filter(
-            (category, index, items) => items.findIndex((item) => item.id === category.id) === index
-        )
-        .sort((left, right) => left.name.localeCompare(right.name))
 }

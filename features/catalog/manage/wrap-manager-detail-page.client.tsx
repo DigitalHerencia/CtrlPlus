@@ -17,8 +17,8 @@ export function WrapManagerDetailPageClient({ wrap }: WrapManagerDetailPageClien
     const [activeTab, setActiveTab] = useState('metadata')
 
     return (
-        <div className="grid grid-cols-3 gap-6">
-            <div className="col-span-2">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+            <div className="min-w-0">
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="metadata">Metadata</TabsTrigger>
@@ -35,7 +35,7 @@ export function WrapManagerDetailPageClient({ wrap }: WrapManagerDetailPageClien
                 </Tabs>
             </div>
 
-            <div className="col-span-1">
+            <div className="min-w-0">
                 <CatalogCommandPanel title="Selected Wrap Workspace">
                     <WrapPublishPanel wrap={wrap} />
                 </CatalogCommandPanel>

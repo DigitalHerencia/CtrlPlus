@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 
 import { CatalogCommandPanel } from '@/components/catalog/manage/catalog-command-panel'
 import { WrapAssetReadinessPanel } from '@/components/catalog/manage/wrap-asset-readiness-panel'
@@ -16,6 +17,7 @@ export interface WrapPublishPanelProps {
 }
 
 export function WrapPublishPanel({ wrap }: WrapPublishPanelProps) {
+    const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [serverMessage, setServerMessage] = useState<string | null>(null)
     const { canPublish, isVisualizerReady, issues } = wrap.readiness
@@ -31,6 +33,7 @@ export function WrapPublishPanel({ wrap }: WrapPublishPanelProps) {
                     await unpublishWrap(wrap.id)
                     setServerMessage('Wrap hidden successfully.')
                 }
+                router.refresh()
             } catch (error) {
                 setServerMessage(
                     error instanceof Error ? error.message : 'Failed to update publish state.'
