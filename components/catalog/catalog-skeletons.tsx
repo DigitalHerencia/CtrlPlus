@@ -29,6 +29,15 @@ export function CatalogHeaderSkeleton() {
     )
 }
 
+export function CatalogResultsSummarySkeleton() {
+    return (
+        <div className="space-y-2 text-right">
+            <Skeleton className="ml-auto h-3 w-18 rounded" />
+            <Skeleton className="ml-auto h-8 w-16 rounded-lg" />
+        </div>
+    )
+}
+
 export function CatalogFiltersSkeleton() {
     return (
         <div className="flex flex-wrap gap-2">

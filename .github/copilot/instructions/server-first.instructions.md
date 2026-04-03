@@ -1,6 +1,6 @@
 ---
 description: "Next.js App Router server-first architecture for CtrlPlus. Use when building pages, features, components, server actions, or fetchers. Foundational patterns for all domains."
-applyTo: "app/**, features/**, components/**, lib/**"
+applyTo: "app/**, features/**, components/**, lib/**, types/**, schemas/**"
 ---
 
 # CtrlPlus Server-First Architecture
@@ -15,6 +15,9 @@ This instruction defines the foundational architecture that all CtrlPlus domains
 - `components/` = pure presentational UI
 - `lib/` = all server authority (reads, writes, auth, integrations)
 - `types/` + `schemas/` = contracts and validation
+
+**Current operating model:** CtrlPlus is single-store and auth-scoped. Do not invent `tenantId`
+filters or membership checks for models that do not have tenant columns.
 
 ## Architectural Laws
 
@@ -171,9 +174,9 @@ Every write to the database goes through `lib/actions/{domain}/*.ts`.
 
 **Mutation Pipeline (6 steps):**
 1. **Authenticate** - `const session = await getSession()`
-2. **Authorize** - Check tenancy and capability: `await assertTenantMembership(tenantId, userId, role)`
+2. **Authorize** - Enforce capability and ownership filters on the server
 3. **Validate** - Parse input with Zod: `const payload = createWrapSchema.parse(input)`
-4. **Mutate** - Write to database with tenancy scope
+4. **Mutate** - Write to the database with record-level scoping where applicable
 5. **Audit** - Log the action: `await auditLog.create(...)`
 6. **Return** - Return the DTO result
 
@@ -187,23 +190,21 @@ export async function updateWrap(input: unknown) {
   if (!session) throw new Error("Unauthorized");
 
   // 2. Authorize
+  requireCapability(session.authz, "catalog.manage");
   const userId = session.userId;
-  const { tenantId, wrapId, ...payload } = input as any;
-
-  await assertTenantMembership(tenantId, userId, "owner");
+  const { wrapId, ...payload } = input as any;
 
   // 3. Validate
   const validated = updateWrapSchema.parse(payload);
 
   // 4. Mutate
   const wrap = await prisma.wrap.update({
-    where: { id: wrapId, tenantId }, // Always scope by tenantId!
+    where: { id: wrapId, deletedAt: null },
     data: validated,
   });
 
   // 5. Audit
   await auditLog.create({
-    tenantId,
     userId,
     action: "wrap.updated",
     resourceType: "Wrap",
@@ -217,29 +218,30 @@ export async function updateWrap(input: unknown) {
 }
 ```
 
-### Law 7: tenancy is non-negotiable
+### Law 7: authorization scope is non-negotiable
 
-Every database query, mutation, and authorization check must include tenancy scope.
+Every database query, mutation, and authorization check must enforce server-derived scope.
 
 **Rules:**
-- Never trust `tenantId` from the client
-- Always derive it from `session.tenantId` or `params.tenantId` after validation
-- Always include `where: { tenantId }` in Prisma queries
-- Always check `await assertTenantMembership(tenantId, userId)`
+- Never trust ownership, role, or record scope from the client
+- Always derive identity and capability from `getSession()`
+- When a model is user-owned, include the ownership filter in the Prisma query
+- When a model is global/shared, rely on capability checks rather than fake tenant filters
 
 **Anti-pattern:**
 ```typescript
-// ❌ WRONG: trusts client tenantId
+// ❌ WRONG: trusts client-provided scope
 const wrap = await prisma.wrap.findUnique({
-  where: { id: wrapId }, // Missing tenantId scope!
+  where: { id: wrapIdFromClient }, // Missing server-side authz check!
 });
 ```
 
 **Correct:**
 ```typescript
-// ✅ CORRECT: scoped by tenantId
+// ✅ CORRECT: authenticated and capability-gated
+requireCapability(session.authz, "catalog.manage");
 const wrap = await prisma.wrap.findUnique({
-  where: { id_tenantId: { id: wrapId, tenantId } },
+  where: { id: wrapId },
 });
 ```
 
@@ -362,7 +364,7 @@ export async function createWrap(input: any) {
 |---|---|---|
 | Prisma in components | No server boundary | Move to `lib/fetchers/` |
 | `await fetch()` in components | Blocks rendering | Move to Server Component or fetcher |
-| Client trusts tenantId | Tenancy leak | Always derive from `session.tenantId` |
+| Client trusts ownership or scope | Authorization leak | Always derive scope from session and server filters |
 | `images[0]` for asset selection | Brittle, no role semantics | Use explicit asset roles (hero, texture, etc.) |
 | Large components (>500 lines) | Hard to maintain | Extract into smaller features/components |
 | Direct Prisma in pages | No business logic layer | Move to `features/` or `lib/actions/` |

@@ -37,11 +37,14 @@ vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
 
 vi.mock('@/lib/uploads/image-processing', () => ({
     normalizeVehicleUpload: mocks.normalizeVehicleUpload,
-    buildWrapPreviewPrompt: mocks.buildWrapPreviewPrompt,
 }))
 
 vi.mock('@/lib/uploads/storage', () => ({
     storePreviewImage: mocks.storePreviewImage,
+}))
+
+vi.mock('@/lib/visualizer/prompting/build-wrap-preview-prompt', () => ({
+    buildWrapPreviewPrompt: mocks.buildWrapPreviewPrompt,
 }))
 
 vi.mock('@/lib/cache/cache-keys', () => ({

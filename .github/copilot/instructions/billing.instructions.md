@@ -1,6 +1,6 @@
 ---
 description: "Billing domain essentials: Stripe integration, invoices, payments, tax calculation. Use when building checkout, payment processing, or subscription features."
-applyTo: "lib/billing/**, features/billing/**, components/billing/**"
+applyTo: "app/(tenant)/billing/**, features/billing/**, components/billing/**, lib/actions/billing.actions.ts, lib/fetchers/billing.fetchers.ts"
 ---
 
 # Billing Domain Quick Reference
@@ -16,8 +16,8 @@ applyTo: "lib/billing/**, features/billing/**, components/billing/**"
 ## Fetchers: `lib/fetchers/billing/`
 
 - `getInvoice(invoiceId, userId)` - Fetch single invoice
-- `getInvoices(tenantId, pagination)` - List tenant invoices
-- `getBalance(tenantId)` - Account balance/credits
+- `getInvoices(filters)` - List invoices for the authenticated billing surface
+- `getBalance()` - Account balance/credits for the current operating context
 
 ## Actions: `lib/actions/billing/`
 
@@ -32,19 +32,19 @@ applyTo: "lib/billing/**, features/billing/**, components/billing/**"
 - Card tokenization: Clerk handles for marketplace model
 - Tax: Stripe Tax API integration (if enabled)
 
-## Public Routes
+## Authenticated Routes
 
 - `/(tenant)/billing` - History
 - `/(tenant)/billing/{invoiceId}` - Invoice detail
 
 ## Schema: `schemas/billing.schemas.ts`
 
-- `createInvoiceSchema`: bookingId, tenantId
+- `createInvoiceSchema`: bookingId
 - `processPaymentSchema`: invoiceId, paymentMethod, amount
 
 ## Key Constraints
 
-- All mutations require `assertTenantMembership(..., "owner")`
+- All mutations require an authenticated session plus server-side capability or ownership checks
 - Never expose full payment methods to UI (use Stripe token)
 - Tax is calculated server-side via Stripe Tax
 - Invoices are immutable after creation (void instead of delete)

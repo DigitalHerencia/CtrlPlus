@@ -25,7 +25,7 @@ describe('visualizer previews route', () => {
         expect(res.status).toBe(404)
     })
 
-    it('returns preview payload with cache headers when found', async () => {
+    it('returns preview payload with private no-store cache headers when found', async () => {
         const mocked = vi.mocked(getPreviewById)
         mocked.mockResolvedValueOnce({
             id: 'preview-1',
@@ -40,7 +40,7 @@ describe('visualizer previews route', () => {
         const res = await GET(new Request('https://example.test'), context)
 
         expect(res.status).toBe(200)
-        expect(res.headers.get('Cache-Control')).toBe('public, max-age=60, stale-while-revalidate=300')
+        expect(res.headers.get('Cache-Control')).toBe('private, no-store, max-age=0')
         await expect(res.json()).resolves.toEqual({
             preview: {
                 id: 'preview-1',

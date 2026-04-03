@@ -1,5 +1,6 @@
 import { InferenceClient } from '@huggingface/inference'
 import sharp from 'sharp'
+import { getCloudinaryCredentials } from '@/lib/integrations/cloudinary'
 
 function parseAllowedHosts(value: string | undefined): string[] {
     if (!value) {
@@ -47,6 +48,7 @@ export const visualizerConfig = {
                 ...parseAllowedHosts(process.env.VISUALIZER_ALLOWED_IMAGE_HOSTS),
                 extractHostFromUrl(process.env.NEXT_PUBLIC_APP_URL),
                 extractHostFromUrl(process.env.BLOB_STORE_URL),
+                getCloudinaryCredentials() ? 'res.cloudinary.com' : null,
                 process.env.BLOB_READ_WRITE_TOKEN ? 'blob.vercel-storage.com' : null,
             ].filter((value): value is string => Boolean(value))
         )

@@ -14,6 +14,24 @@
     },
     "programs": [
         {
+            "id": "repo-alignment-hotfixes-20260403",
+            "domain": "platform",
+            "objective": "Align repo contracts/docs/json with current authenticated single-store behavior and close critical auth/cache/type defects.",
+            "scope": {
+                "docsRoot": ".github/copilot/**",
+                "app": "app/(tenant)/catalog/**, app/(tenant)/visualizer/**, app/api/visualizer/previews/**",
+                "features": "features/auth/**, features/catalog/**, features/visualizer/**"
+            },
+            "workstreams": {
+                "contractsAndDocs": "completed",
+                "runtimeHotfixes": "completed",
+                "suspenseSegmentation": "in_progress",
+                "visualizerBackgroundExecution": "planned",
+                "validation": "in_progress"
+            },
+            "status": "in_progress"
+        },
+        {
             "id": "billing-full-surface-20260402",
             "domain": "billing",
             "objective": "Build complete billing route/feature/component surface with reuse-first fetcher/action integration.",
@@ -110,13 +128,13 @@
                 "transactions": "lib/db/transactions/scheduling.transactions.ts"
             },
             "criticalChanges": [
-                "decide and enforce tenant scoping model",
+                "document deferred tenant-scoping decision before schema changes",
                 "create shared availability engine used by reads and writes",
                 "use transactional capacity checks consistently",
                 "move invoice handoff to confirmation"
             ],
             "riskFlags": [
-                "scheduling tables currently not tenant-scoped",
+                "scheduling tables are intentionally single-store in the current repo",
                 "existing billing handoff occurs too early in createBooking"
             ],
             "status": "planned"

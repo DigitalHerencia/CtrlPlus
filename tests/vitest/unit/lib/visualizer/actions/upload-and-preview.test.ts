@@ -10,6 +10,10 @@ vi.mock('@/lib/auth/session', () => ({
     }),
 }))
 
+vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
+    getVisualizerWrapSelectionById: vi.fn(),
+}))
+
 import { uploadAndGeneratePreview } from '@/lib/actions/visualizer.actions'
 
 describe('uploadAndGeneratePreview', () => {

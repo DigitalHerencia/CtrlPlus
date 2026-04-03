@@ -4,11 +4,7 @@ import { useMemo, useRef, useState, useTransition } from 'react'
 
 import { VisualizerClient } from '@/components/visualizer/VisualizerClient'
 import type { VisualizerWrapSelectionDTO } from '@/types/catalog.types'
-import {
-    createVisualizerPreview,
-    processVisualizerPreview,
-    regenerateVisualizerPreview,
-} from '@/lib/actions/visualizer.actions'
+import { createVisualizerPreview, regenerateVisualizerPreview } from '@/lib/actions/visualizer.actions'
 import { isPreviewProcessingStatus, PreviewStatus } from '@/lib/constants/statuses'
 import type { VisualizerPreviewDTO } from '@/types/visualizer.types'
 import { VisualizerPreviewPollerClient } from './visualizer-preview-poller.client'
@@ -56,60 +52,6 @@ export function VisualizerWorkspaceShellClient({
         wraps.find((wrap) => wrap.id === selectedWrapId) ??
         null
 
-    function beginProcessing(nextPreview: VisualizerPreviewDTO) {
-        if (!isPreviewProcessingStatus(nextPreview.status)) {
-            return
-        }
-
-        const previewId = nextPreview.id
-        void processVisualizerPreview({ previewId: nextPreview.id })
-            .then((processedPreview) => {
-                if (activePreviewIdRef.current !== previewId) {
-                    return
-                }
-
-                setPreview(processedPreview)
-
-                if (processedPreview.status === PreviewStatus.COMPLETE) {
-                    setError(null)
-                    return
-                }
-
-                if (processedPreview.status === PreviewStatus.EXPIRED) {
-                    setError('Preview expired before processing completed. Please regenerate it.')
-                    return
-                }
-
-                if (processedPreview.status === PreviewStatus.FAILED) {
-                    setError(
-                        'Preview generation failed. Adjust the upload or regenerate the preview.'
-                    )
-                }
-            })
-            .catch((previewError) => {
-                if (activePreviewIdRef.current !== previewId) {
-                    return
-                }
-
-                setPreview((currentPreview) => {
-                    if (!currentPreview || currentPreview.id !== previewId) {
-                        return currentPreview
-                    }
-
-                    return {
-                        ...currentPreview,
-                        status: PreviewStatus.FAILED,
-                    }
-                })
-
-                setError(
-                    previewError instanceof Error
-                        ? previewError.message
-                        : 'Preview processing failed.'
-                )
-            })
-    }
-
     function handleSelectWrap(wrapId: string) {
         setSelectedWrapId(wrapId)
         setPreview(null)
@@ -139,13 +81,9 @@ export function VisualizerWorkspaceShellClient({
                     activePreviewIdRef.current = nextPreview.id
                     setPreview(nextPreview)
                     setSelectedFile(null)
-
                     if (nextPreview.status === PreviewStatus.COMPLETE) {
                         setError(null)
-                        return
                     }
-
-                    beginProcessing(nextPreview)
                 })
                 .catch((previewError) => {
                     setError(
@@ -168,7 +106,6 @@ export function VisualizerWorkspaceShellClient({
                 .then((nextPreview) => {
                     activePreviewIdRef.current = nextPreview.id
                     setPreview(nextPreview)
-                    beginProcessing(nextPreview)
                 })
                 .catch((previewError) => {
                     setError(

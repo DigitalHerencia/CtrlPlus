@@ -17,11 +17,11 @@ export default async function WrapDetailPage({ params }: WrapDetailPageParams) {
         redirect('/sign-in')
     }
 
-    const { id } = await params
+    const { wrapId } = await params
 
     return (
         <CatalogDetailPageFeature
-            wrapId={id}
+            wrapId={wrapId}
             canManageCatalog={hasCapability(session.authz, 'catalog.manage')}
         />
     )

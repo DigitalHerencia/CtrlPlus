@@ -75,7 +75,7 @@ Canonical naming conventions for exports, types, components, and files.
 ###Features / Page Blocks
 - **Pattern:** PascalCase{Domain}{Purpose}Feature
 - **Examples:**
-  - `CatalogBrowseFeature` - public wrap browsing
+  - `CatalogBrowseFeature` - authenticated wrap browsing
   - `CatalogDetailFeature` - wrap detail + CTA
   - `WrapManagerFeature` - owner management admin
   - `VisualizerFlowFeature` - main visualizer experience
@@ -85,8 +85,8 @@ Canonical naming conventions for exports, types, components, and files.
 ## File Naming & Organization
 
 ### Directories
-- `lib/actions/{domain}/` - server mutations
-- `lib/fetchers/{domain}/` - server reads
+- `lib/actions/{domain}.actions.ts` - server mutations
+- `lib/fetchers/{domain}.fetchers.ts` - server reads
 - `lib/integrations/{domain}/` - external service adapters
 - `lib/auth/` - auth helpers (not domain-scoped)
 - `lib/authz/` - authorization helpers (not domain-scoped)
@@ -99,8 +99,8 @@ Canonical naming conventions for exports, types, components, and files.
 **Rule:** No barrel index exports. Every import is explicit: `import { WrapListDTO } from "@/types/catalog.types"` not `import { WrapListDTO } from "@/types"`.
 
 ### Files
-- `actions/{domain}.ts` or `actions/{domain}/{action}.ts` - group related or one per file depending on size
-- `fetchers/{domain}.ts` or `fetchers/{domain}/{entity}.ts` - group related or one per file
+- `actions/{domain}.actions.ts` - group related server mutations in the live repo
+- `fetchers/{domain}.fetchers.ts` - group related server reads in the live repo
 - `types/{domain}.types.ts` - monolithic per domain
 - `schemas/{domain}.schemas.ts` - monolithic per domain
 - `{domain}.ts` (utilities) - if small; otherwise `lib/{domain}/utils/{utility}.ts`
@@ -109,17 +109,12 @@ Canonical naming conventions for exports, types, components, and files.
 ```
 lib/
   actions/
-    catalog/
-      wrap.ts (createWrap, updateWrap, deleteWrap, publishWrap)
-      image.ts (addWrapImage, updateWrapImage, deleteWrapImage)
-      category.ts (setWrapCategories)
+    catalog.actions.ts (createWrap, updateWrap, deleteWrap, publishWrap, addWrapImage)
   fetchers/
-    catalog/
-      wrap.ts (getCatalogWraps, getWrapDetail, getWrapsByCategory, getWrapAssets)
-      category.ts (getCategories, getCategoryWraps)
+    catalog.fetchers.ts (getCatalogWraps, getWrapDetail, getWrapsByCategory, getWrapAssets)
+    catalog.mappers.ts (DTO shaping and publish-readiness helpers)
   integrations/
-    catalog/
-      cloudinary.ts (upload, cleanup)
+    huggingface.ts (provider config and allowlist logic)
 ```
 
 ## Imports: No Barrel Exports
@@ -133,8 +128,7 @@ import { createWrap, updateWrap } from "@/lib/actions";
 
 **✅ Do:**
 ```typescript
-import { createWrap } from "@/lib/actions/catalog/wrap";
-import { updateWrap } from "@/lib/actions/catalog/wrap";
+import { createWrap, updateWrap } from "@/lib/actions/catalog.actions";
 ```
 
 This makes static analysis easier and keeps dependency graphs clear.
@@ -158,9 +152,9 @@ export async function getCatalogWraps(filters?: CatalogFilters): Promise<WrapLis
 - **Use comments for:** Why (not what), non-obvious logic, security notes
 - **Example (good):**
 ```typescript
-// Security: Always scope by tenantId to prevent data leakage across tenants
+// Security: Scope shared records with server-derived access rules, never client-provided ownership hints
 const wrap = await prisma.wrap.findUnique({
-  where: { id_tenantId: { id: wrapId, tenantId } },
+  where: { id: wrapId, deletedAt: null },
 });
 ```
 

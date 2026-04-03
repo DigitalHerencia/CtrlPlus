@@ -139,15 +139,19 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
                 return
             }
 
-            if (signUp.status === 'complete' || !!signUp.createdSessionId) {
+            const passwordResultState = passwordResult as {
+                status?: string
+                unverifiedFields?: string[]
+            }
+
+            if (passwordResultState.status === 'complete' || !!signUp.createdSessionId) {
                 await finalizeAndRedirect()
                 return
             }
 
             if (
-                !fetchStatus &&
-                signUp.status === 'missing_requirements' &&
-                signUp.unverifiedFields?.includes('email_address')
+                passwordResultState.status === 'missing_requirements' &&
+                passwordResultState.unverifiedFields?.includes('email_address')
             ) {
                 const sent = await sendVerificationCode()
                 if (sent) {

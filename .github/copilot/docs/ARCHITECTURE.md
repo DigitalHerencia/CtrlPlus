@@ -33,7 +33,7 @@ domain boundaries and security-first mutation flows.
 
 ### Server authority layer
 
-- Fetchers perform tenant-safe reads and shape DTOs.
+- Fetchers perform authenticated, server-authoritative reads and shape DTOs.
 - Actions perform authenticated/authorized writes and revalidation.
 
 ## Mutation pipeline
@@ -64,7 +64,7 @@ All sensitive write flows should follow:
 ## Security boundaries
 
 - Keep auth and authz server-side (`lib/auth/**`, `lib/authz/**`).
-- Never trust tenant, role, or ownership claims from client input.
+- Never trust role, ownership, or client-provided scope claims from input.
 - Validate all mutation payloads at server boundary.
 
 ## App Router implementation guidance

@@ -1,15 +1,21 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 
 import { InvoicesDashboardHeader } from '@/components/billing/invoices-dashboard-header'
-import { InvoicesDashboardStats } from '@/components/billing/invoices-dashboard-stats'
+import {
+    BillingInvoiceTableSkeleton,
+    BillingKpiCardsSkeleton,
+} from '@/components/billing/billing-skeletons'
 import { InvoicesDashboardToolbar } from '@/components/billing/invoices-dashboard-toolbar'
 import { Button } from '@/components/ui/button'
-import { getBalance, getInvoices } from '@/lib/fetchers/billing.fetchers'
 import { parseBillingSearchParams } from '@/lib/utils/search-params'
 import type { SearchParamRecord } from '@/types/common.types'
 
 import { InvoicesDashboardFiltersClient } from './invoices-dashboard-filters.client'
-import { InvoicesDashboardTableClient } from './invoices-dashboard-table.client'
+import {
+    InvoicesDashboardStatsSection,
+    InvoicesDashboardTableSection,
+} from './invoices-dashboard-parts'
 
 interface InvoicesDashboardPageFeatureProps {
     searchParams?: Promise<SearchParamRecord>
@@ -20,11 +26,6 @@ export async function InvoicesDashboardPageFeature({
 }: InvoicesDashboardPageFeatureProps) {
     const resolvedParams = (searchParams ? await searchParams : {}) satisfies SearchParamRecord
     const { filters } = parseBillingSearchParams(resolvedParams)
-
-    const [{ invoices, total }, balance] = await Promise.all([
-        getInvoices(filters),
-        getBalance(),
-    ])
 
     return (
         <div className="space-y-6">
@@ -38,17 +39,17 @@ export async function InvoicesDashboardPageFeature({
                 }
             />
 
-            <InvoicesDashboardStats
-                totalInvoices={total}
-                outstandingAmount={balance.outstandingAmount}
-                creditAmount={balance.creditAmount}
-            />
+            <Suspense fallback={<BillingKpiCardsSkeleton />}>
+                <InvoicesDashboardStatsSection filters={filters} />
+            </Suspense>
 
             <InvoicesDashboardToolbar>
                 <InvoicesDashboardFiltersClient />
             </InvoicesDashboardToolbar>
 
-            <InvoicesDashboardTableClient invoices={invoices} />
+            <Suspense fallback={<BillingInvoiceTableSkeleton />}>
+                <InvoicesDashboardTableSection filters={filters} />
+            </Suspense>
         </div>
     )
 }

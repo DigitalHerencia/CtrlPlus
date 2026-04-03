@@ -20,7 +20,7 @@ export async function GET(_: Request, { params }: PreviewRouteProps) {
             {
                 status: 200,
                 headers: {
-                    'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
+                    'Cache-Control': 'private, no-store, max-age=0',
                 },
             }
         )

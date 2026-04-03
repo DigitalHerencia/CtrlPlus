@@ -1,6 +1,6 @@
 ---
-description: 'Visualizer domain patterns. Use when working on preview generation, vehicle photo handling, AI integration, or visualizer components in lib/visualizer/**, features/visualizer/**, or components/visualizer/**.'
-applyTo: 'lib/visualizer/**, features/visualizer/**, app/(tenant)/visualizer/**, components/visualizer/**'
+description: 'Visualizer domain patterns. Use when working on preview generation, vehicle photo handling, AI integration, or visualizer components in lib/fetchers/visualizer.fetchers.ts, lib/actions/visualizer.actions.ts, lib/uploads/**, lib/integrations/huggingface.ts, features/visualizer/**, or components/visualizer/**.'
+applyTo: 'lib/fetchers/visualizer*.ts, lib/actions/visualizer*.ts, lib/uploads/**, lib/integrations/huggingface.ts, features/visualizer/**, app/(tenant)/visualizer/**, components/visualizer/**'
 ---
 
 # Visualizer Domain Instructions
@@ -26,10 +26,9 @@ Never block the page on generation. Support polling or webhook-based updates.
 
 Preview request + cache entry + ownership tracking.
 
-- `id`, `tenantId` (from wrap owner, not customer), `wrapId`
+- `id`, `wrapId`
 - `ownerClerkUserId` - which customer/session created this preview request
 - `customerPhotoUrl` - HTTPS URL to stored vehicle photo (not base64)
-- `customerPhotoHash` - SHA256 of photo bytes (for cache key + integrity)
 - `processedImageUrl` - URL to generated preview image (nullable until complete)
 - `status` - "pending" | "processing" | "complete" | "failed" | "expired"
 - `cacheKey` - deterministic hash of (photo + wrap + config); used for reuse
@@ -58,7 +57,7 @@ Segmentation model for vehicle detection and mask generation.
 - Generated previews: `/visualizer/previews/{previewId}`
 - Asset cleanup on `deletedAt`
 
-## Fetchers: `lib/visualizer/fetchers/`
+## Fetchers: `lib/fetchers/visualizer.fetchers.ts`
 
 ### `getPreview(previewId)`
 
@@ -100,7 +99,7 @@ export async function getVisualizerWrap(wrapId: string): Promise<VisualizerWrapS
 }
 ```
 
-## Actions: `lib/visualizer/actions/`
+## Actions: `lib/actions/visualizer.actions.ts`
 
 ### `uploadVehiclePhoto(input)`
 
@@ -156,7 +155,7 @@ export async function generatePreview(
 }
 ```
 
-This action initiates generation but does not block. Real generation happens in background (or via serverless function timeout extension).
+This action should update status immediately and let polling own the UX. Avoid making the page depend on the returned terminal state.
 
 ### `regeneratePreview(previewId)`
 
@@ -208,7 +207,7 @@ export interface VisualizerWrapSelectionDTO {
 }
 ```
 
-## Integrations: `lib/visualizer/`
+## Integrations: `lib/integrations/huggingface.ts` + `lib/uploads/**`
 
 ### `huggingface.ts`
 
@@ -379,13 +378,13 @@ State management:
 
 ## Auth & Authz
 
-### Public paths
+### Authenticated paths
 
 - `/visualizer` (with optional `?wrapId=...` query param)
 
 ### Checks
 
-- All mutations: authenticated user (any tenant user)
+- All mutations: authenticated user with server-side ownership/capability checks
 - Ownership: `preview.ownerClerkUserId === session.userId`
 - Wrap authz: wrap must be published (not hidden)
 
@@ -393,8 +392,8 @@ State management:
 
 | What               | Location                               | Cleanup                                | Duration      |
 | ------------------ | -------------------------------------- | -------------------------------------- | ------------- |
-| Vehicle photos     | Cloudinary `/visualizer/uploads/{id}`  | On preview delete/expire               | 30 days (TTL) |
-| Generated previews | Cloudinary `/visualizer/previews/{id}` | On preview delete/expire               | 30 days (TTL) |
+| Vehicle photos     | Cloudinary `/visualizer/uploads/{previewId}`  | On preview delete/expire               | 30 days (TTL) |
+| Generated previews | Cloudinary `/visualizer/previews/{previewId}` | On preview delete/expire               | 30 days (TTL) |
 | Preview records    | VisualizerPreview table                | Soft-delete; hard-delete after 30 days | 30 days       |
 
 ## Caching & Reuse

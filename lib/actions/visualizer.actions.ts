@@ -1,5 +1,7 @@
 'use server'
 
+import { after } from 'next/server'
+
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
 import { buildVisualizerCacheKey } from '@/lib/cache/cache-keys'
@@ -130,6 +132,151 @@ async function executeVisualizerPreviewGeneration(params: {
     }
 }
 
+interface ScheduledVisualizerProcessingInput {
+    previewId: string
+    ownerClerkUserId: string
+    includeHidden: boolean
+}
+
+async function processVisualizerPreviewForOwner({
+    previewId,
+    ownerClerkUserId,
+    includeHidden,
+}: ScheduledVisualizerProcessingInput): Promise<VisualizerPreviewDTO> {
+    const preview = await prisma.visualizerPreview.findFirst({
+        where: {
+            id: previewId,
+            ownerClerkUserId,
+            deletedAt: null,
+        },
+    })
+
+    if (!preview) {
+        throw new Error('Preview not found.')
+    }
+
+    if (preview.status === 'complete' && preview.processedImageUrl) {
+        return toVisualizerPreviewDTO(preview)
+    }
+
+    if (preview.status === 'processing') {
+        return toVisualizerPreviewDTO(preview)
+    }
+
+    const wrap = await getVisualizerWrapSelectionById(preview.wrapId, {
+        includeHidden,
+    })
+    if (!wrap) {
+        await prisma.visualizerPreview.update({
+            where: { id: preview.id },
+            data: {
+                status: 'failed',
+            },
+        })
+
+        throw new Error('Wrap not found or is not visualizer-ready.')
+    }
+
+    await prisma.visualizerPreview.update({
+        where: { id: preview.id },
+        data: {
+            status: 'processing',
+            processedImageUrl: null,
+            sourceWrapImageId: wrap.visualizerTextureImage.id,
+            sourceWrapImageVersion: wrap.visualizerTextureImage.version,
+        },
+    })
+
+    try {
+        const [{ buffer: vehicleBuffer }, { textureBuffer, prompt }] = await Promise.all([
+            readPhotoBuffer(preview.customerPhotoUrl),
+            resolveVisualizerGenerationAssets(wrap),
+        ])
+
+        const result = await executeVisualizerPreviewGeneration({
+            previewId: preview.id,
+            ownerClerkUserId,
+            vehicleBuffer,
+            baseVehicleImageUrl: preview.customerPhotoUrl,
+            textureBuffer,
+            wrap,
+            prompt,
+        })
+
+        const completedPreview = await prisma.visualizerPreview.update({
+            where: { id: preview.id },
+            data: {
+                status: 'complete',
+                processedImageUrl: result.processedImageUrl,
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                sourceWrapImageId: wrap.visualizerTextureImage.id,
+                sourceWrapImageVersion: wrap.visualizerTextureImage.version,
+            },
+        })
+
+        await prisma.auditLog.create({
+            data: {
+                userId: ownerClerkUserId,
+                action: 'visualizerPreview.processed',
+                resourceType: 'VisualizerPreview',
+                resourceId: preview.id,
+                details: JSON.stringify({
+                    wrapId: wrap.id,
+                    cacheKey: preview.cacheKey,
+                    promptVersion: result.promptVersion,
+                    sourceWrapImageId: wrap.visualizerTextureImage.id,
+                    sourceWrapImageVersion: wrap.visualizerTextureImage.version,
+                    model: result.model,
+                    generationFallbackReason: result.generationFallbackReason,
+                }),
+                timestamp: new Date(),
+            },
+        })
+
+        return toVisualizerPreviewDTO(completedPreview)
+    } catch (error) {
+        await prisma.visualizerPreview.update({
+            where: { id: preview.id },
+            data: {
+                status: 'failed',
+            },
+        })
+
+        await prisma.auditLog.create({
+            data: {
+                userId: ownerClerkUserId,
+                action: 'visualizerPreview.processingFailed',
+                resourceType: 'VisualizerPreview',
+                resourceId: preview.id,
+                details: JSON.stringify({
+                    wrapId: wrap.id,
+                    cacheKey: preview.cacheKey,
+                    sourceWrapImageId: wrap.visualizerTextureImage.id,
+                    sourceWrapImageVersion: wrap.visualizerTextureImage.version,
+                    error: error instanceof Error ? error.message : 'Preview generation failed.',
+                }),
+                timestamp: new Date(),
+            },
+        })
+
+        throw new Error(error instanceof Error ? error.message : 'Preview generation failed.')
+    }
+}
+
+function scheduleVisualizerPreviewProcessing(input: ScheduledVisualizerProcessingInput) {
+    if (process.env.NODE_ENV === 'test') {
+        return
+    }
+
+    after(async () => {
+        try {
+            await processVisualizerPreviewForOwner(input)
+        } catch (error) {
+            console.error('Background visualizer preview processing failed', error)
+        }
+    })
+}
+
 export async function createVisualizerPreview(input: {
     wrapId: string
     fileKey?: string
@@ -238,6 +385,12 @@ export async function createVisualizerPreview(input: {
         },
     })
 
+    scheduleVisualizerPreviewProcessing({
+        previewId: preview.id,
+        ownerClerkUserId: userId,
+        includeHidden,
+    })
+
     return toVisualizerPreviewDTO(preview)
 }
 
@@ -299,6 +452,12 @@ export async function regenerateVisualizerPreview(
         },
     })
 
+    scheduleVisualizerPreviewProcessing({
+        previewId: resetPreview.id,
+        ownerClerkUserId: userId,
+        includeHidden: session.isOwner || session.isPlatformAdmin,
+    })
+
     return toVisualizerPreviewDTO(resetPreview)
 }
 
@@ -313,120 +472,11 @@ export async function processVisualizerPreview(
     requireCapability(session.authz, 'visualizer.use')
 
     const parsed = processVisualizerPreviewSchema.parse(input)
-    const preview = await prisma.visualizerPreview.findFirst({
-        where: {
-            id: parsed.previewId,
-            ownerClerkUserId: userId,
-            deletedAt: null,
-        },
-    })
-
-    if (!preview) {
-        throw new Error('Preview not found.')
-    }
-
-    if (preview.status === 'complete' && preview.processedImageUrl) {
-        return toVisualizerPreviewDTO(preview)
-    }
-
-    const wrap = await getVisualizerWrapSelectionById(preview.wrapId, {
+    return processVisualizerPreviewForOwner({
+        previewId: parsed.previewId,
+        ownerClerkUserId: userId,
         includeHidden: session.isOwner || session.isPlatformAdmin,
     })
-    if (!wrap) {
-        await prisma.visualizerPreview.update({
-            where: { id: preview.id },
-            data: {
-                status: 'failed',
-            },
-        })
-
-        throw new Error('Wrap not found or is not visualizer-ready.')
-    }
-
-    await prisma.visualizerPreview.update({
-        where: { id: preview.id },
-        data: {
-            status: 'processing',
-            processedImageUrl: null,
-            sourceWrapImageId: wrap.visualizerTextureImage.id,
-            sourceWrapImageVersion: wrap.visualizerTextureImage.version,
-        },
-    })
-
-    try {
-        const [{ buffer: vehicleBuffer }, { textureBuffer, prompt }] = await Promise.all([
-            readPhotoBuffer(preview.customerPhotoUrl),
-            resolveVisualizerGenerationAssets(wrap),
-        ])
-
-        const result = await executeVisualizerPreviewGeneration({
-            previewId: preview.id,
-            ownerClerkUserId: userId,
-            vehicleBuffer,
-            baseVehicleImageUrl: preview.customerPhotoUrl,
-            textureBuffer,
-            wrap,
-            prompt,
-        })
-
-        const completedPreview = await prisma.visualizerPreview.update({
-            where: { id: preview.id },
-            data: {
-                status: 'complete',
-                processedImageUrl: result.processedImageUrl,
-                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
-                sourceWrapImageId: wrap.visualizerTextureImage.id,
-                sourceWrapImageVersion: wrap.visualizerTextureImage.version,
-            },
-        })
-
-        await prisma.auditLog.create({
-            data: {
-                userId,
-                action: 'visualizerPreview.processed',
-                resourceType: 'VisualizerPreview',
-                resourceId: preview.id,
-                details: JSON.stringify({
-                    wrapId: wrap.id,
-                    cacheKey: preview.cacheKey,
-                    promptVersion: result.promptVersion,
-                    sourceWrapImageId: wrap.visualizerTextureImage.id,
-                    sourceWrapImageVersion: wrap.visualizerTextureImage.version,
-                    model: result.model,
-                    generationFallbackReason: result.generationFallbackReason,
-                }),
-                timestamp: new Date(),
-            },
-        })
-
-        return toVisualizerPreviewDTO(completedPreview)
-    } catch (error) {
-        await prisma.visualizerPreview.update({
-            where: { id: preview.id },
-            data: {
-                status: 'failed',
-            },
-        })
-
-        await prisma.auditLog.create({
-            data: {
-                userId,
-                action: 'visualizerPreview.processingFailed',
-                resourceType: 'VisualizerPreview',
-                resourceId: preview.id,
-                details: JSON.stringify({
-                    wrapId: wrap.id,
-                    cacheKey: preview.cacheKey,
-                    sourceWrapImageId: wrap.visualizerTextureImage.id,
-                    sourceWrapImageVersion: wrap.visualizerTextureImage.version,
-                    error: error instanceof Error ? error.message : 'Preview generation failed.',
-                }),
-                timestamp: new Date(),
-            },
-        })
-
-        throw new Error(error instanceof Error ? error.message : 'Preview generation failed.')
-    }
 }
 
 // Client helper: accept a File-based upload and delegate to createVisualizerPreview.

@@ -30,7 +30,7 @@ export interface VisualizerSearchParamsResult {
 }
 
 export interface VisualizerPageProps {
-    searchParams: SearchParamRecord
+    searchParams: Promise<SearchParamRecord>
 }
 
 export interface VisualizerPageFeatureProps {

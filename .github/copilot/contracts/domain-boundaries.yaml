@@ -81,7 +81,7 @@ domains:
          - lib/actions/settings.actions.ts
          - lib/fetchers/settings.fetchers.ts
       focus:
-         - tenant-scoped settings forms
+         - authenticated settings forms with owner-only account/export operations
          - server-validated configuration saves
 
    - id: DOM-008

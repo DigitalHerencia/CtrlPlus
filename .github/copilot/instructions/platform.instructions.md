@@ -1,6 +1,6 @@
 ---
 description: "Platform domain: infrastructure, health checks, observability, error handling."
-applyTo: "lib/platform/**, lib/integrations/**, app/api/**"
+applyTo: "app/(tenant)/platform/**, app/api/**, features/platform/**, components/platform/**, lib/actions/platform.actions.ts, lib/fetchers/platform.fetchers.ts, lib/integrations/**"
 ---
 
 # Platform Domain Quick Reference

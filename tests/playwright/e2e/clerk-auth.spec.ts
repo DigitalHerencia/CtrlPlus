@@ -15,7 +15,7 @@ test.describe('Clerk Surface Smoke', () => {
         await page.goto('/sign-up')
         await page.waitForLoadState('domcontentloaded')
         await expect(page).toHaveURL(/\/sign-up/)
-        await expect(page.locator('body')).toContainText(/sign up|continue/i)
+        await expect(page.locator('body')).toContainText(/create your account|sign up|continue/i)
         await expect(page.locator('body')).not.toContainText('Application error')
         await expect(page.locator('body')).not.toContainText('500')
     })

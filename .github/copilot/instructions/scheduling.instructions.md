@@ -1,6 +1,6 @@
 ---
 description: "Scheduling domain: booking creation, availability rules, conflict detection, appointment management."
-applyTo: "lib/scheduling/**, features/scheduling/**, components/scheduling/**"
+applyTo: "app/(tenant)/scheduling/**, features/scheduling/**, components/scheduling/**, lib/actions/scheduling.actions.ts, lib/fetchers/scheduling.fetchers.ts"
 ---
 
 # Scheduling Domain Quick Reference
@@ -14,15 +14,15 @@ applyTo: "lib/scheduling/**, features/scheduling/**, components/scheduling/**"
 
 | Operation | Path | Auth | Zod Schema | Action |
 |-----------|------|------|-----------|--------|
-| Get availability | fetcher | public | — | `getAvailability(tenantId, days)` |
-| Create booking | action | tenant user | `createBookingSchema` | `createBooking(input)` |
+| Get availability | fetcher | authenticated | — | `getAvailability(startDate, endDate)` |
+| Create booking | action | authenticated user | `createBookingSchema` | `createBooking(input)` |
 | Cancel booking | action | owner | `cancelBookingSchema` | `cancelBooking(bookingId)` |
 
 ## Fetchers: `lib/fetchers/scheduling/`
 
-- `getAvailability(tenantId, startDate, endDate)` - Available slots
+- `getAvailability(startDate, endDate)` - Available slots
 - `getBooking(bookingId, userId)` - Fetch booking (customer or admin)
-- `getBookings(tenantId, filters)` - List bookings for admin view
+- `getBookings(filters)` - List bookings for admin view
 
 ## Actions: `lib/actions/scheduling/`
 
@@ -46,7 +46,7 @@ pending → confirmed → completed
 - Cancellations audit-logged
 - On booking confirmed: trigger `createInvoice(bookingId)` in Billing domain
 
-## Public Routes
+## Authenticated Routes
 
 - `/(tenant)/scheduling` - Book appointment
 - `/(tenant)/bookings` - View bookings

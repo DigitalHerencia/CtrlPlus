@@ -21,7 +21,7 @@ export default async function WrapManagerPage({ params }: WrapDetailPageParams) 
         redirect('/catalog')
     }
 
-    const { id } = await params
+    const { wrapId } = await params
 
-    return <WrapManagerDetailPage id={id} />
+    return <WrapManagerDetailPage id={wrapId} />
 }

@@ -1,87 +1,88 @@
 {
-  "title": "Next Session Action Plan",
-  "sessionGoal": "Complete phase 1 loading fixes and begin phase 2 suspense segmentation",
-  "preSessionChecklist": [
-    ".github/copilot/json/audit-loading-state.json",
-    ".github/copilot/contracts/suspense-segmentation.contract.yaml",
-    ".github/copilot/json/suspense-refactor-example.json",
-    "components/catalog/catalog-skeletons.tsx"
+  "title": "Repo Alignment And Hotfix Action Plan",
+  "generatedAt": "2026-04-03",
+  "operatingDecisions": {
+    "dataScope": "single-store",
+    "catalogAccess": "authenticated",
+    "visualizerAccess": "authenticated"
+  },
+  "immediateHotfixes": [
+    {
+      "id": "agent-artifact-alignment",
+      "status": "completed",
+      "paths": [
+        ".github/copilot/instructions/authentication.instructions.md",
+        ".github/copilot/instructions/server-first.instructions.md",
+        ".github/copilot/instructions/catalog.instructions.md",
+        ".github/copilot/instructions/visualizer.instructions.md",
+        ".github/copilot/contracts/domain-map.yaml",
+        ".github/copilot/contracts/mutations.yaml",
+        ".github/copilot/contracts/route-layer-contract.yaml",
+        ".github/copilot/docs/ARCHITECTURE.md",
+        ".github/copilot/docs/DATA-MODEL.md",
+        ".github/copilot/docs/PRD.md",
+        ".github/copilot/json/visualizer-refactor.json"
+      ]
+    },
+    {
+      "id": "hotfix-signup-verification",
+      "status": "completed",
+      "paths": [
+        "features/auth/signup-form-client.tsx",
+        "tests/vitest/unit/features/auth/signup-form-client.test.tsx"
+      ]
+    },
+    {
+      "id": "hotfix-catalog-wrapid-contract",
+      "status": "completed",
+      "paths": [
+        "app/(tenant)/catalog/[wrapId]/page.tsx",
+        "app/(tenant)/catalog/manage/[wrapId]/page.tsx",
+        "features/catalog/catalog-detail-page-feature.tsx",
+        "types/catalog.types.ts",
+        "tests/vitest/unit/features/catalog/catalog-detail-route.test.tsx"
+      ]
+    },
+    {
+      "id": "hotfix-preview-cache-headers",
+      "status": "completed",
+      "paths": [
+        "app/api/visualizer/previews/[previewId]/route.ts",
+        "tests/vitest/unit/test/api/visualizer-previews-route.test.ts"
+      ]
+    },
+    {
+      "id": "hotfix-visualizer-cloudinary-allowlist",
+      "status": "completed",
+      "paths": [
+        "lib/integrations/huggingface.ts",
+        "tests/vitest/unit/lib/integrations/huggingface-config.test.ts"
+      ]
+    }
   ],
-  "phase1": {
-    "priority": "highest",
-    "estimatedMinutes": 40,
-    "tasks": [
-      {
-        "id": "p1-1",
-        "targetFile": "app/(tenant)/visualizer/loading.tsx",
-        "action": "replace arbitrary height token",
-        "detail": "h-[34rem] -> h-136",
-        "estimatedMinutes": 5
-      },
-      {
-        "id": "p1-2",
-        "targetFile": "app/(tenant)/settings/loading.tsx",
-        "action": "migrate inline placeholders",
-        "detail": "use Skeleton component with layout parity",
-        "estimatedMinutes": 15
-      },
-      {
-        "id": "p1-3",
-        "targetFile": "app/(tenant)/platform/loading.tsx",
-        "action": "migrate inline placeholders",
-        "detail": "use Skeleton component and domain skeletons",
-        "estimatedMinutes": 15
-      },
-      {
-        "id": "p1-4",
-        "action": "validate",
-        "commands": [
-          "pnpm lint",
-          "pnpm typecheck",
-          "pnpm build"
-        ],
-        "estimatedMinutes": 5
-      }
-    ]
-  },
-  "phase2Starter": {
-    "estimatedMinutes": 35,
-    "tasks": [
-      {
-        "id": "p2-1",
-        "targetFile": "features/catalog/catalog-browse-parts.tsx",
-        "action": "create segmented server components",
-        "components": [
-          "CatalogContent",
-          "CatalogFilters"
-        ]
-      },
-      {
-        "id": "p2-2",
-        "targetFile": "features/catalog/catalog-browse-page-feature.tsx",
-        "action": "replace feature-level blocking data fetch with Suspense boundaries"
-      }
-    ]
-  },
-  "validation": {
-    "perEdit": [
-      "pnpm typecheck",
-      "pnpm lint",
-      "pnpm build"
-    ],
-    "phase1CompletionCriteria": [
-      "all route loading files use Skeleton consistently",
-      "no lint/type errors",
-      "no blank screens on navigation"
-    ],
-    "phase2StarterCriteria": [
-      "catalog browse page has suspense boundaries",
-      "filters and grid can stream independently"
-    ]
-  },
-  "timeboxMinutes": {
-    "phase1": 40,
-    "phase2Starter": 35,
-    "total": 75
-  }
+  "followUpWork": [
+    {
+      "id": "suspense-segmentation-wave",
+      "status": "planned",
+      "targets": [
+        "features/catalog/catalog-browse-page-feature.tsx",
+        "features/visualizer/visualizer-workspace-page-feature.tsx",
+        "features/billing/invoices-dashboard-page-feature.tsx",
+        "features/scheduling/scheduling-dashboard-page-feature.tsx"
+      ],
+      "note": "Tracked separately from immediate repo-alignment and hotfix work."
+    },
+    {
+      "id": "visualizer-background-processing",
+      "status": "planned",
+      "note": "Polling UI exists; full durable background execution remains follow-up work."
+    }
+  ],
+  "validation": [
+    "pnpm lint",
+    "pnpm typecheck",
+    "pnpm prisma:validate",
+    "pnpm build",
+    "pnpm test"
+  ]
 }

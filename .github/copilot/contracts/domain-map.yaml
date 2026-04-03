@@ -27,7 +27,7 @@ domains:
     write_boundary: "lib/actions/catalog.actions.ts"
     notes:
       - "Live repo currently centralizes catalog reads in lib/fetchers/catalog.fetchers.ts and asset readiness logic in lib/fetchers/catalog.mappers.ts."
-      - "Target extraction into lib/catalog/** remains explicit future work, not the current source of truth."
+      - "Any deeper catalog module extraction remains future work, not the current source of truth."
   - id: platform
     route_root: "app/(tenant)/platform"
     feature_root: "features/platform"
@@ -61,3 +61,6 @@ shared:
   schemas: "schemas"
   types: "types"
   prisma: "prisma/schema.prisma"
+  operating_model:
+    data_scope: "single-store"
+    route_access: "catalog and visualizer remain authenticated under app/(tenant)"

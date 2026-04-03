@@ -1,6 +1,6 @@
 ---
-description: 'Catalog domain patterns. Use when working on wrap storefront, asset management, publish workflows, or catalog components in lib/catalog/**, features/catalog/**, app/(tenant)/catalog/**, or components/catalog/**.'
-applyTo: 'lib/catalog/**, features/catalog/**, app/(tenant)/catalog/**, components/catalog/**'
+description: 'Catalog domain patterns. Use when working on wrap storefront, asset management, publish workflows, or catalog components in lib/fetchers/catalog.fetchers.ts, lib/fetchers/catalog.mappers.ts, lib/actions/catalog.actions.ts, features/catalog/**, app/(tenant)/catalog/**, or components/catalog/**.'
+applyTo: 'lib/fetchers/catalog*.ts, lib/actions/catalog.actions.ts, features/catalog/**, app/(tenant)/catalog/**, components/catalog/**'
 ---
 
 # Catalog Domain Instructions
@@ -23,7 +23,7 @@ Never use `images[0]` to assume an asset role. Always resolve roles explicitly:
 
 ### Wrap
 
-- `id`, `tenantId`, `name`, `description` (nullable), `price` (cents), `installationMinutes` (nullable)
+- `id`, `name`, `description` (nullable), `price` (cents), `installationMinutes` (nullable)
 - `isHidden` - publishing toggle; default `true` (hidden until owner publishes)
 - `sortRank` - curated ordering (lower = display first)
 - `createdAt`, `updatedAt`, `deletedAt` (soft delete)
@@ -53,9 +53,9 @@ M2M relationship for categorization and discovery.
 
 - Owned by wrap (via junction table)
 - Allows filtering and taxonomization
-- Must validate: category exists, tenant owns it
+- Must validate: category exists and is active
 
-## Fetchers: `lib/catalog/fetchers/`
+## Fetchers: `lib/fetchers/catalog.fetchers.ts` + `lib/fetchers/catalog.mappers.ts`
 
 ### `getCatalogWraps()`
 
@@ -75,7 +75,7 @@ Related:
 - Returns: `WrapListDTO[]` (minimal for grid display)
 - Cache tag: `catalog:wraps`
 
-### `getWrapDetail(id)`
+### `getWrapDetail(wrapId)`
 
 Fetch wrap detail with all assets.
 
@@ -89,7 +89,7 @@ export async function getWrapDetail(wrapId: string): Promise<WrapDetailDTO> {
 
 Related:
 
-- Auth: public if not hidden, owner-only if hidden
+- Auth: authenticated route; owner/admin can include hidden wraps
 - Returns: `WrapDetailDTO` (full catalog + visualizer asset data)
 - Cache tag: `catalog:wrap:${wrapId}`
 
@@ -240,7 +240,7 @@ export async function setWrapCategories(
   input: SetWrapCategoriesInput
 ): Promise<WrapDetailDTO> {
   // Atomically replace category mappings (delete old, insert new)
-  // Validate: all categoryIds exist and belong to tenant
+  // Validate: all categoryIds exist and are active
   // Invalidate: catalog:wraps, catalog:wrap:${wrapId}
 }
 ```
@@ -358,7 +358,7 @@ Features:
 
 ### CatalogBrowse
 
-Public browse experience.
+Authenticated browse experience.
 
 - List page with filtering
 - Search, category filter, price filter
@@ -388,27 +388,27 @@ Admin catalog management.
 
 ## Auth & Authz
 
-### Public paths (no auth required)
+### Authenticated paths
 
 - `/catalog` (browse)
-- `/catalog/{wrapId}` (detail)
+- `/catalog/[wrapId]` (detail)
 
 ### Owner-only paths (requireOwnerOrPlatformAdmin)
 
 - `/catalog/manage` (manager interface)
-- `/catalog/manage/{wrapId}/edit` (edit page)
-- `/catalog/manage/{wrapId}/assets` (asset management)
+- `/catalog/manage/[wrapId]` (manager detail)
+- `/catalog/manage/new` (create flow)
 
 ### Checks in actions
 
 - All mutations: `requireOwnerOrPlatformAdmin()`
-- Validate ownership: `wrap.tenantId === session.tenantId`
+- Validate capability and record existence server-side
 
 ## Caching Strategy
 
 | What                | Cache tag                | Revalidate | Invalidation                                                                      |
 | ------------------- | ------------------------ | ---------- | --------------------------------------------------------------------------------- |
-| Public catalog list | `catalog:wraps`          | 1 hour     | `createWrap`, `updateWrap`, `publishWrap`, `deleteWrap`, `updateWrapImage`        |
+| Catalog list        | `catalog:wraps`          | 1 hour     | `createWrap`, `updateWrap`, `publishWrap`, `deleteWrap`, `updateWrapImage`        |
 | Wrap detail         | `catalog:wrap:${wrapId}` | 1 hour     | `updateWrap`, `addWrapImage`, `updateWrapImage`, `deleteWrapImage`, `publishWrap` |
 | Wrap assets         | `catalog:wrap:${wrapId}` | 1 hour     | Any asset mutation for that wrap                                                  |
 

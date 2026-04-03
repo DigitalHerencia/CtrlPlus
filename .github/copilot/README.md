@@ -43,6 +43,9 @@ Available contracts:
 
 Current execution state files:
 
+- `next-session-action-plan.json`
+- `tracking-programs.json`
+- `tracking-backlog.json`
 - `catalog-refactor.json`
 - `visualizer-refactor.json`
 
@@ -59,12 +62,12 @@ Current focused prompt files:
 1. **Route-specific problem?** → Check `/instructions/{domain}.instructions.md`
 2. **Architectural decision needed?** → Check `/docs/ARCHITECTURE.md`, then relevant domain doc
 3. **Want to validate generated code?** → Check `/contracts/` for that domain
-4. **Need to inherit state?** → Check `/json/catalog-refactor.json` and `/json/visualizer-refactor.json`
+4. **Need to inherit state?** → Check `/json/next-session-action-plan.json`, `/json/tracking-programs.json`, then domain-specific JSON files
 5. **Running a focused refactor?** → Use `/prompts/catalog-asset-role-unification.md`
 
 ### For Agents Completing Work
 
-1. Update `/json/catalog-refactor.json` or `/json/visualizer-refactor.json` when progress changes
+1. Update `/json/next-session-action-plan.json` and any affected domain JSON when progress changes
 2. Reference updated docs in relevant instruction file sections
 
 ## Key Principles
@@ -133,7 +136,7 @@ Agent working on lib/auth/session.ts
 
 ```
 Agent reads catalog-refactor.json
-→ identifies next priority from catalog-refactor.json/visualizer-refactor.json
+→ identifies next priority from next-session-action-plan.json/tracking-programs.json/domain JSON
 → loads relevant domain docs and instructions
 → checks known blockers in those JSON files
 → proceeds with implementation

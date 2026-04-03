@@ -7,8 +7,8 @@ import type { CatalogDetailPageFeatureProps, WrapDetailPageParams } from '@/type
 import { CatalogWrapAssetsClient } from './catalog-wrap-assets-client'
 
 export async function generateCatalogWrapMetadata(params: WrapDetailPageParams['params']) {
-    const { id } = await params
-    const wrap = await getCatalogWrapById(id, { includeHidden: true })
+    const { wrapId } = await params
+    const wrap = await getCatalogWrapById(wrapId, { includeHidden: true })
 
     if (!wrap) {
         return { title: 'Wrap Not Found' }

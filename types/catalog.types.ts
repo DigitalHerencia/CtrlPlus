@@ -220,8 +220,12 @@ export interface CatalogPageSearchParams {
     searchParams: Promise<SearchParamRecord>
 }
 
+export interface WrapRouteParams {
+    wrapId: string
+}
+
 export interface WrapDetailPageParams {
-    params: Promise<{ id: string }>
+    params: Promise<WrapRouteParams>
 }
 
 export interface CatalogBrowsePageFeatureProps {

@@ -1,6 +1,6 @@
 ---
 description: "Admin domain: moderation, analytics, platform operations for owner/admin users."
-applyTo: "lib/admin/**, features/admin/**, components/admin/**, app/(tenant)/admin/**"
+applyTo: "app/(tenant)/admin/**, features/admin/**, components/admin/**, lib/actions/admin.actions.ts, lib/fetchers/admin.fetchers.ts"
 ---
 
 # Admin Domain Quick Reference
@@ -21,9 +21,9 @@ applyTo: "lib/admin/**, features/admin/**, components/admin/**, app/(tenant)/adm
 
 ## Fetchers: `lib/fetchers/admin/`
 
-- `getTenantMetrics(tenantId, dateRange)` - KPIs
-- `getAuditLog(tenantId, filters)` - Action history
-- `getFlaggedItems(tenantId)` - Moderation queue
+- `getTenantMetrics(dateRange)` - KPIs for the current admin surface
+- `getAuditLog(filters)` - Action history
+- `getFlaggedItems()` - Moderation queue
 
 ## Actions: `lib/actions/admin/`
 
@@ -32,6 +32,6 @@ applyTo: "lib/admin/**, features/admin/**, components/admin/**, app/(tenant)/adm
 
 ## Key Rules
 
-- All access requires `assertTenantMembership(..., "admin")`
+- All access requires authenticated owner/admin capability checks
 - Audit log is append-only (no deletes)
 - Metrics computed from audit log (immutable)

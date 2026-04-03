@@ -23,6 +23,16 @@ export function SchedulingBookingCardsSkeleton() {
     )
 }
 
+export function SchedulingDashboardStatsSkeleton() {
+    return (
+        <div className="grid gap-4 md:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-28 rounded-lg" />
+            ))}
+        </div>
+    )
+}
+
 export function SchedulingBookingTableSkeleton() {
     return (
         <div className="space-y-2">

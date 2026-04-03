@@ -1,22 +1,22 @@
 ## Data model overview
 
 CtrlPlus uses Prisma as the canonical schema and PostgreSQL as the persistent data
-store. Domain entities are tenant-scoped where applicable and are consumed via
-server-side fetchers/actions.
+store. The current implementation is single-store and auth-scoped; domain entities
+are consumed via server-side fetchers/actions.
 
 ## Data model principles
 
 - Prisma schema is the source of truth for persisted entities.
-- Tenant boundaries must be enforced server-side for reads and writes.
+- Authorization boundaries must be enforced server-side for reads and writes.
 - DTOs exposed to UI should be explicit and minimal.
 - Mutations should be validated before touching persistence.
 
 ## Core domain entities
 
-### Identity and tenancy
+### Identity and authorization posture
 
 - User identity is managed through Clerk.
-- Tenant membership and role drive authorization rules.
+- Role, capability, and ownership checks drive authorization rules in the current single-store schema.
 
 ### Catalog
 
@@ -44,10 +44,10 @@ server-side fetchers/actions.
 
 ## Relationship and flow summary
 
-- A tenant owns wraps, bookings, invoices, and related operational records.
+- Authenticated users create and manage wraps, bookings, invoices, and related operational records through server-side capability checks.
 - A wrap can have multiple categorized media assets with explicit role meaning.
 - Visualizer previews reference a selected wrap and an uploaded customer vehicle image.
-- Scheduling and billing entities are linked to tenant-scoped business activity.
+- Scheduling and billing entities are linked to authenticated operational activity in the current single-store schema.
 
 ## Schema change safety checklist
 

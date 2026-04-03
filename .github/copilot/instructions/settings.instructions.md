@@ -1,6 +1,6 @@
 ---
-description: "Settings domain: user preferences, tenant configuration, data export."
-applyTo: "lib/settings/**, features/settings/**, components/settings/**"
+description: "Settings domain: user preferences, owner-controlled account settings, and data export."
+applyTo: "app/(tenant)/settings/**, features/settings/**, components/settings/**, lib/actions/settings.actions.ts, lib/fetchers/settings.fetchers.ts"
 ---
 
 # Settings Domain Quick Reference
@@ -27,12 +27,12 @@ All preferences stored in Prisma as JSONB in `UserPreferences` or `TenantSetting
 ## Actions: `lib/actions/settings/`
 
 - `updateUserPreferences(userId, prefs)` - User settings
-- `updateTenantSettings(tenantId, settings)` - Tenant settings (owner-only)
-- `exportData(tenantId, format)` - Data export (owner-only)
+- `updateAccountSettings(settings)` - Owner-controlled account settings
+- `exportData(format)` - Data export (owner-only)
 
 ## Pages
 
-- `/(tenant)/settings/profile` - User settings (public)
+- `/(tenant)/settings/profile` - User settings (authenticated)
 - `/(tenant)/settings/account` - Tenant settings (owner-only)
 - `/(tenant)/settings/data` - Export options (owner-only)
 

@@ -9,6 +9,49 @@
     ],
     "items": [
         {
+            "id": "repo-alignment.phase1.contracts-and-docs",
+            "program": "repo-alignment-hotfixes-20260403",
+            "title": "Align instructions, contracts, and tracking JSON to authenticated single-store behavior",
+            "status": "completed",
+            "dependsOn": []
+        },
+        {
+            "id": "repo-alignment.phase2.runtime-hotfixes",
+            "program": "repo-alignment-hotfixes-20260403",
+            "title": "Fix signup verification branch, wrapId route contract, preview cache headers, and Cloudinary allowlist",
+            "status": "completed",
+            "dependsOn": [
+                "repo-alignment.phase1.contracts-and-docs"
+            ]
+        },
+        {
+            "id": "repo-alignment.phase3.suspense-segmentation",
+            "program": "repo-alignment-hotfixes-20260403",
+            "title": "Split catalog, billing, scheduling, and visualizer shells into suspense-driven regions",
+            "status": "in-progress",
+            "dependsOn": [
+                "repo-alignment.phase2.runtime-hotfixes"
+            ]
+        },
+        {
+            "id": "repo-alignment.phase4.visualizer-background-processing",
+            "program": "repo-alignment-hotfixes-20260403",
+            "title": "Move preview processing to durable background execution beyond request-lifecycle scheduling",
+            "status": "not-started",
+            "dependsOn": [
+                "repo-alignment.phase3.suspense-segmentation"
+            ]
+        },
+        {
+            "id": "repo-alignment.phase5.validation",
+            "program": "repo-alignment-hotfixes-20260403",
+            "title": "Run repo quality gates and auth/catalog/visualizer validation",
+            "status": "not-started",
+            "dependsOn": [
+                "repo-alignment.phase3.suspense-segmentation"
+            ]
+        },
+        {
             "id": "billing.phase1.components",
             "program": "billing-full-surface-20260402",
             "title": "Create pay/refund/adjust + manage billing components",

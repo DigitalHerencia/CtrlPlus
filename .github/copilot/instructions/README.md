@@ -36,7 +36,7 @@ Applies to: Domain-specific patterns
 - `authentication.instructions.md` - Clerk integration + capability checks
 - `billing.instructions.md` - Stripe integration + payment workflows
 - `catalog.instructions.md` - Wrap storefront + asset management
-- `platform.instructions.md` - Core platform operations + tenancy
+- `platform.instructions.md` - Core platform operations + integrations
 - `scheduling.instructions.md` - Availability + bookings + temporal logic
 - `settings.instructions.md` - User preferences + tenant config
 - `visualizer.instructions.md` - Preview generation + vehicle handling + AI
@@ -62,7 +62,7 @@ Testing and security guidance is covered through:
 When adding a new domain or discovering a recurring pattern:
 
 1. **Create** `{domain}.instructions.md` with frontmatter
-2. **Set `applyTo`** to match all files in that domain (e.g., `lib/{domain}/**`, `app/(tenant)/{domain}/**`)
+2. **Set `applyTo`** to match the live repo boundaries for that domain (e.g., `lib/actions/{domain}.actions.ts`, `lib/fetchers/{domain}.fetchers.ts`, `app/(tenant)/{domain}/**`)
 3. **Document patterns** that appear across multiple files in that domain
 4. **Cross-reference** `server-first.instructions.md` for baseline architecture
 5. **Link to contracts** for machine-checkable rules
@@ -78,7 +78,7 @@ When adding a new domain or discovering a recurring pattern:
 
 When updating `catalog.instructions.md`:
 
-- Set `applyTo: "lib/catalog/**, features/catalog/**, app/(tenant)/catalog/**"`
+- Set `applyTo: "lib/fetchers/catalog*.ts, lib/actions/catalog.actions.ts, features/catalog/**, app/(tenant)/catalog/**"`
 - Include sections: Asset roles, DTO contracts, server actions, publish validation
 - Link to `/docs/ARCHITECTURE.md` and `/docs/DATA-MODEL.md` for long explanations
 - Link to `/contracts/naming.yaml` and `/contracts/mutations.yaml` for enforceable rules

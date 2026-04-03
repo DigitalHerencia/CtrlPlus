@@ -1,6 +1,6 @@
 ## Product vision
 
-CtrlPlus is a tenant-scoped operations platform for wrap shops that unifies catalog,
+CtrlPlus is an authenticated operations platform for wrap shops that unifies catalog,
 visualizer, scheduling, billing, settings, and admin workflows in one system.
 
 The product must deliver a server-first, secure, and operationally reliable experience
@@ -10,13 +10,13 @@ for store owners, staff members, and customers.
 
 - Provide a professional wrap storefront and management experience.
 - Enable deterministic visualizer previews based on catalog-approved assets.
-- Keep scheduling and billing flows accurate, auditable, and tenant-safe.
+- Keep scheduling and billing flows accurate, auditable, and authorization-safe.
 - Ensure production-readiness with explicit auth/authz, validation, and observability.
 
 ## Non-goals
 
 - Physically accurate manufacturing-grade wrap simulation.
-- Client-authoritative ownership, tenant, role, booking, or billing decisions.
+- Client-authoritative ownership, role, booking, or billing decisions.
 - Ad hoc domain coupling that bypasses server boundaries.
 
 ## Primary personas
@@ -24,7 +24,7 @@ for store owners, staff members, and customers.
 ### Owner / Admin
 
 - Manages wraps, categories, assets, and publishing readiness.
-- Oversees scheduling, billing, and tenant operations.
+- Oversees scheduling, billing, and shop operations.
 - Reviews metrics and performs platform-sensitive actions.
 
 ### Team member
@@ -55,16 +55,16 @@ for store owners, staff members, and customers.
 ### Scheduling
 
 - Availability and booking workflows.
-- Tenant-scoped booking visibility and mutation.
+- Authenticated booking visibility and mutation with server-side capability checks.
 
 ### Billing
 
 - Invoice lifecycle and payment workflows.
-- Tenant-safe access and status handling.
+- Authenticated access and status handling with server-side ownership and role checks.
 
 ### Settings, admin, and platform
 
-- Tenant configuration and user preferences.
+- Store configuration and user preferences.
 - Admin analytics and sensitive operations with strict authorization.
 - Platform integration boundaries (webhooks, recovery, diagnostics).
 
@@ -92,12 +92,12 @@ for store owners, staff members, and customers.
   authorized, and validated.
 - Acceptance criteria:
     - Server actions enforce auth, authz, and schema validation.
-    - Mutations are tenant-scoped and auditable.
+    - Mutations are server-authoritative, capability-gated, and auditable.
     - Cache invalidation occurs after successful writes.
 
 ## Success metrics
 
 - Reduced time-to-publish for new wraps.
 - High preview completion rate with low failure rate.
-- Low authorization error leakage and zero cross-tenant data exposure.
+- Low authorization error leakage and zero cross-user data exposure.
 - Improved operational throughput in scheduling and billing domains.
