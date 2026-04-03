@@ -91,6 +91,7 @@ export function revalidateSchedulingAvailability(): void {
 }
 
 export function revalidateSchedulingBooking(bookingId: string): void {
+    void bookingId
     for (const path of SCHEDULING_REVALIDATION_PATHS) {
         revalidatePath(path)
     }
@@ -121,27 +122,33 @@ export function revalidateCatalogAll(): void {
 }
 
 export function revalidateVisualizerPreview(previewId: string): void {
+    void previewId
     revalidatePath('/visualizer')
 }
 
 export function revalidateVisualizerPreviewsByWrap(wrapId: string): void {
+    void wrapId
     revalidatePath('/visualizer')
 }
 
 export function revalidateVisualizerPreviewsByUser(userId: string): void {
+    void userId
     revalidatePath('/visualizer')
 }
 
 export function revalidateAuthUser(clerkUserId: string): void {
+    void clerkUserId
     // Auth state changes don't require path revalidation (session-based)
     // Will use tag-based in Phase 3
 }
 
 export function revalidateSettingsUser(userId: string): void {
+    void userId
     revalidatePath('/settings')
 }
 
 export function revalidateSettingsTenant(tenantId: string): void {
+    void tenantId
     revalidatePath('/settings')
 }
 
@@ -150,6 +157,7 @@ export function revalidateAdminFlaggedItems(): void {
 }
 
 export function revalidateAdminFlag(flagId: string): void {
+    void flagId
     revalidatePath('/admin')
 }
 

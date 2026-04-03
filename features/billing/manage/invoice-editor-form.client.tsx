@@ -1,7 +1,7 @@
 'use client'
 
 import { useTransition } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 
@@ -35,6 +35,7 @@ export function InvoiceEditorFormClient({
             bookingId: initialBookingId,
         },
     })
+    const bookingId = useWatch({ control: form.control, name: 'bookingId' })
 
     function onSubmit(values: CreateInvoiceInput) {
         form.clearErrors()
@@ -68,7 +69,7 @@ export function InvoiceEditorFormClient({
                     <p className="text-sm text-red-300">{form.formState.errors.root.message}</p>
                 ) : null}
                 <InvoiceFormFields
-                    bookingId={form.watch('bookingId')}
+                    bookingId={bookingId}
                     onBookingIdChange={(value) =>
                         form.setValue('bookingId', value, {
                             shouldValidate: true,

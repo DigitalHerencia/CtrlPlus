@@ -1,7 +1,7 @@
 'use client'
 
 import { useTransition } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 import { InvoiceAdjustmentFields } from '@/components/billing/invoice-form/invoice-adjustment-fields'
@@ -28,6 +28,8 @@ export function InvoiceAdjustFormClient({ invoiceId }: InvoiceAdjustFormClientPr
             notes: '',
         },
     })
+    const amount = useWatch({ control: form.control, name: 'amount' })
+    const notes = useWatch({ control: form.control, name: 'notes' })
 
     function onSubmit(values: ApplyCreditInput) {
         form.clearErrors()
@@ -51,8 +53,8 @@ export function InvoiceAdjustFormClient({ invoiceId }: InvoiceAdjustFormClientPr
                     <p className="text-sm text-red-300">{form.formState.errors.root.message}</p>
                 ) : null}
                 <InvoiceAdjustmentFields
-                    amount={form.watch('amount')}
-                    notes={form.watch('notes') ?? ''}
+                    amount={amount}
+                    notes={notes ?? ''}
                     onAmountChange={(value) =>
                         form.setValue('amount', value, { shouldValidate: true })
                     }
