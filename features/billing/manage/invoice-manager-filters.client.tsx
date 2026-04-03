@@ -1,22 +1,7 @@
 'use client'
 
-import { Input } from '@/components/ui/input'
+import { InvoiceSearchFilterClient } from '../invoice-search-filter.client'
 
-interface InvoiceManagerFiltersClientProps {
-    query: string
-    onQueryChange: (value: string) => void
-}
-
-export function InvoiceManagerFiltersClient({
-    query,
-    onQueryChange,
-}: InvoiceManagerFiltersClientProps) {
-    return (
-        <Input
-            value={query}
-            onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Filter by invoice id"
-            className="max-w-sm"
-        />
-    )
+export function InvoiceManagerFiltersClient() {
+    return <InvoiceSearchFilterClient />
 }

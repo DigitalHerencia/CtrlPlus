@@ -1,6 +1,0 @@
-
-> ctrl-plus@0.1.4 typecheck D:\CtrlPlus
-> tsc --noEmit
-
-features/visualizer/visualizer-preview-poller-client.tsx(7,15): error TS2305: Module '"@/types/visualizer.types"' has no exported member 'SerializedVisualizerPreview'.
-ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.

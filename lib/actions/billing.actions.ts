@@ -54,7 +54,17 @@ export async function createCheckoutSession(
     const { invoiceId } = createCheckoutSessionSchema.parse(rawInput)
 
     const invoice = await prisma.invoice.findFirst({
-        where: { id: invoiceId, deletedAt: null },
+        where: {
+            id: invoiceId,
+            deletedAt: null,
+            ...(!access.canWriteAllInvoices
+                ? {
+                      booking: {
+                          customerId: access.session.userId,
+                      },
+                  }
+                : {}),
+        },
         select: {
             id: true,
             totalAmount: true,
@@ -189,6 +199,7 @@ export async function ensureInvoiceForBooking(
         where: {
             id: bookingId,
             deletedAt: null,
+            ...(!session.isOwner && !session.isPlatformAdmin ? { customerId: userId } : {}),
         },
         select: {
             id: true,
@@ -475,7 +486,7 @@ export type ProcessStripeWebhookEventResult =
 
 interface ProcessStripeWebhookEventInput {
     event: Stripe.Event
-    payload: Prisma.InputJsonValue
+    payload: unknown
 }
 
 function isPrismaUniqueConstraintError(err: unknown): boolean {
@@ -498,7 +509,7 @@ function toPaymentStatus(status: string): ConfirmPaymentResult['status'] {
 async function claimStripeWebhookEvent(
     eventId: string,
     eventType: string,
-    payload: Prisma.InputJsonValue
+    payload: unknown
 ): Promise<WebhookEventState> {
     const now = new Date()
 
@@ -508,7 +519,7 @@ async function claimStripeWebhookEvent(
                 id: eventId,
                 type: eventType,
                 status: 'processing',
-                payload,
+                payload: payload as Prisma.InputJsonValue,
                 lastAttemptedAt: now,
             },
         })
@@ -542,7 +553,7 @@ async function claimStripeWebhookEvent(
                 status: 'processing',
                 processedAt: now,
                 lastAttemptedAt: now,
-                payload,
+                payload: payload as Prisma.InputJsonValue,
                 retryCount: {
                     increment: 1,
                 },

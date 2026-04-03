@@ -372,7 +372,21 @@ export async function getBookingById(bookingId: string): Promise<BookingDTO | nu
 }
 
 export async function getBookingTimeline(bookingId: string): Promise<BookingTimelineEventDTO[]> {
-    await requireSchedulingReadSession()
+    const session = await requireSchedulingReadSession()
+    const customerId = canViewAllSchedulingBookings(session) ? undefined : session.userId
+
+    const bookingExists = await prisma.booking.findFirst({
+        where: {
+            id: bookingId,
+            deletedAt: null,
+            ...(customerId ? { customerId } : {}),
+        },
+        select: { id: true },
+    })
+
+    if (!bookingExists) {
+        return []
+    }
 
     const events = await prisma.auditLog.findMany({
         where: {

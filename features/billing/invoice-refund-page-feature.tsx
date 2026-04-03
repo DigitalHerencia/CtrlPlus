@@ -1,4 +1,3 @@
-import { refundInvoice } from '@/lib/actions/billing.actions'
 import { getInvoice } from '@/lib/fetchers/billing.fetchers'
 import { notFound } from 'next/navigation'
 
@@ -14,7 +13,7 @@ export async function InvoiceRefundPageFeature({ invoiceId }: InvoiceRefundPageF
     return (
         <div className="space-y-4">
             <h1 className="text-2xl font-semibold text-neutral-100">Refund {invoice.id}</h1>
-            <InvoiceRefundFormClient invoiceId={invoice.id} onRefund={refundInvoice} />
+            <InvoiceRefundFormClient invoiceId={invoice.id} />
         </div>
     )
 }

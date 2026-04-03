@@ -12,8 +12,8 @@ import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { sanitizePostAuthRedirect } from '@/lib/auth/redirect'
-import { signupSchema, verificationSchema } from '@/schemas/auth'
-import { type SignupFormProps, type SignupFormValues } from '@/types/auth'
+import { signupSchema, verificationSchema } from '@/schemas/auth.schemas'
+import { type SignupFormProps, type SignupFormValues } from '@/types/auth.types'
 import { cn } from '@/lib/utils/cn'
 
 function getErrorMessage(error: unknown, fallback: string): string {

@@ -1,44 +1,7 @@
 'use client'
 
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-
-import { Button } from '@/components/ui/button'
-
-const FILTERS = ['all', 'pending', 'confirmed', 'completed', 'cancelled'] as const
+import { BookingStatusFiltersClient } from '../booking-status-filters.client'
 
 export function BookingsManagerFiltersClient() {
-    const router = useRouter()
-    const pathname = usePathname()
-    const searchParams = useSearchParams()
-    const currentStatus = searchParams.get('status') ?? 'all'
-
-    function setStatus(status: (typeof FILTERS)[number]) {
-        const next = new URLSearchParams(searchParams.toString())
-
-        if (status === 'all') {
-            next.delete('status')
-        } else {
-            next.set('status', status)
-        }
-
-        next.delete('page')
-        const query = next.toString()
-        router.push(query ? `${pathname}?${query}` : pathname)
-    }
-
-    return (
-        <div className="flex flex-wrap items-center gap-2">
-            {FILTERS.map((status) => (
-                <Button
-                    key={status}
-                    type="button"
-                    size="sm"
-                    variant={status === currentStatus ? 'default' : 'outline'}
-                    onClick={() => setStatus(status)}
-                >
-                    {status[0]!.toUpperCase() + status.slice(1)}
-                </Button>
-            ))}
-        </div>
-    )
+    return <BookingStatusFiltersClient />
 }

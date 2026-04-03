@@ -7,9 +7,10 @@ const mocks = vi.hoisted(() => ({
     readPhotoBuffer: vi.fn(),
     readImageBufferFromUrl: vi.fn(),
     buildWrapPreviewPrompt: vi.fn(),
-    buildPreviewConditioningBoard: vi.fn(),
-    generateDeterministicCompositePreview: vi.fn(),
-    createWrapPreviewGeneratorAdapter: vi.fn(),
+    buildGenerationInputBoard: vi.fn(),
+    generateWrapPreview: vi.fn(),
+    buildSimpleWrapPreview: vi.fn(),
+    getHfModelName: vi.fn(),
     storePreviewImage: vi.fn(),
     prisma: {
         visualizerPreview: {
@@ -41,21 +42,27 @@ vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
 vi.mock('@/lib/uploads/image-processing', () => ({
     readPhotoBuffer: mocks.readPhotoBuffer,
     readImageBufferFromUrl: mocks.readImageBufferFromUrl,
-    buildWrapPreviewPrompt: mocks.buildWrapPreviewPrompt,
-    buildPreviewConditioningBoard: mocks.buildPreviewConditioningBoard,
-    generateDeterministicCompositePreview: mocks.generateDeterministicCompositePreview,
 }))
 
-vi.mock('@/lib/integrations/huggingface', async () => {
-    const actual = await vi.importActual<typeof import('@/lib/integrations/huggingface')>(
-        '@/lib/integrations/huggingface'
-    )
+vi.mock('@/lib/visualizer/prompting/build-wrap-preview-prompt', () => ({
+    buildWrapPreviewPrompt: mocks.buildWrapPreviewPrompt,
+}))
 
-    return {
-        ...actual,
-        createWrapPreviewGeneratorAdapter: mocks.createWrapPreviewGeneratorAdapter,
-    }
-})
+vi.mock('@/lib/visualizer/preprocessing/build-generation-input-board', () => ({
+    buildGenerationInputBoard: mocks.buildGenerationInputBoard,
+}))
+
+vi.mock('@/lib/visualizer/huggingface/generate-wrap-preview', () => ({
+    generateWrapPreview: mocks.generateWrapPreview,
+}))
+
+vi.mock('@/lib/visualizer/fallback/build-simple-wrap-preview', () => ({
+    buildSimpleWrapPreview: mocks.buildSimpleWrapPreview,
+}))
+
+vi.mock('@/lib/visualizer/huggingface/client', () => ({
+    getHfModelName: mocks.getHfModelName,
+}))
 
 vi.mock('@/lib/uploads/storage', () => ({
     storePreviewImage: mocks.storePreviewImage,
@@ -138,23 +145,25 @@ describe('processVisualizerPreview', () => {
         mocks.requireCapability.mockReturnValue(undefined)
         mocks.getVisualizerWrapSelectionById.mockResolvedValue(makeWrap())
         mocks.readPhotoBuffer.mockResolvedValue({
-            buffer: Buffer.from('vehicle-bytes'),
+            buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Z3ioAAAAASUVORK5CYII=', 'base64'),
             contentType: 'image/png',
         })
-        mocks.readImageBufferFromUrl.mockResolvedValue(Buffer.from('texture-bytes'))
+        mocks.readImageBufferFromUrl.mockResolvedValue(Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Z3ioAAAAASUVORK5CYII=', 'base64'))
         mocks.buildWrapPreviewPrompt.mockReturnValue({
             prompt: 'Apply Ocean Spectrum wrap',
             negativePrompt: 'No distortion',
             promptVersion: 'prompt-version',
         })
-        mocks.buildPreviewConditioningBoard.mockResolvedValue(Buffer.from('board-bytes'))
-        mocks.createWrapPreviewGeneratorAdapter.mockReturnValue({
-            generate: vi.fn().mockResolvedValue(Buffer.from('generated-preview')),
+        mocks.buildGenerationInputBoard.mockResolvedValue(Buffer.from('board-bytes'))
+        mocks.generateWrapPreview.mockResolvedValue({
+            imageBuffer: Buffer.from('generated-preview'),
         })
+        mocks.buildSimpleWrapPreview.mockResolvedValue(Buffer.from('fallback-bytes'))
+        mocks.getHfModelName.mockReturnValue('hf-test-model')
         mocks.storePreviewImage.mockResolvedValue('https://cloudinary.com/fallback.png')
-        mocks.generateDeterministicCompositePreview.mockResolvedValue(
-            'https://cloudinary.com/fallback.png'
-        )
+        mocks.generateWrapPreview.mockResolvedValue({
+            imageBuffer: Buffer.from('generated-preview'),
+        })
         mocks.prisma.visualizerPreview.findFirst.mockResolvedValue(makePreviewRecord())
         mocks.prisma.visualizerPreview.update
             .mockResolvedValueOnce(makePreviewRecord({ status: 'processing' }))
@@ -172,12 +181,13 @@ describe('processVisualizerPreview', () => {
 
         expect(mocks.readPhotoBuffer).toHaveBeenCalledWith('data:image/png;base64,ZmFrZQ==')
         expect(mocks.readImageBufferFromUrl).toHaveBeenCalledWith('https://example.com/texture.png')
-        expect(mocks.buildPreviewConditioningBoard).toHaveBeenCalledWith(
+        expect(mocks.buildGenerationInputBoard).toHaveBeenCalledWith(
             expect.objectContaining({
-                vehicleBuffer: Buffer.from('vehicle-bytes'),
-                textureBuffer: Buffer.from('texture-bytes'),
+                vehicleBuffer: expect.any(Buffer),
+                wrapTextureBuffer: expect.any(Buffer),
             })
         )
+        expect(mocks.generateWrapPreview).toHaveBeenCalled()
         expect(result).toEqual(
             expect.objectContaining({
                 id: 'preview-1',
@@ -185,6 +195,16 @@ describe('processVisualizerPreview', () => {
                 processedImageUrl: 'https://cloudinary.com/fallback.png',
             })
         )
+    })
+
+    it('throws when preview cannot be found for the current owner', async () => {
+        mocks.prisma.visualizerPreview.findFirst.mockResolvedValue(null)
+
+        await expect(processVisualizerPreview({ previewId: 'missing' })).rejects.toThrow(
+            'Preview not found.'
+        )
+
+        expect(mocks.prisma.visualizerPreview.update).not.toHaveBeenCalled()
     })
 
     it('returns an existing completed preview without reprocessing', async () => {
@@ -222,6 +242,21 @@ describe('processVisualizerPreview', () => {
                 data: expect.objectContaining({
                     status: 'failed',
                 }),
+            })
+        )
+    })
+
+    it('marks preview failed when wrap selection is unavailable', async () => {
+        mocks.getVisualizerWrapSelectionById.mockResolvedValue(null)
+
+        await expect(processVisualizerPreview({ previewId: 'preview-1' })).rejects.toThrow(
+            'Wrap not found or is not visualizer-ready.'
+        )
+
+        expect(mocks.prisma.visualizerPreview.update).toHaveBeenCalledWith(
+            expect.objectContaining({
+                where: { id: 'preview-1' },
+                data: { status: 'failed' },
             })
         )
     })

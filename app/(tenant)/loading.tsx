@@ -1,30 +1,29 @@
+import { Skeleton } from '@/components/ui/skeleton'
+
 export default function TenantLoading() {
-  return (
-    <div className="min-h-screen flex bg-neutral-900 text-neutral-100">
-      {/* Sidebar skeleton */}
-      <aside className="hidden md:block w-48 p-4">
-        <div className="h-8 w-full rounded bg-neutral-800 animate-pulse mb-4" />
-        <div className="space-y-3">
-          <div className="h-10 rounded bg-neutral-800 animate-pulse" />
-          <div className="h-10 rounded bg-neutral-800 animate-pulse" />
-          <div className="h-10 rounded bg-neutral-800 animate-pulse" />
-          <div className="h-10 rounded bg-neutral-800 animate-pulse" />
-        </div>
-      </aside>
+    return (
+        <div className="flex min-h-screen bg-neutral-900 text-neutral-100">
+            {/* Sidebar skeleton */}
+            <aside className="hidden w-48 border-r border-neutral-800 p-4 md:block">
+                <Skeleton className="mb-4 h-8 w-full rounded" />
+                <div className="space-y-3">
+                    <Skeleton className="h-10 rounded" />
+                    <Skeleton className="h-10 rounded" />
+                    <Skeleton className="h-10 rounded" />
+                    <Skeleton className="h-10 rounded" />
+                </div>
+            </aside>
 
-      {/* Main content skeleton */}
-      <main className="flex-1 p-6">
-        <div className="h-8 w-1/3 rounded bg-neutral-800 animate-pulse mb-6" />
+            {/* Main content skeleton */}
+            <main className="flex-1 p-6">
+                <Skeleton className="mb-6 h-8 w-1/3 rounded" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="h-48 rounded bg-neutral-800 animate-pulse" />
-          <div className="h-48 rounded bg-neutral-800 animate-pulse" />
-          <div className="h-48 rounded bg-neutral-800 animate-pulse" />
-          <div className="h-48 rounded bg-neutral-800 animate-pulse" />
-          <div className="h-48 rounded bg-neutral-800 animate-pulse" />
-          <div className="h-48 rounded bg-neutral-800 animate-pulse" />
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                        <Skeleton key={i} className="h-48 rounded" />
+                    ))}
+                </div>
+            </main>
         </div>
-      </main>
-    </div>
-  )
+    )
 }

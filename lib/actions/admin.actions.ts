@@ -19,6 +19,12 @@ import type {
 } from '@/types/admin.types'
 import { revalidateAdminPaths } from '@/lib/cache/revalidate-tags'
 
+const ADMIN_TENANT_ID = 'single-store'
+
+function resolveAdminTenantId(): string {
+    return ADMIN_TENANT_ID
+}
+
 function createFlagId(): string {
     return `flag_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`
 }
@@ -38,6 +44,7 @@ export async function flagContent(rawInput: unknown): Promise<{ flagId: string }
     const userId = await requireAdminActor()
 
     const input = flagContentSchema.parse(rawInput as FlagContentInput)
+    const tenantId = resolveAdminTenantId()
     const flagId = createFlagId()
 
     await prisma.auditLog.create({
@@ -47,7 +54,7 @@ export async function flagContent(rawInput: unknown): Promise<{ flagId: string }
             resourceType: input.resourceType,
             resourceId: input.resourceId,
             details: JSON.stringify({
-                tenantId: input.tenantId,
+                tenantId,
                 flagId,
                 reason: input.reason,
                 summary: `Flagged ${input.resourceType} for review`,
@@ -65,13 +72,21 @@ export async function resolveFlag(rawInput: unknown): Promise<{ resolved: boolea
     const userId = await requireAdminActor()
 
     const input = resolveFlagSchema.parse(rawInput as ResolveFlagInput)
+    const tenantId = resolveAdminTenantId()
 
     const flagLog = await prisma.auditLog.findFirst({
         where: {
             action: 'admin.flagContent',
             details: {
-                contains: input.flagId,
+                contains: `\"flagId\":\"${input.flagId}\"`,
             },
+            AND: [
+                {
+                    details: {
+                        contains: `\"tenantId\":\"${tenantId}\"`,
+                    },
+                },
+            ],
         },
         orderBy: { timestamp: 'desc' },
     })
@@ -87,7 +102,7 @@ export async function resolveFlag(rawInput: unknown): Promise<{ resolved: boolea
             resourceType: flagLog.resourceType,
             resourceId: flagLog.resourceId,
             details: JSON.stringify({
-                tenantId: input.tenantId,
+                tenantId,
                 flagId: input.flagId,
                 resolution: input.action,
                 summary: `Resolved flag ${input.flagId} as ${input.action}`,
@@ -105,6 +120,7 @@ export async function createInvoice(input: CreateInvoiceInput) {
     const userId = await requireAdminActor()
 
     const parsed = createInvoiceSchema.parse(input)
+    const tenantId = resolveAdminTenantId()
 
     const result = await createAdminInvoice(prisma, {
         bookingId: parsed.bookingId,
@@ -117,10 +133,12 @@ export async function createInvoice(input: CreateInvoiceInput) {
             action: 'admin.createInvoice',
             resourceType: 'Invoice',
             resourceId: result.invoiceId,
-            details: JSON.stringify({ tenantId: parsed.tenantId, invoiceResult: result }),
+            details: JSON.stringify({ tenantId, invoiceResult: result }),
             timestamp: new Date(),
         },
     })
+
+    revalidateAdminPaths()
 
     return result
 }
@@ -129,6 +147,7 @@ export async function confirmAppointment(input: ConfirmAppointmentInput) {
     const userId = await requireAdminActor()
 
     const parsed = confirmAppointmentSchema.parse(input)
+    const tenantId = resolveAdminTenantId()
 
     const result = await confirmAdminAppointment(prisma, {
         bookingId: parsed.bookingId,
@@ -141,10 +160,12 @@ export async function confirmAppointment(input: ConfirmAppointmentInput) {
             action: 'admin.confirmAppointment',
             resourceType: 'Booking',
             resourceId: parsed.bookingId,
-            details: JSON.stringify({ tenantId: parsed.tenantId, status: parsed.status }),
+            details: JSON.stringify({ tenantId, status: parsed.status }),
             timestamp: new Date(),
         },
     })
+
+    revalidateAdminPaths()
 
     return result
 }

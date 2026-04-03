@@ -8,7 +8,7 @@ import { useForm, useWatch } from 'react-hook-form'
 
 import { BookingForm } from '@/components/scheduling/booking-form'
 import { createBooking } from '@/lib/actions/scheduling.actions'
-import { bookingFormSchema } from '@/schemas/scheduling'
+import { bookingFormSchema } from '@/schemas/scheduling.schemas'
 import {
     type BookingFormValues,
     type SchedulingBookingFormClientProps,

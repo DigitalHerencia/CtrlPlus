@@ -1,6 +1,7 @@
 'use client'
 
 import { useTransition } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 
@@ -23,6 +24,7 @@ export interface WrapMetadataEditorProps {
 
 export function WrapMetadataEditor({ wrap }: WrapMetadataEditorProps) {
     const [isPending, startTransition] = useTransition()
+    const [serverMessage, setServerMessage] = useState<string | null>(null)
     const {
         register,
         handleSubmit,
@@ -37,14 +39,14 @@ export function WrapMetadataEditor({ wrap }: WrapMetadataEditorProps) {
         },
     })
 
-    const onSubmit = async (data: unknown) => {
-        const validated = updateWrapSchema.parse(data)
+    const onSubmit = async (data: UpdateWrapInput) => {
+        setServerMessage(null)
         startTransition(async () => {
             try {
-                await updateWrap(wrap.id, validated)
-                console.log('Wrap updated successfully')
+                await updateWrap(wrap.id, data)
+                setServerMessage('Wrap updated successfully.')
             } catch (error) {
-                console.error('Failed to update wrap', error)
+                setServerMessage(error instanceof Error ? error.message : 'Failed to update wrap.')
             }
         })
     }
@@ -94,6 +96,9 @@ export function WrapMetadataEditor({ wrap }: WrapMetadataEditorProps) {
                 </WrapFormFields>
 
                 <WrapFormActions>
+                    {serverMessage ? (
+                        <p className="text-sm text-neutral-300">{serverMessage}</p>
+                    ) : null}
                     <Button type="submit" disabled={isPending}>
                         {isPending ? 'Saving...' : 'Save Changes'}
                     </Button>

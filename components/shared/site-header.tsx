@@ -20,6 +20,13 @@ export function SiteHeader() {
                 <div className="flex items-center gap-3">
                     <Button
                         asChild
+                        variant="outline"
+                        className="hidden border-neutral-700 bg-transparent text-neutral-100 hover:border-blue-600 hover:bg-transparent hover:text-blue-600 sm:inline-flex"
+                    >
+                        <Link href="/docs">Docs</Link>
+                    </Button>
+                    <Button
+                        asChild
                         className="bg-blue-600 text-neutral-100 transition-all hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600"
                     >
                         <Link href="/sign-in">Sign In</Link>

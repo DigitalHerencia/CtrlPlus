@@ -1,5 +1,3 @@
-import type { Prisma } from '@prisma/client'
-
 import { processStripeWebhookEvent } from '@/lib/actions/billing.actions'
 import { constructWebhookEvent } from '@/lib/integrations/stripe'
 import { type NextRequest, NextResponse } from 'next/server'
@@ -14,9 +12,10 @@ export async function POST(request: NextRequest) {
 
     try {
         const event = constructWebhookEvent(payload, signature)
+        const parsedPayload: unknown = JSON.parse(payload)
         const result = await processStripeWebhookEvent({
             event,
-            payload: JSON.parse(payload) as Prisma.InputJsonValue,
+            payload: parsedPayload,
         })
 
         if (result.kind === 'ignored') {

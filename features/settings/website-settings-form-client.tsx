@@ -7,8 +7,8 @@ import { ZodError } from 'zod'
 import { WebsiteSettingsForm } from '@/components/settings/website-settings-form'
 import { applyZodErrors, zodResolver } from '@/components/ui/forms'
 import { updateUserWebsiteSettings } from '@/lib/actions/settings.actions'
-import { websiteSettingsSchema } from '@/schemas/settings'
-import { type WebsiteSettingsDTO, type WebsiteSettingsInput } from '@/types/settings'
+import { websiteSettingsSchema } from '@/schemas/settings.schemas'
+import { type WebsiteSettingsDTO, type WebsiteSettingsInput } from '@/types/settings.types'
 
 interface WebsiteSettingsFormClientProps {
     initialSettings: WebsiteSettingsDTO

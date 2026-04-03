@@ -1,0 +1,153 @@
+{
+    "version": "1.0.0",
+    "sourceDirectory": ".copilot-tracking",
+    "generatedAt": "2026-04-03",
+    "dedupeStrategy": {
+        "normalizedWorkflow": "research -> details -> plan -> implementation prompt",
+        "dedupedCommonSections": [
+            "change-tracking file creation",
+            "phase/task stop flags",
+            "server-first layer constraints",
+            "cleanup expectation"
+        ],
+        "replacedFilesCount": 16
+    },
+    "programs": [
+        {
+            "id": "billing-full-surface-20260402",
+            "domain": "billing",
+            "objective": "Build complete billing route/feature/component surface with reuse-first fetcher/action integration.",
+            "scope": {
+                "routesRoot": "app/(tenant)/billing/**",
+                "featuresRoot": "features/billing/**",
+                "componentsRoot": "components/billing/**"
+            },
+            "deliverables": {
+                "routes": [
+                    "invoice detail segment error/not-found files",
+                    "pay/refund/adjust segments with loading/error/not-found",
+                    "manage subtree list/new/detail/edit with route-state files"
+                ],
+                "features": [
+                    "pay/refund/adjust page features",
+                    "manage list/new/detail/edit features"
+                ],
+                "components": [
+                    "pay/refund/adjust UI blocks",
+                    "manage list/form/detail blocks",
+                    "action/manage skeletons"
+                ]
+            },
+            "reuseFirstApis": {
+                "fetchers": [
+                    "getInvoices",
+                    "getInvoiceById",
+                    "getBalance",
+                    "getPaymentStatusForInvoice"
+                ],
+                "actions": [
+                    "createCheckoutSession",
+                    "processPayment",
+                    "refundInvoice",
+                    "applyCredit",
+                    "voidInvoice",
+                    "createInvoice",
+                    "ensureInvoiceForBooking"
+                ]
+            },
+            "status": "planned"
+        },
+        {
+            "id": "scheduling-structure-20260402",
+            "domain": "scheduling",
+            "objective": "Create full scheduling route/feature/component structure with thin routes and presentational components.",
+            "scope": {
+                "routesRoot": "app/(tenant)/scheduling/**",
+                "featuresRoot": "features/scheduling/**",
+                "componentsRoot": "components/scheduling/**"
+            },
+            "deliverables": {
+                "routes": [
+                    "customer new/detail/edit and not-found",
+                    "manage route subtree and segment states"
+                ],
+                "features": [
+                    "customer dashboard/new/detail/edit features and client modules",
+                    "manage table/filter/toolbar/bulk-action and lifecycle controls"
+                ],
+                "components": [
+                    "dashboard, detail, booking-form subcomponents",
+                    "manage-specific presentational blocks"
+                ]
+            },
+            "reuseFirstApis": {
+                "fetchers": [
+                    "getBookings",
+                    "getBookingById",
+                    "getUpcomingBookingCount",
+                    "getAvailabilityRules",
+                    "getAvailability"
+                ],
+                "actions": [
+                    "reserveSlot",
+                    "createBooking",
+                    "updateBooking",
+                    "confirmBooking",
+                    "cancelBooking",
+                    "cleanupExpiredReservations"
+                ]
+            },
+            "status": "planned"
+        },
+        {
+            "id": "scheduling-server-authoritative-booking-20260402",
+            "domain": "scheduling",
+            "objective": "Refactor availability/reservation lifecycle to server-authoritative slot discovery and confirmation-time billing handoff.",
+            "scope": {
+                "schema": "prisma/schema.prisma",
+                "reads": "lib/fetchers/scheduling/**",
+                "writes": "lib/actions/scheduling/**",
+                "transactions": "lib/db/transactions/scheduling.transactions.ts"
+            },
+            "criticalChanges": [
+                "decide and enforce tenant scoping model",
+                "create shared availability engine used by reads and writes",
+                "use transactional capacity checks consistently",
+                "move invoice handoff to confirmation"
+            ],
+            "riskFlags": [
+                "scheduling tables currently not tenant-scoped",
+                "existing billing handoff occurs too early in createBooking"
+            ],
+            "status": "planned"
+        },
+        {
+            "id": "settings-domain-expansion-20260402",
+            "domain": "settings",
+            "objective": "Expand settings to segmented profile/account/data routes with owner-only account/export operations.",
+            "scope": {
+                "routesRoot": "app/(tenant)/settings/**",
+                "featuresRoot": "features/settings/**",
+                "componentsRoot": "components/settings/**",
+                "reads": "lib/fetchers/settings/**",
+                "writes": "lib/actions/settings/**"
+            },
+            "deliverables": {
+                "routes": [
+                    "/settings/profile",
+                    "/settings/account",
+                    "/settings/data"
+                ],
+                "contracts": [
+                    "expanded Zod schemas for profile/account/export",
+                    "expanded DTOs for user/tenant/export flows"
+                ],
+                "authz": [
+                    "owner-only tenant settings updates",
+                    "owner-only data export requests"
+                ]
+            },
+            "status": "planned"
+        }
+    ]
+}

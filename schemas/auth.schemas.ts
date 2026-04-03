@@ -22,3 +22,14 @@ export const verificationCodeSchema = z
 export const verificationSchema = z.object({
     verificationCode: verificationCodeSchema,
 })
+
+export const upsertUserFromClerkSchema = z
+    .object({
+        clerkUserId: z.string().trim().min(1),
+        email: z.string().trim().email(),
+        firstName: z.string().trim().min(1).nullable().optional(),
+        lastName: z.string().trim().min(1).nullable().optional(),
+        imageUrl: z.url().trim().nullable().optional(),
+        globalRole: z.enum(['owner', 'admin', 'employee', 'customer']).nullable().optional(),
+    })
+    .strict()

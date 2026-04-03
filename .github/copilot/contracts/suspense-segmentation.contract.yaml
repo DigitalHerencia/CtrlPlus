@@ -1,0 +1,81 @@
+version: 1
+contract: suspense-segmentation
+status: active
+source_prompts:
+    - .github/copilot/prompts/suspense-segmentation-strategy.md
+    - .github/copilot/prompts/loading-state-visual-reference.md
+
+objective: Eliminate page-level data blocking and enforce progressive streaming with region-level Suspense boundaries.
+
+scope:
+    paths:
+        - features/**/**-page-feature.tsx
+        - app/**/loading.tsx
+        - components/**/**-skeletons.tsx
+
+anti_patterns:
+    - id: feature-level-blocking-promise-all
+      pattern: top-level Promise.all in page feature shell for independent regions
+      prohibition: true
+
+required_patterns:
+    - id: region-suspense-boundaries
+      rule: Each independent UI region (grid, filters, sidebar, table, chart) must have its own Suspense boundary.
+    - id: specialized-fallbacks
+      rule: Suspense fallback must use a region-specific skeleton component matching final layout structure.
+    - id: thin-feature-shell
+      rule: Feature shell should render structure immediately and delegate data fetching to segmented async server components.
+    - id: route-loading-parity
+      rule: Route loading.tsx must represent full-page shape and align with real layout geometry.
+
+priority_refactor_targets:
+    critical:
+        - features/scheduling/scheduling-page-feature.tsx
+        - features/catalog/catalog-browse-page-feature.tsx
+        - features/admin/admin-page-feature.tsx
+        - features/billing/invoices-dashboard-page-feature.tsx
+    high:
+        - features/admin/admin-analytics-page-feature.tsx
+        - features/visualizer/visualizer-workspace-page-feature.tsx
+        - features/scheduling/manage/bookings-manager-page-feature.tsx
+    medium:
+        - features/catalog/catalog-manager-page-feature.tsx
+        - features/platform/platform-health-overview-feature.tsx
+
+validation:
+    required_checks:
+        - pnpm lint
+        - pnpm typecheck
+        - pnpm build
+    runtime_checks:
+        - No blank screen during route navigation.
+        - At least one meaningful section renders before slowest query resolves.
+    architecture_checks:
+        - Feature shells avoid unrelated blocking awaits.
+        - Each major region has explicit fallback.
+
+expected_outcomes:
+    perceived_performance:
+        improvement: 5-10x
+        time_to_first_paint_ms:
+            before: 500
+            after: 50
+        time_to_first_content_ms:
+            before: 500
+            after: 150
+
+implementation_phases:
+    - phase: 1
+      name: loading-state completion
+      focus:
+          - normalize loading.tsx skeleton usage
+          - remove lint/style violations in loading files
+    - phase: 2
+      name: suspense segmentation
+      focus:
+          - extract segmented async server components
+          - add boundary-specific skeleton fallbacks
+    - phase: 3
+      name: skeleton regionalization
+      focus:
+          - ensure all fallbacks use specialized domain skeleton components

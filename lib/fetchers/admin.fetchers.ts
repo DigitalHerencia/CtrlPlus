@@ -17,6 +17,11 @@ import type {
 
 const DEFAULT_TENANT_ID = 'single-store'
 
+function resolveAdminTenantId(_tenantId?: string | null): string {
+    void _tenantId
+    return DEFAULT_TENANT_ID
+}
+
 function parseDateRange(input: { startDate?: string | null; endDate?: string | null }): {
     startDate: Date | null
     endDate: Date | null
@@ -80,8 +85,10 @@ export interface OwnerDashboardStatsDTO {
 export async function getTenantMetrics(input: TenantMetricsFilterInput): Promise<TenantMetricsDTO> {
     await requireOwnerOrPlatformAdmin()
 
+    const resolvedTenantId = resolveAdminTenantId(input.tenantId)
+
     const parsed = tenantMetricsFilterSchema.parse({
-        tenantId: input.tenantId || DEFAULT_TENANT_ID,
+        tenantId: resolvedTenantId,
         startDate: input.startDate ?? null,
         endDate: input.endDate ?? null,
     })
@@ -128,8 +135,10 @@ export async function getTenantMetrics(input: TenantMetricsFilterInput): Promise
 export async function getAuditLog(input: AuditLogFilterInput): Promise<AuditLogRowDTO[]> {
     await requireOwnerOrPlatformAdmin()
 
+    const resolvedTenantId = resolveAdminTenantId(input.tenantId)
+
     const parsed = auditLogFilterSchema.parse({
-        tenantId: input.tenantId || DEFAULT_TENANT_ID,
+        tenantId: resolvedTenantId,
         actorId: input.actorId ?? null,
         eventType: input.eventType ?? null,
         resourceType: input.resourceType ?? null,
@@ -197,7 +206,7 @@ export async function getAuditLog(input: AuditLogFilterInput): Promise<AuditLogR
 export async function getFlaggedItems(tenantId: string): Promise<FlaggedItemDTO[]> {
     await requireOwnerOrPlatformAdmin()
 
-    const parsedTenant = tenantId || DEFAULT_TENANT_ID
+    const parsedTenant = resolveAdminTenantId(tenantId)
 
     const logs = await prisma.auditLog.findMany({
         where: {
@@ -363,8 +372,10 @@ export async function getAnalyticsSeries(
 ): Promise<AdminAnalyticsSeriesPointDTO[]> {
     await requireOwnerOrPlatformAdmin()
 
+    const resolvedTenantId = resolveAdminTenantId(input.tenantId)
+
     const parsed = tenantMetricsFilterSchema.parse({
-        tenantId: input.tenantId || DEFAULT_TENANT_ID,
+        tenantId: resolvedTenantId,
         startDate: input.startDate ?? null,
         endDate: input.endDate ?? null,
     })
@@ -426,10 +437,12 @@ export async function getAnalyticsSeries(
 export async function getAdminDashboardSummary(tenantId: string): Promise<AdminDashboardDTO> {
     await requireOwnerOrPlatformAdmin()
 
+    const resolvedTenantId = resolveAdminTenantId(tenantId)
+
     const [userCount, tenantMetrics, recentActivity, quickLinks] = await Promise.all([
         prisma.user.count({ where: { deletedAt: null } }),
-        getTenantMetrics({ tenantId }),
-        getAdminRecentActivity(tenantId),
+        getTenantMetrics({ tenantId: resolvedTenantId }),
+        getAdminRecentActivity(resolvedTenantId),
         getAdminQuickLinks(),
     ])
 

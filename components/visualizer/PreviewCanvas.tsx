@@ -119,7 +119,11 @@ export function PreviewCanvas({
                 )}
             >
                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                <p className="text-sm text-neutral-300">Processing your preview…</p>
+                <p className="text-sm text-neutral-300">
+                    {preview.status === PreviewStatus.PENDING
+                        ? 'Preparing your preview…'
+                        : 'Processing your preview…'}
+                </p>
             </div>
         )
     }
@@ -135,6 +139,38 @@ export function PreviewCanvas({
                 <ImageOff className="h-10 w-10 text-blue-600" />
                 <p className="text-sm text-neutral-100">
                     Preview generation failed. Adjust the upload or regenerate the preview.
+                </p>
+            </div>
+        )
+    }
+
+    if (preview.status === PreviewStatus.EXPIRED) {
+        return (
+            <div
+                className={cn(
+                    'flex flex-col items-center justify-center gap-3 border border-amber-700 bg-amber-950 p-12 text-center',
+                    className
+                )}
+            >
+                <ImageOff className="h-10 w-10 text-amber-500" />
+                <p className="text-sm text-amber-200">
+                    This preview expired. Regenerate it to create a fresh result.
+                </p>
+            </div>
+        )
+    }
+
+    if (preview.status !== PreviewStatus.COMPLETE) {
+        return (
+            <div
+                className={cn(
+                    'flex flex-col items-center justify-center gap-3 border border-dashed border-orange-700 bg-orange-950 p-12 text-center',
+                    className
+                )}
+            >
+                <ImageOff className="h-10 w-10 text-orange-400" />
+                <p className="text-sm text-orange-200">
+                    Preview status is unsupported. Please regenerate and try again.
                 </p>
             </div>
         )

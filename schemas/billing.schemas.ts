@@ -4,6 +4,7 @@ import { paginationParamsSchema } from '@/schemas/common.schemas'
 
 export const invoiceListParamsSchema = paginationParamsSchema.extend({
     status: z.enum(['draft', 'issued', 'paid', 'refunded', 'void']).optional(),
+    query: z.string().trim().max(120).optional(),
 })
 
 export const createInvoiceSchema = z.object({

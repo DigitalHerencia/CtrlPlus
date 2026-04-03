@@ -5,23 +5,24 @@ import { InvoicesDashboardStats } from '@/components/billing/invoices-dashboard-
 import { InvoicesDashboardToolbar } from '@/components/billing/invoices-dashboard-toolbar'
 import { Button } from '@/components/ui/button'
 import { getBalance, getInvoices } from '@/lib/fetchers/billing.fetchers'
+import { parseBillingSearchParams } from '@/lib/utils/search-params'
+import type { SearchParamRecord } from '@/types/common.types'
 
 import { InvoicesDashboardFiltersClient } from './invoices-dashboard-filters.client'
 import { InvoicesDashboardTableClient } from './invoices-dashboard-table.client'
 
 interface InvoicesDashboardPageFeatureProps {
-    searchParams?: Promise<{ page?: string; pageSize?: string }>
+    searchParams?: Promise<SearchParamRecord>
 }
 
 export async function InvoicesDashboardPageFeature({
     searchParams,
 }: InvoicesDashboardPageFeatureProps) {
-    const resolvedParams = searchParams ? await searchParams : undefined
-    const page = Number(resolvedParams?.page ?? 1)
-    const pageSize = Number(resolvedParams?.pageSize ?? 20)
+    const resolvedParams = (searchParams ? await searchParams : {}) satisfies SearchParamRecord
+    const { filters } = parseBillingSearchParams(resolvedParams)
 
     const [{ invoices, total }, balance] = await Promise.all([
-        getInvoices({ page, pageSize }),
+        getInvoices(filters),
         getBalance(),
     ])
 

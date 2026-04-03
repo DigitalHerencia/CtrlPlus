@@ -7,6 +7,7 @@ import {
     invoiceLineItemDTOFields,
     paymentDTOFields,
 } from '@/lib/db/selects/billing.selects'
+import { invoiceListParamsSchema } from '@/schemas/billing.schemas'
 import type {
     BillingBalanceDTO,
     InvoiceDTO,
@@ -75,14 +76,21 @@ export async function getInvoices(
     params: InvoiceListParams = { page: 1, pageSize: 20 }
 ): Promise<InvoiceListResult> {
     const access = await getBillingAccessContext()
-    // Validate params at the action boundary: invoiceListParamsSchema.parse(params)
-    const { page, pageSize, status } = params
+    const { page, pageSize, query, status } = invoiceListParamsSchema.parse(params)
     const skip = (page - 1) * pageSize
 
     const where: Prisma.InvoiceWhereInput = {
         deletedAt: null,
         ...buildInvoiceReadWhere(access.session.userId, access.canReadAllInvoices),
         ...(status ? { status } : {}),
+        ...(query
+            ? {
+                  OR: [
+                      { id: { contains: query, mode: 'insensitive' } },
+                      { bookingId: { contains: query, mode: 'insensitive' } },
+                  ],
+              }
+            : {}),
     }
 
     const [rows, total] = await Promise.all([

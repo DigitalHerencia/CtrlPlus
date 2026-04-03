@@ -1,39 +1,81 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useTransition } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useRouter } from 'next/navigation'
 
 import { InvoiceFormActions } from '@/components/billing/invoice-form/invoice-form-actions'
 import { InvoiceFormFields } from '@/components/billing/invoice-form/invoice-form-fields'
 import { InvoiceFormShell } from '@/components/billing/invoice-form/invoice-form-shell'
+import { createInvoice } from '@/lib/actions/billing.actions'
+import { createInvoiceSchema } from '@/schemas/billing.schemas'
+import type { z } from 'zod'
+
+type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>
 
 interface InvoiceEditorFormClientProps {
     initialBookingId?: string
-    submitLabel: string
-    onSubmitInvoice: (input: { bookingId: string }) => Promise<unknown>
+    submitLabel?: string
+    onSubmitInvoice?: (input: { bookingId: string }) => Promise<unknown>
 }
 
 export function InvoiceEditorFormClient({
     initialBookingId = '',
-    submitLabel,
+    submitLabel = 'Create Invoice',
     onSubmitInvoice,
 }: InvoiceEditorFormClientProps) {
-    const [bookingId, setBookingId] = useState(initialBookingId)
+    const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
-    function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault()
+    const form = useForm<CreateInvoiceInput>({
+        mode: 'onSubmit',
+        resolver: zodResolver(createInvoiceSchema),
+        defaultValues: {
+            bookingId: initialBookingId,
+        },
+    })
+
+    function onSubmit(values: CreateInvoiceInput) {
+        form.clearErrors()
         startTransition(async () => {
-            await onSubmitInvoice({ bookingId })
+            try {
+                if (onSubmitInvoice) {
+                    await onSubmitInvoice({ bookingId: values.bookingId })
+                    router.refresh()
+                    return
+                }
+
+                const invoice = await createInvoice(values)
+                router.push(`/billing/${invoice.invoiceId}`)
+                router.refresh()
+            } catch (error) {
+                form.setError('root', {
+                    type: 'server',
+                    message: error instanceof Error ? error.message : 'Unable to save invoice.',
+                })
+            }
         })
     }
 
     return (
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
             <InvoiceFormShell
                 title="Invoice Editor"
                 description="Issue an invoice from booking context."
             >
-                <InvoiceFormFields bookingId={bookingId} onBookingIdChange={setBookingId} />
+                {form.formState.errors.root ? (
+                    <p className="text-sm text-red-300">{form.formState.errors.root.message}</p>
+                ) : null}
+                <InvoiceFormFields
+                    bookingId={form.watch('bookingId')}
+                    onBookingIdChange={(value) =>
+                        form.setValue('bookingId', value, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                        })
+                    }
+                />
                 <InvoiceFormActions submitLabel={submitLabel} isPending={isPending} />
             </InvoiceFormShell>
         </form>

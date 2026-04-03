@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 
 import { CatalogCommandPanel } from '@/components/catalog/manage/catalog-command-panel'
 import { WrapAssetReadinessPanel } from '@/components/catalog/manage/wrap-asset-readiness-panel'
@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { publishWrap, unpublishWrap } from '@/lib/actions/catalog.actions'
 import type { CatalogDetailDTO } from '@/types/catalog.types'
-import { AlertCircle, CheckCircle2, Clock } from 'lucide-react'
+import { CheckCircle2, Clock } from 'lucide-react'
 
 export interface WrapPublishPanelProps {
     wrap: CatalogDetailDTO
@@ -17,20 +17,24 @@ export interface WrapPublishPanelProps {
 
 export function WrapPublishPanel({ wrap }: WrapPublishPanelProps) {
     const [isPending, startTransition] = useTransition()
+    const [serverMessage, setServerMessage] = useState<string | null>(null)
     const { canPublish, isVisualizerReady, issues } = wrap.readiness
 
     const handleTogglePublish = () => {
+        setServerMessage(null)
         startTransition(async () => {
             try {
                 if (wrap.isHidden) {
                     await publishWrap(wrap.id)
-                    console.log('Wrap published successfully')
+                    setServerMessage('Wrap published successfully.')
                 } else {
                     await unpublishWrap(wrap.id)
-                    console.log('Wrap hidden successfully')
+                    setServerMessage('Wrap hidden successfully.')
                 }
             } catch (error) {
-                console.error('Failed to update publish state', error)
+                setServerMessage(
+                    error instanceof Error ? error.message : 'Failed to update publish state.'
+                )
             }
         })
     }
@@ -65,6 +69,10 @@ export function WrapPublishPanel({ wrap }: WrapPublishPanelProps) {
                     >
                         {isPending ? 'Updating...' : wrap.isHidden ? 'Publish Wrap' : 'Hide Wrap'}
                     </Button>
+
+                    {serverMessage ? (
+                        <p className="text-sm text-neutral-300">{serverMessage}</p>
+                    ) : null}
                 </CardContent>
             </Card>
 

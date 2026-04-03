@@ -1,0 +1,157 @@
+{
+    "version": "1.0.0",
+    "generatedAt": "2026-04-03",
+    "statusModel": [
+        "not-started",
+        "in-progress",
+        "completed",
+        "blocked"
+    ],
+    "items": [
+        {
+            "id": "billing.phase1.components",
+            "program": "billing-full-surface-20260402",
+            "title": "Create pay/refund/adjust + manage billing components",
+            "status": "not-started",
+            "dependsOn": []
+        },
+        {
+            "id": "billing.phase2.features",
+            "program": "billing-full-surface-20260402",
+            "title": "Create pay/refund/adjust + manage billing features",
+            "status": "not-started",
+            "dependsOn": [
+                "billing.phase1.components"
+            ]
+        },
+        {
+            "id": "billing.phase3.routes",
+            "program": "billing-full-surface-20260402",
+            "title": "Expand billing route tree and segment state files",
+            "status": "not-started",
+            "dependsOn": [
+                "billing.phase2.features"
+            ]
+        },
+        {
+            "id": "billing.phase4.validation",
+            "program": "billing-full-surface-20260402",
+            "title": "Run quality gates and billing route smoke validation",
+            "status": "not-started",
+            "dependsOn": [
+                "billing.phase3.routes"
+            ]
+        },
+        {
+            "id": "sched-structure.phase1.routes",
+            "program": "scheduling-structure-20260402",
+            "title": "Scaffold customer + manage scheduling routes",
+            "status": "not-started",
+            "dependsOn": []
+        },
+        {
+            "id": "sched-structure.phase2.customer-features",
+            "program": "scheduling-structure-20260402",
+            "title": "Add customer scheduling features and client modules",
+            "status": "not-started",
+            "dependsOn": [
+                "sched-structure.phase1.routes"
+            ]
+        },
+        {
+            "id": "sched-structure.phase3.manage-features",
+            "program": "scheduling-structure-20260402",
+            "title": "Add manage scheduling features and client modules",
+            "status": "not-started",
+            "dependsOn": [
+                "sched-structure.phase2.customer-features"
+            ]
+        },
+        {
+            "id": "sched-structure.phase4.components",
+            "program": "scheduling-structure-20260402",
+            "title": "Add presentational scheduling components",
+            "status": "not-started",
+            "dependsOn": [
+                "sched-structure.phase3.manage-features"
+            ]
+        },
+        {
+            "id": "sched-structure.phase5.validation",
+            "program": "scheduling-structure-20260402",
+            "title": "Boundary, lint, typecheck, and test validation",
+            "status": "not-started",
+            "dependsOn": [
+                "sched-structure.phase4.components"
+            ]
+        },
+        {
+            "id": "sched-server.phase1.scope",
+            "program": "scheduling-server-authoritative-booking-20260402",
+            "title": "Resolve tenant scoping + define availability DTOs",
+            "status": "not-started",
+            "dependsOn": []
+        },
+        {
+            "id": "sched-server.phase2.engine",
+            "program": "scheduling-server-authoritative-booking-20260402",
+            "title": "Build shared availability engine and transactional enforcement",
+            "status": "not-started",
+            "dependsOn": [
+                "sched-server.phase1.scope"
+            ]
+        },
+        {
+            "id": "sched-server.phase3.lifecycle",
+            "program": "scheduling-server-authoritative-booking-20260402",
+            "title": "Normalize lifecycle actions, audit events, and billing-on-confirm",
+            "status": "not-started",
+            "dependsOn": [
+                "sched-server.phase2.engine"
+            ]
+        },
+        {
+            "id": "sched-server.phase4.rewire-verify",
+            "program": "scheduling-server-authoritative-booking-20260402",
+            "title": "Rewire feature/form flow and expand test coverage",
+            "status": "not-started",
+            "dependsOn": [
+                "sched-server.phase3.lifecycle"
+            ]
+        },
+        {
+            "id": "settings.phase1.contracts-and-boundaries",
+            "program": "settings-domain-expansion-20260402",
+            "title": "Expand schemas/DTOs and add folderized settings fetchers/actions",
+            "status": "not-started",
+            "dependsOn": []
+        },
+        {
+            "id": "settings.phase2.features-and-components",
+            "program": "settings-domain-expansion-20260402",
+            "title": "Add segmented settings features and presentational components",
+            "status": "not-started",
+            "dependsOn": [
+                "settings.phase1.contracts-and-boundaries"
+            ]
+        },
+        {
+            "id": "settings.phase3.routes",
+            "program": "settings-domain-expansion-20260402",
+            "title": "Create thin settings profile/account/data routes",
+            "status": "not-started",
+            "dependsOn": [
+                "settings.phase2.features-and-components"
+            ]
+        },
+        {
+            "id": "settings.phase4.tests",
+            "program": "settings-domain-expansion-20260402",
+            "title": "Expand unit/E2E tests including owner/non-owner paths",
+            "status": "not-started",
+            "dependsOn": [
+                "settings.phase3.routes"
+            ]
+        }
+    ]
+}

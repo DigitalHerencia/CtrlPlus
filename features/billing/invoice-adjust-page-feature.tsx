@@ -1,4 +1,3 @@
-import { applyCredit } from '@/lib/actions/billing.actions'
 import { getInvoice } from '@/lib/fetchers/billing.fetchers'
 import { notFound } from 'next/navigation'
 
@@ -14,7 +13,7 @@ export async function InvoiceAdjustPageFeature({ invoiceId }: InvoiceAdjustPageF
     return (
         <div className="space-y-4">
             <h1 className="text-2xl font-semibold text-neutral-100">Adjust {invoice.id}</h1>
-            <InvoiceAdjustFormClient invoiceId={invoice.id} onAdjust={applyCredit} />
+            <InvoiceAdjustFormClient invoiceId={invoice.id} />
         </div>
     )
 }

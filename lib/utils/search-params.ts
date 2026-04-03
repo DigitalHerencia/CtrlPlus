@@ -1,9 +1,13 @@
 import { APP_ROUTES } from '@/lib/constants/app'
+import { invoiceListParamsSchema } from '@/schemas/billing.schemas'
 import { searchWrapsSchema } from '@/schemas/catalog.schemas'
+import { bookingListParamsSchema } from '@/schemas/scheduling.schemas'
 import { visualizerSearchParamsSchema } from '@/schemas/visualizer.schemas'
 import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } from '@/lib/constants/app'
+import type { InvoiceListParams } from '@/types/billing.types'
 import type { CatalogSearchParamsResult, SearchWrapsInput } from '@/types/catalog.types'
 import type { SearchParamRecord } from '@/types/common.types'
+import type { BookingListParams } from '@/types/scheduling.types'
 import type { VisualizerSearchParamsResult } from '@/types/visualizer.types'
 
 function toNumber(value: string | null): number | undefined {
@@ -108,6 +112,75 @@ export function parseCatalogSearchParams(
             filters.categoryId ||
             filters.sortBy !== 'createdAt' ||
             filters.sortOrder !== 'desc' ||
+            filters.pageSize !== DEFAULT_PAGE_SIZE
+        ),
+    }
+}
+
+export function parseBillingSearchParams(searchParams: SearchParamRecord): {
+    filters: InvoiceListParams
+    hasActiveFilters: boolean
+} {
+    const candidate = {
+        query: first(searchParams.query),
+        status: first(searchParams.status),
+        page: first(searchParams.page),
+        pageSize: first(searchParams.pageSize),
+    }
+
+    const parsed = invoiceListParamsSchema.safeParse(candidate)
+    const filters = parsed.success
+        ? parsed.data
+        : invoiceListParamsSchema.parse({
+              query: candidate.query,
+              status: candidate.status,
+              page: DEFAULT_PAGE,
+              pageSize: DEFAULT_PAGE_SIZE,
+          })
+
+    return {
+        filters,
+        hasActiveFilters: Boolean(
+            filters.query ||
+            filters.status ||
+            filters.pageSize !== DEFAULT_PAGE_SIZE
+        ),
+    }
+}
+
+export function parseSchedulingSearchParams(searchParams: SearchParamRecord): {
+    filters: BookingListParams
+    hasActiveFilters: boolean
+} {
+    const candidate = {
+        status: first(searchParams.status),
+        page: first(searchParams.page),
+        pageSize: first(searchParams.pageSize),
+        fromDate: first(searchParams.fromDate),
+        toDate: first(searchParams.toDate),
+    }
+
+    const parsed = bookingListParamsSchema.safeParse(candidate)
+    const normalized = parsed.success
+        ? parsed.data
+        : bookingListParamsSchema.parse({
+              status: candidate.status,
+              page: DEFAULT_PAGE,
+              pageSize: DEFAULT_PAGE_SIZE,
+          })
+
+    const filters: BookingListParams = {
+        ...normalized,
+        fromDate: normalized.fromDate?.toISOString(),
+        toDate: normalized.toDate?.toISOString(),
+    }
+
+    return {
+        filters,
+        hasActiveFilters: Boolean(
+            filters.status ||
+            filters.fromDate ||
+            filters.toDate ||
             filters.pageSize !== DEFAULT_PAGE_SIZE
         ),
     }

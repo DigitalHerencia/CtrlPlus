@@ -7,15 +7,24 @@ import { InvoiceManagerStats } from '@/components/billing/manage/invoice-manager
 import { InvoiceNotificationPanel } from '@/components/billing/manage/invoice-notification-panel'
 import { Button } from '@/components/ui/button'
 import { getBalance, getInvoices } from '@/lib/fetchers/billing.fetchers'
+import { parseBillingSearchParams } from '@/lib/utils/search-params'
 import { voidInvoice } from '@/lib/actions/billing.actions'
+import type { SearchParamRecord } from '@/types/common.types'
 
 import { InvoiceLifecycleActionsClient } from './invoice-lifecycle-actions.client'
 import { InvoiceManagerTableClient } from './invoice-manager-table.client'
 import { InvoiceManagerToolbarClient } from './invoice-manager-toolbar.client'
 import { InvoiceNotificationControlsClient } from './invoice-notification-controls.client'
 
-export async function InvoiceManagerPageFeature() {
-    const [{ invoices, total }, balance] = await Promise.all([getInvoices(), getBalance()])
+interface InvoiceManagerPageFeatureProps {
+    searchParams?: Promise<SearchParamRecord>
+}
+
+export async function InvoiceManagerPageFeature({ searchParams }: InvoiceManagerPageFeatureProps) {
+    const resolvedParams = (searchParams ? await searchParams : {}) satisfies SearchParamRecord
+    const { filters } = parseBillingSearchParams(resolvedParams)
+
+    const [{ invoices, total }, balance] = await Promise.all([getInvoices(filters), getBalance()])
 
     return (
         <div className="space-y-6">

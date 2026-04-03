@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 
 import { BrandingFields } from '@/components/settings/tenant-settings/branding-fields'
 import { BusinessDetailsFields } from '@/components/settings/tenant-settings/business-details-fields'
@@ -46,6 +46,12 @@ export function TenantSettingsFormClient({
         },
     })
 
+    const businessName = useWatch({ control: form.control, name: 'businessName' })
+    const address = useWatch({ control: form.control, name: 'address' })
+    const taxId = useWatch({ control: form.control, name: 'taxId' })
+    const notificationEmail = useWatch({ control: form.control, name: 'notificationEmail' })
+    const logoUrl = useWatch({ control: form.control, name: 'logoUrl' })
+
     async function onSubmit(values: FormValues) {
         setServerMessage(null)
         startTransition(async () => {
@@ -64,10 +70,10 @@ export function TenantSettingsFormClient({
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <TenantSettingsFormShell>
                 <TenantSettingsFormFields
-                    businessName={form.watch('businessName')}
-                    address={form.watch('address')}
-                    taxId={form.watch('taxId')}
-                    notificationEmail={form.watch('notificationEmail')}
+                    businessName={businessName}
+                    address={address}
+                    taxId={taxId}
+                    notificationEmail={notificationEmail}
                     onBusinessNameChange={(value) =>
                         form.setValue('businessName', value, { shouldDirty: true })
                     }
@@ -81,9 +87,9 @@ export function TenantSettingsFormClient({
                 />
 
                 <BusinessDetailsFields
-                    businessName={form.watch('businessName')}
-                    address={form.watch('address')}
-                    taxId={form.watch('taxId')}
+                    businessName={businessName}
+                    address={address}
+                    taxId={taxId}
                     onBusinessNameChange={(value) =>
                         form.setValue('businessName', value, { shouldDirty: true })
                     }
@@ -94,7 +100,7 @@ export function TenantSettingsFormClient({
                 />
 
                 <BrandingFields
-                    logoUrl={form.watch('logoUrl')}
+                    logoUrl={logoUrl}
                     onLogoUrlChange={(value) =>
                         form.setValue('logoUrl', value, { shouldDirty: true })
                     }

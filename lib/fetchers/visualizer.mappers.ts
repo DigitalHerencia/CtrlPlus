@@ -1,4 +1,4 @@
-import type { PreviewStatus } from '@/lib/constants/statuses'
+import { normalizePreviewStatus } from '@/lib/constants/statuses'
 import type { VisualizerPreviewDTO } from '@/types/visualizer.types'
 
 type VisualizerPreviewRecord = {
@@ -21,7 +21,7 @@ export function toVisualizerPreviewDTO(record: VisualizerPreviewRecord): Visuali
         wrapId: record.wrapId,
         customerPhotoUrl: record.customerPhotoUrl,
         processedImageUrl: record.processedImageUrl,
-        status: record.status as PreviewStatus,
+        status: normalizePreviewStatus(record.status),
         cacheKey: record.cacheKey,
         sourceWrapImageId: record.sourceWrapImageId,
         sourceWrapImageVersion: record.sourceWrapImageVersion,

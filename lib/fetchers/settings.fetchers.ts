@@ -13,6 +13,13 @@ import {
 } from '@/types/settings.types'
 import { DEFAULT_STORE_TIMEZONE } from '@/lib/constants/app'
 
+export const SETTINGS_TENANT_ID = 'default-tenant'
+
+export function resolveSettingsTenantId(_tenantId?: string | null): string {
+    void _tenantId
+    return SETTINGS_TENANT_ID
+}
+
 export function createDefaultWebsiteSettingsInput(): WebsiteSettingsInput {
     return {
         preferredContact: 'email',
@@ -158,12 +165,13 @@ export async function getTenantSettingsView(
 ): Promise<TenantSettingsViewDTO> {
     const session = await requireAuthzCapability('settings.manage.own')
     requireOwnerOrAdmin(session.authz)
+    const resolvedTenantId = resolveSettingsTenantId(tenantId)
 
     const latestSnapshot = await prisma.auditLog.findFirst({
         where: {
             action: 'TENANT_SETTINGS_UPDATED',
             resourceType: 'TenantSettings',
-            resourceId: tenantId,
+            resourceId: resolvedTenantId,
             deletedAt: null,
         },
         orderBy: { timestamp: 'desc' },
@@ -176,7 +184,7 @@ export async function getTenantSettingsView(
     const parsed = parseTenantSettingsPayload(latestSnapshot?.details ?? null)
 
     return {
-        tenantId,
+        tenantId: resolvedTenantId,
         ...parsed,
         updatedAt: latestSnapshot?.timestamp.toISOString() ?? null,
     }
@@ -192,12 +200,13 @@ export async function getExportOptionsView(
 ): Promise<ExportOptionsViewDTO> {
     const session = await requireAuthzCapability('settings.manage.own')
     requireOwnerOrAdmin(session.authz)
+    const resolvedTenantId = resolveSettingsTenantId(tenantId)
 
     const rows = await prisma.auditLog.findMany({
         where: {
             action: 'SETTINGS_DATA_EXPORT_REQUESTED',
             resourceType: 'TenantSettings',
-            resourceId: tenantId,
+            resourceId: resolvedTenantId,
             deletedAt: null,
         },
         orderBy: { timestamp: 'desc' },
@@ -211,7 +220,7 @@ export async function getExportOptionsView(
     })
 
     return {
-        tenantId,
+        tenantId: resolvedTenantId,
         allowedFormats: ['json', 'csv'],
         history: rows.map(parseExportHistoryRow),
     }

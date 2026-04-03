@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { CatalogManagerHeader } from '@/components/catalog/manage/catalog-manager-header'
@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation'
 export function NewWrapPageFeature() {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
+    const [submitError, setSubmitError] = useState<string | null>(null)
 
     const {
         register,
@@ -33,13 +34,13 @@ export function NewWrapPageFeature() {
     })
 
     const onSubmit = (data: CreateWrapInput) => {
+        setSubmitError(null)
         startTransition(async () => {
             try {
                 const wrap = await createWrap(data)
-                console.log('Wrap created successfully', wrap.id)
                 router.push(`/catalog/manage/${wrap.id}`)
             } catch (error) {
-                console.error('Failed to create wrap', error)
+                setSubmitError(error instanceof Error ? error.message : 'Failed to create wrap.')
             }
         })
     }
@@ -120,6 +121,7 @@ export function NewWrapPageFeature() {
                     </WrapFormFields>
 
                     <WrapFormActions>
+                        {submitError ? <p className="text-sm text-red-500">{submitError}</p> : null}
                         <Button type="submit" disabled={isPending}>
                             {isPending ? 'Creating...' : 'Create Wrap'}
                         </Button>

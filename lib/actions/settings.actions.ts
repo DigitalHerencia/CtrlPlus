@@ -24,6 +24,7 @@ import {
     createWebsiteSettingsDTO,
     getTenantSettingsView,
     getUserSettingsView,
+    resolveSettingsTenantId,
 } from '@/lib/fetchers/settings.fetchers'
 
 export async function updateUserPreferences(
@@ -111,20 +112,21 @@ export async function updateTenantSettings(
     }
 
     const parsed = updateTenantSettingsSchema.parse(input)
+    const resolvedTenantId = resolveSettingsTenantId(tenantId)
 
     await prisma.auditLog.create({
         data: {
             userId: session.userId,
             action: 'TENANT_SETTINGS_UPDATED',
             resourceType: 'TenantSettings',
-            resourceId: tenantId,
+            resourceId: resolvedTenantId,
             details: JSON.stringify(parsed),
             timestamp: new Date(),
         },
     })
 
     revalidateSettingsPaths()
-    return getTenantSettingsView(tenantId)
+    return getTenantSettingsView(resolvedTenantId)
 }
 
 export async function exportData(input: ExportDataRequestDTO): Promise<ExportDataResultDTO> {
@@ -136,13 +138,14 @@ export async function exportData(input: ExportDataRequestDTO): Promise<ExportDat
     }
 
     const parsed = exportDataSchema.parse(input)
+    const resolvedTenantId = resolveSettingsTenantId(parsed.tenantId)
 
     const row = await prisma.auditLog.create({
         data: {
             userId: session.userId,
             action: 'SETTINGS_DATA_EXPORT_REQUESTED',
             resourceType: 'TenantSettings',
-            resourceId: parsed.tenantId,
+            resourceId: resolvedTenantId,
             details: JSON.stringify({ format: parsed.format }),
             timestamp: new Date(),
         },
@@ -156,7 +159,7 @@ export async function exportData(input: ExportDataRequestDTO): Promise<ExportDat
     revalidateSettingsPaths()
     return {
         requestId: row.id,
-        tenantId: row.resourceId,
+        tenantId: resolvedTenantId,
         format: parsed.format,
         createdAt: row.timestamp.toISOString(),
         status: 'queued',

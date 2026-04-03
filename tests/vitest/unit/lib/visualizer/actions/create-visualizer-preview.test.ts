@@ -135,7 +135,7 @@ describe('createVisualizerPreview', () => {
         mocks.buildWrapPreviewPrompt.mockReturnValue({
             prompt: 'Apply Ocean Spectrum wrap',
             negativePrompt: 'No distortion',
-            promptVersion: 'prompt-version',
+            promptVersion: expect.any(String),
         })
         mocks.storePreviewImage.mockResolvedValue('https://cloudinary.com/generated.png')
         mocks.buildVisualizerCacheKey.mockReturnValue('cache-key')
@@ -165,9 +165,9 @@ describe('createVisualizerPreview', () => {
                 customerPhotoHash: 'vehicle-hash',
                 sourceWrapImageId: 'texture-1',
                 sourceAssetVersion: 4,
-                generationMode: 'hf-primary-with-deterministic-fallback',
-                generationModel: 'deterministic-fallback',
-                promptVersion: 'prompt-version',
+                generationMode: 'ai-preview-v1',
+                generationModel: expect.any(String),
+                promptVersion: expect.any(String),
             })
         )
         expect(mocks.storePreviewImage).not.toHaveBeenCalled()

@@ -1,0 +1,61 @@
+{
+  "version": "1.0.0",
+  "sourceDirectory": ".github/copilot/prompts",
+  "generatedAt": "2026-04-03",
+  "status": "active",
+  "purpose": "Registry of migrated prompt artifacts and execution usage guidance",
+  "executionPattern": [
+    "Read context + linked docs/contracts",
+    "Check active JSON state files for progress and blockers",
+    "Execute ordered steps",
+    "Validate acceptance criteria",
+    "Update JSON execution state"
+  ],
+  "artifacts": [
+    {
+      "id": "audit-loading-state",
+      "type": "json",
+      "path": ".github/copilot/json/audit-loading-state.json",
+      "derivedFrom": [
+        "AUDIT-SUMMARY.md",
+        "INDEX.md",
+        "SESSION-COMPLETE-SUMMARY.md",
+        "loading-state-visual-reference.md"
+      ]
+    },
+    {
+      "id": "next-session-action-plan",
+      "type": "json",
+      "path": ".github/copilot/json/next-session-action-plan.json",
+      "derivedFrom": [
+        "NEXT-SESSION-ACTION-PLAN.md"
+      ]
+    },
+    {
+      "id": "suspense-refactor-example",
+      "type": "json",
+      "path": ".github/copilot/json/suspense-refactor-example.json",
+      "derivedFrom": [
+        "refactor-example-catalog-suspense.md"
+      ]
+    },
+    {
+      "id": "catalog-asset-role-unification-contract",
+      "type": "yaml",
+      "path": ".github/copilot/contracts/catalog-asset-role-unification.contract.yaml",
+      "derivedFrom": [
+        "catalog-asset-role-unification.md"
+      ]
+    },
+    {
+      "id": "suspense-segmentation-contract",
+      "type": "yaml",
+      "path": ".github/copilot/contracts/suspense-segmentation.contract.yaml",
+      "derivedFrom": [
+        "suspense-segmentation-strategy.md",
+        "loading-state-visual-reference.md"
+      ]
+    }
+  ],
+  "replacesPromptReadme": true
+}

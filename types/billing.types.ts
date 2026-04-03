@@ -41,7 +41,7 @@ export interface InvoiceDetailDTO extends InvoiceDetailViewDTO {
     payments: PaymentDTO[]
 }
 
-export interface InvoiceManagerRowDTO extends InvoiceDTO {}
+export type InvoiceManagerRowDTO = InvoiceDTO
 
 export interface PaymentDTO {
     id: string
@@ -56,6 +56,7 @@ export interface InvoiceListParams {
     page: number
     pageSize: number
     status?: InvoiceStatus
+    query?: string
 }
 
 export interface InvoiceListResult {

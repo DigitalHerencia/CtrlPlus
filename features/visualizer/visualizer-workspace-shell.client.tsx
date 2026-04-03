@@ -9,7 +9,7 @@ import {
     processVisualizerPreview,
     regenerateVisualizerPreview,
 } from '@/lib/actions/visualizer.actions'
-import { PreviewStatus } from '@/lib/constants/statuses'
+import { isPreviewProcessingStatus, PreviewStatus } from '@/lib/constants/statuses'
 import type { VisualizerPreviewDTO } from '@/types/visualizer.types'
 import { VisualizerPreviewPollerClient } from './visualizer-preview-poller.client'
 
@@ -20,7 +20,7 @@ interface VisualizerWorkspaceShellClientProps {
 }
 
 function isPreviewRunning(preview: VisualizerPreviewDTO | null) {
-    return preview?.status === PreviewStatus.PENDING || preview?.status === PreviewStatus.PROCESSING
+    return !!preview && isPreviewProcessingStatus(preview.status)
 }
 
 export function VisualizerWorkspaceShellClient({
@@ -57,10 +57,7 @@ export function VisualizerWorkspaceShellClient({
         null
 
     function beginProcessing(nextPreview: VisualizerPreviewDTO) {
-        if (
-            nextPreview.status !== PreviewStatus.PENDING &&
-            nextPreview.status !== PreviewStatus.PROCESSING
-        ) {
+        if (!isPreviewProcessingStatus(nextPreview.status)) {
             return
         }
 
@@ -72,12 +69,38 @@ export function VisualizerWorkspaceShellClient({
                 }
 
                 setPreview(processedPreview)
-                setError(null)
+
+                if (processedPreview.status === PreviewStatus.COMPLETE) {
+                    setError(null)
+                    return
+                }
+
+                if (processedPreview.status === PreviewStatus.EXPIRED) {
+                    setError('Preview expired before processing completed. Please regenerate it.')
+                    return
+                }
+
+                if (processedPreview.status === PreviewStatus.FAILED) {
+                    setError(
+                        'Preview generation failed. Adjust the upload or regenerate the preview.'
+                    )
+                }
             })
             .catch((previewError) => {
                 if (activePreviewIdRef.current !== previewId) {
                     return
                 }
+
+                setPreview((currentPreview) => {
+                    if (!currentPreview || currentPreview.id !== previewId) {
+                        return currentPreview
+                    }
+
+                    return {
+                        ...currentPreview,
+                        status: PreviewStatus.FAILED,
+                    }
+                })
 
                 setError(
                     previewError instanceof Error
@@ -170,8 +193,19 @@ export function VisualizerWorkspaceShellClient({
                     }
 
                     setPreview(nextPreview)
+
                     if (nextPreview?.status === PreviewStatus.COMPLETE) {
                         setError(null)
+                        return
+                    }
+
+                    if (nextPreview?.status === PreviewStatus.EXPIRED) {
+                        setError('Preview expired before completion. Regenerate to continue.')
+                        return
+                    }
+
+                    if (nextPreview?.status === PreviewStatus.FAILED) {
+                        setError('Preview generation failed. Adjust the upload or regenerate.')
                     }
                 }}
                 onError={setError}

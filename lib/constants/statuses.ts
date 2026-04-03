@@ -1,20 +1,3 @@
-export const WrapStatus = {
-    ACTIVE: 'ACTIVE',
-    INACTIVE: 'INACTIVE',
-    DRAFT: 'DRAFT',
-} as const
-
-export type WrapStatus = (typeof WrapStatus)[keyof typeof WrapStatus]
-
-export const WrapCategory = {
-    FULL_WRAP: 'FULL_WRAP',
-    PARTIAL_WRAP: 'PARTIAL_WRAP',
-    ACCENT: 'ACCENT',
-    PAINT_PROTECTION_FILM: 'PAINT_PROTECTION_FILM',
-} as const
-
-export type WrapCategory = (typeof WrapCategory)[keyof typeof WrapCategory]
-
 export const WrapImageKind = {
     HERO: 'hero',
     VISUALIZER_TEXTURE: 'visualizer_texture',
@@ -43,9 +26,42 @@ export const PreviewStatus = {
     PROCESSING: 'processing',
     COMPLETE: 'complete',
     FAILED: 'failed',
+    EXPIRED: 'expired',
 } as const
 
 export type PreviewStatus = (typeof PreviewStatus)[keyof typeof PreviewStatus]
+
+export const previewStatusValues = [
+    PreviewStatus.PENDING,
+    PreviewStatus.PROCESSING,
+    PreviewStatus.COMPLETE,
+    PreviewStatus.FAILED,
+    PreviewStatus.EXPIRED,
+] as const
+
+const previewStatusSet = new Set<PreviewStatus>(previewStatusValues)
+
+export function normalizePreviewStatus(status: string): PreviewStatus {
+    const normalizedStatus = status.toLowerCase() as PreviewStatus
+
+    if (previewStatusSet.has(normalizedStatus)) {
+        return normalizedStatus
+    }
+
+    return PreviewStatus.FAILED
+}
+
+export function isPreviewProcessingStatus(status: PreviewStatus): boolean {
+    return status === PreviewStatus.PENDING || status === PreviewStatus.PROCESSING
+}
+
+export function isPreviewTerminalStatus(status: PreviewStatus): boolean {
+    return (
+        status === PreviewStatus.COMPLETE ||
+        status === PreviewStatus.FAILED ||
+        status === PreviewStatus.EXPIRED
+    )
+}
 
 export const VisualizerGenerationMode = {
     HUGGING_FACE: 'huggingface',

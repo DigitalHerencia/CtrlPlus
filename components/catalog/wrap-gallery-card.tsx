@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { Badge } from '@/components/ui/badge'
@@ -27,9 +28,12 @@ export function WrapGalleryCard({ wrap }: WrapGalleryCardProps) {
                 className="relative block overflow-hidden border-b border-neutral-800 bg-neutral-900"
             >
                 {wrap.displayImage ? (
-                    <img
+                    <Image
                         src={wrap.displayImage.cardUrl}
                         alt={wrap.name}
+                        width={1200}
+                        height={672}
+                        unoptimized
                         className="h-56 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                     />
                 ) : (

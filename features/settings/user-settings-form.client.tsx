@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 
 import { NotificationPreferencesFields } from '@/components/settings/user-settings/notification-preferences-fields'
 import { PreferencesFields } from '@/components/settings/user-settings/preferences-fields'
@@ -47,6 +47,13 @@ export function UserSettingsFormClient({ initialSettings, onSave }: UserSettings
         },
     })
 
+    const theme = useWatch({ control: form.control, name: 'theme' })
+    const language = useWatch({ control: form.control, name: 'language' })
+    const timezone = useWatch({ control: form.control, name: 'timezone' })
+    const email = useWatch({ control: form.control, name: 'email' })
+    const sms = useWatch({ control: form.control, name: 'sms' })
+    const push = useWatch({ control: form.control, name: 'push' })
+
     async function onSubmit(values: FormValues) {
         setServerMessage(null)
         startTransition(async () => {
@@ -77,12 +84,12 @@ export function UserSettingsFormClient({ initialSettings, onSave }: UserSettings
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <UserSettingsFormShell>
                 <PreferencesFields
-                    theme={form.watch('theme')}
+                    theme={theme}
                     onThemeChange={(value) => form.setValue('theme', value, { shouldDirty: true })}
                 />
                 <UserSettingsFormFields
-                    language={form.watch('language')}
-                    timezone={form.watch('timezone')}
+                    language={language}
+                    timezone={timezone}
                     onLanguageChange={(value) =>
                         form.setValue('language', value, { shouldDirty: true })
                     }
@@ -91,9 +98,9 @@ export function UserSettingsFormClient({ initialSettings, onSave }: UserSettings
                     }
                 />
                 <NotificationPreferencesFields
-                    email={form.watch('email')}
-                    sms={form.watch('sms')}
-                    push={form.watch('push')}
+                    email={email}
+                    sms={sms}
+                    push={push}
                     onEmailChange={(value) => form.setValue('email', value, { shouldDirty: true })}
                     onSmsChange={(value) => form.setValue('sms', value, { shouldDirty: true })}
                     onPushChange={(value) => form.setValue('push', value, { shouldDirty: true })}

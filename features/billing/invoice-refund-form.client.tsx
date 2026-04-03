@@ -1,36 +1,64 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useTransition } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 
 import { InvoiceAdjustmentFields } from '@/components/billing/invoice-form/invoice-adjustment-fields'
 import { InvoiceFormActions } from '@/components/billing/invoice-form/invoice-form-actions'
 import { InvoiceFormShell } from '@/components/billing/invoice-form/invoice-form-shell'
+import { refundInvoice } from '@/lib/actions/billing.actions'
+import { refundInvoiceSchema } from '@/schemas/billing.schemas'
+import type { z } from 'zod'
+
+type RefundInvoiceInput = z.infer<typeof refundInvoiceSchema>
 
 interface InvoiceRefundFormClientProps {
     invoiceId: string
-    onRefund: (input: { invoiceId: string; amount: number; notes?: string }) => Promise<unknown>
 }
 
-export function InvoiceRefundFormClient({ invoiceId, onRefund }: InvoiceRefundFormClientProps) {
-    const [amount, setAmount] = useState(100)
-    const [notes, setNotes] = useState('')
+export function InvoiceRefundFormClient({ invoiceId }: InvoiceRefundFormClientProps) {
     const [isPending, startTransition] = useTransition()
+    const form = useForm<RefundInvoiceInput>({
+        mode: 'onSubmit',
+        resolver: zodResolver(refundInvoiceSchema),
+        defaultValues: {
+            invoiceId,
+            amount: 100,
+            notes: '',
+        },
+    })
 
-    function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault()
+    function onSubmit(values: RefundInvoiceInput) {
+        form.clearErrors()
         startTransition(async () => {
-            await onRefund({ invoiceId, amount, notes: notes || undefined })
+            try {
+                await refundInvoice(values)
+                form.reset()
+            } catch (error) {
+                form.setError('root', {
+                    type: 'server',
+                    message: error instanceof Error ? error.message : 'Unable to issue refund.',
+                })
+            }
         })
     }
 
     return (
-        <form onSubmit={onSubmit}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
             <InvoiceFormShell title="Refund Invoice">
+                {form.formState.errors.root ? (
+                    <p className="text-sm text-red-300">{form.formState.errors.root.message}</p>
+                ) : null}
                 <InvoiceAdjustmentFields
-                    amount={amount}
-                    notes={notes}
-                    onAmountChange={setAmount}
-                    onNotesChange={setNotes}
+                    amount={form.watch('amount') ?? 100}
+                    notes={form.watch('notes') ?? ''}
+                    onAmountChange={(value) =>
+                        form.setValue('amount', value, { shouldValidate: true })
+                    }
+                    onNotesChange={(value) =>
+                        form.setValue('notes', value, { shouldValidate: true })
+                    }
                 />
                 <InvoiceFormActions submitLabel="Issue Refund" isPending={isPending} />
             </InvoiceFormShell>

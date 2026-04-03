@@ -2,7 +2,11 @@
 
 import { useEffect, useEffectEvent } from 'react'
 
-import { PreviewStatus } from '@/lib/constants/statuses'
+import {
+    isPreviewProcessingStatus,
+    isPreviewTerminalStatus,
+    PreviewStatus,
+} from '@/lib/constants/statuses'
 import type { VisualizerPreviewDTO } from '@/types/visualizer.types'
 import type { SerializedVisualizerPreview } from '@/types/visualizer.types'
 
@@ -46,14 +50,22 @@ export function VisualizerPreviewPollerClient({
 
         let cancelled = false
         let timer: ReturnType<typeof setTimeout> | null = null
+        let consecutiveErrors = 0
+        const maxConsecutiveErrors = 3
 
         const poll = async () => {
             try {
-                const response = await fetch(`/visualizer/previews/${previewId}`, {
+                const response = await fetch(`/api/visualizer/previews/${previewId}`, {
                     cache: 'no-store',
                 })
 
                 if (!response.ok) {
+                    if (response.status === 404) {
+                        handlePreviewUpdate(null)
+                        handleError('Preview no longer exists or has expired.')
+                        return
+                    }
+
                     throw new Error('Failed to refresh preview status.')
                 }
 
@@ -62,14 +74,30 @@ export function VisualizerPreviewPollerClient({
                     return
                 }
 
+                consecutiveErrors = 0
+
                 const nextPreview = deserializePreview(payload.preview)
                 handlePreviewUpdate(nextPreview)
 
-                if (
-                    !nextPreview ||
-                    nextPreview.status === PreviewStatus.COMPLETE ||
-                    nextPreview.status === PreviewStatus.FAILED
-                ) {
+                if (!nextPreview) {
+                    handleError('Preview response was empty.')
+                    return
+                }
+
+                if (isPreviewTerminalStatus(nextPreview.status)) {
+                    if (nextPreview.status === PreviewStatus.EXPIRED) {
+                        handleError('Preview expired before completion. Regenerate to continue.')
+                    } else if (nextPreview.status === PreviewStatus.FAILED) {
+                        handleError('Preview generation failed. Adjust the upload or regenerate.')
+                    } else {
+                        handleError(null)
+                    }
+
+                    return
+                }
+
+                if (!isPreviewProcessingStatus(nextPreview.status)) {
+                    handleError('Preview entered an unsupported state and polling was stopped.')
                     return
                 }
 
@@ -84,6 +112,14 @@ export function VisualizerPreviewPollerClient({
                 handleError(
                     error instanceof Error ? error.message : 'Failed to refresh preview status.'
                 )
+
+                consecutiveErrors += 1
+                if (consecutiveErrors >= maxConsecutiveErrors) {
+                    handleError(
+                        'Preview status refresh failed repeatedly. Please refresh and try again.'
+                    )
+                    return
+                }
 
                 timer = setTimeout(() => {
                     void poll()

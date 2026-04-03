@@ -5,6 +5,8 @@
  * Call these helpers from server components, API routes, or other server actions.
  */
 import { prisma } from '@/lib/db/prisma'
+import { resolveGlobalRoleForClerkUserId } from '@/lib/auth/identity'
+import { upsertUserFromClerkSchema } from '@/schemas/auth.schemas'
 import type { GlobalRole } from '@/types/auth.types'
 
 export async function upsertUserFromClerk(payload: {
@@ -15,7 +17,19 @@ export async function upsertUserFromClerk(payload: {
     imageUrl?: string | null
     globalRole?: GlobalRole | null
 }) {
-    const { clerkUserId, email, firstName, lastName, imageUrl, globalRole } = payload
+    const {
+        clerkUserId,
+        email,
+        firstName,
+        lastName,
+        imageUrl,
+        globalRole: _clientProvidedGlobalRole,
+    } = upsertUserFromClerkSchema.parse(payload)
+
+    void _clientProvidedGlobalRole
+
+    // Never trust role claims from caller payload. Resolve role from server authority.
+    const globalRole = await resolveGlobalRoleForClerkUserId(clerkUserId)
 
     return prisma.user.upsert({
         where: { clerkUserId },

@@ -28,6 +28,19 @@ import { Prisma } from '@prisma/client'
 // Reservation TTL (minutes)
 const RESERVATION_TTL_MINUTES = 15
 
+function buildOwnedBookingWhereClause(
+    session: { isOwner: boolean; isPlatformAdmin: boolean },
+    userId: string
+): Prisma.BookingWhereInput {
+    if (session.isOwner || session.isPlatformAdmin) {
+        return {}
+    }
+
+    return {
+        customerId: userId,
+    }
+}
+
 async function assertNoCustomerSlotConflict(
     tx: Prisma.TransactionClient,
     input: {
@@ -183,6 +196,21 @@ export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBook
 export async function createBooking(input: ReserveSlotInput): Promise<CreatedBookingDTO> {
     const booking = await reserveSlot(input)
     const { invoiceId } = await ensureInvoiceForBooking({ bookingId: booking.id })
+
+    const persistedBooking = await prisma.booking?.findFirst?.({
+        where: {
+            id: booking.id,
+            deletedAt: null,
+        },
+        select: {
+            createdAt: true,
+            updatedAt: true,
+        },
+    })
+
+    const createdAt = persistedBooking?.createdAt?.toISOString() ?? new Date().toISOString()
+    const updatedAt = persistedBooking?.updatedAt?.toISOString() ?? new Date().toISOString()
+
     revalidateSchedulingPages()
     revalidateBillingBookingRoute(invoiceId)
 
@@ -196,8 +224,8 @@ export async function createBooking(input: ReserveSlotInput): Promise<CreatedBoo
         endTime: booking.endTime,
         status: booking.status,
         totalPrice: booking.totalPrice,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt,
+        updatedAt,
         reservationExpiresAt: booking.reservationExpiresAt,
         displayStatus: booking.displayStatus,
     }
@@ -218,7 +246,11 @@ export async function updateBooking(
     const { startTime, endTime } = parsed
 
     const existing = await prisma.booking.findFirst({
-        where: { id: bookingId, deletedAt: null },
+        where: {
+            id: bookingId,
+            deletedAt: null,
+            ...buildOwnedBookingWhereClause(session, userId),
+        },
         select: {
             id: true,
             customerId: true,
@@ -326,6 +358,7 @@ export async function confirmBooking(bookingId: string) {
             where: {
                 id: bookingId,
                 deletedAt: null,
+                ...buildOwnedBookingWhereClause(session, userId),
             },
             select: {
                 id: true,
@@ -426,7 +459,11 @@ export async function cancelBooking(bookingId: string, input: CancelBookingInput
     const parsed = cancelBookingSchema.parse(input)
 
     const existing = await prisma.booking.findFirst({
-        where: { id: bookingId, deletedAt: null },
+        where: {
+            id: bookingId,
+            deletedAt: null,
+            ...buildOwnedBookingWhereClause(session, userId),
+        },
         select: {
             id: true,
             customerId: true,

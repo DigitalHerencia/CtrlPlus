@@ -1,34 +1,65 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useTransition } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 
-import { InvoiceDiscountFields } from '@/components/billing/invoice-form/invoice-discount-fields'
+import { InvoiceAdjustmentFields } from '@/components/billing/invoice-form/invoice-adjustment-fields'
 import { InvoiceFormActions } from '@/components/billing/invoice-form/invoice-form-actions'
 import { InvoiceFormShell } from '@/components/billing/invoice-form/invoice-form-shell'
-import { InvoiceNotificationFields } from '@/components/billing/invoice-form/invoice-notification-fields'
+import { applyCredit } from '@/lib/actions/billing.actions'
+import { applyCreditSchema } from '@/schemas/billing.schemas'
+import type { z } from 'zod'
+
+type ApplyCreditInput = z.infer<typeof applyCreditSchema>
 
 interface InvoiceAdjustFormClientProps {
     invoiceId: string
-    onAdjust: (input: { invoiceId: string; amount: number; notes?: string }) => Promise<unknown>
 }
 
-export function InvoiceAdjustFormClient({ invoiceId, onAdjust }: InvoiceAdjustFormClientProps) {
-    const [amount, setAmount] = useState(100)
-    const [notes, setNotes] = useState('')
+export function InvoiceAdjustFormClient({ invoiceId }: InvoiceAdjustFormClientProps) {
     const [isPending, startTransition] = useTransition()
+    const form = useForm<ApplyCreditInput>({
+        mode: 'onSubmit',
+        resolver: zodResolver(applyCreditSchema),
+        defaultValues: {
+            invoiceId,
+            amount: 100,
+            notes: '',
+        },
+    })
 
-    function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault()
+    function onSubmit(values: ApplyCreditInput) {
+        form.clearErrors()
         startTransition(async () => {
-            await onAdjust({ invoiceId, amount, notes: notes || undefined })
+            try {
+                await applyCredit(values)
+                form.reset()
+            } catch (error) {
+                form.setError('root', {
+                    type: 'server',
+                    message: error instanceof Error ? error.message : 'Unable to apply credit.',
+                })
+            }
         })
     }
 
     return (
-        <form onSubmit={onSubmit}>
+        <form onSubmit={form.handleSubmit(onSubmit)}>
             <InvoiceFormShell title="Apply Credit / Adjustment">
-                <InvoiceDiscountFields amount={amount} onAmountChange={setAmount} />
-                <InvoiceNotificationFields message={notes} onMessageChange={setNotes} />
+                {form.formState.errors.root ? (
+                    <p className="text-sm text-red-300">{form.formState.errors.root.message}</p>
+                ) : null}
+                <InvoiceAdjustmentFields
+                    amount={form.watch('amount')}
+                    notes={form.watch('notes') ?? ''}
+                    onAmountChange={(value) =>
+                        form.setValue('amount', value, { shouldValidate: true })
+                    }
+                    onNotesChange={(value) =>
+                        form.setValue('notes', value, { shouldValidate: true })
+                    }
+                />
                 <InvoiceFormActions submitLabel="Apply Credit" isPending={isPending} />
             </InvoiceFormShell>
         </form>

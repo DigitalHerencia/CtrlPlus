@@ -1,0 +1,42 @@
+version: 1
+contract: dto-hygiene
+status: active
+objective: Enforce minimal, consistent, serialization-safe DTO contracts without adding broad context overhead.
+
+scope:
+  paths:
+    - types/**
+    - schemas/**
+    - lib/fetchers/**
+    - lib/db/selects/**
+
+rules:
+  - id: dto-no-prisma-model-exposure
+    rule: DTO exports must not expose raw Prisma model types.
+
+  - id: dto-timestamp-normalization
+    rule: Outbound DTO date/time fields must use Timestamp (ISO string), not Date objects.
+    applies_to:
+      - types/admin.types.ts
+      - types/**/*.types.ts
+
+  - id: dto-purpose-specific-shapes
+    rule: List/manager DTOs must be right-sized for their surface; do not inherit detail DTOs when it introduces unused payload.
+
+  - id: dto-nullability-semantics
+    rule: Prefer optional fields for patch/update inputs and explicit nullable fields for read/output DTOs.
+
+  - id: dto-shared-status-types
+    rule: Status/action constrained values should use shared constants/types, not repeated inline string unions, when domain values are reused.
+
+validation:
+  required_checks:
+    - pnpm typecheck
+    - pnpm lint
+    - pnpm test
+    - pnpm build
+
+evidence_source:
+  - DTO_AUDIT_SUMMARY.md (2026-04-02)
+  - DTO_AUDIT_REPORT.md (2026-04-02)
+  - DTO_REMEDIATION_GUIDE.md (2026-04-02)

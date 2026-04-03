@@ -139,4 +139,22 @@ describe('regenerateVisualizerPreview', () => {
             })
         )
     })
+
+    it('throws when preview cannot be found', async () => {
+        mocks.prisma.visualizerPreview.findFirst.mockResolvedValue(null)
+
+        await expect(regenerateVisualizerPreview({ previewId: 'missing' })).rejects.toThrow(
+            'Preview not found.'
+        )
+        expect(mocks.prisma.visualizerPreview.update).not.toHaveBeenCalled()
+    })
+
+    it('throws when wrap is not visualizer-ready during regeneration', async () => {
+        mocks.getVisualizerWrapSelectionById.mockResolvedValue(null)
+
+        await expect(regenerateVisualizerPreview({ previewId: 'preview-1' })).rejects.toThrow(
+            'Wrap not found or is not visualizer-ready.'
+        )
+        expect(mocks.prisma.visualizerPreview.update).not.toHaveBeenCalled()
+    })
 })

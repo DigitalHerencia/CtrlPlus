@@ -1,3 +1,5 @@
+import Image from 'next/image'
+
 import type { CatalogAssetImageDTO } from '@/types/catalog.types'
 
 interface WrapDetailCarouselProps {
@@ -21,9 +23,12 @@ export function WrapDetailCarousel({ name, images }: WrapDetailCarouselProps) {
                     key={image.id}
                     className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900"
                 >
-                    <img
+                    <Image
                         src={image.detailUrl}
                         alt={`${name} gallery asset`}
+                        width={800}
+                        height={560}
+                        unoptimized
                         className="h-56 w-full object-cover"
                     />
                 </div>

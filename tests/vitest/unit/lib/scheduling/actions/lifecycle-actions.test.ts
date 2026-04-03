@@ -245,6 +245,70 @@ describe('scheduling lifecycle actions', () => {
         )
     })
 
+    it('blocks updates that would overlap with another active booking for the same customer', async () => {
+        const tx = createTx()
+        mocks.prisma.booking.findFirst.mockResolvedValue({
+            id: 'booking-1',
+            customerId: 'user-1',
+            startTime: new Date('2030-03-23T16:00:00.000Z'),
+            endTime: new Date('2030-03-23T18:00:00.000Z'),
+            status: 'pending',
+            wrap: { name: 'Midnight Matte' },
+            reservation: { expiresAt: new Date('2030-03-23T17:00:00.000Z') },
+        })
+        mocks.prisma.$transaction.mockImplementation(async (callback) => callback(tx))
+        mocks.assertSlotHasCapacity.mockResolvedValue(undefined)
+        tx.booking.findFirst.mockResolvedValue({ id: 'booking-overlap' })
+
+        await expect(
+            updateBooking('booking-1', {
+                startTime: new Date('2030-03-23T17:00:00.000Z').toISOString(),
+                endTime: new Date('2030-03-23T19:00:00.000Z').toISOString(),
+            })
+        ).rejects.toThrow('You already have a booking in this time slot')
+
+        expect(tx.booking.update).not.toHaveBeenCalled()
+    })
+
+    it('rejects confirming bookings that are not pending', async () => {
+        const tx = createTx()
+        mocks.prisma.$transaction.mockImplementation(async (callback) => callback(tx))
+        tx.booking.findFirst.mockResolvedValue({
+            id: 'booking-1',
+            customerId: 'user-1',
+            wrapId: 'wrap-1',
+            wrap: { name: 'Midnight Matte' },
+            startTime: new Date('2030-03-23T16:00:00.000Z'),
+            endTime: new Date('2030-03-23T18:00:00.000Z'),
+            status: 'confirmed',
+            totalPrice: 100000,
+            createdAt: new Date('2026-03-20T10:00:00.000Z'),
+            updatedAt: new Date('2026-03-20T10:00:00.000Z'),
+            reservation: null,
+        })
+
+        await expect(confirmBooking('booking-1')).rejects.toThrow(
+            'Only pending bookings can be confirmed'
+        )
+
+        expect(tx.booking.update).not.toHaveBeenCalled()
+    })
+
+    it('rejects cancelling completed bookings', async () => {
+        mocks.prisma.booking.findFirst.mockResolvedValue({
+            id: 'booking-1',
+            customerId: 'user-1',
+            status: 'completed',
+            wrap: { name: 'Midnight Matte' },
+        })
+
+        await expect(cancelBooking('booking-1', { reason: 'late request' })).rejects.toThrow(
+            'Completed bookings cannot be cancelled'
+        )
+
+        expect(mocks.prisma.$transaction).not.toHaveBeenCalled()
+    })
+
     it('cleans up expired reservations idempotently', async () => {
         const tx = createTx()
         mocks.prisma.bookingReservation.findMany
