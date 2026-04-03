@@ -495,7 +495,11 @@ export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps)
                                     </div>
                                 </CardHeader>
                                 <CardContent className="space-y-6">
-                                    <form onSubmit={handleSaveWrap} className="grid gap-4">
+                                    <form
+                                        key={selectedWrap.id}
+                                        onSubmit={handleSaveWrap}
+                                        className="grid gap-4"
+                                    >
                                         <div className="grid gap-4 md:grid-cols-2">
                                             <label className="space-y-2 text-sm text-neutral-300">
                                                 <span className="block">Wrap name</span>
