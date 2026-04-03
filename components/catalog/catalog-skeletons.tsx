@@ -32,7 +32,7 @@ export function CatalogHeaderSkeleton() {
 export function CatalogResultsSummarySkeleton() {
     return (
         <div className="space-y-2 text-right">
-            <Skeleton className="ml-auto h-3 w-18 rounded" />
+            <Skeleton className="w-18 ml-auto h-3 rounded" />
             <Skeleton className="ml-auto h-8 w-16 rounded-lg" />
         </div>
     )
@@ -40,10 +40,15 @@ export function CatalogResultsSummarySkeleton() {
 
 export function CatalogFiltersSkeleton() {
     return (
-        <div className="flex flex-wrap gap-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-24 rounded" />
-            ))}
+        <div className="border border-neutral-700 bg-neutral-950/80 px-6 py-7">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_repeat(2,minmax(0,0.9fr))]">
+                {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="space-y-2">
+                        <Skeleton className="h-3 w-20 rounded" />
+                        <Skeleton className="h-11 w-full rounded" />
+                    </div>
+                ))}
+            </div>
         </div>
     )
 }

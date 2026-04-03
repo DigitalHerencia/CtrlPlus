@@ -49,7 +49,7 @@ export function WorkspacePageContextCard({
     children,
 }: WorkspacePageContextCardProps) {
     return (
-        <section className={cn('border border-neutral-700 bg-neutral-950/80 px-6 py-5', className)}>
+        <section className={cn('border border-neutral-700 bg-neutral-950/80 px-6 py-6', className)}>
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 {title || description ? (
                     <div className="space-y-1">
@@ -58,7 +58,9 @@ export function WorkspacePageContextCard({
                                 {title}
                             </p>
                         ) : null}
-                        {description ? <p className="text-sm text-neutral-100">{description}</p> : null}
+                        {description ? (
+                            <p className="text-sm text-neutral-100">{description}</p>
+                        ) : null}
                     </div>
                 ) : null}
                 <div className="flex w-full flex-wrap items-center gap-3 lg:w-auto lg:justify-end">

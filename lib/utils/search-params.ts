@@ -40,24 +40,12 @@ export function createCatalogQueryString(filters: SearchWrapsInput): string {
         params.set('query', filters.query)
     }
 
-    if (filters.maxPrice !== undefined) {
-        params.set('maxPrice', String(filters.maxPrice))
-    }
-
     if (filters.categoryId) {
         params.set('categoryId', filters.categoryId)
     }
 
     if (filters.sortBy && filters.sortBy !== 'createdAt') {
         params.set('sortBy', filters.sortBy)
-    }
-
-    if (filters.sortOrder && filters.sortOrder !== 'desc') {
-        params.set('sortOrder', filters.sortOrder)
-    }
-
-    if (filters.pageSize !== undefined && filters.pageSize !== 20) {
-        params.set('pageSize', String(filters.pageSize))
     }
 
     if (filters.page !== undefined && filters.page !== 1) {
@@ -81,11 +69,8 @@ export function parseCatalogSearchParams(
 ): CatalogSearchParamsResult {
     const candidate = {
         query: first(searchParams.query),
-        maxPrice: toNumber(first(searchParams.maxPrice) ?? null),
         sortBy: first(searchParams.sortBy),
-        sortOrder: first(searchParams.sortOrder),
         page: toNumber(first(searchParams.page) ?? null),
-        pageSize: toNumber(first(searchParams.pageSize) ?? null),
         categoryId: first(searchParams.categoryId),
     }
 
@@ -101,18 +86,13 @@ export function parseCatalogSearchParams(
     const filters: SearchWrapsInput = {
         ...normalized,
         sortBy: normalized.sortBy ?? 'createdAt',
-        sortOrder: normalized.sortOrder ?? 'desc',
+        pageSize: normalized.pageSize ?? DEFAULT_PAGE_SIZE,
     }
 
     return {
         filters,
         hasActiveFilters: Boolean(
-            filters.query ||
-            filters.maxPrice !== undefined ||
-            filters.categoryId ||
-            filters.sortBy !== 'createdAt' ||
-            filters.sortOrder !== 'desc' ||
-            filters.pageSize !== DEFAULT_PAGE_SIZE
+            filters.query || filters.categoryId || filters.sortBy !== 'createdAt'
         ),
     }
 }
@@ -141,9 +121,7 @@ export function parseBillingSearchParams(searchParams: SearchParamRecord): {
     return {
         filters,
         hasActiveFilters: Boolean(
-            filters.query ||
-            filters.status ||
-            filters.pageSize !== DEFAULT_PAGE_SIZE
+            filters.query || filters.status || filters.pageSize !== DEFAULT_PAGE_SIZE
         ),
     }
 }

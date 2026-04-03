@@ -10,11 +10,6 @@ import { PlatformWebhookMonitorFeature } from './platform-webhook-monitor-featur
 export async function PlatformDashboardPageFeature() {
     return (
         <div className="space-y-8" aria-label="Platform dashboard">
-            <PlatformPageHeader
-                title="Platform operations"
-                description="Operate the core systems behind your wrap business with confidence, visibility, and dependable service quality."
-            />
-
             <PlatformHealthOverviewFeature />
             <PlatformWebhookMonitorFeature />
             <PlatformJobToolsFeature />

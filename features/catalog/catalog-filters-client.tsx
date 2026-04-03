@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { wrapFilterFormSchema } from '@/schemas/catalog.schemas'
 import { zodResolver } from '@/components/ui/forms'
 import type { WrapFilterFormValues, WrapFilterProps } from '@/types/catalog.types'
@@ -13,47 +13,14 @@ import { useForm, useWatch } from 'react-hook-form'
 const defaultValues: WrapFilterFormValues = {
     query: '',
     categoryId: '',
-    maxPrice: '',
     sortBy: 'createdAt',
-    sortOrder: 'desc',
-    pageSize: '20',
-}
-
-function formatPriceInputFromCents(value: string | null): string {
-    if (!value) {
-        return ''
-    }
-
-    const cents = Number(value)
-    if (!Number.isFinite(cents) || cents <= 0) {
-        return ''
-    }
-
-    return (cents / 100).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1')
-}
-
-function parsePriceInputToCents(value: string): string | null {
-    const normalized = value.trim()
-    if (!normalized) {
-        return null
-    }
-
-    const dollars = Number(normalized)
-    if (!Number.isFinite(dollars) || dollars <= 0) {
-        return null
-    }
-
-    return String(Math.round(dollars * 100))
 }
 
 function getFormValues(searchParams: ReadonlyURLSearchParams): WrapFilterFormValues {
     return {
         query: searchParams.get('query') ?? '',
         categoryId: searchParams.get('categoryId') ?? '',
-        maxPrice: formatPriceInputFromCents(searchParams.get('maxPrice')),
         sortBy: (searchParams.get('sortBy') as WrapFilterFormValues['sortBy']) ?? 'createdAt',
-        sortOrder: (searchParams.get('sortOrder') as WrapFilterFormValues['sortOrder']) ?? 'desc',
-        pageSize: (searchParams.get('pageSize') as WrapFilterFormValues['pageSize']) ?? '20',
     }
 }
 
@@ -61,6 +28,9 @@ function buildQueryString(values: WrapFilterFormValues, searchParams: ReadonlyUR
     const params = new URLSearchParams(searchParams.toString())
 
     params.delete('page')
+    params.delete('maxPrice')
+    params.delete('sortOrder')
+    params.delete('pageSize')
 
     if (values.query) {
         params.set('query', values.query)
@@ -74,30 +44,10 @@ function buildQueryString(values: WrapFilterFormValues, searchParams: ReadonlyUR
         params.delete('categoryId')
     }
 
-    const maxPriceInCents = parsePriceInputToCents(values.maxPrice)
-
-    if (maxPriceInCents) {
-        params.set('maxPrice', maxPriceInCents)
-    } else {
-        params.delete('maxPrice')
-    }
-
     if (values.sortBy !== 'createdAt') {
         params.set('sortBy', values.sortBy)
     } else {
         params.delete('sortBy')
-    }
-
-    if (values.sortOrder !== 'desc') {
-        params.set('sortOrder', values.sortOrder)
-    } else {
-        params.delete('sortOrder')
-    }
-
-    if (values.pageSize !== '20') {
-        params.set('pageSize', values.pageSize)
-    } else {
-        params.delete('pageSize')
     }
 
     return params.toString()
@@ -170,14 +120,7 @@ export function CatalogFiltersClient({ categories = [] }: WrapFilterProps) {
     const hasActiveFilters = useMemo(() => {
         const current = watchedValues ?? defaultValues
 
-        return Boolean(
-            current.query ||
-            current.maxPrice ||
-            current.categoryId ||
-            current.sortBy !== 'createdAt' ||
-            current.sortOrder !== 'desc' ||
-            current.pageSize !== '20'
-        )
+        return Boolean(current.query || current.categoryId || current.sortBy !== 'createdAt')
     }, [watchedValues])
 
     const inputClassName =
@@ -186,128 +129,79 @@ export function CatalogFiltersClient({ categories = [] }: WrapFilterProps) {
         'h-11 border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100'
 
     return (
-        <form onSubmit={(event) => event.preventDefault()} className="space-y-4">
-            <FieldGroup className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_repeat(5,minmax(0,0.78fr))] lg:items-start">
-                <Field>
-                    <FieldLabel htmlFor="catalog-search" className="text-neutral-300">
-                        Search
-                    </FieldLabel>
-                    <input
-                        id="catalog-search"
-                        type="search"
-                        placeholder="Search wraps, finishes, or textures"
-                        className={inputClassName}
-                        disabled={isPending}
-                        {...form.register('query')}
-                    />
-                </Field>
+        <section className="border border-neutral-700 bg-neutral-950/80 px-6 py-7">
+            <form onSubmit={(event) => event.preventDefault()} className="space-y-4">
+                <FieldGroup className="grid gap-4 lg:grid-cols-[minmax(0,1.8fr)_repeat(2,minmax(0,0.9fr))] lg:items-start">
+                    <Field>
+                        <FieldLabel htmlFor="catalog-search" className="text-neutral-300">
+                            Search
+                        </FieldLabel>
+                        <input
+                            id="catalog-search"
+                            type="search"
+                            placeholder="Search wraps, finishes, or textures"
+                            className={inputClassName}
+                            disabled={isPending}
+                            {...form.register('query')}
+                        />
+                    </Field>
 
-                <Field>
-                    <FieldLabel htmlFor="catalog-category" className="text-neutral-300">
-                        Category
-                    </FieldLabel>
-                    <select
-                        id="catalog-category"
-                        className={selectClassName}
-                        disabled={isPending}
-                        {...form.register('categoryId')}
-                    >
-                        <option value="">All categories</option>
-                        {categories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                                {category.name}
-                            </option>
-                        ))}
-                    </select>
-                </Field>
+                    <Field>
+                        <FieldLabel htmlFor="catalog-category" className="text-neutral-300">
+                            Category
+                        </FieldLabel>
+                        <select
+                            id="catalog-category"
+                            className={selectClassName}
+                            disabled={isPending}
+                            {...form.register('categoryId')}
+                        >
+                            <option value="">All categories</option>
+                            {categories.map((category) => (
+                                <option key={category.id} value={category.id}>
+                                    {category.name}
+                                </option>
+                            ))}
+                        </select>
+                    </Field>
 
-                <Field data-invalid={Boolean(form.formState.errors.maxPrice)}>
-                    <FieldLabel htmlFor="catalog-max-price" className="text-neutral-300">
-                        Max Price (USD)
-                    </FieldLabel>
-                    <input
-                        id="catalog-max-price"
-                        type="number"
-                        inputMode="decimal"
-                        min={0.01}
-                        step={0.01}
-                        placeholder="No limit"
-                        className={inputClassName}
-                        disabled={isPending}
-                        {...form.register('maxPrice')}
-                    />
-                    {form.formState.errors.maxPrice && (
-                        <FieldError errors={[form.formState.errors.maxPrice]} />
+                    <Field>
+                        <FieldLabel htmlFor="catalog-sort-by" className="text-neutral-300">
+                            Sort By
+                        </FieldLabel>
+                        <select
+                            id="catalog-sort-by"
+                            className={selectClassName}
+                            disabled={isPending}
+                            {...form.register('sortBy')}
+                        >
+                            <option value="createdAt">Date Added</option>
+                            <option value="name">Name</option>
+                            <option value="price">Price</option>
+                        </select>
+                    </Field>
+                </FieldGroup>
+
+                <div className="flex flex-col gap-3 border-t border-neutral-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-xs uppercase tracking-[0.18em] text-neutral-500">
+                        {isPending
+                            ? 'Refreshing catalog results'
+                            : 'Filters sync with the URL and server search.'}
+                    </div>
+
+                    {hasActiveFilters && (
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleReset}
+                            disabled={isPending}
+                        >
+                            Clear Filters
+                        </Button>
                     )}
-                </Field>
-
-                <Field>
-                    <FieldLabel htmlFor="catalog-sort-by" className="text-neutral-300">
-                        Sort By
-                    </FieldLabel>
-                    <select
-                        id="catalog-sort-by"
-                        className={selectClassName}
-                        disabled={isPending}
-                        {...form.register('sortBy')}
-                    >
-                        <option value="createdAt">Date Added</option>
-                        <option value="name">Name</option>
-                        <option value="price">Price</option>
-                    </select>
-                </Field>
-
-                <Field>
-                    <FieldLabel htmlFor="catalog-sort-order" className="text-neutral-300">
-                        Order
-                    </FieldLabel>
-                    <select
-                        id="catalog-sort-order"
-                        className={selectClassName}
-                        disabled={isPending}
-                        {...form.register('sortOrder')}
-                    >
-                        <option value="desc">Descending</option>
-                        <option value="asc">Ascending</option>
-                    </select>
-                </Field>
-
-                <Field>
-                    <FieldLabel htmlFor="catalog-page-size" className="text-neutral-300">
-                        Per Page
-                    </FieldLabel>
-                    <select
-                        id="catalog-page-size"
-                        className={selectClassName}
-                        disabled={isPending}
-                        {...form.register('pageSize')}
-                    >
-                        <option value="12">12</option>
-                        <option value="20">20</option>
-                        <option value="32">32</option>
-                    </select>
-                </Field>
-            </FieldGroup>
-
-            <div className="flex flex-col gap-3 border-t border-neutral-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="text-xs uppercase tracking-[0.18em] text-neutral-500">
-                    {isPending
-                        ? 'Refreshing catalog results'
-                        : 'Filters sync with the URL and server search.'}
                 </div>
-
-                {hasActiveFilters && (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleReset}
-                        disabled={isPending}
-                    >
-                        Clear Filters
-                    </Button>
-                )}
-            </div>
-        </form>
+            </form>
+        </section>
     )
 }

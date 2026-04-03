@@ -10,7 +10,6 @@ describe('parseCatalogSearchParams', () => {
             page: 1,
             pageSize: 20,
             sortBy: 'createdAt',
-            sortOrder: 'desc',
         })
         expect(result.hasActiveFilters).toBe(false)
     })
@@ -19,21 +18,16 @@ describe('parseCatalogSearchParams', () => {
         const result = parseCatalogSearchParams({
             query: ['matte', 'ignored'],
             categoryId: ['cat-1', 'ignored'],
-            maxPrice: ['25000'],
             sortBy: ['price', 'createdAt'],
-            sortOrder: ['asc', 'desc'],
             page: ['3', '4'],
-            pageSize: ['12', '20'],
         })
 
         expect(result.filters).toMatchObject({
             query: 'matte',
             categoryId: 'cat-1',
-            maxPrice: 25000,
             sortBy: 'price',
-            sortOrder: 'asc',
             page: 3,
-            pageSize: 12,
+            pageSize: 20,
         })
         expect(result.hasActiveFilters).toBe(true)
     })
@@ -42,7 +36,6 @@ describe('parseCatalogSearchParams', () => {
         const result = parseCatalogSearchParams({
             query: 'satin',
             page: 'not-a-number',
-            pageSize: 'oops',
         })
 
         expect(result.filters).toMatchObject({
@@ -50,7 +43,6 @@ describe('parseCatalogSearchParams', () => {
             page: 1,
             pageSize: 20,
             sortBy: 'createdAt',
-            sortOrder: 'desc',
         })
         expect(result.hasActiveFilters).toBe(true)
     })

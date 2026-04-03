@@ -15,8 +15,7 @@ test.describe('Domain Journey Smoke', () => {
     }
 
     test('catalog browse route preserves search context when redirecting', async ({ page }) => {
-        const route =
-            '/catalog?query=matte&categoryId=cat-1&sortBy=price&sortOrder=asc&page=2&pageSize=12'
+        const route = '/catalog?query=matte&categoryId=cat-1&sortBy=price&page=2'
 
         await page.goto(route)
         await expectAuthRedirectWithContext(page, route)

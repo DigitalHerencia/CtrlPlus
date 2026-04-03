@@ -190,9 +190,7 @@ export type WrapSortBy = (typeof WRAP_SORT_BY_VALUES)[keyof typeof WRAP_SORT_BY_
 
 export interface SearchWrapsInput {
     query?: string
-    maxPrice?: number
     sortBy?: WrapSortBy
-    sortOrder?: 'asc' | 'desc'
     page: number
     pageSize: number
     categoryId?: string
@@ -201,10 +199,7 @@ export interface SearchWrapsInput {
 export interface WrapFilterFormValues {
     query: string
     categoryId: string
-    maxPrice: string
     sortBy: 'createdAt' | 'name' | 'price'
-    sortOrder: 'desc' | 'asc'
-    pageSize: '12' | '20' | '32'
 }
 
 export interface CatalogSearchParamsResult {
