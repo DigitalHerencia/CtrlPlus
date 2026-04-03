@@ -3,6 +3,7 @@
 import { resolveGlobalRoleForClerkUserId } from '@/lib/auth/identity'
 import { upsertUserFromClerk } from '@/lib/actions/auth.actions'
 import { prisma } from '@/lib/db/prisma'
+import type { Prisma } from '@prisma/client'
 import type { ClerkWebhookEvent } from '@/lib/integrations/clerk'
 import {
     resolveClerkDevWebhookBaseUrl,
@@ -276,7 +277,7 @@ async function handleUserEvent(eventType: string, data: unknown): Promise<void> 
 
     if (eventType === 'user.deleted') {
         const deletedAt = new Date()
-        await prisma.$transaction(async (tx) => {
+        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             await tx.user.updateMany({
                 where: { clerkUserId },
                 data: {
