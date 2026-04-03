@@ -21,6 +21,7 @@ export function WrapPublishPanel({ wrap }: WrapPublishPanelProps) {
     const [isPending, startTransition] = useTransition()
     const [serverMessage, setServerMessage] = useState<string | null>(null)
     const { canPublish, isVisualizerReady, issues } = wrap.readiness
+    const publishDisabled = isPending || (wrap.isHidden && !canPublish)
 
     const handleTogglePublish = () => {
         setServerMessage(null)
@@ -66,7 +67,7 @@ export function WrapPublishPanel({ wrap }: WrapPublishPanelProps) {
 
                     <Button
                         onClick={handleTogglePublish}
-                        disabled={isPending}
+                        disabled={publishDisabled}
                         variant={wrap.isHidden ? 'default' : 'destructive'}
                         className="w-full"
                     >

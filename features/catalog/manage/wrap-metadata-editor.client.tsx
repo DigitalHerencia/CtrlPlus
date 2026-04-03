@@ -22,6 +22,23 @@ export interface WrapMetadataEditorProps {
     wrap: CatalogDetailDTO
 }
 
+function formatPriceInput(priceInCents: number): number {
+    return Number((priceInCents / 100).toFixed(2))
+}
+
+function parsePriceInput(value: unknown): number | undefined {
+    if (value === '' || value === null || value === undefined) {
+        return undefined
+    }
+
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed)) {
+        return undefined
+    }
+
+    return Math.round(parsed * 100)
+}
+
 export function WrapMetadataEditor({ wrap }: WrapMetadataEditorProps) {
     const [isPending, startTransition] = useTransition()
     const [serverMessage, setServerMessage] = useState<string | null>(null)
@@ -34,7 +51,7 @@ export function WrapMetadataEditor({ wrap }: WrapMetadataEditorProps) {
         defaultValues: {
             name: wrap.name,
             description: wrap.description ?? '',
-            price: wrap.price,
+            price: formatPriceInput(wrap.price),
             installationMinutes: wrap.installationMinutes ?? undefined,
         },
     })
@@ -73,11 +90,15 @@ export function WrapMetadataEditor({ wrap }: WrapMetadataEditorProps) {
 
                     <WrapPricingFields>
                         <div className="space-y-2">
-                            <Label htmlFor="price">Price (cents)</Label>
+                            <Label htmlFor="price">Price (USD)</Label>
                             <Input
                                 id="price"
                                 type="number"
-                                {...register('price', { valueAsNumber: true })}
+                                min="0.01"
+                                step="0.01"
+                                {...register('price', {
+                                    setValueAs: (value) => parsePriceInput(value),
+                                })}
                             />
                             {errors.price && (
                                 <p className="text-sm text-red-500">{errors.price.message}</p>

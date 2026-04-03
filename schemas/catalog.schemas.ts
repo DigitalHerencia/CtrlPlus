@@ -55,9 +55,12 @@ export const wrapFilterFormSchema = z.object({
     maxPrice: z
         .string()
         .trim()
-        .refine((value) => value === '' || /^\d+$/.test(value), 'Use whole cents only.')
         .refine(
-            (value) => value === '' || Number(value) <= 1_000_000_000,
+            (value) => value === '' || /^\d+(\.\d{1,2})?$/.test(value),
+            'Use dollars and cents only.'
+        )
+        .refine(
+            (value) => value === '' || Number(value) <= 10_000_000,
             'Max price is too large.'
         ),
     sortBy: z.enum(['createdAt', 'name', 'price']),

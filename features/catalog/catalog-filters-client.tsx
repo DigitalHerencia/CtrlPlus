@@ -19,11 +19,38 @@ const defaultValues: WrapFilterFormValues = {
     pageSize: '20',
 }
 
+function formatPriceInputFromCents(value: string | null): string {
+    if (!value) {
+        return ''
+    }
+
+    const cents = Number(value)
+    if (!Number.isFinite(cents) || cents <= 0) {
+        return ''
+    }
+
+    return (cents / 100).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1')
+}
+
+function parsePriceInputToCents(value: string): string | null {
+    const normalized = value.trim()
+    if (!normalized) {
+        return null
+    }
+
+    const dollars = Number(normalized)
+    if (!Number.isFinite(dollars) || dollars <= 0) {
+        return null
+    }
+
+    return String(Math.round(dollars * 100))
+}
+
 function getFormValues(searchParams: ReadonlyURLSearchParams): WrapFilterFormValues {
     return {
         query: searchParams.get('query') ?? '',
         categoryId: searchParams.get('categoryId') ?? '',
-        maxPrice: searchParams.get('maxPrice') ?? '',
+        maxPrice: formatPriceInputFromCents(searchParams.get('maxPrice')),
         sortBy: (searchParams.get('sortBy') as WrapFilterFormValues['sortBy']) ?? 'createdAt',
         sortOrder: (searchParams.get('sortOrder') as WrapFilterFormValues['sortOrder']) ?? 'desc',
         pageSize: (searchParams.get('pageSize') as WrapFilterFormValues['pageSize']) ?? '20',
@@ -47,8 +74,10 @@ function buildQueryString(values: WrapFilterFormValues, searchParams: ReadonlyUR
         params.delete('categoryId')
     }
 
-    if (values.maxPrice) {
-        params.set('maxPrice', values.maxPrice)
+    const maxPriceInCents = parsePriceInputToCents(values.maxPrice)
+
+    if (maxPriceInCents) {
+        params.set('maxPrice', maxPriceInCents)
     } else {
         params.delete('maxPrice')
     }
@@ -194,14 +223,14 @@ export function CatalogFiltersClient({ categories = [] }: WrapFilterProps) {
 
                 <Field data-invalid={Boolean(form.formState.errors.maxPrice)}>
                     <FieldLabel htmlFor="catalog-max-price" className="text-neutral-300">
-                        Max Price (cents)
+                        Max Price (USD)
                     </FieldLabel>
                     <input
                         id="catalog-max-price"
                         type="number"
-                        inputMode="numeric"
-                        min={1}
-                        step={1}
+                        inputMode="decimal"
+                        min={0.01}
+                        step={0.01}
                         placeholder="No limit"
                         className={inputClassName}
                         disabled={isPending}
