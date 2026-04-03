@@ -9,8 +9,6 @@ interface WorkspacePageIntroProps {
     label: string
     title: string
     description: string
-    actions?: ReactNode
-    detail?: ReactNode
     className?: string
 }
 
@@ -18,34 +16,54 @@ export function WorkspacePageIntro({
     label,
     title,
     description,
-    actions,
-    detail,
     className,
 }: WorkspacePageIntroProps) {
     return (
         <section className={cn('border border-neutral-700 bg-neutral-950/80 px-6 py-7', className)}>
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">
-                        {label}
-                    </p>
-                    <div className="space-y-1">
-                        <h1 className="text-3xl font-black tracking-tight text-neutral-100 sm:text-4xl">
-                            {title}
-                        </h1>
-                        <p className="max-w-3xl text-sm text-neutral-100 sm:text-base">
-                            {description}
-                        </p>
-                    </div>
+            <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-blue-600">
+                    {label}
+                </p>
+                <div className="space-y-1">
+                    <h1 className="text-3xl font-black tracking-tight text-neutral-100 sm:text-4xl">
+                        {title}
+                    </h1>
+                    <p className="max-w-3xl text-sm text-neutral-100 sm:text-base">{description}</p>
                 </div>
-                {(actions || detail) && (
-                    <div className="flex w-full flex-col gap-3 lg:w-auto lg:min-w-72 lg:items-end">
-                        {detail ? <div className="w-full lg:w-auto">{detail}</div> : null}
-                        {actions ? (
-                            <div className="flex flex-wrap gap-3 lg:justify-end">{actions}</div>
+            </div>
+        </section>
+    )
+}
+
+interface WorkspacePageContextCardProps {
+    title?: string
+    description?: string
+    className?: string
+    children: ReactNode
+}
+
+export function WorkspacePageContextCard({
+    title,
+    description,
+    className,
+    children,
+}: WorkspacePageContextCardProps) {
+    return (
+        <section className={cn('border border-neutral-700 bg-neutral-950/80 px-6 py-5', className)}>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                {title || description ? (
+                    <div className="space-y-1">
+                        {title ? (
+                            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-neutral-100">
+                                {title}
+                            </p>
                         ) : null}
+                        {description ? <p className="text-sm text-neutral-100">{description}</p> : null}
                     </div>
-                )}
+                ) : null}
+                <div className="flex w-full flex-wrap items-center gap-3 lg:w-auto lg:justify-end">
+                    {children}
+                </div>
             </div>
         </section>
     )

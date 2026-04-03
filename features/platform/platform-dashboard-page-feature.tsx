@@ -12,7 +12,7 @@ export async function PlatformDashboardPageFeature() {
         <div className="space-y-8" aria-label="Platform dashboard">
             <PlatformPageHeader
                 title="Platform operations"
-                description="System operations and developer control surface for observability, health, integrations, and maintenance tooling."
+                description="Operate the core systems behind your wrap business with confidence, visibility, and dependable service quality."
             />
 
             <PlatformHealthOverviewFeature />

@@ -37,7 +37,8 @@ export type WrapRecord = Prisma.WrapGetPayload<{
     select: typeof wrapDTOFields
 }>
 
-export function isExampleCatalogWrapId(_wrapId: string): boolean {
+export function isExampleCatalogWrapId(wrapId: string): boolean {
+    void wrapId
     return false
 }
 
@@ -64,7 +65,6 @@ function getWrapWhere(
                   ],
               }
             : {}),
-        ...(filters.maxPrice !== undefined ? { price: { lte: filters.maxPrice } } : {}),
         ...(filters.categoryId
             ? {
                   categoryMappings: {
@@ -113,6 +113,36 @@ function getWrapReadiness(wrap: WrapDTO) {
         price: wrap.price,
         images: wrap.images,
     })
+}
+
+function getWrapOrderBy(
+    sortBy: SearchWrapsInput['sortBy'] = 'createdAt'
+): Prisma.WrapOrderByWithRelationInput {
+    if (sortBy === 'name') {
+        return { name: 'asc' }
+    }
+
+    if (sortBy === 'price') {
+        return { price: 'asc' }
+    }
+
+    return { createdAt: 'desc' }
+}
+
+function compareWraps(
+    left: WrapDTO,
+    right: WrapDTO,
+    sortBy: SearchWrapsInput['sortBy'] = 'createdAt'
+) {
+    if (sortBy === 'name') {
+        return left.name.localeCompare(right.name)
+    }
+
+    if (sortBy === 'price') {
+        return left.price - right.price
+    }
+
+    return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
 }
 
 function toCatalogBrowseCard(wrap: WrapDTO): CatalogBrowseCardDTO {
@@ -224,7 +254,7 @@ async function searchWrapRecords(
     const [wraps, total] = await Promise.all([
         prisma.wrap.findMany({
             where,
-            orderBy: { [parsedFilters.sortBy ?? 'createdAt']: parsedFilters.sortOrder ?? 'desc' },
+            orderBy: getWrapOrderBy(parsedFilters.sortBy),
             select: wrapDTOFields,
             skip,
             take: parsedFilters.pageSize,
@@ -338,10 +368,6 @@ export async function searchCatalogWraps(
                 }
             }
 
-            if (parsedFilters.maxPrice !== undefined && wrap.price > parsedFilters.maxPrice) {
-                return false
-            }
-
             if (
                 parsedFilters.categoryId &&
                 !wrap.categories.some((category) => category.id === parsedFilters.categoryId)
@@ -352,23 +378,9 @@ export async function searchCatalogWraps(
             return true
         })
 
-    const sortedCatalogWraps = [...filteredCatalogWraps].sort((left, right) => {
-        const sortBy = parsedFilters.sortBy ?? 'createdAt'
-        const sortOrder = parsedFilters.sortOrder ?? 'desc'
-        const direction = sortOrder === 'asc' ? 1 : -1
-
-        if (sortBy === 'name') {
-            return left.name.localeCompare(right.name) * direction
-        }
-
-        if (sortBy === 'price') {
-            return (left.price - right.price) * direction
-        }
-
-        return (
-            (new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()) * direction
-        )
-    })
+    const sortedCatalogWraps = [...filteredCatalogWraps].sort((left, right) =>
+        compareWraps(left, right, parsedFilters.sortBy)
+    )
 
     const total = sortedCatalogWraps.length
     const pageSize = parsedFilters.pageSize ?? 20

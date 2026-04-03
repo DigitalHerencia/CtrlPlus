@@ -7,7 +7,7 @@ export async function PlatformDbPageFeature() {
         <div className="space-y-6">
             <PlatformPageHeader
                 title="Platform database tools"
-                description="Database diagnostics and support tools for platform operators."
+                description="Maintain healthy data operations so customer bookings, invoices, and previews stay dependable and fast."
             />
             <PlatformDbToolsFeature />
         </div>

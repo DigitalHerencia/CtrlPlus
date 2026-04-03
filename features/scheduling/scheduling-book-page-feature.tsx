@@ -2,7 +2,11 @@ import 'server-only'
 
 import Link from 'next/link'
 
-import { WorkspaceEmptyState, WorkspacePageIntro } from '@/components/shared/tenant-elements'
+import {
+    WorkspaceEmptyState,
+    WorkspacePageContextCard,
+    WorkspacePageIntro,
+} from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { getWrapsForScheduling, getAvailabilityWindows } from '@/lib/fetchers/scheduling.fetchers'
@@ -40,13 +44,16 @@ export async function SchedulingBookPageFeature({
             <WorkspacePageIntro
                 label="Booking"
                 title="Book an Appointment"
-                description="Select an available date, claim a time slot, and attach the right wrap package for the installation."
-                actions={
-                    <Button asChild variant="outline">
-                        <Link href="/scheduling">Back to Calendar</Link>
-                    </Button>
-                }
+                description="Guide customers from wrap selection to a confirmed install slot with a clear, premium booking experience."
             />
+            <WorkspacePageContextCard
+                title="Booking Navigation"
+                description="Return to calendar planning at any time"
+            >
+                <Button asChild variant="outline">
+                    <Link href="/scheduling">Back to Calendar</Link>
+                </Button>
+            </WorkspacePageContextCard>
 
             {wraps.length === 0 ? (
                 <WorkspaceEmptyState

@@ -3,7 +3,11 @@ import 'server-only'
 import Link from 'next/link'
 
 import { BookingCard } from '@/components/scheduling/booking-card'
-import { WorkspaceEmptyState, WorkspacePageIntro } from '@/components/shared/tenant-elements'
+import {
+    WorkspaceEmptyState,
+    WorkspacePageContextCard,
+    WorkspacePageIntro,
+} from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getBookings } from '@/lib/fetchers/scheduling.fetchers'
@@ -30,41 +34,42 @@ export async function SchedulingBookingsPageFeature({ tab }: SchedulingBookingsP
             <WorkspacePageIntro
                 label="Appointments"
                 title="Bookings"
-                description="Flip between upcoming and past installs while keeping navigation and actions consistent with the rest of the workspace."
-                actions={
-                    <>
-                        <Button asChild variant="outline">
-                            <Link href="/scheduling">Calendar</Link>
-                        </Button>
-                        <Button asChild>
-                            <Link href="/scheduling/book">New Booking</Link>
-                        </Button>
-                    </>
-                }
+                description="Track every customer appointment with confidence, from upcoming install commitments to completed vehicle transformations."
             />
 
-            <div className="inline-flex gap-1 border border-neutral-800 bg-neutral-900/80 p-1">
-                <Link
-                    href="/scheduling/bookings?tab=upcoming"
-                    className={`px-4 py-2 text-sm font-semibold transition-colors ${
-                        isUpcoming
-                            ? 'bg-blue-600 text-neutral-100 shadow-[0_16px_30px_-20px_rgba(37,99,235,0.9)]'
-                            : 'text-neutral-400 hover:text-neutral-100'
-                    }`}
-                >
-                    Upcoming
-                </Link>
-                <Link
-                    href="/scheduling/bookings?tab=past"
-                    className={`px-4 py-2 text-sm font-semibold transition-colors ${
-                        !isUpcoming
-                            ? 'bg-blue-600 text-neutral-100 shadow-[0_16px_30px_-20px_rgba(37,99,235,0.9)]'
-                            : 'text-neutral-400 hover:text-neutral-100'
-                    }`}
-                >
-                    Past
-                </Link>
-            </div>
+            <WorkspacePageContextCard
+                title="Booking Navigation"
+                description="Switch between upcoming and past installs"
+            >
+                <Button asChild variant="outline">
+                    <Link href="/scheduling">Calendar</Link>
+                </Button>
+                <Button asChild>
+                    <Link href="/scheduling/book">New Booking</Link>
+                </Button>
+                <div className="inline-flex gap-1 border border-neutral-800 bg-neutral-900/80 p-1">
+                    <Link
+                        href="/scheduling/bookings?tab=upcoming"
+                        className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                            isUpcoming
+                                ? 'bg-blue-600 text-neutral-100 shadow-[0_16px_30px_-20px_rgba(37,99,235,0.9)]'
+                                : 'text-neutral-400 hover:text-neutral-100'
+                        }`}
+                    >
+                        Upcoming
+                    </Link>
+                    <Link
+                        href="/scheduling/bookings?tab=past"
+                        className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                            !isUpcoming
+                                ? 'bg-blue-600 text-neutral-100 shadow-[0_16px_30px_-20px_rgba(37,99,235,0.9)]'
+                                : 'text-neutral-400 hover:text-neutral-100'
+                        }`}
+                    >
+                        Past
+                    </Link>
+                </div>
+            </WorkspacePageContextCard>
 
             <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
                 <CardHeader>

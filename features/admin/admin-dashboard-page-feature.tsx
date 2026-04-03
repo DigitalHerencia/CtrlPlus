@@ -16,7 +16,7 @@ export async function AdminDashboardPageFeature() {
             <AdminPageHeader
                 label="Admin"
                 title="Command and control"
-                description="Monitor bookings, revenue, previews, moderation, and operational activity from one dashboard."
+                description="Keep bookings, revenue, moderation, and preview operations aligned so customers experience reliable delivery at every step."
             />
 
             <AdminKpiGridFeature tenantId={TENANT_ID} />

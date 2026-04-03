@@ -1,3 +1,7 @@
+import Link from 'next/link'
+
+import { WorkspacePageContextCard, WorkspacePageIntro } from '@/components/shared/tenant-elements'
+import { Button } from '@/components/ui/button'
 import { getInvoice } from '@/lib/fetchers/billing.fetchers'
 import { notFound } from 'next/navigation'
 
@@ -11,8 +15,17 @@ export async function InvoicePayPageFeature({ invoiceId }: InvoicePayPageFeature
     const invoice = (await getInvoice(invoiceId)) ?? notFound()
 
     return (
-        <div className="space-y-4">
-            <h1 className="text-2xl font-semibold text-neutral-100">Pay Invoice {invoice.id}</h1>
+        <div className="space-y-6">
+            <WorkspacePageIntro
+                label="Billing"
+                title={`Pay Invoice ${invoice.id}`}
+                description="Complete this payment securely to keep your wrap project moving on schedule."
+            />
+            <WorkspacePageContextCard title="Payment Navigation" description="Return to invoice detail">
+                <Button asChild variant="outline">
+                    <Link href={`/billing/${invoice.id}`}>Back to Invoice</Link>
+                </Button>
+            </WorkspacePageContextCard>
             <InvoicePayFormClient invoiceId={invoice.id} />
         </div>
     )

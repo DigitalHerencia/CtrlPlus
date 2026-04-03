@@ -1,6 +1,9 @@
 import { applyCredit } from '@/lib/actions/billing.actions'
+import { WorkspacePageContextCard, WorkspacePageIntro } from '@/components/shared/tenant-elements'
+import { Button } from '@/components/ui/button'
 import { getInvoice } from '@/lib/fetchers/billing.fetchers'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 
 import { InvoiceEditorFormClient } from './invoice-editor-form.client'
 
@@ -21,8 +24,17 @@ export async function EditInvoicePageFeature({ invoiceId }: EditInvoicePageFeatu
     }
 
     return (
-        <div className="space-y-4">
-            <h1 className="text-2xl font-semibold text-neutral-100">Edit Invoice {invoice.id}</h1>
+        <div className="space-y-6">
+            <WorkspacePageIntro
+                label="Billing"
+                title={`Edit Invoice ${invoice.id}`}
+                description="Refine billing details without losing financial traceability or customer confidence."
+            />
+            <WorkspacePageContextCard title="Manager Navigation" description="Return to invoice operations">
+                <Button asChild variant="outline">
+                    <Link href="/billing/manage">Back to Manager</Link>
+                </Button>
+            </WorkspacePageContextCard>
             <InvoiceEditorFormClient
                 initialBookingId={invoice.bookingId}
                 submitLabel="Save Changes"

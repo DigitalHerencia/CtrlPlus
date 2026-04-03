@@ -1,3 +1,7 @@
+import Link from 'next/link'
+
+import { WorkspacePageContextCard, WorkspacePageIntro } from '@/components/shared/tenant-elements'
+import { Button } from '@/components/ui/button'
 import { getInvoice } from '@/lib/fetchers/billing.fetchers'
 import { notFound } from 'next/navigation'
 
@@ -11,8 +15,17 @@ export async function InvoiceRefundPageFeature({ invoiceId }: InvoiceRefundPageF
     const invoice = (await getInvoice(invoiceId)) ?? notFound()
 
     return (
-        <div className="space-y-4">
-            <h1 className="text-2xl font-semibold text-neutral-100">Refund {invoice.id}</h1>
+        <div className="space-y-6">
+            <WorkspacePageIntro
+                label="Billing"
+                title={`Refund Invoice ${invoice.id}`}
+                description="Issue a controlled refund while preserving full audit clarity and a premium customer experience."
+            />
+            <WorkspacePageContextCard title="Refund Navigation" description="Return to invoice detail">
+                <Button asChild variant="outline">
+                    <Link href={`/billing/${invoice.id}`}>Back to Invoice</Link>
+                </Button>
+            </WorkspacePageContextCard>
             <InvoiceRefundFormClient invoiceId={invoice.id} />
         </div>
     )

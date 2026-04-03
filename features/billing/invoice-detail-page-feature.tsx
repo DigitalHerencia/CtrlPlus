@@ -2,9 +2,13 @@ import { InvoiceDetailHeader } from '@/components/billing/invoice-detail-header'
 import { InvoiceDetailSummary } from '@/components/billing/invoice-detail-summary'
 import { InvoiceLineItemsTable } from '@/components/billing/invoice-line-items-table'
 import { InvoicePaymentPanel } from '@/components/billing/invoice-payment-panel'
+import { InvoiceStatusBadge } from '@/components/billing/InvoiceStatusBadge'
+import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getInvoice } from '@/lib/fetchers/billing.fetchers'
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 
 import { InvoiceDetailTabsClient } from './invoice-detail-tabs.client'
 
@@ -18,6 +22,15 @@ export async function InvoiceDetailPageFeature({ invoiceId }: InvoiceDetailPageF
     return (
         <div className="space-y-6">
             <InvoiceDetailHeader invoice={invoice} />
+            <WorkspacePageContextCard
+                title="Invoice Controls"
+                description="Current status and quick navigation"
+            >
+                <InvoiceStatusBadge status={invoice.status} />
+                <Button asChild variant="outline">
+                    <Link href="/billing">Back to Billing</Link>
+                </Button>
+            </WorkspacePageContextCard>
 
             <div className="grid gap-4 md:grid-cols-3">
                 <div className="md:col-span-2">

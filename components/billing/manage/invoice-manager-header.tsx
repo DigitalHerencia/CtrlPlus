@@ -1,19 +1,15 @@
-import { type ReactNode } from 'react'
+import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 
 interface InvoiceManagerHeaderProps {
-    actions?: ReactNode
+    title?: string
+    description?: string
 }
 
-export function InvoiceManagerHeader({ actions }: InvoiceManagerHeaderProps) {
+export function InvoiceManagerHeader({
+    title = 'Invoice Manager',
+    description = 'Guide every customer project from estimate to payment with confident, transparent billing operations.',
+}: InvoiceManagerHeaderProps) {
     return (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-                <h1 className="text-2xl font-semibold text-neutral-100">Invoice Manager</h1>
-                <p className="text-sm text-neutral-400">
-                    Issue, refund, credit, and void invoices.
-                </p>
-            </div>
-            {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
-        </div>
+        <WorkspacePageIntro label="Billing" title={title} description={description} />
     )
 }

@@ -7,7 +7,7 @@ export async function PlatformVisualizerPageFeature() {
         <div className="space-y-6">
             <PlatformPageHeader
                 title="Platform visualizer tools"
-                description="Visualizer preview maintenance and operational support tooling."
+                description="Keep AI preview operations stable so customers can explore wrap concepts without friction."
             />
             <PlatformVisualizerToolsFeature />
         </div>

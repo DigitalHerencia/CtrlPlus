@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { notFound } from 'next/navigation'
 import { getCatalogWrapById } from '@/lib/fetchers/catalog.fetchers'
 import { WrapManagerDetailPageClient } from './wrap-manager-detail-page.client'
+import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
 
 export interface WrapManagerDetailPageProps {
     id: string
@@ -17,13 +18,17 @@ export async function WrapManagerDetailPage({ id }: WrapManagerDetailPageProps) 
     return (
         <div className="space-y-6">
             <CatalogManagerHeader
-                total={1}
-                actions={
-                    <Button variant="outline" asChild>
-                        <Link href="/catalog/manage">Back</Link>
-                    </Button>
-                }
+                title={`Refine ${wrap.name}`}
+                description="Keep this wrap listing polished with consistent visuals, pricing clarity, and preview-ready assets."
             />
+            <WorkspacePageContextCard
+                title="Manager Navigation"
+                description="Return to inventory or continue editing this listing"
+            >
+                <Button variant="outline" asChild>
+                    <Link href="/catalog/manage">Back to Manager</Link>
+                </Button>
+            </WorkspacePageContextCard>
 
             <WrapManagerDetailPageClient wrap={wrap} />
         </div>

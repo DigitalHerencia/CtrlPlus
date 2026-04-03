@@ -13,6 +13,7 @@ import {
     CatalogResultsSection,
     CatalogResultsSummary,
 } from './catalog-browse-parts'
+import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
 
 function CatalogResultsRegionSkeleton() {
     return (
@@ -32,16 +33,16 @@ export function CatalogBrowsePageFeature({
             <CatalogPageHeader
                 label="Catalog"
                 title="Vehicle Wrap Gallery"
-                description="Browse professionally managed wrap packages with deterministic product imagery, category filtering, and direct detail access."
-                detail={
-                    <Suspense fallback={<CatalogResultsSummarySkeleton />}>
-                        <CatalogResultsSummary
-                            filters={filters}
-                            canManageCatalog={canManageCatalog}
-                        />
-                    </Suspense>
-                }
+                description="Explore premium wrap styles built for attention, compare finish options quickly, and move from inspiration to booking with confidence."
             />
+            <WorkspacePageContextCard
+                title="Catalog Snapshot"
+                description="Live result and publishing visibility"
+            >
+                <Suspense fallback={<CatalogResultsSummarySkeleton />}>
+                    <CatalogResultsSummary filters={filters} canManageCatalog={canManageCatalog} />
+                </Suspense>
+            </WorkspacePageContextCard>
             <Suspense fallback={<CatalogFiltersSkeleton />}>
                 <CatalogFiltersSection />
             </Suspense>

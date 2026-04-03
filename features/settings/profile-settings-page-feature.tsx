@@ -15,7 +15,7 @@ export async function ProfileSettingsPageFeature() {
         <div className="space-y-6">
             <SettingsPageHeader
                 title="Profile Settings"
-                description="Manage personal preferences, notifications, and account-level defaults."
+                description="Personalize how you run customer conversations, notifications, and day-to-day wrap operations."
             />
             <SettingsTabsClient active="profile" />
             <UserSettingsFormClient initialSettings={userSettings} onSave={updateUserPreferences} />

@@ -22,7 +22,7 @@ export async function DataExportPageFeature({
             <div className="space-y-6">
                 <SettingsPageHeader
                     title="Data Export"
-                    description="Owner-only export controls for operational data portability."
+                    description="Access governed export controls to share operational data safely with customers, partners, or finance workflows."
                 />
                 <SettingsTabsClient active="data" />
                 <SettingsEmptyState
@@ -37,7 +37,7 @@ export async function DataExportPageFeature({
         <div className="space-y-6">
             <SettingsPageHeader
                 title="Data Export"
-                description="Owner-only export controls for operational data portability."
+                description="Access governed export controls to share operational data safely with customers, partners, or finance workflows."
             />
             <SettingsTabsClient active="data" />
             <ExportDataActionsClient

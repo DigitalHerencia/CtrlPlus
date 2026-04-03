@@ -23,7 +23,7 @@ export async function AdminAnalyticsPageFeature({
             <AdminPageHeader
                 label="Admin"
                 title="Analytics"
-                description="Track tenant-scoped booking and preview trends over time."
+                description="Track booking and preview momentum to identify what is driving customer confidence and conversion."
             />
 
             <AdminAnalyticsFiltersClient />

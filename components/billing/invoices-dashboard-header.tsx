@@ -1,23 +1,15 @@
-import { type ReactNode } from 'react'
+import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 
 interface InvoicesDashboardHeaderProps {
+    label?: string
     title?: string
     description?: string
-    actions?: ReactNode
 }
 
 export function InvoicesDashboardHeader({
+    label = 'Billing',
     title = 'Invoices',
-    description = 'Track invoice lifecycle, balances, and payment outcomes.',
-    actions,
+    description = 'Keep every wrap project financially clear with transparent invoices, balances, and payment milestones.',
 }: InvoicesDashboardHeaderProps) {
-    return (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-                <h1 className="text-2xl font-semibold text-neutral-100">{title}</h1>
-                <p className="text-sm text-neutral-400">{description}</p>
-            </div>
-            {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
-        </div>
-    )
+    return <WorkspacePageIntro label={label} title={title} description={description} />
 }

@@ -19,6 +19,7 @@ import { createWrap } from '@/lib/actions/catalog.actions'
 import { createWrapSchema } from '@/schemas/catalog.schemas'
 import type { CreateWrapInput } from '@/types/catalog.types'
 import { useRouter } from 'next/navigation'
+import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
 
 function parsePriceInput(value: number): number {
     if (!Number.isFinite(value) || value <= 0) {
@@ -59,13 +60,17 @@ export function NewWrapPageFeature() {
     return (
         <div className="space-y-6">
             <CatalogManagerHeader
-                total={0}
-                actions={
-                    <Button variant="outline" asChild>
-                        <Link href="/catalog/manage">Cancel</Link>
-                    </Button>
-                }
+                title="Launch a New Wrap Package"
+                description="Create a high-converting catalog listing with clear pricing, production-ready details, and premium positioning."
             />
+            <WorkspacePageContextCard
+                title="Creation Controls"
+                description="Return to your manager workspace anytime"
+            >
+                <Button variant="outline" asChild>
+                    <Link href="/catalog/manage">Cancel</Link>
+                </Button>
+            </WorkspacePageContextCard>
 
             <WrapFormShell
                 title="Wrap Information"

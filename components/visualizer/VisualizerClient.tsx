@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { WorkspacePageContextCard, WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { formatPrice } from '@/lib/utils/currency'
 import { formatInstallationTime } from '@/lib/utils/dates'
 import type { VisualizerWrapSelectionDTO } from '@/types/catalog.types'
@@ -50,14 +51,20 @@ export function VisualizerClient({
 }: VisualizerClientProps) {
     return (
         <div className="space-y-6">
-            <section className="rounded-2xl border border-neutral-800 bg-neutral-950/90 p-8 text-neutral-100 shadow-[0_24px_80px_-56px_rgba(0,0,0,0.95)]">
-                <p className="text-xs uppercase tracking-[0.32em] text-blue-400">Preview</p>
-                <h1 className="mt-3 text-5xl font-black tracking-tight">Wrap Visualizer</h1>
-                <p className="mt-4 max-w-3xl text-lg leading-8 text-neutral-300">
-                    Upload a vehicle photo, select a visualizer-ready wrap, and generate an AI
-                    concept preview that approximates how the branding could look on your vehicle.
+            <WorkspacePageIntro
+                label="Visualizer"
+                title="Wrap Visualizer"
+                description="Upload a vehicle photo, choose a premium wrap package, and generate customer-ready AI concept previews in minutes."
+            />
+            <WorkspacePageContextCard
+                title="Preview Guidance"
+                description="Use high-quality source photos for the most realistic concept output"
+            >
+                <p className="text-sm text-neutral-100">Accepted uploads: JPG, PNG, WebP</p>
+                <p className="text-sm text-neutral-100">
+                    Generation path: AI preview with resilient fallback
                 </p>
-            </section>
+            </WorkspacePageContextCard>
 
             <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
                 <div className="space-y-6">

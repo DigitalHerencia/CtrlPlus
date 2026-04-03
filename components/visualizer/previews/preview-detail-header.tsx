@@ -1,12 +1,12 @@
+import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import type { VisualizerPreviewDTO } from '@/types/visualizer.types'
 
 export function PreviewDetailHeader({ preview }: { preview: VisualizerPreviewDTO }) {
     return (
-        <div>
-            <h2 className="text-2xl font-bold text-neutral-100">
-                Preview {preview.id.slice(0, 8)}
-            </h2>
-            <p className="text-sm text-neutral-400">Status: {preview.status}</p>
-        </div>
+        <WorkspacePageIntro
+            label="Visualizer"
+            title={`Preview ${preview.id.slice(0, 8)}`}
+            description={`Track generation progress and validate this concept render before sharing it with your customer. Status: ${preview.status}.`}
+        />
     )
 }

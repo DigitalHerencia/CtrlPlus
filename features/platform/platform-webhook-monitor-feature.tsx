@@ -18,7 +18,7 @@ export async function PlatformWebhookMonitorFeature() {
         <div className="space-y-6">
             <PlatformPageHeader
                 title="Webhook monitor"
-                description="Inspect failures, stale processing locks, and run bounded replay and cleanup actions."
+                description="Protect checkout, auth, and preview automations by quickly diagnosing webhook failures and restoring flow reliability."
             />
 
             <PlatformWebhookPanel overview={overview} />

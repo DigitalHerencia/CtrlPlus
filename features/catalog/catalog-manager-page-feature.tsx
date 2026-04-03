@@ -8,6 +8,7 @@ import { createCatalogQueryString } from '@/lib/utils/search-params'
 import type { CatalogManagerPageFeatureProps } from '@/types/catalog.types'
 import { CatalogFiltersClient } from './catalog-filters-client'
 import { CatalogManagerClient } from './catalog-manager-client'
+import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
 
 export async function CatalogManagerPageFeature({ filters }: CatalogManagerPageFeatureProps) {
     const [data, categories] = await Promise.all([
@@ -17,14 +18,19 @@ export async function CatalogManagerPageFeature({ filters }: CatalogManagerPageF
 
     return (
         <div className="space-y-6">
-            <CatalogManagerHeader
-                total={data.total}
-                actions={
-                    <Button asChild variant="outline">
-                        <Link href="/catalog">Back to Gallery</Link>
-                    </Button>
-                }
-            />
+            <CatalogManagerHeader />
+            <WorkspacePageContextCard
+                title="Manager Controls"
+                description="Inventory oversight and storefront navigation"
+            >
+                <div className="mr-4 text-left lg:text-right">
+                    <p className="text-xs uppercase tracking-[0.24em] text-neutral-500">Managed Wraps</p>
+                    <p className="text-3xl font-black text-neutral-100">{data.total}</p>
+                </div>
+                <Button asChild variant="outline">
+                    <Link href="/catalog">Back to Gallery</Link>
+                </Button>
+            </WorkspacePageContextCard>
             <CatalogFiltersClient categories={categories} />
             <CatalogManagerClient wraps={data.wraps} categories={categories} />
             <CatalogPagination

@@ -5,6 +5,7 @@ import { InvoiceLifecyclePanel } from '@/components/billing/manage/invoice-lifec
 import { InvoiceManagerHeader } from '@/components/billing/manage/invoice-manager-header'
 import { InvoiceManagerStats } from '@/components/billing/manage/invoice-manager-stats'
 import { InvoiceNotificationPanel } from '@/components/billing/manage/invoice-notification-panel'
+import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { getBalance, getInvoices } from '@/lib/fetchers/billing.fetchers'
 import { parseBillingSearchParams } from '@/lib/utils/search-params'
@@ -28,13 +29,15 @@ export async function InvoiceManagerPageFeature({ searchParams }: InvoiceManager
 
     return (
         <div className="space-y-6">
-            <InvoiceManagerHeader
-                actions={
-                    <Button asChild>
-                        <Link href="/billing/manage/new">New Invoice</Link>
-                    </Button>
-                }
-            />
+            <InvoiceManagerHeader />
+            <WorkspacePageContextCard
+                title="Manager Actions"
+                description="Create invoices and operate lifecycle tools"
+            >
+                <Button asChild>
+                    <Link href="/billing/manage/new">New Invoice</Link>
+                </Button>
+            </WorkspacePageContextCard>
 
             <InvoiceManagerStats
                 totalInvoices={total}

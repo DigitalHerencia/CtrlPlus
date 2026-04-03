@@ -4,7 +4,11 @@ import Link from 'next/link'
 
 import { BookingCard, type BookingCardItem } from '@/components/scheduling/booking-card'
 import { CalendarClient } from '@/components/scheduling/calendar-client'
-import { WorkspaceMetricCard, WorkspacePageIntro } from '@/components/shared/tenant-elements'
+import {
+    WorkspaceMetricCard,
+    WorkspacePageContextCard,
+    WorkspacePageIntro,
+} from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getAvailabilityWindows, getBookings } from '@/lib/fetchers/scheduling.fetchers'
@@ -64,18 +68,19 @@ export async function SchedulingPageFeature() {
             <WorkspacePageIntro
                 label="Calendar"
                 title="Scheduling"
-                description="Review open days, monitor upcoming installs, and move into booking without leaving the workspace flow."
-                actions={
-                    <>
-                        <Button asChild variant="outline">
-                            <Link href="/scheduling/bookings">All Bookings</Link>
-                        </Button>
-                        <Button asChild>
-                            <Link href="/scheduling/book">Book Appointment</Link>
-                        </Button>
-                    </>
-                }
+                description="Help customers lock in the perfect install window with clear availability, accurate timing, and seamless booking flow."
             />
+            <WorkspacePageContextCard
+                title="Scheduling Actions"
+                description="Access booking history or create a new appointment"
+            >
+                <Button asChild variant="outline">
+                    <Link href="/scheduling/bookings">All Bookings</Link>
+                </Button>
+                <Button asChild>
+                    <Link href="/scheduling/book">Book Appointment</Link>
+                </Button>
+            </WorkspacePageContextCard>
 
             <div className="grid gap-4 md:grid-cols-3">
                 <WorkspaceMetricCard

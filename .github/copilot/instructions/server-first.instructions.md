@@ -130,6 +130,22 @@ export function WrapCard({ wrapId }: { wrapId: string }) {
 }
 ```
 
+### Law 4.1: tenant page intro consistency
+
+Tenant-facing route features should use a uniform top-of-page structure:
+
+1. **`WorkspacePageIntro`** (intro-only)
+  - Blue eyebrow label
+  - Page title
+  - Page description
+  - No actions, tabs, badges, counters, or navigation controls
+
+2. **`WorkspacePageContextCard`** immediately below intro
+  - Holds page-level actions, status badges, summary counters, and navigation affordances
+  - Must use the shared dark card styling (`border-neutral-700 bg-neutral-950/80`) via the shared component
+
+This keeps visual hierarchy consistent across catalog, scheduling, billing, settings, admin, platform, and visualizer flows.
+
 ### Law 5: lib/fetchers/* owns server reads
 
 Every read from the database, cache, or external system goes through `lib/fetchers/{domain}/*.ts`.
@@ -373,7 +389,7 @@ export async function createWrap(input: any) {
 
 ## Related Files
 
-- Architecture docs: [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md)
+- Architecture docs: [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md)
 - Domain-specific rules: See `{domain}.instructions.md`
 - Naming conventions: See `contracts/naming.yaml`
 - Mutation pipeline: See `contracts/mutations.yaml`

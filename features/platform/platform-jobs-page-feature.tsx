@@ -7,7 +7,7 @@ export async function PlatformJobsPageFeature() {
         <div className="space-y-6">
             <PlatformPageHeader
                 title="Platform jobs"
-                description="Operational job controls for safe, auditable maintenance actions."
+                description="Control background operations with clear safeguards so customer-facing experiences remain smooth and predictable."
             />
             <PlatformJobToolsFeature />
         </div>

@@ -22,7 +22,7 @@ export async function AccountSettingsPageFeature({
             <div className="space-y-6">
                 <SettingsPageHeader
                     title="Account Settings"
-                    description="Owner-managed business configuration and branding settings."
+                    description="Shape your brand presence and business defaults so every wrap customer touchpoint feels premium and consistent."
                 />
                 <SettingsTabsClient active="account" />
                 <SettingsEmptyState
@@ -48,7 +48,7 @@ export async function AccountSettingsPageFeature({
         <div className="space-y-6">
             <SettingsPageHeader
                 title="Account Settings"
-                description="Owner-managed business configuration and branding settings."
+                description="Shape your brand presence and business defaults so every wrap customer touchpoint feels premium and consistent."
             />
             <SettingsTabsClient active="account" />
             <TenantSettingsFormClient initialSettings={tenantSettings} onSave={onSave} />

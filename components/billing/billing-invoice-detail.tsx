@@ -3,7 +3,11 @@ import Link from 'next/link'
 import { CheckoutButton } from '@/components/billing/CheckoutButton'
 import { InvoiceStatusBadge } from '@/components/billing/InvoiceStatusBadge'
 import { BillingPaymentBanner } from '@/components/billing/billing-payment-banner'
-import { WorkspaceMetricCard, WorkspacePageIntro } from '@/components/shared/tenant-elements'
+import {
+    WorkspaceMetricCard,
+    WorkspacePageContextCard,
+    WorkspacePageIntro,
+} from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -41,14 +45,17 @@ export function BillingInvoiceDetail({
             <WorkspacePageIntro
                 label="Collections"
                 title="Invoice Detail"
-                description="Inspect line items, review payment attempts, and move into checkout from the billing workspace."
-                detail={<InvoiceStatusBadge status={invoice.status} />}
-                actions={
-                    <Button asChild variant="outline">
-                        <Link href="/billing">Back to Billing</Link>
-                    </Button>
-                }
+                description="Inspect line items, review payment attempts, and complete checkout with clear confidence."
             />
+            <WorkspacePageContextCard
+                title="Invoice Controls"
+                description="Status and quick navigation"
+            >
+                <InvoiceStatusBadge status={invoice.status} />
+                <Button asChild variant="outline">
+                    <Link href="/billing">Back to Billing</Link>
+                </Button>
+            </WorkspacePageContextCard>
 
             {paymentState ? <BillingPaymentBanner variant={paymentState} /> : null}
 

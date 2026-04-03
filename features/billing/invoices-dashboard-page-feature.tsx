@@ -7,6 +7,7 @@ import {
     BillingKpiCardsSkeleton,
 } from '@/components/billing/billing-skeletons'
 import { InvoicesDashboardToolbar } from '@/components/billing/invoices-dashboard-toolbar'
+import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { parseBillingSearchParams } from '@/lib/utils/search-params'
 import type { SearchParamRecord } from '@/types/common.types'
@@ -31,13 +32,16 @@ export async function InvoicesDashboardPageFeature({
         <div className="space-y-6">
             <InvoicesDashboardHeader
                 title="Billing"
-                description="Monitor invoice status, balances, and payment lifecycle events."
-                actions={
-                    <Button asChild>
-                        <Link href="/billing/manage">Manage</Link>
-                    </Button>
-                }
+                description="Keep every wrap project financially aligned with clear balances, payment signals, and invoice accountability."
             />
+            <WorkspacePageContextCard
+                title="Billing Actions"
+                description="Open management tools and lifecycle controls"
+            >
+                <Button asChild>
+                    <Link href="/billing/manage">Manage Invoices</Link>
+                </Button>
+            </WorkspacePageContextCard>
 
             <Suspense fallback={<BillingKpiCardsSkeleton />}>
                 <InvoicesDashboardStatsSection filters={filters} />

@@ -15,7 +15,7 @@ export async function AdminModerationPageFeature() {
             <AdminPageHeader
                 label="Admin"
                 title="Moderation queue"
-                description="Review flagged resources and apply bounded resolution actions."
+                description="Resolve flagged items quickly to keep your storefront and visualizer experience safe, professional, and customer-ready."
             />
 
             <AdminModerationQueue

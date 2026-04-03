@@ -27,7 +27,7 @@ export async function AdminAuditPageFeature({
             <AdminPageHeader
                 label="Admin"
                 title="Audit history"
-                description="Append-only action history for administrative and operational events."
+                description="Review traceable action history to protect trust, accountability, and operational quality across the customer journey."
             />
 
             <AdminAuditFiltersClient />
