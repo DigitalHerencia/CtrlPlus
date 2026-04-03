@@ -7,7 +7,6 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-next-env.d.ts
 
 # testing
 /coverage
@@ -19,6 +18,7 @@ next-env.d.ts
 /playwright/.cache/
 
 # next.js
+/next-env.d.ts
 /.next/
 /out/
 
