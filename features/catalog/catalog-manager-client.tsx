@@ -103,7 +103,8 @@ export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps)
 
     function handleCreateWrap(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        const formData = new FormData(event.currentTarget)
+        const form = event.currentTarget
+        const formData = new FormData(form)
         runMutation('Wrap created.', async () => {
             await createWrap({
                 name: String(formData.get('name') ?? ''),
@@ -115,7 +116,7 @@ export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps)
                 aiPromptTemplate: String(formData.get('aiPromptTemplate') ?? '') || undefined,
                 aiNegativePrompt: String(formData.get('aiNegativePrompt') ?? '') || undefined,
             })
-            event.currentTarget.reset()
+            form.reset()
         })
     }
 
@@ -165,12 +166,13 @@ export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps)
 
     function handleCreateCategory(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        const formData = new FormData(event.currentTarget)
+        const form = event.currentTarget
+        const formData = new FormData(form)
         const name = String(formData.get('name') ?? '').trim()
         const slugInput = String(formData.get('slug') ?? '').trim()
         runMutation('Category created.', async () => {
             await createWrapCategory({ name, slug: slugInput || slugifyCategory(name) })
-            event.currentTarget.reset()
+            form.reset()
         })
     }
 
