@@ -1,0 +1,20 @@
+{
+  "entryFilePath": ".dependencygraph\\entry-all.ts",
+  "alias": {
+    "@/*": "./*"
+  },
+  "resolveExtensions": [
+    ".tsx",
+    ".ts",
+    ".js",
+    ".jsx",
+    ".cjs",
+    ".md",
+    ".sql",
+    ".png",
+    ".json",
+    ".yaml",
+    ".mjs",
+    ".yml"
+  ]
+}

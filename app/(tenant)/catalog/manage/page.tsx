@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import { CatalogManagerPageFeature } from '@/features/catalog/catalog-manager-page-feature'
+import { WrapManagerPageFeature } from '@/features/catalog/manage/wrap-manager-page-feature'
 import { getSession } from '@/lib/auth/session'
 import { hasCapability } from '@/lib/authz/policy'
 import { parseCatalogSearchParams } from '@/lib/utils/search-params'
@@ -19,5 +19,5 @@ export default async function CatalogManagerPage({ searchParams }: CatalogPageSe
 
     const parsedSearch = parseCatalogSearchParams(await searchParams)
 
-    return <CatalogManagerPageFeature filters={parsedSearch.filters} />
+    return <WrapManagerPageFeature filters={parsedSearch.filters} />
 }

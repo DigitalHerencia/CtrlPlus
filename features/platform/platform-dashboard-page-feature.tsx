@@ -1,4 +1,3 @@
-import { PlatformPageHeader } from '@/components/platform/platform-page-header'
 import { PlatformUserToolsPanel } from '@/components/platform/platform-user-tools-panel'
 
 import { PlatformDbToolsFeature } from './platform-db-tools-feature'

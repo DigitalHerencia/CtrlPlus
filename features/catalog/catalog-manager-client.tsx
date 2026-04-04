@@ -1,12 +1,22 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { Image as ImageIcon, PencilLine, Plus, Tags } from 'lucide-react'
 
 import { WorkspaceMetricCard } from '@/components/shared/tenant-elements'
+import { CatalogManagerRowActions } from '@/components/catalog/manage/catalog-manager-row-actions'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+} from '@/components/ui/sheet'
 import {
     Table,
     TableBody,
@@ -15,6 +25,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
     createWrap,
     deleteWrap,
@@ -33,6 +44,7 @@ import { formatPrice } from '@/lib/utils/currency'
 import { WrapImageManager } from '@/components/catalog/WrapImageManager'
 import type { WrapImageKind } from '@/lib/constants/statuses'
 import type { CatalogManagerProps } from '@/types/catalog.types'
+import { CatalogFiltersClient } from './catalog-filters-client'
 import { fileToDataUrl } from './file-key.client'
 
 function slugifyCategory(value: string): string {
@@ -53,10 +65,19 @@ function parsePriceInput(value: string): number {
     return Math.round(parsed * 100)
 }
 
+type ManagerSheet =
+    | 'create-wrap'
+    | 'categories'
+    | 'metadata'
+    | 'category-mapping'
+    | 'catalog-assets'
+
 export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [selectedWrapId, setSelectedWrapId] = useState<string | null>(wraps[0]?.id ?? null)
+    const [openSheet, setOpenSheet] = useState<ManagerSheet | null>(null)
+    const [sheetWrapId, setSheetWrapId] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [status, setStatus] = useState<string | null>(null)
     const [categorySelections, setCategorySelections] = useState<Record<string, string[]>>({})
@@ -75,10 +96,22 @@ export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps)
         () => wraps.find((wrap) => wrap.id === effectiveSelectedWrapId) ?? null,
         [effectiveSelectedWrapId, wraps]
     )
+    const sheetWrap = useMemo(
+        () => wraps.find((wrap) => wrap.id === sheetWrapId) ?? null,
+        [sheetWrapId, wraps]
+    )
+    const metadataWrap = sheetWrap ?? selectedWrap
     const visibleWrapCount = wraps.filter((wrap) => !wrap.isHidden).length
     const publishReadyCount = wraps.filter((wrap) => wrap.readiness.canPublish).length
     const totalAssetCount = wraps.reduce((total, wrap) => total + wrap.imageCount, 0)
-    const selectedReadinessIssues = selectedWrap?.readiness.issues ?? []
+    const selectedReadinessIssues = metadataWrap?.readiness.issues ?? []
+
+    const inputClassName =
+        'h-11 rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100'
+    const textareaClassName =
+        'rounded-md border border-neutral-800 bg-neutral-900 px-3 py-3 text-sm text-neutral-100'
+    const iconButtonClassName =
+        'h-8 w-8 border-neutral-800 text-neutral-300 hover:bg-neutral-800/70 hover:text-neutral-100'
 
     function runMutation(successMessage: string, action: () => Promise<void>) {
         setError(null)
@@ -89,6 +122,9 @@ export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps)
                     await action()
                     setCategorySelections({})
                     setStatus(successMessage)
+                    if (openSheet) {
+                        setOpenSheet(null)
+                    }
                     router.refresh()
                 } catch (mutationError) {
                     setError(
@@ -122,10 +158,10 @@ export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps)
 
     function handleSaveWrap(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
-        if (!selectedWrap) return
+        if (!metadataWrap) return
         const formData = new FormData(event.currentTarget)
         runMutation('Wrap updated.', async () => {
-            await updateWrap(selectedWrap.id, {
+            await updateWrap(metadataWrap.id, {
                 name: String(formData.get('name') ?? ''),
                 description: String(formData.get('description') ?? '') || undefined,
                 price: parsePriceInput(String(formData.get('price') ?? '0')),
@@ -139,28 +175,29 @@ export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps)
     }
 
     function handleToggleVisibility() {
-        if (!selectedWrap) return
-        const nextHiddenState = !selectedWrap.isHidden
+        if (!metadataWrap) return
+        const nextHiddenState = !metadataWrap.isHidden
         runMutation(
             nextHiddenState
                 ? 'Wrap hidden from the customer catalog.'
                 : 'Wrap published to the catalog.',
             async () => {
                 if (nextHiddenState) {
-                    await unpublishWrap(selectedWrap.id)
+                    await unpublishWrap(metadataWrap.id)
                     return
                 }
 
-                await publishWrap(selectedWrap.id)
+                await publishWrap(metadataWrap.id)
             }
         )
     }
 
     function handleDeleteSelectedWrap() {
-        if (!selectedWrap || !window.confirm(`Delete ${selectedWrap.name}?`)) return
+        if (!metadataWrap || !window.confirm(`Delete ${metadataWrap.name}?`)) return
         runMutation('Wrap deleted.', async () => {
-            await deleteWrap(selectedWrap.id)
+            await deleteWrap(metadataWrap.id)
             setSelectedWrapId(null)
+            setSheetWrapId(null)
         })
     }
 
@@ -183,72 +220,90 @@ export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps)
     }
 
     function handleSaveCategories() {
-        if (!selectedWrap) return
+        if (!metadataWrap) return
         runMutation('Category mappings updated.', async () => {
             await setWrapCategoryMappings({
-                wrapId: selectedWrap.id,
+                wrapId: metadataWrap.id,
                 categoryIds:
-                    categorySelections[selectedWrap.id] ??
-                    defaultCategorySelections[selectedWrap.id] ??
+                    categorySelections[metadataWrap.id] ??
+                    defaultCategorySelections[metadataWrap.id] ??
                     [],
             })
         })
     }
 
     function toggleCategory(categoryId: string) {
-        if (!selectedWrap) return
+        if (!metadataWrap) return
         setCategorySelections((current) => {
             const next = new Set(
-                current[selectedWrap.id] ?? defaultCategorySelections[selectedWrap.id] ?? []
+                current[metadataWrap.id] ?? defaultCategorySelections[metadataWrap.id] ?? []
             )
             if (next.has(categoryId)) {
                 next.delete(categoryId)
             } else {
                 next.add(categoryId)
             }
-            return { ...current, [selectedWrap.id]: [...next] }
+            return { ...current, [metadataWrap.id]: [...next] }
         })
     }
 
     function handleAddImage(file: File, kind: WrapImageKind, isActive: boolean) {
-        if (!selectedWrap) return Promise.resolve()
+        if (!metadataWrap) return Promise.resolve()
         return new Promise<void>((resolve) =>
             runMutation('Asset uploaded.', async () => {
                 const fileKey = await fileToDataUrl(file)
-                await addWrapImage({ wrapId: selectedWrap.id, fileKey, kind, isActive })
+                await addWrapImage({ wrapId: metadataWrap.id, fileKey, kind, isActive })
                 resolve()
             })
         )
     }
 
     function handleRemoveImage(imageId: string) {
-        if (!selectedWrap) return Promise.resolve()
+        if (!metadataWrap) return Promise.resolve()
         return new Promise<void>((resolve) =>
             runMutation('Asset removed.', async () => {
-                await removeWrapImage(selectedWrap.id, imageId)
+                await removeWrapImage(metadataWrap.id, imageId)
                 resolve()
             })
         )
     }
 
     function handleReorderImages(orderedIds: string[]) {
-        if (!selectedWrap) return Promise.resolve()
+        if (!metadataWrap) return Promise.resolve()
         return new Promise<void>((resolve) =>
             runMutation('Asset order updated.', async () => {
-                await reorderWrapImages(selectedWrap.id, orderedIds)
+                await reorderWrapImages(metadataWrap.id, orderedIds)
                 resolve()
             })
         )
     }
 
     function handleUpdateImageMetadata(imageId: string, kind: WrapImageKind, isActive: boolean) {
-        if (!selectedWrap) return Promise.resolve()
+        if (!metadataWrap) return Promise.resolve()
         return new Promise<void>((resolve) =>
             runMutation('Asset metadata updated.', async () => {
-                await updateWrapImageMetadata({ wrapId: selectedWrap.id, imageId, kind, isActive })
+                await updateWrapImageMetadata({ wrapId: metadataWrap.id, imageId, kind, isActive })
                 resolve()
             })
         )
+    }
+
+    function openWrapSheet(
+        wrapId: string,
+        sheet: Extract<ManagerSheet, 'metadata' | 'category-mapping' | 'catalog-assets'>
+    ) {
+        setSelectedWrapId(wrapId)
+        setSheetWrapId(wrapId)
+        setOpenSheet(sheet)
+    }
+
+    function handleSheetOpenChange(sheet: ManagerSheet, open: boolean) {
+        if (open) {
+            setOpenSheet(sheet)
+            return
+        }
+
+        setOpenSheet((current) => (current === sheet ? null : current))
     }
 
     return (
@@ -281,416 +336,535 @@ export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps)
                     <CardContent className="py-4 text-sm">{error ?? status}</CardContent>
                 </Card>
             ) : null}
-            <section className="grid gap-6 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
-                <div className="space-y-6">
-                    <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
-                        <CardHeader>
-                            <CardTitle className="text-lg">Create Wrap</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleCreateWrap} className="grid gap-4">
-                                <input
-                                    name="name"
-                                    required
-                                    placeholder="Wrap name"
-                                    className="h-11 rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100"
-                                />
-                                <textarea
-                                    name="description"
-                                    rows={3}
-                                    placeholder="Short product description"
-                                    className="rounded-md border border-neutral-800 bg-neutral-900 px-3 py-3 text-sm text-neutral-100"
-                                />
-                                <div className="grid gap-4 md:grid-cols-2">
+            <CatalogFiltersClient categories={categories} />
+            <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <div className="space-y-1">
+                        <CardTitle className="text-lg">Inventory</CardTitle>
+                        <p className="text-xs uppercase tracking-[0.16em] text-neutral-500">
+                            Select a wrap row, then edit metadata, category mapping, or assets.
+                        </p>
+                    </div>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    type="button"
+                                    size="icon"
+                                    variant="outline"
+                                    className={iconButtonClassName}
+                                    aria-label="Manage categories"
+                                    onClick={() => setOpenSheet('categories')}
+                                >
+                                    <Tags className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Categories</TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Wrap</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Price</TableHead>
+                                <TableHead className="w-41 text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {wraps.map((wrap) => (
+                                <TableRow
+                                    key={wrap.id}
+                                    data-state={
+                                        effectiveSelectedWrapId === wrap.id ? 'selected' : undefined
+                                    }
+                                    className="cursor-pointer transition-colors hover:bg-neutral-900/70"
+                                    onClick={() => setSelectedWrapId(wrap.id)}
+                                >
+                                    <TableCell>
+                                        <div className="space-y-1">
+                                            <p className="font-medium text-neutral-100">
+                                                {wrap.name}
+                                            </p>
+                                            <p className="text-xs text-neutral-500">
+                                                {wrap.categories
+                                                    .map((category) => category.name)
+                                                    .join(', ') || 'Uncategorized'}
+                                            </p>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-wrap gap-2">
+                                            <Badge
+                                                variant="outline"
+                                                className={
+                                                    wrap.readiness.canPublish
+                                                        ? 'border-emerald-500/40 text-emerald-200'
+                                                        : 'border-red-500/40 text-red-200'
+                                                }
+                                            >
+                                                {wrap.readiness.canPublish ? 'Ready' : 'Attention'}
+                                            </Badge>
+                                            <Badge
+                                                variant="outline"
+                                                className={
+                                                    wrap.isHidden
+                                                        ? 'border-amber-500/40 text-amber-200'
+                                                        : 'border-blue-500/40 text-blue-200'
+                                                }
+                                            >
+                                                {wrap.isHidden ? 'Hidden' : 'Visible'}
+                                            </Badge>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right font-medium">
+                                        {formatPrice(wrap.price)}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <TooltipProvider>
+                                            <CatalogManagerRowActions>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button
+                                                            type="button"
+                                                            size="icon"
+                                                            variant="outline"
+                                                            className={iconButtonClassName}
+                                                            aria-label={`Edit metadata for ${wrap.name}`}
+                                                            onClick={(event) => {
+                                                                event.stopPropagation()
+                                                                openWrapSheet(wrap.id, 'metadata')
+                                                            }}
+                                                        >
+                                                            <PencilLine className="h-4 w-4" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Wrap metadata</TooltipContent>
+                                                </Tooltip>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button
+                                                            type="button"
+                                                            size="icon"
+                                                            variant="outline"
+                                                            className={iconButtonClassName}
+                                                            aria-label={`Edit category mapping for ${wrap.name}`}
+                                                            onClick={(event) => {
+                                                                event.stopPropagation()
+                                                                openWrapSheet(
+                                                                    wrap.id,
+                                                                    'category-mapping'
+                                                                )
+                                                            }}
+                                                        >
+                                                            <Tags className="h-4 w-4" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>
+                                                        Category mapping
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Button
+                                                            type="button"
+                                                            size="icon"
+                                                            variant="outline"
+                                                            className={iconButtonClassName}
+                                                            aria-label={`Manage catalog assets for ${wrap.name}`}
+                                                            onClick={(event) => {
+                                                                event.stopPropagation()
+                                                                openWrapSheet(
+                                                                    wrap.id,
+                                                                    'catalog-assets'
+                                                                )
+                                                            }}
+                                                        >
+                                                            <ImageIcon className="h-4 w-4" />
+                                                        </Button>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent>Catalog assets</TooltipContent>
+                                                </Tooltip>
+                                            </CatalogManagerRowActions>
+                                        </TooltipProvider>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-800 pt-4">
+                <p className="text-xs uppercase tracking-[0.16em] text-neutral-500">
+                    Manager actions
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                    <Button asChild variant="outline">
+                        <Link href="/catalog">Back to Gallery</Link>
+                    </Button>
+                    <Button type="button" onClick={() => setOpenSheet('create-wrap')}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create Wrap
+                    </Button>
+                </div>
+            </div>
+
+            <Sheet
+                open={openSheet === 'create-wrap'}
+                onOpenChange={(open) => handleSheetOpenChange('create-wrap', open)}
+            >
+                <SheetContent
+                    side="right"
+                    className="sm:max-w-190 w-full overflow-y-auto border-neutral-800 bg-neutral-950 text-neutral-100"
+                >
+                    <SheetHeader>
+                        <SheetTitle>Create Wrap</SheetTitle>
+                        <SheetDescription>
+                            Add a new catalog item and complete metadata before publishing.
+                        </SheetDescription>
+                    </SheetHeader>
+                    <form onSubmit={handleCreateWrap} className="mt-6 grid gap-4">
+                        <input
+                            name="name"
+                            required
+                            placeholder="Wrap name"
+                            className={inputClassName}
+                        />
+                        <textarea
+                            name="description"
+                            rows={3}
+                            placeholder="Short product description"
+                            className={textareaClassName}
+                        />
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <input
+                                name="price"
+                                required
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                placeholder="Price (USD)"
+                                className={inputClassName}
+                            />
+                            <input
+                                name="installationMinutes"
+                                type="number"
+                                min="1"
+                                step="1"
+                                placeholder="Install minutes"
+                                className={inputClassName}
+                            />
+                        </div>
+                        <div className="flex justify-end">
+                            <Button type="submit" disabled={isPending}>
+                                Create Wrap
+                            </Button>
+                        </div>
+                    </form>
+                </SheetContent>
+            </Sheet>
+
+            <Sheet
+                open={openSheet === 'categories'}
+                onOpenChange={(open) => handleSheetOpenChange('categories', open)}
+            >
+                <SheetContent
+                    side="right"
+                    className="sm:max-w-190 w-full overflow-y-auto border-neutral-800 bg-neutral-950 text-neutral-100"
+                >
+                    <SheetHeader>
+                        <SheetTitle>Categories</SheetTitle>
+                        <SheetDescription>
+                            Manage category taxonomy used by inventory and storefront filters.
+                        </SheetDescription>
+                    </SheetHeader>
+                    <div className="mt-6 space-y-4">
+                        <form
+                            onSubmit={handleCreateCategory}
+                            className="grid gap-3 md:grid-cols-[1fr_1fr_auto]"
+                        >
+                            <input
+                                name="name"
+                                required
+                                placeholder="Category name"
+                                className={inputClassName}
+                            />
+                            <input
+                                name="slug"
+                                placeholder="category-slug"
+                                className={inputClassName}
+                            />
+                            <Button type="submit" disabled={isPending}>
+                                Add Category
+                            </Button>
+                        </form>
+                        <div className="space-y-2">
+                            {categories.map((category) => (
+                                <div
+                                    key={category.id}
+                                    className="flex items-center justify-between gap-3 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-3"
+                                >
+                                    <div>
+                                        <p className="text-sm font-medium text-neutral-100">
+                                            {category.name}
+                                        </p>
+                                        <p className="text-xs text-neutral-500">{category.slug}</p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={isPending}
+                                        onClick={() => handleDeleteCategory(category.id)}
+                                    >
+                                        Remove
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </SheetContent>
+            </Sheet>
+
+            <Sheet
+                open={openSheet === 'metadata'}
+                onOpenChange={(open) => handleSheetOpenChange('metadata', open)}
+            >
+                <SheetContent
+                    side="right"
+                    className="sm:max-w-225 w-full overflow-y-auto border-neutral-800 bg-neutral-950 text-neutral-100"
+                >
+                    <SheetHeader>
+                        <SheetTitle>Wrap Metadata</SheetTitle>
+                        <SheetDescription>
+                            Update pricing, copy, AI prompts, and publish visibility.
+                        </SheetDescription>
+                    </SheetHeader>
+                    {metadataWrap ? (
+                        <form
+                            key={metadataWrap.id}
+                            onSubmit={handleSaveWrap}
+                            className="mt-6 grid gap-4"
+                        >
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <label className="space-y-2 text-sm text-neutral-300">
+                                    <span className="block">Wrap name</span>
+                                    <input
+                                        name="name"
+                                        required
+                                        defaultValue={metadataWrap.name}
+                                        className={inputClassName}
+                                    />
+                                </label>
+                                <label className="space-y-2 text-sm text-neutral-300">
+                                    <span className="block">Price (USD)</span>
                                     <input
                                         name="price"
                                         required
                                         type="number"
                                         min="0.01"
                                         step="0.01"
-                                        placeholder="Price (USD)"
-                                        className="h-11 rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100"
+                                        defaultValue={formatPriceInput(metadataWrap.price)}
+                                        className={inputClassName}
                                     />
+                                </label>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <label className="space-y-2 text-sm text-neutral-300">
+                                    <span className="block">Description</span>
+                                    <textarea
+                                        name="description"
+                                        rows={4}
+                                        defaultValue={metadataWrap.description ?? ''}
+                                        className={textareaClassName}
+                                    />
+                                </label>
+                                <label className="space-y-2 text-sm text-neutral-300">
+                                    <span className="block">Install minutes</span>
                                     <input
                                         name="installationMinutes"
                                         type="number"
                                         min="1"
                                         step="1"
-                                        placeholder="Install minutes"
-                                        className="h-11 rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100"
+                                        defaultValue={metadataWrap.installationMinutes ?? ''}
+                                        className={inputClassName}
                                     />
-                                </div>
-                                <div className="flex justify-end">
-                                    <Button type="submit" disabled={isPending}>
-                                        Create Wrap
+                                </label>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                <label className="space-y-2 text-sm text-neutral-300">
+                                    <span className="block">AI prompt template</span>
+                                    <textarea
+                                        name="aiPromptTemplate"
+                                        rows={4}
+                                        defaultValue={metadataWrap.aiPromptTemplate ?? ''}
+                                        className={textareaClassName}
+                                    />
+                                </label>
+                                <label className="space-y-2 text-sm text-neutral-300">
+                                    <span className="block">AI negative prompt</span>
+                                    <textarea
+                                        name="aiNegativePrompt"
+                                        rows={4}
+                                        defaultValue={metadataWrap.aiNegativePrompt ?? ''}
+                                        className={textareaClassName}
+                                    />
+                                </label>
+                            </div>
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-neutral-800 pt-4">
+                                <Button type="submit" disabled={isPending}>
+                                    Save Metadata
+                                </Button>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        disabled={
+                                            isPending ||
+                                            (!metadataWrap.readiness.canPublish &&
+                                                metadataWrap.isHidden)
+                                        }
+                                        onClick={handleToggleVisibility}
+                                    >
+                                        {metadataWrap.isHidden ? 'Publish Wrap' : 'Hide Wrap'}
+                                    </Button>
+                                    <Button type="button" variant="outline" asChild>
+                                        <a href={`/visualizer?wrapId=${metadataWrap.id}`}>
+                                            Preview Test
+                                        </a>
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        disabled={isPending}
+                                        onClick={handleDeleteSelectedWrap}
+                                    >
+                                        Delete Wrap
                                     </Button>
                                 </div>
-                            </form>
-                        </CardContent>
-                    </Card>
-                    <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
-                        <CardHeader>
-                            <CardTitle className="text-lg">Inventory</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Wrap</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead className="text-right">Price</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {wraps.map((wrap) => (
-                                        <TableRow
-                                            key={wrap.id}
-                                            data-state={
-                                                effectiveSelectedWrapId === wrap.id
-                                                    ? 'selected'
-                                                    : undefined
-                                            }
-                                            className="cursor-pointer"
-                                            onClick={() => setSelectedWrapId(wrap.id)}
-                                        >
-                                            <TableCell>
-                                                <div className="space-y-1">
-                                                    <p className="font-medium text-neutral-100">
-                                                        {wrap.name}
-                                                    </p>
-                                                    <p className="text-xs text-neutral-500">
-                                                        {wrap.categories
-                                                            .map((category) => category.name)
-                                                            .join(', ') || 'Uncategorized'}
-                                                    </p>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex flex-wrap gap-2">
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={
-                                                            wrap.readiness.canPublish
-                                                                ? 'border-emerald-500/40 text-emerald-200'
-                                                                : 'border-red-500/40 text-red-200'
-                                                        }
-                                                    >
-                                                        {wrap.readiness.canPublish
-                                                            ? 'Ready'
-                                                            : 'Attention'}
-                                                    </Badge>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={
-                                                            wrap.isHidden
-                                                                ? 'border-amber-500/40 text-amber-200'
-                                                                : 'border-blue-500/40 text-blue-200'
-                                                        }
-                                                    >
-                                                        {wrap.isHidden ? 'Hidden' : 'Visible'}
-                                                    </Badge>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-right font-medium">
-                                                {formatPrice(wrap.price)}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                    <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
-                        <CardHeader>
-                            <CardTitle className="text-lg">Categories</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <form
-                                onSubmit={handleCreateCategory}
-                                className="grid gap-3 md:grid-cols-[1fr_1fr_auto]"
-                            >
-                                <input
-                                    name="name"
-                                    required
-                                    placeholder="Category name"
-                                    className="h-11 rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100"
-                                />
-                                <input
-                                    name="slug"
-                                    placeholder="category-slug"
-                                    className="h-11 rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100"
-                                />
-                                <Button type="submit" disabled={isPending}>
-                                    Add Category
-                                </Button>
-                            </form>
-                            <div className="space-y-2">
-                                {categories.map((category) => (
-                                    <div
-                                        key={category.id}
-                                        className="flex items-center justify-between gap-3 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-3"
-                                    >
-                                        <div>
-                                            <p className="text-sm font-medium text-neutral-100">
-                                                {category.name}
-                                            </p>
-                                            <p className="text-xs text-neutral-500">
-                                                {category.slug}
-                                            </p>
-                                        </div>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            disabled={isPending}
-                                            onClick={() => handleDeleteCategory(category.id)}
-                                        >
-                                            Remove
-                                        </Button>
-                                    </div>
-                                ))}
                             </div>
-                        </CardContent>
-                    </Card>
-                </div>
-                <div className="space-y-6">
-                    {selectedWrap ? (
-                        <>
-                            <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
-                                <CardHeader className="gap-4">
-                                    <div className="flex flex-wrap items-start justify-between gap-4">
-                                        <div>
-                                            <CardTitle className="text-2xl">
-                                                {selectedWrap.name}
-                                            </CardTitle>
-                                            <p className="mt-2 text-sm text-neutral-400">
-                                                Maintain metadata, asset roles, category mapping,
-                                                and publish state from one panel.
-                                            </p>
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            <Badge
-                                                variant="outline"
-                                                className={
-                                                    selectedWrap.readiness.canPublish
-                                                        ? 'border-emerald-500/40 text-emerald-200'
-                                                        : 'border-red-500/40 text-red-200'
-                                                }
-                                            >
-                                                {selectedWrap.readiness.canPublish
-                                                    ? 'Publish-ready'
-                                                    : 'Needs asset attention'}
-                                            </Badge>
-                                            <Badge
-                                                variant="outline"
-                                                className={
-                                                    selectedWrap.isHidden
-                                                        ? 'border-amber-500/40 text-amber-200'
-                                                        : 'border-blue-500/40 text-blue-200'
-                                                }
-                                            >
-                                                {selectedWrap.isHidden ? 'Hidden' : 'Visible'}
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
-                                    <form
-                                        key={selectedWrap.id}
-                                        onSubmit={handleSaveWrap}
-                                        className="grid gap-4"
-                                    >
-                                        <div className="grid gap-4 md:grid-cols-2">
-                                            <label className="space-y-2 text-sm text-neutral-300">
-                                                <span className="block">Wrap name</span>
-                                                <input
-                                                    name="name"
-                                                    required
-                                                    defaultValue={selectedWrap.name}
-                                                    className="h-11 w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100"
-                                                />
-                                            </label>
-                                            <label className="space-y-2 text-sm text-neutral-300">
-                                                <span className="block">Price (USD)</span>
-                                                <input
-                                                    name="price"
-                                                    required
-                                                    type="number"
-                                                    min="0.01"
-                                                    step="0.01"
-                                                    defaultValue={formatPriceInput(
-                                                        selectedWrap.price
-                                                    )}
-                                                    className="h-11 w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100"
-                                                />
-                                            </label>
-                                        </div>
-                                        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
-                                            <label className="space-y-2 text-sm text-neutral-300">
-                                                <span className="block">Description</span>
-                                                <textarea
-                                                    name="description"
-                                                    rows={4}
-                                                    defaultValue={selectedWrap.description ?? ''}
-                                                    className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-3 text-sm text-neutral-100"
-                                                />
-                                            </label>
-                                            <label className="space-y-2 text-sm text-neutral-300">
-                                                <span className="block">Install minutes</span>
-                                                <input
-                                                    name="installationMinutes"
-                                                    type="number"
-                                                    min="1"
-                                                    step="1"
-                                                    defaultValue={
-                                                        selectedWrap.installationMinutes ?? ''
-                                                    }
-                                                    className="h-11 w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100"
-                                                />
-                                            </label>
-                                        </div>
-                                        <div className="grid gap-4 md:grid-cols-2">
-                                            <label className="space-y-2 text-sm text-neutral-300">
-                                                <span className="block">AI prompt template</span>
-                                                <textarea
-                                                    name="aiPromptTemplate"
-                                                    rows={4}
-                                                    defaultValue={
-                                                        selectedWrap.aiPromptTemplate ?? ''
-                                                    }
-                                                    className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-3 text-sm text-neutral-100"
-                                                />
-                                            </label>
-                                            <label className="space-y-2 text-sm text-neutral-300">
-                                                <span className="block">AI negative prompt</span>
-                                                <textarea
-                                                    name="aiNegativePrompt"
-                                                    rows={4}
-                                                    defaultValue={
-                                                        selectedWrap.aiNegativePrompt ?? ''
-                                                    }
-                                                    className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-3 text-sm text-neutral-100"
-                                                />
-                                            </label>
-                                        </div>
-                                        <div className="flex flex-wrap gap-3">
-                                            <Button type="submit" disabled={isPending}>
-                                                Save Metadata
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                disabled={
-                                                    isPending ||
-                                                    (!selectedWrap.readiness.canPublish &&
-                                                        selectedWrap.isHidden)
-                                                }
-                                                onClick={handleToggleVisibility}
-                                            >
-                                                {selectedWrap.isHidden
-                                                    ? 'Publish Wrap'
-                                                    : 'Hide Wrap'}
-                                            </Button>
-                                            <Button type="button" variant="outline" asChild>
-                                                <a href={`/visualizer?wrapId=${selectedWrap.id}`}>
-                                                    Preview Test
-                                                </a>
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                disabled={isPending}
-                                                onClick={handleDeleteSelectedWrap}
-                                            >
-                                                Delete Wrap
-                                            </Button>
-                                        </div>
-                                        {selectedWrap.readiness.missingRequiredAssetRoles.length >
-                                        0 ? (
-                                            <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-100">
-                                                Missing required roles:{' '}
-                                                {selectedWrap.readiness.missingRequiredAssetRoles.join(
-                                                    ', '
-                                                )}
-                                            </div>
-                                        ) : null}
-                                        {selectedReadinessIssues.length > 0 ? (
-                                            <div className="rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm text-neutral-200">
-                                                <p className="mb-2 text-xs uppercase tracking-[0.2em] text-neutral-500">
-                                                    Readiness issues
-                                                </p>
-                                                <ul className="space-y-2">
-                                                    {selectedReadinessIssues.map((issue) => (
-                                                        <li key={issue.code}>{issue.message}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        ) : null}
-                                    </form>
-                                </CardContent>
-                            </Card>
-                            <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Category Mapping</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid gap-3 md:grid-cols-2">
-                                        {categories.map((category) => {
-                                            const selected = (
-                                                categorySelections[selectedWrap.id] ??
-                                                defaultCategorySelections[selectedWrap.id] ??
-                                                []
-                                            ).includes(category.id)
-                                            return (
-                                                <label
-                                                    key={category.id}
-                                                    className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-3 text-sm text-neutral-200"
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selected}
-                                                        disabled={isPending}
-                                                        onChange={() => toggleCategory(category.id)}
-                                                    />
-                                                    <span>{category.name}</span>
-                                                </label>
-                                            )
-                                        })}
-                                    </div>
-                                    <div className="flex justify-end">
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            disabled={isPending}
-                                            onClick={handleSaveCategories}
+                            {metadataWrap.readiness.missingRequiredAssetRoles.length > 0 ? (
+                                <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-100">
+                                    Missing required roles:{' '}
+                                    {metadataWrap.readiness.missingRequiredAssetRoles.join(', ')}
+                                </div>
+                            ) : null}
+                            {selectedReadinessIssues.length > 0 ? (
+                                <div className="rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm text-neutral-200">
+                                    <p className="mb-2 text-xs uppercase tracking-[0.2em] text-neutral-500">
+                                        Readiness issues
+                                    </p>
+                                    <ul className="space-y-2">
+                                        {selectedReadinessIssues.map((issue) => (
+                                            <li key={issue.code}>{issue.message}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ) : null}
+                        </form>
+                    ) : (
+                        <p className="mt-6 text-sm text-neutral-400">
+                            Select a wrap from inventory first.
+                        </p>
+                    )}
+                </SheetContent>
+            </Sheet>
+
+            <Sheet
+                open={openSheet === 'category-mapping'}
+                onOpenChange={(open) => handleSheetOpenChange('category-mapping', open)}
+            >
+                <SheetContent
+                    side="right"
+                    className="sm:max-w-190 w-full overflow-y-auto border-neutral-800 bg-neutral-950 text-neutral-100"
+                >
+                    <SheetHeader>
+                        <SheetTitle>Category Mapping</SheetTitle>
+                        <SheetDescription>
+                            Assign the selected wrap to the right discovery categories.
+                        </SheetDescription>
+                    </SheetHeader>
+                    {metadataWrap ? (
+                        <div className="mt-6 space-y-4">
+                            <div className="grid gap-3 md:grid-cols-2">
+                                {categories.map((category) => {
+                                    const selected = (
+                                        categorySelections[metadataWrap.id] ??
+                                        defaultCategorySelections[metadataWrap.id] ??
+                                        []
+                                    ).includes(category.id)
+                                    return (
+                                        <label
+                                            key={category.id}
+                                            className="flex items-center gap-3 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-3 text-sm text-neutral-200"
                                         >
-                                            Save Categories
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                            <input
+                                                type="checkbox"
+                                                checked={selected}
+                                                disabled={isPending}
+                                                onChange={() => toggleCategory(category.id)}
+                                            />
+                                            <span>{category.name}</span>
+                                        </label>
+                                    )
+                                })}
+                            </div>
+                            <div className="flex justify-end">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={isPending}
+                                    onClick={handleSaveCategories}
+                                >
+                                    Save Categories
+                                </Button>
+                            </div>
+                        </div>
+                    ) : (
+                        <p className="mt-6 text-sm text-neutral-400">
+                            Select a wrap from inventory first.
+                        </p>
+                    )}
+                </SheetContent>
+            </Sheet>
+
+            <Sheet
+                open={openSheet === 'catalog-assets'}
+                onOpenChange={(open) => handleSheetOpenChange('catalog-assets', open)}
+            >
+                <SheetContent
+                    side="right"
+                    className="sm:max-w-280 w-full overflow-y-auto border-neutral-800 bg-neutral-950 text-neutral-100"
+                >
+                    <SheetHeader>
+                        <SheetTitle>Catalog Assets</SheetTitle>
+                        <SheetDescription>
+                            Upload, reorder, and set active state for display and visualizer assets.
+                        </SheetDescription>
+                    </SheetHeader>
+                    {metadataWrap ? (
+                        <div className="mt-6">
                             <WrapImageManager
-                                key={`${selectedWrap.id}:${selectedWrap.images.map((image) => `${image.id}:${image.version}:${image.kind}:${image.isActive}:${image.displayOrder}`).join('|')}`}
-                                wrapId={selectedWrap.id}
-                                images={selectedWrap.images}
-                                readiness={selectedWrap.readiness}
+                                key={`${metadataWrap.id}:${metadataWrap.images.map((image) => `${image.id}:${image.version}:${image.kind}:${image.isActive}:${image.displayOrder}`).join('|')}`}
+                                wrapId={metadataWrap.id}
+                                images={metadataWrap.images}
+                                readiness={metadataWrap.readiness}
                                 isPending={isPending}
                                 onAddImage={handleAddImage}
                                 onRemoveImage={handleRemoveImage}
                                 onReorderImages={handleReorderImages}
                                 onUpdateImageMetadata={handleUpdateImageMetadata}
                             />
-                        </>
+                        </div>
                     ) : (
-                        <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
-                            <CardContent className="py-16 text-center text-sm text-neutral-400">
-                                Select a wrap from the inventory to edit metadata, map categories,
-                                and manage assets.
-                            </CardContent>
-                        </Card>
+                        <p className="mt-6 text-sm text-neutral-400">
+                            Select a wrap from inventory first.
+                        </p>
                     )}
-                </div>
-            </section>
+                </SheetContent>
+            </Sheet>
         </div>
     )
 }

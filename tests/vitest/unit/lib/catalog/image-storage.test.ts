@@ -2,10 +2,7 @@ import { access, mkdir, rm, unlink, writeFile } from 'fs/promises'
 import path from 'path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import {
-    deletePersistedWrapImage,
-    persistWrapImage,
-} from '@/lib/uploads/storage'
+import { deletePersistedWrapImage, persistWrapImage } from '@/lib/uploads/storage'
 import { MAX_WRAP_IMAGE_BYTES, validateWrapImageFile } from '@/lib/uploads/file-validation'
 
 const originalEnv = {
@@ -115,35 +112,29 @@ describe('persistWrapImage', () => {
         )
     })
 
-    it('falls back to local storage when Cloudinary credentials are incomplete', async () => {
+    it('rejects wrap uploads when Cloudinary credentials are incomplete', async () => {
         process.env.CLOUDINARY_CLOUD_NAME = 'demo'
         delete process.env.CLOUDINARY_API_KEY
         delete process.env.CLOUDINARY_API_SECRET
         process.env.CLOUDINARY_WRAP_UPLOAD_PRESET = 'wraps-preset'
 
         const file = new File(['asset'], 'wrap.png', { type: 'image/png' })
-        const result = await persistWrapImage({ wrapId: 'wrap-credentials', file })
-
-        expect(result.url).toMatch(/^\/uploads\/wraps\/wrap-credentials-.*\.png$/)
+        await expect(persistWrapImage({ wrapId: 'wrap-credentials', file })).rejects.toThrow(
+            /requires Cloudinary/i
+        )
         expect(vi.mocked(fetch)).not.toHaveBeenCalled()
     })
 
-    it('falls back to local storage when Cloudinary is unavailable', async () => {
+    it('rejects wrap uploads when Cloudinary is unavailable', async () => {
         delete process.env.CLOUDINARY_CLOUD_NAME
+        delete process.env.CLOUD_NAME
+        delete process.env.CLOUDINARY_URL
 
         const file = new File(['asset'], 'wrap.png', { type: 'image/png' })
-        const result = await persistWrapImage({ wrapId: 'wrap-2', file })
-
-        expect(result.contentHash).toHaveLength(64)
-        expect(result.url).toMatch(/^\/uploads\/wraps\/wrap-2-.*\.png$/)
-
-        const fileName = result.url.split('/').at(-1)
-        expect(fileName).toBeTruthy()
-
-        const absolutePath = path.join(process.cwd(), 'public', 'uploads', 'wraps', fileName!)
-        createdLocalFiles.push(absolutePath)
-
-        await expect(access(absolutePath)).resolves.toBeUndefined()
+        await expect(persistWrapImage({ wrapId: 'wrap-2', file })).rejects.toThrow(
+            /requires Cloudinary/i
+        )
+        expect(vi.mocked(fetch)).not.toHaveBeenCalled()
     })
 })
 

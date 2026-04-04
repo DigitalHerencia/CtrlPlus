@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CatalogManagerClient } from '@/features/catalog/catalog-manager-client'
@@ -6,6 +6,8 @@ import type { CatalogManagerItemDTO } from '@/types/catalog.types'
 
 const mocks = vi.hoisted(() => ({
     refresh: vi.fn(),
+    push: vi.fn(),
+    searchParams: new URLSearchParams(),
     createWrap: vi.fn(),
     updateWrap: vi.fn(),
     publishWrap: vi.fn(),
@@ -23,7 +25,19 @@ const mocks = vi.hoisted(() => ({
 vi.mock('next/navigation', () => ({
     useRouter: () => ({
         refresh: mocks.refresh,
+        push: mocks.push,
     }),
+    usePathname: () => '/catalog/manage',
+    useSearchParams: () => mocks.searchParams,
+}))
+
+vi.mock('@/components/ui/sheet', () => ({
+    Sheet: ({ open, children }: { open?: boolean; children: unknown }) =>
+        open ? <div data-testid="sheet-root">{children}</div> : null,
+    SheetContent: ({ children }: { children: unknown }) => <div>{children}</div>,
+    SheetHeader: ({ children }: { children: unknown }) => <div>{children}</div>,
+    SheetTitle: ({ children }: { children: unknown }) => <h2>{children}</h2>,
+    SheetDescription: ({ children }: { children: unknown }) => <p>{children}</p>,
 }))
 
 vi.mock('@/lib/actions/catalog.actions', () => ({
@@ -129,12 +143,15 @@ describe('CatalogManagerClient', () => {
 
         expect(screen.getByText('Visible Wraps')).toBeInTheDocument()
         expect(screen.getAllByText('Graphite Stealth').length).toBeGreaterThan(0)
-        expect(screen.getAllByText(/missing required roles/i).length).toBeGreaterThan(0)
-        expect(screen.getByText('Category Mapping')).toBeInTheDocument()
+        expect(screen.getByText('Inventory')).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: 'Create Wrap' })).toBeInTheDocument()
+        expect(screen.getByRole('link', { name: 'Back to Gallery' })).toBeInTheDocument()
     })
 
     it('creates wraps through the create form', async () => {
         render(<CatalogManagerClient wraps={mockWraps} categories={mockCategories} />)
+
+        fireEvent.click(screen.getByRole('button', { name: 'Create Wrap' }))
 
         fireEvent.change(screen.getByPlaceholderText('Wrap name'), {
             target: { value: 'Midnight Chrome' },
@@ -142,7 +159,8 @@ describe('CatalogManagerClient', () => {
         fireEvent.change(screen.getByPlaceholderText('Price (USD)'), {
             target: { value: '1299.99' },
         })
-        fireEvent.click(screen.getByRole('button', { name: 'Create Wrap' }))
+        const sheetRoot = screen.getByTestId('sheet-root')
+        fireEvent.click(within(sheetRoot).getByRole('button', { name: 'Create Wrap' }))
 
         await waitFor(() =>
             expect(mocks.createWrap).toHaveBeenCalledWith(
@@ -174,8 +192,9 @@ describe('CatalogManagerClient', () => {
             />
         )
 
-        fireEvent.click(screen.getByRole('button', { name: 'Publish Wrap' }))
-
+        fireEvent.click(screen.getByRole('button', { name: /edit metadata for graphite stealth/i }))
+        const publishButton = await screen.findByRole('button', { name: 'Publish Wrap' })
+        fireEvent.click(publishButton)
         await waitFor(() => expect(mocks.publishWrap).toHaveBeenCalledWith('wrap1'))
     })
 })

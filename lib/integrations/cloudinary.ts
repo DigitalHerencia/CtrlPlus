@@ -38,7 +38,16 @@ function parseCloudinaryUrl(value: string): {
             apiSecret,
         }
     } catch {
-        return null
+        const match = value.match(/^cloudinary:\/\/([^:\s]+):([^@\s]+)(?:@([^/\s?#]+))?$/)
+        if (!match) {
+            return null
+        }
+
+        return {
+            cloudName: (match[3] ?? '').trim(),
+            apiKey: match[1].trim(),
+            apiSecret: match[2].trim(),
+        }
     }
 }
 
