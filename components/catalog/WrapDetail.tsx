@@ -47,8 +47,8 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
                 </Card>
 
                 <div className="space-y-4">
-                    <WrapDetailSummary wrap={wrap} />
-                    <WrapDetailSpecs wrap={wrap} />
+                    <WrapDetailSummary wrap={wrap} canManageCatalog={canManageCatalog} />
+                    <WrapDetailSpecs wrap={wrap} canManageCatalog={canManageCatalog} />
                 </div>
             </section>
 

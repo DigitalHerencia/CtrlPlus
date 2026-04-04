@@ -51,7 +51,7 @@ describe('catalog detail route contracts', () => {
         await generateCatalogWrapMetadata(Promise.resolve({ wrapId: 'wrap-1' }))
 
         expect(metadataMocks.getCatalogWrapById).toHaveBeenCalledWith('wrap-1', {
-            includeHidden: true,
+            includeHidden: false,
         })
     })
 

@@ -3,9 +3,14 @@ import type { CatalogDetailDTO } from '@/types/catalog.types'
 
 interface WrapDetailSpecsProps {
     wrap: CatalogDetailDTO
+    canManageCatalog: boolean
 }
 
-export function WrapDetailSpecs({ wrap }: WrapDetailSpecsProps) {
+export function WrapDetailSpecs({ wrap, canManageCatalog }: WrapDetailSpecsProps) {
+    if (!canManageCatalog) {
+        return null
+    }
+
     if (
         wrap.readiness.missingRequiredAssetRoles.length === 0 &&
         wrap.readiness.issues.length === 0

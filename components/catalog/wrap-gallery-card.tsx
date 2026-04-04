@@ -8,8 +8,6 @@ import { formatPrice } from '@/lib/utils/currency'
 import { formatInstallationTime } from '@/lib/utils/dates'
 import type { CatalogBrowseCardDTO } from '@/types/catalog.types'
 
-import { WrapStatusBadge } from './wrap-status-badge'
-
 interface WrapGalleryCardProps {
     wrap: CatalogBrowseCardDTO
 }
@@ -41,17 +39,13 @@ export function WrapGalleryCard({ wrap }: WrapGalleryCardProps) {
                         No display asset
                     </div>
                 )}
-                <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4">
+                <div className="absolute inset-x-0 top-0 flex items-start justify-end p-4">
                     <Badge
                         variant="secondary"
                         className="border border-neutral-800 bg-black/70 text-neutral-100"
                     >
-                        {wrap.readiness.canPublish ? 'Ready' : 'Needs assets'}
+                        Featured Wrap
                     </Badge>
-                    <WrapStatusBadge
-                        isHidden={wrap.isHidden}
-                        canPublish={wrap.readiness.canPublish}
-                    />
                 </div>
             </Link>
 

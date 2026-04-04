@@ -54,6 +54,7 @@ export function CatalogWrapAssetsClient({ wrap }: CatalogWrapAssetsClientProps) 
                     </div>
                 ) : null}
                 <WrapImageManager
+                    key={`${wrap.id}:${wrap.images.map((image) => `${image.id}:${image.version}:${image.kind}:${image.isActive}:${image.displayOrder}`).join('|')}`}
                     wrapId={wrap.id}
                     images={wrap.images}
                     readiness={wrap.readiness}
