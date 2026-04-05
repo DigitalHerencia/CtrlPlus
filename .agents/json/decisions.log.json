@@ -18,6 +18,14 @@
       "date": "2026-04-05",
       "impact": "high",
       "summary": "Normative rules move to contract YAML with rule IDs; instructions only interpret."
+    },
+    {
+      "id": "DEC-003",
+      "title": "Favor canonical exports and remove dead aliases quickly",
+      "status": "accepted",
+      "date": "2026-04-05",
+      "impact": "medium",
+      "summary": "Duplicate export names are consolidated to a single canonical surface, and orphan transaction/select/helper modules are removed once reachability is confirmed."
     }
   ],
   "open_questions": [

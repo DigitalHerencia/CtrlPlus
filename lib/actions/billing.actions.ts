@@ -298,12 +298,6 @@ export async function createInvoice(rawInput: CreateInvoiceInput): Promise<Ensur
     return ensureInvoiceForBooking({ bookingId: parsed.bookingId })
 }
 
-export async function ensureInvoice(
-    rawInput: EnsureInvoiceForBookingInput
-): Promise<EnsureInvoiceResult> {
-    return ensureInvoiceForBooking(rawInput)
-}
-
 export async function processPayment(rawInput: ProcessPaymentInput): Promise<CheckoutSessionDTO> {
     const { invoiceId } = processPaymentSchema.parse(rawInput)
     return createCheckoutSession({ invoiceId })

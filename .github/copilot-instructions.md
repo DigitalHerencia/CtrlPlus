@@ -1,6 +1,6 @@
 ---
 description: CtrlPlus repository agent instructions
-applyTo: "**/*"
+applyTo: '**/*'
 ---
 
 ## Project intent
@@ -64,6 +64,25 @@ Required quality gates when affected:
 - `pnpm build`
 - `pnpm test`
 - `pnpm test:e2e --project=chromium --reporter=line`
+
+### Dead-code prevention policy
+
+- Every new module must be imported by at least one route, feature, action, fetcher, or test in the same PR.
+- Prefer local (non-exported) helpers unless external reuse is required.
+- Do not create parallel abstractions in both `components/{domain}` and `features/{domain}` unless each has documented ownership.
+- For alias migrations, keep one canonical export name and remove redundant aliases within one release cycle.
+
+### CI enforcement
+
+- Run `knip --no-progress` in CI and fail on newly introduced unused files/exports.
+- Run `tsc --noEmit --noUnusedLocals --noUnusedParameters` in CI profile.
+- Keep a reviewed ignore list (`knip.json`) for framework-convention exports (Next.js route entrypoints).
+
+### Layer integrity
+
+- `lib/actions/*` owns writes and orchestration.
+- `lib/fetchers/*` owns reads.
+- `lib/db/transactions/*` must be either actively consumed by actions or removed.
 
 ## Operating workflow
 

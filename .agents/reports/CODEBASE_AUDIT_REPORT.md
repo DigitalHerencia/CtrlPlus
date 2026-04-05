@@ -256,7 +256,7 @@ Use `knip` + route-convention awareness before deleting framework entrypoints.
 
 ### Immediate next steps (high confidence)
 
-1. **Create a deletion candidate PR** containing only:
+1. **Create a deletion candidate plan** containing only:
     - orphan transaction modules (6)
     - orphan schema/type files (`schemas/api.schemas.ts`, the 3 orphan type files)
     - clearly orphan components/features confirmed by no inbound imports
@@ -281,78 +281,6 @@ Use `knip` + route-convention awareness before deleting framework entrypoints.
 1. CI job for dead-code detection (`knip`, optional `ts-prune`) with baseline controls.
 2. TS compiler settings for stricter unused detection in CI profile.
 3. Domain-level ownership map for each module family to reduce drift and duplicate abstractions.
-
-## Copilot Remediation Prompts
-
-Use these directly with Copilot Chat for iterative cleanup.
-
-```md
-Prompt 1 — Safe dead-file removal pass
-Read CODEBASE_AUDIT_REPORT.md and .audit/knip.txt.
-Create a minimal PR plan that removes ONLY high-confidence orphan files:
-
-- lib/db/transactions/admin.transactions.ts
-- lib/db/transactions/auth.transactions.ts
-- lib/db/transactions/catalog.transactions.ts
-- lib/db/transactions/platform.transactions.ts
-- lib/db/transactions/settings.transactions.ts
-- lib/db/transactions/visualizer.transactions.ts
-- schemas/api.schemas.ts
-- types/api.types.ts
-- types/catalog.client.types.ts
-- types/visualizer.client.types.ts
-  Then run lint, typecheck, test, and build, and summarize any breakages.
-  Do not refactor unrelated files.
-```
-
-```md
-Prompt 2 — Duplicate export consolidation
-Find and consolidate duplicate exports reported in CODEBASE_AUDIT_REPORT.md.
-For each duplicate pair, choose one canonical name, update references safely,
-and deprecate/remove the redundant alias with minimal changes.
-Run typecheck and tests after each pair.
-```
-
-```md
-Prompt 3 — Visualizer redundancy reduction
-Audit components/visualizer/** and features/visualizer/** for parallel abstractions.
-Propose a staged consolidation plan with zero behavior change and explicit ownership
-boundaries (feature composition vs UI primitives).
-Then implement phase 1 only.
-```
-
-```md
-Prompt 4 — Export-surface tightening
-For modules with many unused exports in lib/fetchers and lib/actions,
-restrict exports to externally consumed symbols only.
-Keep public API compatibility unless explicitly approved.
-Return a before/after export diff.
-```
-
-## Proposed Copilot Instructions (to prevent recurrence)
-
-Add/adapt these rules in repo instructions:
-
-```md
-### Dead-code prevention policy
-
-- Every new module must be imported by at least one route, feature, action, fetcher, or test in the same PR.
-- Prefer local (non-exported) helpers unless external reuse is required.
-- Do not create parallel abstractions in both `components/{domain}` and `features/{domain}` unless each has documented ownership.
-- For alias migrations, keep one canonical export name and remove redundant aliases within one release cycle.
-
-### CI enforcement
-
-- Run `knip --no-progress` in CI and fail on newly introduced unused files/exports.
-- Run `tsc --noEmit --noUnusedLocals --noUnusedParameters` in CI profile.
-- Keep a reviewed ignore list (`knip.json`) for framework-convention exports (Next.js route entrypoints).
-
-### Layer integrity
-
-- `lib/actions/*` owns writes and orchestration.
-- `lib/fetchers/*` owns reads.
-- `lib/db/transactions/*` must be either actively consumed by actions or removed.
-```
 
 ## Appendix
 

@@ -12,11 +12,9 @@ export const createInvoiceSchema = z.object({
     tenantId: z.string().min(1).optional(),
 })
 
-export const ensureInvoiceSchema = createInvoiceSchema.pick({
+export const ensureInvoiceForBookingSchema = createInvoiceSchema.pick({
     bookingId: true,
 })
-
-export const ensureInvoiceForBookingSchema = ensureInvoiceSchema
 
 export const createCheckoutSessionSchema = z.object({
     invoiceId: z.string().min(1),

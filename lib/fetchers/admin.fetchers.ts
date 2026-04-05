@@ -6,7 +6,6 @@ import { auditLogFilterSchema, tenantMetricsFilterSchema } from '@/schemas/admin
 import type {
     AdminActivityEventDTO,
     AdminAnalyticsSeriesPointDTO,
-    AdminDashboardDTO,
     AdminQuickLinkDTO,
     AuditLogFilterInput,
     AuditLogRowDTO,
@@ -432,28 +431,6 @@ export async function getAnalyticsSeries(
             bookingsCount: values.bookingsCount,
             previewGenerationCount: values.previewGenerationCount,
         }))
-}
-
-export async function getAdminDashboardSummary(tenantId: string): Promise<AdminDashboardDTO> {
-    await requireOwnerOrPlatformAdmin()
-
-    const resolvedTenantId = resolveAdminTenantId(tenantId)
-
-    const [userCount, tenantMetrics, recentActivity, quickLinks] = await Promise.all([
-        prisma.user.count({ where: { deletedAt: null } }),
-        getTenantMetrics({ tenantId: resolvedTenantId }),
-        getAdminRecentActivity(resolvedTenantId),
-        getAdminQuickLinks(),
-    ])
-
-    return {
-        totalUsers: userCount,
-        totalBookings: tenantMetrics.bookingsCount,
-        totalRevenue: tenantMetrics.revenueTotal,
-        totalPreviewGenerations: tenantMetrics.previewGenerationCount,
-        recentActivity,
-        quickLinks,
-    }
 }
 
 // Legacy compatibility exports while transitioning to the new admin surface

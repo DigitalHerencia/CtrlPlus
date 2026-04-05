@@ -13,14 +13,14 @@ import {
 } from '@/types/settings.types'
 import { DEFAULT_STORE_TIMEZONE } from '@/lib/constants/app'
 
-export const SETTINGS_TENANT_ID = 'default-tenant'
+const SETTINGS_TENANT_ID = 'default-tenant'
 
 export function resolveSettingsTenantId(_tenantId?: string | null): string {
     void _tenantId
     return SETTINGS_TENANT_ID
 }
 
-export function createDefaultWebsiteSettingsInput(): WebsiteSettingsInput {
+function createDefaultWebsiteSettingsInput(): WebsiteSettingsInput {
     return {
         preferredContact: 'email',
         appointmentReminders: true,
@@ -188,11 +188,6 @@ export async function getTenantSettingsView(
         ...parsed,
         updatedAt: latestSnapshot?.timestamp.toISOString() ?? null,
     }
-}
-
-export async function getNotificationSettingsView(): Promise<NotificationPreferencesDTO> {
-    const userSettings = await getUserSettingsView()
-    return userSettings.notifications
 }
 
 export async function getExportOptionsView(

@@ -29,9 +29,9 @@ vi.mock('@/lib/db/prisma', () => ({
 
 import {
     getAvailability,
-    getAvailabilityRuleById,
-    getAvailabilityRules,
-    getAvailabilityRulesByDay,
+    getAvailabilityWindowById,
+    getAvailabilityWindows,
+    getAvailabilityWindowsByDay,
 } from '@/lib/fetchers/scheduling.fetchers'
 
 describe('scheduling availability fetchers', () => {
@@ -47,7 +47,7 @@ describe('scheduling availability fetchers', () => {
             authz: {},
         })
 
-        await expect(getAvailabilityRules()).rejects.toThrow('Unauthorized: not authenticated')
+        await expect(getAvailabilityWindows()).rejects.toThrow('Unauthorized: not authenticated')
         expect(mocks.prisma.availabilityRule.findMany).not.toHaveBeenCalled()
     })
 
@@ -61,7 +61,7 @@ describe('scheduling availability fetchers', () => {
         mocks.prisma.availabilityRule.findMany.mockResolvedValue([])
         mocks.prisma.availabilityRule.count.mockResolvedValue(0)
 
-        await getAvailabilityRules()
+        await getAvailabilityWindows()
 
         expect(mocks.hasCapability).toHaveBeenCalledWith(
             expect.objectContaining({ role: 'customer' }),
@@ -89,7 +89,7 @@ describe('scheduling availability fetchers', () => {
         ])
         mocks.prisma.availabilityRule.count.mockResolvedValue(1)
 
-        const result = await getAvailabilityRulesByDay(1)
+        const result = await getAvailabilityWindowsByDay(1)
 
         expect(result).toEqual([
             {
@@ -121,7 +121,7 @@ describe('scheduling availability fetchers', () => {
             updatedAt: new Date('2026-03-20T10:00:00.000Z'),
         })
 
-        await expect(getAvailabilityRuleById('rule-1')).resolves.toEqual({
+        await expect(getAvailabilityWindowById('rule-1')).resolves.toEqual({
             id: 'rule-1',
             dayOfWeek: 2,
             startTime: '10:00',

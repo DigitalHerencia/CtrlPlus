@@ -48,31 +48,6 @@ export async function getPreviewById(previewId: string): Promise<VisualizerPrevi
     return preview ? toVisualizerPreviewDTO(preview) : null
 }
 
-export async function getPreviewsByWrap(wrapId: string): Promise<VisualizerPreviewDTO[]> {
-    const session = await getSession()
-    const userId = session.userId
-    if (!session.isAuthenticated || !userId) {
-        return []
-    }
-
-    requireCapability(session.authz, 'visualizer.use')
-
-    const previews = await prisma.visualizerPreview.findMany({
-        where: {
-            wrapId,
-            ownerClerkUserId: userId,
-            deletedAt: null,
-            expiresAt: {
-                gt: new Date(),
-            },
-        },
-        orderBy: { createdAt: 'desc' },
-        select: visualizerPreviewDTOFields,
-    })
-
-    return previews.map(toVisualizerPreviewDTO)
-}
-
 export async function listMyVisualizerPreviews(limit = 50): Promise<VisualizerPreviewDTO[]> {
     const session = await getSession()
     const userId = session.userId

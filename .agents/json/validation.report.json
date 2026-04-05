@@ -20,6 +20,12 @@
       "name": "prompt-accountability-coverage",
       "status": "in-progress",
       "details": "Prompt library migration underway"
+    },
+    {
+      "id": "VAL-004",
+      "name": "dead-code-governance-alignment",
+      "status": "pass",
+      "details": "Repository instructions now require dead-code prevention, CI enforcement, and action/fetcher/transaction layer integrity rules."
     }
   ]
 }

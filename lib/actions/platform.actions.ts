@@ -1,18 +1,10 @@
 'use server'
 
-import { getSession } from '@/lib/auth/session'
-import { requireCapability } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
 
 import { requirePlatformDeveloperAdmin } from '@/lib/authz/guards'
 import { processStripeWebhookEvent } from '@/lib/actions/billing.actions'
-import {
-    previewPruneSchema,
-    replayWebhookFailuresSchema,
-    resetWebhookLocksSchema,
-    webhookMaintenanceSchema,
-} from '@/schemas/platform.schemas'
-import type { ResetWebhookLocksInput } from '@/types/platform.types'
+import { replayWebhookFailuresSchema, webhookMaintenanceSchema } from '@/schemas/platform.schemas'
 import type { Prisma } from '@prisma/client'
 import { revalidatePlatformPaths } from '@/lib/cache/revalidate-tags'
 import type Stripe from 'stripe'
@@ -21,49 +13,6 @@ import { WEBHOOK_STALE_THRESHOLD_MINUTES } from '@/lib/constants/app'
 import { writeOperationalAuditLog } from '@/lib/integrations/audit-log'
 import { observability } from '@/lib/integrations/observability'
 import type { WebhookMutationResultDTO, WebhookReplayResultDTO } from '@/types/platform.types'
-
-export async function pruneVisualizerPreviews(rawInput?: {
-    olderThanDays?: number
-}): Promise<{ affectedCount: number }> {
-    const session = await getSession()
-    const userId = session.userId
-    if (!session.isAuthenticated || !userId) {
-        throw new Error('Unauthorized: not authenticated')
-    }
-
-    requireCapability(session.authz, 'dashboard.owner')
-    const input = previewPruneSchema.parse(rawInput ?? {})
-
-    const cutoff = new Date()
-    cutoff.setDate(cutoff.getDate() - input.olderThanDays)
-
-    const result = await prisma.visualizerPreview.updateMany({
-        where: {
-            deletedAt: null,
-            createdAt: { lt: cutoff },
-        },
-        data: { deletedAt: new Date() },
-    })
-
-    await writeOperationalAuditLog({
-        userId,
-        action: 'platform.pruneVisualizerPreviews',
-        resourceType: 'VisualizerPreview',
-        resourceId: 'platform:visualizer-previews',
-        details: {
-            olderThanDays: input.olderThanDays,
-            prunedCount: result.count,
-        },
-    })
-
-    revalidatePlatformPaths()
-
-    return { affectedCount: result.count }
-}
-
-export async function pruneOldPreviews(): Promise<void> {
-    await pruneVisualizerPreviews()
-}
 
 function getStoredStripeEvent(
     payload: unknown,
@@ -155,10 +104,6 @@ export async function clearStuckWebhookProcessingEvents(): Promise<WebhookMutati
     }
 }
 
-export async function cleanupStaleWebhookLocks(): Promise<WebhookMutationResultDTO> {
-    return await clearStuckWebhookProcessingEvents()
-}
-
 export async function replayStripeWebhookFailures(rawInput: {
     eventIds: string[]
 }): Promise<WebhookReplayResultDTO> {
@@ -248,32 +193,3 @@ export async function replayStripeWebhookFailures(rawInput: {
         failedCount,
     }
 }
-
-export async function resetFailedWebhookLocks(rawInput: {
-    source: 'clerk' | 'stripe'
-    eventIds: string[]
-}): Promise<WebhookMutationResultDTO> {
-    const session = await requirePlatformDeveloperAdmin()
-
-    if (!session.userId) {
-        throw new Error('Unauthorized: not authenticated')
-    }
-
-    const input = resetWebhookLocksSchema.parse(rawInput as ResetWebhookLocksInput)
-
-    if (input.source === 'clerk') {
-        throw new Error(
-            'Clerk replay remains owned by auth/authz and is not available from platform.'
-        )
-    }
-
-    const result = await replayStripeWebhookFailures({ eventIds: input.eventIds })
-
-    return {
-        affectedCount: result.replayedCount + result.ignoredCount,
-        clerkAffectedCount: 0,
-        stripeAffectedCount: result.replayedCount + result.ignoredCount,
-    }
-}
-
-export { writeOperationalAuditLog }

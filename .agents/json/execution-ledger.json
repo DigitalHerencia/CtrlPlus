@@ -34,6 +34,23 @@
         ".agents/instructions/*"
       ],
       "error_reference": "PATCH-DUPLICATE-PATH"
+    },
+    {
+      "id": "LEDGER-004",
+      "timestamp": "2026-04-05T16:35:00Z",
+      "type": "cleanup",
+      "summary": "Removed high-confidence dead files, consolidated duplicate exports, reduced visualizer redundancy, tightened export surfaces, and synchronized dead-code policy updates",
+      "files": [
+        "lib/db/transactions/*",
+        "schemas/*",
+        "types/*",
+        "components/visualizer/**",
+        "features/visualizer/**",
+        "lib/fetchers/**",
+        "lib/actions/**",
+        "AGENTS.md",
+        ".github/copilot-instructions.md"
+      ]
     }
   ]
 }

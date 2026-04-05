@@ -24,28 +24,6 @@ function computeContentHash(buffer: Buffer): string {
     return createHash('sha256').update(buffer).digest('hex')
 }
 
-async function persistWrapImageLocally(params: {
-    wrapId: string
-    file: File
-    buffer: Buffer
-    contentHash: string
-}): Promise<PersistedWrapImage> {
-    const ext = IMAGE_EXT_BY_TYPE[params.file.type]
-    const fileName = `${params.wrapId}-${randomUUID()}.${ext}`
-    const relativeDir = path.join('uploads', 'wraps')
-    const relativePath = path.join(relativeDir, fileName)
-    const absoluteDir = path.join(process.cwd(), 'public', relativeDir)
-    const absolutePath = path.join(process.cwd(), 'public', relativePath)
-
-    await mkdir(absoluteDir, { recursive: true })
-    await writeFile(absolutePath, params.buffer)
-
-    return {
-        url: `/${relativePath.replaceAll(path.sep, '/')}`,
-        contentHash: params.contentHash,
-    }
-}
-
 async function uploadWrapImageToCloudinary(params: {
     wrapId: string
     file: File

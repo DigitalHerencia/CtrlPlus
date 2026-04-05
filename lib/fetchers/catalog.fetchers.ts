@@ -23,7 +23,6 @@ import type {
     WrapCategoryDTO,
     WrapDTO,
     WrapImageDTO,
-    WrapListDTO,
 } from '@/types/catalog.types'
 
 import { WrapImageKind } from '../constants/statuses'
@@ -87,7 +86,7 @@ function mapWrapImage(image: WrapRecord['images'][number]): WrapImageDTO {
     }
 }
 
-export function toWrapDTO(prismaWrap: WrapRecord): WrapDTO {
+function toWrapDTO(prismaWrap: WrapRecord): WrapDTO {
     return {
         id: prismaWrap.id,
         name: prismaWrap.name,
@@ -320,17 +319,6 @@ export async function getCatalogWrapById(
     }
 
     return detail
-}
-
-export async function searchWraps(
-    filters: SearchWrapsInput = { page: 1, pageSize: 20 },
-    scope: WrapVisibilityScope = {}
-): Promise<WrapListDTO> {
-    // Validate params at the action boundary: searchWrapsSchema.parse(filters)
-    const parsedFilters = filters
-    const { wraps, total } = await searchWrapRecords(parsedFilters, scope)
-
-    return toWrapListResult(wraps, total, parsedFilters, (wrap) => wrap)
 }
 
 export async function searchCatalogWraps(

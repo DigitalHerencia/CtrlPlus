@@ -90,7 +90,7 @@ function toAvailabilityRuleDTO(record: {
     }
 }
 
-export async function getAvailabilityRules(
+export async function getAvailabilityWindows(
     params: AvailabilityListParams = DEFAULT_AVAILABILITY_LIST_PARAMS
 ): Promise<AvailabilityListResult> {
     await requireSchedulingReadSession()
@@ -124,9 +124,7 @@ export async function getAvailabilityRules(
     }
 }
 
-export const getAvailabilityWindows = getAvailabilityRules
-
-export async function getAvailabilityRuleById(
+export async function getAvailabilityWindowById(
     windowId: string
 ): Promise<AvailabilityWindowDTO | null> {
     await requireSchedulingReadSession()
@@ -142,9 +140,7 @@ export async function getAvailabilityRuleById(
     return record ? toAvailabilityRuleDTO(record) : null
 }
 
-export const getAvailabilityWindowById = getAvailabilityRuleById
-
-export async function getAvailabilityRulesByDay(
+export async function getAvailabilityWindowsByDay(
     dayOfWeek: number
 ): Promise<AvailabilityWindowDTO[]> {
     await requireSchedulingReadSession()
@@ -160,8 +156,6 @@ export async function getAvailabilityRulesByDay(
 
     return records.map(toAvailabilityRuleDTO)
 }
-
-export const getAvailabilityWindowsByDay = getAvailabilityRulesByDay
 
 export async function getAvailability(
     startDate: Date,
@@ -371,7 +365,7 @@ export async function getBookingById(bookingId: string): Promise<BookingDTO | nu
     return record ? toBookingDTO(record) : null
 }
 
-export async function getBookingTimeline(bookingId: string): Promise<BookingTimelineEventDTO[]> {
+async function getBookingTimeline(bookingId: string): Promise<BookingTimelineEventDTO[]> {
     const session = await requireSchedulingReadSession()
     const customerId = canViewAllSchedulingBookings(session) ? undefined : session.userId
 

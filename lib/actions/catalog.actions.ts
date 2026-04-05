@@ -3,11 +3,7 @@
 import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { prisma } from '@/lib/db/prisma'
 import { createWrapSchema, updateWrapSchema } from '@/schemas/catalog.schemas'
-import {
-    createWrapCategorySchema,
-    setWrapCategoryMappingsSchema,
-    updateWrapCategorySchema,
-} from '@/schemas/catalog.schemas'
+import { createWrapCategorySchema, setWrapCategoryMappingsSchema } from '@/schemas/catalog.schemas'
 import { assertWrapIsPublishReady } from '@/lib/fetchers/catalog.mappers'
 import { updateWrapImageMetadataSchema, wrapImageUploadSchema } from '@/schemas/catalog.schemas'
 import {
@@ -22,7 +18,6 @@ import {
     type CreateWrapCategoryInput,
     type CreateWrapInput,
     type SetWrapCategoryMappingsInput,
-    type UpdateWrapCategoryInput,
     type UpdateWrapImageMetadataInput,
     type UpdateWrapInput,
     type WrapImageUploadInput,
@@ -224,50 +219,6 @@ export async function createWrapCategory(input: CreateWrapCategoryInput): Promis
             resourceType: 'WrapCategory',
             resourceId: category.id,
             details: JSON.stringify({ slug: category.slug }),
-            timestamp: new Date(),
-        },
-    })
-
-    revalidateCatalogPaths()
-
-    return category
-}
-
-export async function updateWrapCategory(
-    categoryId: string,
-    input: UpdateWrapCategoryInput
-): Promise<WrapCategoryDTO> {
-    const session = await requireOwnerOrPlatformAdmin()
-    const parsed = updateWrapCategorySchema.parse(input)
-
-    const result = await prisma.wrapCategory.updateMany({
-        where: {
-            id: categoryId,
-            deletedAt: null,
-        },
-        data: parsed,
-    })
-
-    if (result.count === 0) {
-        throw new Error('Forbidden: category not found')
-    }
-
-    const category = await prisma.wrapCategory.findFirst({
-        where: { id: categoryId, deletedAt: null },
-        select: { id: true, name: true, slug: true },
-    })
-
-    if (!category) {
-        throw new Error('Forbidden: category not found')
-    }
-
-    await prisma.auditLog.create({
-        data: {
-            userId: session.userId ?? 'system',
-            action: 'wrapCategory.updated',
-            resourceType: 'WrapCategory',
-            resourceId: category.id,
-            details: JSON.stringify(parsed),
             timestamp: new Date(),
         },
     })

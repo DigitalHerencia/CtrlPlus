@@ -8,10 +8,8 @@ import { getStripeClient } from '@/lib/integrations/stripe'
 import { RECENT_WEBHOOK_FAILURE_LIMIT, WEBHOOK_STALE_THRESHOLD_MINUTES } from '@/lib/constants/app'
 import type {
     DependencyHealthDTO,
-    PlatformDashboardDTO,
     PlatformHealthDTO,
     PlatformHealthStatus,
-    PlatformIncidentDTO,
     PlatformToolCardDTO,
     WebhookFailureDTO,
     WebhookOperationsOverviewDTO,
@@ -172,85 +170,6 @@ export async function getPlatformHealthOverview(): Promise<PlatformHealthDTO> {
     }
 }
 
-async function getPlatformRecentIncidents(limit = 10): Promise<PlatformIncidentDTO[]> {
-    const [clerkFailures, stripeFailures] = await Promise.all([
-        prisma.clerkWebhookEvent.findMany({
-            where: { status: 'failed' },
-            orderBy: { processedAt: 'desc' },
-            take: limit,
-            select: {
-                id: true,
-                type: true,
-                error: true,
-                processedAt: true,
-            },
-        }),
-        prisma.stripeWebhookEvent.findMany({
-            where: { status: 'failed' },
-            orderBy: { processedAt: 'desc' },
-            take: limit,
-            select: {
-                id: true,
-                type: true,
-                error: true,
-                processedAt: true,
-            },
-        }),
-    ])
-
-    return [...clerkFailures, ...stripeFailures]
-        .sort((left, right) => right.processedAt.getTime() - left.processedAt.getTime())
-        .slice(0, limit)
-        .map((failure) => ({
-            id: failure.id,
-            severity: 'error',
-            title: failure.type,
-            message: failure.error ?? 'Operational failure recorded.',
-            createdAt: failure.processedAt.toISOString(),
-            source: 'webhook',
-        }))
-}
-
-function getPlatformMaintenanceTools(): PlatformToolCardDTO[] {
-    return [
-        {
-            id: 'cleanup-stale-webhook-locks',
-            title: 'Cleanup stale webhook locks',
-            description: 'Release stale webhook processing locks for recovery.',
-            actionKey: 'cleanup-stale-webhook-locks',
-        },
-        {
-            id: 'replay-stripe-webhook-failures',
-            title: 'Replay Stripe webhook failures',
-            description: 'Retry replayable failed Stripe webhook events.',
-            actionKey: 'replay-stripe-webhook-failures',
-        },
-        {
-            id: 'prune-visualizer-previews',
-            title: 'Prune visualizer previews',
-            description: 'Clean stale visualizer preview records and assets.',
-            actionKey: 'prune-visualizer-previews',
-        },
-    ]
-}
-
-export async function getPlatformDashboard(): Promise<PlatformDashboardDTO> {
-    await requirePlatformDeveloperAdmin()
-
-    const [dependencies, recentIncidents] = await Promise.all([
-        getDependencyHealth(),
-        getPlatformRecentIncidents(),
-    ])
-
-    return {
-        overallStatus: deriveOverallStatus(dependencies),
-        dependencies,
-        recentIncidents,
-        maintenanceTools: getPlatformMaintenanceTools(),
-        updatedAt: new Date().toISOString(),
-    }
-}
-
 export async function getWebhookMonitorState(): Promise<WebhookOperationsOverviewDTO> {
     return await getWebhookOperationsOverview()
 }
@@ -329,7 +248,7 @@ function toFailureDTO(
     }
 }
 
-export async function getWebhookOperationsOverview(): Promise<WebhookOperationsOverviewDTO> {
+async function getWebhookOperationsOverview(): Promise<WebhookOperationsOverviewDTO> {
     await requirePlatformDeveloperAdmin()
 
     const staleCutoff = new Date(Date.now() - WEBHOOK_STALE_THRESHOLD_MINUTES * 60_000)
