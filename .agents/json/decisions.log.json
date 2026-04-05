@@ -1,0 +1,31 @@
+{
+  "artifact_type": "decision-log",
+  "version": "1.0.0",
+  "updated_at": "2026-04-05",
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "title": "Make .agents canonical governance source",
+      "status": "accepted",
+      "date": "2026-04-05",
+      "impact": "high",
+      "summary": "All governance authoring occurs under .agents; AGENTS.md and .github/copilot-instructions.md are synchronized mirrors."
+    },
+    {
+      "id": "DEC-002",
+      "title": "Contract-first policy enforcement",
+      "status": "accepted",
+      "date": "2026-04-05",
+      "impact": "high",
+      "summary": "Normative rules move to contract YAML with rule IDs; instructions only interpret."
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q-001",
+      "question": "Should CI enforce AGENTS and .github/copilot-instructions byte equality?",
+      "owner": "platform",
+      "status": "open"
+    }
+  ]
+}

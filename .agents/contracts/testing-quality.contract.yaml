@@ -1,0 +1,21 @@
+contract_id: GOV-TESTING-QUALITY
+version: 1.0.0
+scope: repository
+owner: engineering
+last_reviewed: 2026-04-05
+rules:
+  - id: QA-001
+    type: must
+    statement: Repository quality gates must pass for affected changes.
+    applies_to: "repository"
+    validation_hint: "Run lint, typecheck, prisma:validate, build, test; run e2e when affected."
+  - id: QA-002
+    type: must
+    statement: Unit/integration tests should cover high-risk mutation and lifecycle transitions.
+    applies_to: "lib/**, features/**, tests/vitest/**"
+    validation_hint: "Require targeted coverage when modifying sensitive flows."
+  - id: QA-003
+    type: must
+    statement: E2E tests should validate critical user workflows and auth boundaries.
+    applies_to: "tests/playwright/**"
+    validation_hint: "Keep key tenant/auth/catalog/visualizer/billing flows stable."

@@ -1,0 +1,29 @@
+{
+  "artifact_type": "program-status",
+  "version": "1.0.0",
+  "updated_at": "2026-04-05",
+  "programs": [
+    {
+      "id": "governance-refresh-v1",
+      "name": "Governance Layer Realignment",
+      "status": "in-progress",
+      "progress_pct": 60,
+      "owner": "platform",
+      "linked_contract_ids": [
+        "GOV-LAYERS"
+      ],
+      "next_milestone": "Finalize prompt/accountability alignment and run validation report"
+    },
+    {
+      "id": "catalog-visualizer-contract-hardening",
+      "name": "Catalog + Visualizer Hand-off Hardening",
+      "status": "planned",
+      "progress_pct": 10,
+      "owner": "catalog",
+      "linked_contract_ids": [
+        "GOV-CATALOG-VISUALIZER-HANDOFF"
+      ],
+      "next_milestone": "Operationalize contract checks in implementation prompts"
+    }
+  ]
+}

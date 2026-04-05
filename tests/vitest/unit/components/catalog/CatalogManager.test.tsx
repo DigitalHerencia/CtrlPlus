@@ -32,12 +32,12 @@ vi.mock('next/navigation', () => ({
 }))
 
 vi.mock('@/components/ui/sheet', () => ({
-    Sheet: ({ open, children }: { open?: boolean; children: unknown }) =>
+    Sheet: ({ open, children }: { open?: boolean; children: React.ReactNode }) =>
         open ? <div data-testid="sheet-root">{children}</div> : null,
-    SheetContent: ({ children }: { children: unknown }) => <div>{children}</div>,
-    SheetHeader: ({ children }: { children: unknown }) => <div>{children}</div>,
-    SheetTitle: ({ children }: { children: unknown }) => <h2>{children}</h2>,
-    SheetDescription: ({ children }: { children: unknown }) => <p>{children}</p>,
+    SheetContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    SheetHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    SheetTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
+    SheetDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
 }))
 
 vi.mock('@/lib/actions/catalog.actions', () => ({

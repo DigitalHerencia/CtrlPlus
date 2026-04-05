@@ -45,14 +45,17 @@ pnpm dev
 
 ## Engineering References
 
-- `.copilot/README.md`
-- `.copilot/docs/`
-- `.copilot/contracts/`
-- `.copilot/execution/`
-- `.copilot/instructions/`
-- `.copilot/prompts/`
+- `.agents/README.md`
+- `.agents/docs/`
+- `.agents/instructions/`
+- `.agents/contracts/`
+- `.agents/json/`
+- `.agents/prompts/`
 
 `docs/` is reserved for end-user and operational product documentation.
+
+`AGENTS.md` and `.github/copilot-instructions.md` are synchronized repository-level
+agent instructions and must remain identical.
 
 ## Quality Gates
 

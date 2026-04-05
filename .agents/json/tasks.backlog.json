@@ -1,0 +1,47 @@
+{
+  "artifact_type": "task-backlog",
+  "version": "1.0.0",
+  "updated_at": "2026-04-05",
+  "tasks": [
+    {
+      "id": "TASK-001",
+      "title": "Sync AGENTS and .github/copilot-instructions",
+      "priority": "high",
+      "status": "in-progress",
+      "owner": "platform",
+      "dependencies": [],
+      "acceptance": [
+        "Files are byte-identical",
+        "All resource references point to .agents canonical paths"
+      ]
+    },
+    {
+      "id": "TASK-002",
+      "title": "Refactor prompt library to accountability model",
+      "priority": "high",
+      "status": "in-progress",
+      "owner": "platform",
+      "dependencies": [
+        "TASK-001"
+      ],
+      "acceptance": [
+        "Each prompt references contract IDs",
+        "Each prompt requires reporting updates"
+      ]
+    },
+    {
+      "id": "TASK-003",
+      "title": "Publish governance validation report",
+      "priority": "medium",
+      "status": "todo",
+      "owner": "platform",
+      "dependencies": [
+        "TASK-002"
+      ],
+      "acceptance": [
+        "No layer-boundary violations",
+        "No duplicate policy statements across layers"
+      ]
+    }
+  ]
+}

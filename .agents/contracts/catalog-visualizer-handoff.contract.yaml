@@ -1,0 +1,21 @@
+contract_id: GOV-CATALOG-VISUALIZER-HANDOFF
+version: 1.0.0
+scope: catalog-visualizer
+owner: catalog
+last_reviewed: 2026-04-05
+rules:
+  - id: CVH-001
+    type: must
+    statement: Catalog wrap asset semantics must use explicit WrapImageKind role values.
+    applies_to: "catalog, visualizer"
+    validation_hint: "Reject role inference from unordered arrays such as images[0]."
+  - id: CVH-002
+    type: must
+    statement: Visualizer entry must validate wrap selection server-side before preview generation.
+    applies_to: "app/(tenant)/visualizer/**, lib/actions/visualizer*.ts"
+    validation_hint: "Require wrap existence/publish-readiness and ownership checks as applicable."
+  - id: CVH-003
+    type: must
+    statement: Preview lifecycle states must be explicit and traceable.
+    applies_to: "visualizer"
+    validation_hint: "Status values limited to pending, processing, complete, failed."

@@ -1,0 +1,14 @@
+{
+  "artifact_type": "blocker-status",
+  "version": "1.0.0",
+  "updated_at": "2026-04-05",
+  "active_blockers": [],
+  "resolved_blockers": [
+    {
+      "id": "BLK-001",
+      "title": "Instruction-file overwrite patch conflict",
+      "resolved_at": "2026-04-05",
+      "resolution": "Used explicit delete-and-recreate flow for deterministic content replacement"
+    }
+  ]
+}

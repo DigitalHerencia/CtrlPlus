@@ -1,0 +1,39 @@
+{
+  "artifact_type": "execution-ledger",
+  "version": "1.0.0",
+  "updated_at": "2026-04-05",
+  "entries": [
+    {
+      "id": "LEDGER-001",
+      "timestamp": "2026-04-05T00:00:00Z",
+      "type": "action",
+      "summary": "Rewrote docs layer for boundary clarity and intent-only scope",
+      "files": [
+        ".agents/docs/PRD.md",
+        ".agents/docs/ARCHITECTURE.md",
+        ".agents/docs/TECHNOLOGY-REQUIREMENTS.md",
+        ".agents/docs/DATA-MODEL.md",
+        ".agents/docs/ROADMAP.md"
+      ]
+    },
+    {
+      "id": "LEDGER-002",
+      "timestamp": "2026-04-05T00:05:00Z",
+      "type": "edit",
+      "summary": "Replaced instruction set with interpretation-layer aligned files",
+      "files": [
+        ".agents/instructions/*"
+      ]
+    },
+    {
+      "id": "LEDGER-003",
+      "timestamp": "2026-04-05T00:10:00Z",
+      "type": "fix",
+      "summary": "Resolved in-place patch conflict by switching to delete-and-recreate strategy",
+      "files": [
+        ".agents/instructions/*"
+      ],
+      "error_reference": "PATCH-DUPLICATE-PATH"
+    }
+  ]
+}

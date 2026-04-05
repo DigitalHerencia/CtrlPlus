@@ -1,0 +1,31 @@
+contract_id: GOV-MUTATION-PIPELINE
+version: 1.0.0
+scope: write-paths
+owner: security
+last_reviewed: 2026-04-05
+rules:
+  - id: MUT-001
+    type: must
+    statement: Sensitive mutations must authenticate the caller first.
+    applies_to: "lib/actions/**/*.ts, app/api/**/route.ts"
+    validation_hint: "Check for server-side session/auth resolution before mutation work."
+  - id: MUT-002
+    type: must
+    statement: Sensitive mutations must authorize capability/ownership before persistence.
+    applies_to: "lib/actions/**/*.ts, app/api/**/route.ts"
+    validation_hint: "Check capability/ownership verification against target resource scope."
+  - id: MUT-003
+    type: must
+    statement: Mutation input must be validated with runtime schema parsing.
+    applies_to: "lib/actions/**/*.ts, app/api/**/route.ts"
+    validation_hint: "Require Zod parse/safeParse gate before DB writes."
+  - id: MUT-004
+    type: must
+    statement: Sensitive operations must emit auditable context.
+    applies_to: "lib/actions/**/*.ts, app/api/**/route.ts"
+    validation_hint: "Capture actor, action, target, and timestamp metadata."
+  - id: MUT-005
+    type: must
+    statement: Successful writes must trigger cache invalidation strategy aligned with read paths.
+    applies_to: "lib/actions/**/*.ts"
+    validation_hint: "Use revalidateTag/revalidatePath/updateTag semantics deliberately."

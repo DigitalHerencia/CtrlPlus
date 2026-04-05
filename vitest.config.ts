@@ -22,7 +22,8 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': resolve(__dirname, '.'),
-            'server-only': resolve(__dirname, 'test-shims/server-only.js'),
+            // Test-only shim - only active in test environments, not in production builds
+            'server-only': resolve(__dirname, 'tests/test-shims/server-only.js'),
         },
     },
 })

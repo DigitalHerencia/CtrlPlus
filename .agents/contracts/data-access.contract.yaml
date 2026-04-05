@@ -1,0 +1,26 @@
+contract_id: GOV-DATA-ACCESS
+version: 1.0.0
+scope: repository
+owner: data-platform
+last_reviewed: 2026-04-05
+rules:
+  - id: DATA-001
+    type: must
+    statement: All database reads must flow through lib/fetchers.
+    applies_to: "app/**, features/**, components/**, lib/**"
+    validation_hint: "No Prisma reads in app/components; feature reads should consume fetchers."
+  - id: DATA-002
+    type: must
+    statement: All database writes must flow through lib/actions.
+    applies_to: "app/**, features/**, components/**, lib/**"
+    validation_hint: "No direct Prisma writes outside action modules."
+  - id: DATA-003
+    type: must
+    statement: Data returned to UI must use explicit DTO shapes.
+    applies_to: "lib/fetchers/**, features/**"
+    validation_hint: "Disallow leaking raw Prisma entities to client-facing layers."
+  - id: DATA-004
+    type: must
+    statement: Multi-step writes with consistency requirements must use transaction boundaries.
+    applies_to: "lib/actions/**"
+    validation_hint: "Validate $transaction or equivalent atomic pattern where required."

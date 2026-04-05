@@ -1,0 +1,21 @@
+{
+  "artifact_type": "domain-status",
+  "domain": "visualizer",
+  "version": "1.0.0",
+  "updated_at": "2026-04-05",
+  "state": "stable",
+  "focus": [
+    "preview lifecycle consistency",
+    "storage-backed artifacts",
+    "fallback resilience"
+  ],
+  "progress": {
+    "contract_alignment_pct": 75,
+    "instruction_alignment_pct": 80,
+    "prompt_alignment_pct": 30
+  },
+  "next_actions": [
+    "Ensure all preview workflows report status transitions clearly",
+    "Ensure prompts require error/fix logging in execution-ledger"
+  ]
+}

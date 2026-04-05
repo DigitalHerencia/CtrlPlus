@@ -1,0 +1,31 @@
+contract_id: GOV-NAMING
+version: 1.0.0
+scope: repository
+owner: architecture
+last_reviewed: 2026-04-05
+rules:
+  - id: NAME-001
+    type: must
+    statement: Runtime validation schemas must use *Schema suffix.
+    applies_to: "schemas/**/*.ts, lib/**/*.ts"
+    validation_hint: "Examples: createWrapSchema, updateBookingSchema."
+  - id: NAME-002
+    type: must
+    statement: DTO interfaces/types must use *DTO suffix when crossing layer boundaries.
+    applies_to: "types/**/*.ts, lib/fetchers/**/*.ts"
+    validation_hint: "Examples: WrapListDTO, PreviewDetailDTO."
+  - id: NAME-003
+    type: must
+    statement: Read authority modules must be placed and named under lib/fetchers/{domain}*.ts.
+    applies_to: "lib/fetchers/**/*.ts"
+    validation_hint: "Disallow duplicate read layers outside fetchers for domain data access."
+  - id: NAME-004
+    type: must
+    statement: Write authority modules must be placed and named under lib/actions/{domain}*.ts.
+    applies_to: "lib/actions/**/*.ts"
+    validation_hint: "Disallow direct write orchestration in app/components/features."
+  - id: NAME-005
+    type: forbidden
+    statement: Barrel exports that hide domain ownership boundaries are not allowed in governance-sensitive layers.
+    applies_to: "lib/**, features/**"
+    validation_hint: "Prefer explicit imports for traceability."

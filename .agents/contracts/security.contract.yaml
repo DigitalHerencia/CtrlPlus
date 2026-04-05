@@ -1,0 +1,31 @@
+contract_id: GOV-SECURITY
+version: 1.0.0
+scope: repository
+owner: security
+last_reviewed: 2026-04-05
+rules:
+  - id: SEC-001
+    type: must
+    statement: Authentication and authorization must be enforced server-side.
+    applies_to: "lib/**, app/api/**"
+    validation_hint: "No trust of client-side authority assertions."
+  - id: SEC-002
+    type: forbidden
+    statement: Secrets must not be exposed in client bundles, logs, or responses.
+    applies_to: "**/*.ts, **/*.tsx, **/*.md"
+    validation_hint: "Block plaintext secrets and direct provider key leaks."
+  - id: SEC-003
+    type: must
+    statement: Stripe webhooks must verify signature and support replay-safe processing.
+    applies_to: "app/api/stripe/**, lib/actions/billing*.ts"
+    validation_hint: "Require signature verification and idempotency semantics."
+  - id: SEC-004
+    type: must
+    statement: Server actions must assume direct invocation is possible and re-check auth/authz.
+    applies_to: "lib/actions/**/*.ts"
+    validation_hint: "No reliance on UI-level gating for action safety."
+  - id: SEC-005
+    type: must
+    statement: File upload and remote-fetch flows must sanitize input and ownership context.
+    applies_to: "lib/uploads/**, app/api/**, lib/actions/visualizer*.ts"
+    validation_hint: "Validate content constraints and actor/resource ownership."

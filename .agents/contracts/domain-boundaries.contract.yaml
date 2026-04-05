@@ -1,0 +1,36 @@
+contract_id: GOV-DOMAIN-BOUNDARIES
+version: 1.0.0
+scope: repository
+owner: architecture
+last_reviewed: 2026-04-05
+rules:
+  - id: DOM-001
+    type: must
+    statement: Domain logic ownership must remain within its mapped app/features/components/lib segments.
+    applies_to: "app/**, features/**, components/**, lib/**"
+    validation_hint: "Validate import and file placement against route-ownership and domain map expectations."
+  - id: DOM-002
+    type: forbidden
+    statement: Cross-domain direct writes that bypass lib/actions/{domain} are not allowed.
+    applies_to: "**/*.ts, **/*.tsx"
+    validation_hint: "Disallow direct write calls into foreign domain persistence from unrelated domains."
+  - id: DOM-003
+    type: must
+    statement: Catalog owns wrap assets and publish readiness.
+    applies_to: "catalog, visualizer"
+    validation_hint: "Visualizer must consume validated wrap selections from catalog-owned read paths."
+  - id: DOM-004
+    type: must
+    statement: Visualizer owns preview generation lifecycle and status transitions.
+    applies_to: "visualizer"
+    validation_hint: "Preview state transitions must be managed in visualizer actions/fetchers only."
+  - id: DOM-005
+    type: must
+    statement: Billing owns invoice/payment transitions and Stripe event reconciliation.
+    applies_to: "billing"
+    validation_hint: "Ensure webhook reconciliation behavior is isolated to billing flows."
+  - id: DOM-006
+    type: must
+    statement: Scheduling owns availability and booking transitions.
+    applies_to: "scheduling"
+    validation_hint: "Avoid booking state mutation outside scheduling actions."

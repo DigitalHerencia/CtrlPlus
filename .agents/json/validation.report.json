@@ -1,0 +1,25 @@
+{
+  "artifact_type": "validation-report",
+  "version": "1.0.0",
+  "updated_at": "2026-04-05",
+  "checks": [
+    {
+      "id": "VAL-001",
+      "name": "layer-boundary-coherence",
+      "status": "pass",
+      "details": "Intent, interpretation, execution, and reporting artifacts are split by role"
+    },
+    {
+      "id": "VAL-002",
+      "name": "contract-rule-id-coverage",
+      "status": "pass",
+      "details": "All contracts include machine-readable rule IDs"
+    },
+    {
+      "id": "VAL-003",
+      "name": "prompt-accountability-coverage",
+      "status": "in-progress",
+      "details": "Prompt library migration underway"
+    }
+  ]
+}

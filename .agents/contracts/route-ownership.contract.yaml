@@ -1,0 +1,21 @@
+contract_id: GOV-ROUTE-OWNERSHIP
+version: 1.0.0
+scope: app-router
+owner: architecture
+last_reviewed: 2026-04-05
+rules:
+  - id: ROUTE-001
+    type: must
+    statement: app/** files must remain orchestration-only and delegate non-trivial logic.
+    applies_to: "app/**/*.ts, app/**/*.tsx"
+    validation_hint: "Reject direct Prisma calls and large business logic blocks in app routes."
+  - id: ROUTE-002
+    type: must
+    statement: Page-level views should resolve through feature composition boundaries.
+    applies_to: "app/(tenant)/**/page.tsx, app/(auth)/**/page.tsx"
+    validation_hint: "Ensure page files import feature-level entrypoints."
+  - id: ROUTE-003
+    type: must
+    statement: Route handlers must enforce server-side authn/authz for sensitive operations.
+    applies_to: "app/api/**/route.ts"
+    validation_hint: "Require explicit auth checks and validation for write/sensitive read endpoints."

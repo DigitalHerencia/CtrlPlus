@@ -1,0 +1,31 @@
+contract_id: GOV-LAYERS
+version: 1.0.0
+scope: repository
+owner: platform
+last_reviewed: 2026-04-05
+rules:
+  - id: GOV-LAYERS-001
+    type: must
+    statement: Documentation files in .agents/docs must contain intent and rationale only.
+    applies_to: ".agents/docs/**/*.md"
+    validation_hint: "Reject files containing execution state or enforceable rule syntax."
+  - id: GOV-LAYERS-002
+    type: must
+    statement: Instruction files in .agents/instructions must interpret docs/contracts without redefining authority.
+    applies_to: ".agents/instructions/**/*.md"
+    validation_hint: "Flag duplicated hard rules that belong in contracts."
+  - id: GOV-LAYERS-003
+    type: must
+    statement: Contracts in .agents/contracts must be machine-readable with unique rule IDs.
+    applies_to: ".agents/contracts/**/*.yaml"
+    validation_hint: "Each rule must include id, type, statement, applies_to, validation_hint."
+  - id: GOV-LAYERS-004
+    type: must
+    statement: Reporting JSON in .agents/json must not define policy.
+    applies_to: ".agents/json/**/*.json"
+    validation_hint: "Allow only status, decisions, progress, blockers, actions, errors, fixes."
+  - id: GOV-LAYERS-005
+    type: must
+    statement: Prompt files must reference contracts and reporting outputs for accountability.
+    applies_to: ".agents/prompts/**/*.md"
+    validation_hint: "Prompt must include acceptance criteria and reporting update requirements."

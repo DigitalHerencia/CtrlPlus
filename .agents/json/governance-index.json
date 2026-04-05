@@ -1,0 +1,22 @@
+{
+  "artifact_type": "governance-index",
+  "version": "1.0.0",
+  "updated_at": "2026-04-05",
+  "owners": {
+    "intent": ".agents/docs",
+    "interpretation": ".agents/instructions",
+    "execution": ".agents/contracts",
+    "reporting": ".agents/json",
+    "accountability": ".agents/prompts"
+  },
+  "reporting_files": [
+    "programs.status.json",
+    "tasks.backlog.json",
+    "decisions.log.json",
+    "execution-ledger.json",
+    "blockers.status.json",
+    "domains.catalog.status.json",
+    "domains.visualizer.status.json",
+    "validation.report.json"
+  ]
+}
