@@ -10,6 +10,7 @@ import {
     resolveHeroAsset,
     resolvePrimaryDisplayAsset,
 } from '@/lib/fetchers/catalog.mappers'
+import { toCatalogAssetImage } from '@/lib/utils/catalog-assets'
 import type {
     CatalogBrowseCardDTO,
     CatalogBrowseResultDTO,
@@ -78,10 +79,10 @@ function getWrapWhere(
 }
 
 function mapWrapImage(image: WrapRecord['images'][number]): WrapImageDTO {
-    return {
+    return toCatalogAssetImage({
         ...image,
         kind: image.kind as WrapImageKind,
-    }
+    })
 }
 
 function toWrapDTO(prismaWrap: WrapRecord): WrapDTO {

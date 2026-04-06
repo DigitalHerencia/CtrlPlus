@@ -1,5 +1,3 @@
-import { access, mkdir, rm, unlink, writeFile } from 'fs/promises'
-import path from 'path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { deletePersistedWrapImage, persistWrapImage } from '@/lib/uploads/storage'
@@ -12,8 +10,6 @@ const originalEnv = {
     CLOUDINARY_WRAP_UPLOAD_PRESET: process.env.CLOUDINARY_WRAP_UPLOAD_PRESET,
     CLOUDINARY_WRAP_FOLDER: process.env.CLOUDINARY_WRAP_FOLDER,
 }
-
-const createdLocalFiles: string[] = []
 
 function resetEnv(): void {
     const keys = Object.keys(originalEnv) as Array<keyof typeof originalEnv>
@@ -36,24 +32,6 @@ beforeEach(() => {
 afterEach(async () => {
     resetEnv()
     vi.unstubAllGlobals()
-
-    while (createdLocalFiles.length > 0) {
-        const filePath = createdLocalFiles.pop()
-        if (!filePath) {
-            continue
-        }
-
-        try {
-            await unlink(filePath)
-        } catch {
-            // Ignore cleanup errors.
-        }
-    }
-
-    await rm(path.join(process.cwd(), 'public', 'uploads'), {
-        recursive: true,
-        force: true,
-    }).catch(() => undefined)
 })
 
 describe('validateWrapImageFile', () => {
@@ -90,6 +68,17 @@ describe('persistWrapImage', () => {
                 JSON.stringify({
                     secure_url:
                         'https://res.cloudinary.com/demo/image/upload/v1/ctrlplus/wraps/wrap-1',
+                    asset_id: 'asset-1',
+                    public_id: 'ctrlplus/wraps/wrap-1',
+                    version: 1,
+                    resource_type: 'image',
+                    type: 'upload',
+                    asset_folder: 'ctrlplus/wraps',
+                    format: 'png',
+                    bytes: 512,
+                    width: 1200,
+                    height: 800,
+                    original_filename: 'wrap-1',
                 }),
                 {
                     status: 200,
@@ -104,6 +93,19 @@ describe('persistWrapImage', () => {
         expect(result).toEqual({
             url: 'https://res.cloudinary.com/demo/image/upload/v1/ctrlplus/wraps/wrap-1',
             contentHash: expect.any(String),
+            secureUrl: 'https://res.cloudinary.com/demo/image/upload/v1/ctrlplus/wraps/wrap-1',
+            assetId: 'asset-1',
+            publicId: 'ctrlplus/wraps/wrap-1',
+            version: 1,
+            resourceType: 'image',
+            deliveryType: 'upload',
+            assetFolder: 'ctrlplus/wraps',
+            format: 'png',
+            bytes: 512,
+            width: 1200,
+            height: 800,
+            mimeType: 'image/png',
+            originalFileName: 'wrap-1',
         })
         expect(result.contentHash).toHaveLength(64)
         expect(fetchMock).toHaveBeenCalledWith(
@@ -147,9 +149,12 @@ describe('deletePersistedWrapImage', () => {
         const fetchMock = vi.mocked(fetch)
         fetchMock.mockResolvedValue(new Response('', { status: 200 }))
 
-        await deletePersistedWrapImage(
-            'https://res.cloudinary.com/demo/image/upload/v1700000000/ctrlplus/wraps/wrap-3.png'
-        )
+        await deletePersistedWrapImage({
+            url: 'https://res.cloudinary.com/demo/image/upload/v1700000000/ctrlplus/wraps/wrap-3.png',
+            cloudinaryPublicId: 'ctrlplus/wraps/wrap-3',
+            cloudinaryResourceType: 'image',
+            cloudinaryDeliveryType: 'upload',
+        })
 
         expect(fetchMock).toHaveBeenCalledTimes(1)
         expect(fetchMock.mock.calls[0]?.[0]).toBe(
@@ -157,17 +162,7 @@ describe('deletePersistedWrapImage', () => {
         )
         const body = fetchMock.mock.calls[0]?.[1]?.body as URLSearchParams
         expect(body.toString()).toContain('public_id=ctrlplus%2Fwraps%2Fwrap-3')
-    })
-
-    it('removes local assets when the URL uses the local uploads path', async () => {
-        const absolutePath = path.join(process.cwd(), 'public', 'uploads', 'wraps', 'wrap-4.png')
-        await unlink(absolutePath).catch(() => undefined)
-        createdLocalFiles.push(absolutePath)
-        await mkdir(path.dirname(absolutePath), { recursive: true })
-        await writeFile(absolutePath, Buffer.from('asset'))
-
-        await deletePersistedWrapImage('/uploads/wraps/wrap-4.png')
-
-        await expect(access(absolutePath)).rejects.toThrow()
+        expect(body.toString()).toContain('resource_type=image')
+        expect(body.toString()).toContain('type=upload')
     })
 })

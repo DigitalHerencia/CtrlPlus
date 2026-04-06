@@ -15,7 +15,7 @@ Execution constraints are enforced in contracts.
 | Auth            | Clerk                                                   |
 | Database        | PostgreSQL via Prisma                                   |
 | Billing         | Stripe                                                  |
-| Media/AI        | Cloudinary + Hugging Face integration paths             |
+| Media/AI        | Cloudinary-backed catalog media + authenticated Cloudinary visualizer media + Hugging Face |
 | Testing         | Vitest + Playwright                                     |
 | Package manager | pnpm                                                    |
 
@@ -50,6 +50,8 @@ Execution constraints are enforced in contracts.
 - Keep Stripe webhook handling robust against retries and out-of-order delivery.
 - Keep Clerk usage server-authoritative for identity/capability checks.
 - Keep media and preview generation integration resilient to provider failures.
+- Treat catalog storefront wrap imagery as Cloudinary-backed production media;
+  local `/uploads/wraps/**` paths are remediation-only.
 
 ## Dependency choices
 

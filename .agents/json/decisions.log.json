@@ -58,6 +58,14 @@
       "date": "2026-04-05",
       "impact": "high",
       "summary": "Catalog no longer treats visualizer_texture or visualizer_mask_hint as canonical publish or handoff requirements; the visualizer consumes active hero and gallery imagery only."
+    },
+    {
+      "id": "DEC-008",
+      "title": "Use Cloudinary authority fields as the live catalog asset storage contract",
+      "status": "accepted",
+      "date": "2026-04-05",
+      "impact": "high",
+      "summary": "Active catalog wrap imagery persists Cloudinary authority fields and derives storefront delivery URLs from those fields; legacy local /uploads/wraps paths are remediation-only."
     }
   ],
   "open_questions": [

@@ -24,11 +24,11 @@ export function WrapAssetManager({ wrap }: WrapAssetManagerProps) {
                     {wrap.heroImage ? (
                         <WrapImageCard>
                             <Image
-                                src={wrap.heroImage.url}
+                                src={wrap.heroImage.detailUrl}
                                 alt={wrap.heroImage.id}
                                 width={1200}
                                 height={675}
-                                unoptimized
+                                sizes="(min-width: 1280px) 40vw, 100vw"
                                 className="h-48 w-full rounded object-cover"
                             />
                             <p className="text-sm text-neutral-400">UUID: {wrap.heroImage.id}</p>
@@ -50,11 +50,11 @@ export function WrapAssetManager({ wrap }: WrapAssetManagerProps) {
                             {wrap.galleryImages.map((image) => (
                                 <WrapImageCard key={image.id}>
                                     <Image
-                                        src={image.url}
+                                        src={image.detailUrl}
                                         alt={image.id}
                                         width={480}
                                         height={270}
-                                        unoptimized
+                                        sizes="(min-width: 1280px) 20vw, 100vw"
                                         className="h-24 w-full rounded object-cover"
                                     />
                                 </WrapImageCard>

@@ -4,6 +4,44 @@
   "updated_at": "2026-04-05",
   "tasks": [
     {
+      "id": "CAT-ASSET-001",
+      "title": "Harden catalog wrap imagery on Cloudinary-backed storage and delivery",
+      "priority": "high",
+      "status": "done",
+      "owner": "catalog",
+      "dependencies": [
+        "VIS-REF-002"
+      ],
+      "source_docs": [
+        ".agents/docs/ARCHITECTURE.md",
+        ".agents/docs/DATA-MODEL.md",
+        ".agents/docs/TECHNOLOGY-REQUIREMENTS.md"
+      ],
+      "contract_refs": [
+        "GOV-CATALOG-ASSET-STORAGE/CAS-001",
+        "GOV-CATALOG-ASSET-STORAGE/CAS-002",
+        "GOV-CATALOG-ASSET-STORAGE/CAS-003",
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-004"
+      ],
+      "impacted_paths": [
+        "prisma/schema.prisma",
+        "lib/uploads/storage.ts",
+        "lib/uploads/image-processing.ts",
+        "lib/utils/catalog-assets.ts",
+        "lib/actions/catalog.actions.ts",
+        "lib/fetchers/catalog.*",
+        "components/catalog/**",
+        "components/visualizer/WrapSelector.tsx",
+        ".agents/**"
+      ],
+      "acceptance": [
+        "Catalog wrap images persist Cloudinary authority fields",
+        "Local /uploads/wraps/** is no longer a live catalog production path",
+        "Catalog browse/detail/manager and visualizer selection render derived delivery URLs",
+        "Soft-deleted legacy rows remain documented for manual re-upload remediation"
+      ]
+    },
+    {
       "id": "VIS-REF-001",
       "title": "Add first-class visualizer upload model and authenticated asset storage",
       "priority": "high",

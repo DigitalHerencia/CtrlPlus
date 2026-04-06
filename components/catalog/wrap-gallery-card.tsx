@@ -31,7 +31,7 @@ export function WrapGalleryCard({ wrap }: WrapGalleryCardProps) {
                         alt={wrap.name}
                         width={1200}
                         height={672}
-                        unoptimized
+                        sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
                         className="h-56 w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                     />
                 ) : (

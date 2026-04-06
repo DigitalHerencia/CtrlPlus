@@ -49,6 +49,9 @@ Active domains:
 
 Catalog owns wrap and asset semantics. Visualizer owns preview lifecycle.
 
+- Catalog wrap imagery production storage is Cloudinary-backed; local `/uploads/wraps/**`
+  paths are legacy remediation-only and must not be used for live catalog assets.
+
 ## Security and quality expectations
 
 - Never trust client-provided role/ownership/scope.

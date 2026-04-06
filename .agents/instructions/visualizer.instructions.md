@@ -20,6 +20,8 @@ states and storage-backed outputs.
   application routes, not raw public asset URLs.
 - Build generation inputs from the selected wrap's `hero` plus active `gallery`
   references.
+- Treat catalog-provided reference imagery as catalog-owned Cloudinary-backed media;
+  do not rely on legacy local `/uploads/wraps/**` paths in live visualizer flows.
 - Treat the model workflow as reference-guided image editing that preserves the
   uploaded vehicle scene and modifies exterior surfaces only.
 - Preserve fallback behavior when inference provider is unavailable.

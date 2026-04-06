@@ -1,7 +1,5 @@
 export const WrapImageKind = {
     HERO: 'hero',
-    VISUALIZER_TEXTURE: 'visualizer_texture',
-    VISUALIZER_MASK_HINT: 'visualizer_mask_hint',
     GALLERY: 'gallery',
 } as const
 
@@ -9,8 +7,6 @@ export type WrapImageKind = (typeof WrapImageKind)[keyof typeof WrapImageKind]
 
 export const wrapImageKindValues = [
     WrapImageKind.HERO,
-    WrapImageKind.VISUALIZER_TEXTURE,
-    WrapImageKind.VISUALIZER_MASK_HINT,
     WrapImageKind.GALLERY,
 ] as const
 

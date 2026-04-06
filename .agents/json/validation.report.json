@@ -7,49 +7,55 @@
       "id": "VAL-001",
       "name": "catalog-visualizer-contract-alignment",
       "status": "pass",
-      "details": "Catalog handoff now uses hero plus gallery references; texture-era readiness and DTO coupling were removed."
+      "details": "Catalog handoff now uses hero plus gallery references only, publish readiness remains hero-driven, and catalog DTOs no longer rely on texture-era asset roles."
     },
     {
       "id": "VAL-002",
       "name": "prisma-schema-and-client",
       "status": "pass",
-      "details": "VisualizerUpload model and preview authority fields validate successfully with Prisma 7 client generation."
+      "details": "WrapImage now includes Cloudinary authority/media fields, the migration is applied, and Prisma Client was regenerated against the updated schema."
     },
     {
       "id": "VAL-003",
       "name": "typecheck",
       "status": "pass",
-      "details": "pnpm typecheck"
+      "details": "Included in `pnpm validate`."
     },
     {
       "id": "VAL-004",
       "name": "unit-tests",
       "status": "pass",
-      "details": "pnpm test:unit"
+      "details": "Included in `pnpm validate`; 43 files and 148 tests passed."
     },
     {
       "id": "VAL-005",
       "name": "lint",
       "status": "pass",
-      "details": "pnpm lint"
+      "details": "Included in `pnpm validate`."
     },
     {
       "id": "VAL-006",
       "name": "build",
       "status": "pass",
-      "details": "pnpm build"
+      "details": "`pnpm build` passed after regenerating Prisma Client against the updated WrapImage schema."
     },
     {
       "id": "VAL-007",
       "name": "e2e",
       "status": "pass",
-      "details": "pnpm test:e2e --project=chromium --reporter=line"
+      "details": "`pnpm test:e2e --project=chromium --reporter=line` passed with 27 passing tests and 2 skipped tests."
     },
     {
       "id": "VAL-008",
       "name": "prisma-validate",
       "status": "pass",
-      "details": "pnpm prisma:validate"
+      "details": "Included in `pnpm validate`."
+    },
+    {
+      "id": "VAL-009",
+      "name": "catalog-legacy-row-posture",
+      "status": "pass",
+      "details": "No active local `/uploads/wraps/**` rows remain; 19 soft-deleted local-path rows remain documented for remediation, and 4 wraps remain hidden pending manual hero/gallery re-upload."
     }
   ]
 }

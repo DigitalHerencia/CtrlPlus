@@ -35,6 +35,7 @@ export interface CloudinaryStoredAsset {
 }
 
 export type CloudinaryAssetVariant = 'thumbnail' | 'detail' | 'download'
+export type CloudinaryDeliveryVariant = 'thumbnail' | 'card' | 'detail'
 type CloudinaryRuntime = (typeof import('cloudinary'))['v2']
 
 let cloudinaryRuntimePromise: Promise<CloudinaryRuntime> | null = null
@@ -178,6 +179,38 @@ function getTransformationForVariant(variant: CloudinaryAssetVariant) {
     return undefined
 }
 
+const PUBLIC_TRANSFORMATION_BY_VARIANT: Record<CloudinaryDeliveryVariant, string> = {
+    thumbnail: 'f_auto,q_auto,c_fill,g_auto,w_320,h_240',
+    card: 'f_auto,q_auto,c_fill,g_auto,w_960,h_720',
+    detail: 'f_auto,q_auto,c_limit,w_1600,h_1200',
+}
+
+export function getCloudinaryPublicTransformation(
+    variant: CloudinaryDeliveryVariant
+): string {
+    return PUBLIC_TRANSFORMATION_BY_VARIANT[variant]
+}
+
+export function buildCloudinaryPublicDeliveryUrl(
+    asset: Pick<
+        CloudinaryStoredAsset,
+        'publicId' | 'version' | 'resourceType' | 'deliveryType'
+    >,
+    transformation: string
+): string | null {
+    const credentials = getCloudinaryCredentials()
+    if (!credentials || !asset.publicId) {
+        return null
+    }
+
+    const resourceType = asset.resourceType ?? 'image'
+    const deliveryType = asset.deliveryType ?? 'upload'
+    const versionSegment = asset.version ? `/v${asset.version}` : ''
+    const publicIdPath = asset.publicId.split('/').map(encodeURIComponent).join('/')
+
+    return `https://res.cloudinary.com/${credentials.cloudName}/${resourceType}/${deliveryType}/${transformation}${versionSegment}/${publicIdPath}`
+}
+
 export async function buildCloudinaryDeliveryUrl(
     asset: Pick<CloudinaryStoredAsset, 'publicId' | 'version' | 'resourceType' | 'deliveryType' | 'format'>,
     variant: CloudinaryAssetVariant = 'detail'
@@ -210,12 +243,23 @@ export function extractCloudinaryPublicId(url: string): string | null {
         }
 
         const segments = parsed.pathname.split('/').filter(Boolean)
-        const uploadIndex = segments.indexOf('upload')
-        if (uploadIndex < 0 || uploadIndex + 1 >= segments.length) {
+        const deliveryIndex = segments.findIndex((segment) =>
+            ['upload', 'authenticated', 'private'].includes(segment)
+        )
+        if (deliveryIndex < 0 || deliveryIndex + 1 >= segments.length) {
             return null
         }
 
-        const publicIdSegments = segments.slice(uploadIndex + 1)
+        const publicIdSegments = segments.slice(deliveryIndex + 1)
+
+        while (
+            publicIdSegments.length > 0 &&
+            (publicIdSegments[0] ?? '').includes(',') &&
+            !/^v\d+$/.test(publicIdSegments[0] ?? '')
+        ) {
+            publicIdSegments.shift()
+        }
+
         if (publicIdSegments[0] && /^v\d+$/.test(publicIdSegments[0])) {
             publicIdSegments.shift()
         }
@@ -231,4 +275,38 @@ export function extractCloudinaryPublicId(url: string): string | null {
     } catch {
         return null
     }
+}
+
+export async function destroyCloudinaryAsset(params: {
+    publicId: string
+    resourceType?: string | null
+    deliveryType?: string | null
+}): Promise<void> {
+    const credentials = getCloudinaryCredentials()
+    if (!credentials || !params.publicId) {
+        return
+    }
+
+    const timestamp = Math.floor(Date.now() / 1000).toString()
+    const resourceType = params.resourceType?.trim() || 'image'
+    const deliveryType = params.deliveryType?.trim() || 'upload'
+    const payload = {
+        public_id: params.publicId,
+        resource_type: resourceType,
+        timestamp,
+        type: deliveryType,
+    }
+    const signature = buildCloudinarySignature(payload, credentials.apiSecret)
+
+    await fetch(`https://api.cloudinary.com/v1_1/${credentials.cloudName}/image/destroy`, {
+        method: 'POST',
+        headers: {
+            'content-type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            ...payload,
+            api_key: credentials.apiKey,
+            signature,
+        }),
+    })
 }

@@ -13,6 +13,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
                     alt="Premium Vehicle Wrap"
                     fill
                     priority
+                    sizes="(min-width: 1024px) 50vw, 0px"
                     className="object-cover"
                 />
             </div>

@@ -25,7 +25,8 @@ persistent store. The operating model is single-store with server-authoritative 
 ### Catalog
 
 - Wrap records represent product entities and publish state.
-- Wrap image records carry explicit asset-role semantics.
+- Wrap image records carry explicit asset-role semantics and persist Cloudinary
+  authority fields as the durable storage contract for active storefront media.
 - Category mappings drive browse/discovery taxonomy.
 
 ### Visualizer

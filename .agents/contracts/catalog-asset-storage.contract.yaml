@@ -1,0 +1,21 @@
+contract_id: GOV-CATALOG-ASSET-STORAGE
+version: 1.0.0
+scope: catalog
+owner: catalog
+last_reviewed: 2026-04-05
+rules:
+  - id: CAS-001
+    type: must
+    statement: Active catalog wrap imagery must persist Cloudinary authority fields through the blob adapter contract.
+    applies_to: "lib/actions/catalog*.ts, lib/uploads/**, lib/integrations/**, prisma/schema.prisma"
+    validation_hint: "New catalog wrap image records persist cloudinary publicId/version/resourceType/deliveryType metadata and do not rely on local filesystem storage."
+  - id: CAS-002
+    type: must
+    statement: Local /uploads/wraps/** paths are legacy remediation surfaces only and must not be used as live catalog production assets.
+    applies_to: "lib/uploads/**, lib/fetchers/catalog*.ts, components/catalog/**, components/visualizer/**"
+    validation_hint: "Active catalog rendering and preview-selection flows consume derived delivery URLs or fail into remediation guidance, not local disk reads."
+  - id: CAS-003
+    type: must
+    statement: Catalog storefront delivery URLs must be derived from stored authority fields, not from raw persisted local paths.
+    applies_to: "lib/utils/catalog-assets.ts, lib/fetchers/catalog*.ts, features/catalog/**, components/catalog/**, components/visualizer/**"
+    validation_hint: "Browse/detail/manager/visualizer selection surfaces render hero and gallery assets through delivery URL shaping."

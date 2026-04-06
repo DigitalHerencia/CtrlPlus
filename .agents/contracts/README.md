@@ -16,6 +16,7 @@ during implementation.
 - `security.contract.yaml`
 - `testing-quality.contract.yaml`
 - `catalog-visualizer-handoff.contract.yaml`
+- `catalog-asset-storage.contract.yaml`
 
 ## Enforcement intent
 

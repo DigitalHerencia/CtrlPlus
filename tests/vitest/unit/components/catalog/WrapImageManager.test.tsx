@@ -12,6 +12,9 @@ const mockImages = [
         version: 1,
         contentHash: 'hash1',
         displayOrder: 0,
+        thumbnailUrl: 'https://example.com/img1-thumb.jpg',
+        cardUrl: 'https://example.com/img1-card.jpg',
+        detailUrl: 'https://example.com/img1-detail.jpg',
     },
     {
         id: 'img2',
@@ -21,6 +24,9 @@ const mockImages = [
         version: 1,
         contentHash: 'hash2',
         displayOrder: 1,
+        thumbnailUrl: 'https://example.com/img2-thumb.jpg',
+        cardUrl: 'https://example.com/img2-card.jpg',
+        detailUrl: 'https://example.com/img2-detail.jpg',
     },
 ]
 

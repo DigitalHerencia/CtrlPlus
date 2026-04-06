@@ -10,14 +10,18 @@ import { WrapImageKind } from '@/lib/constants/statuses'
 import type { WrapImageDTO } from '@/types/catalog.types'
 
 function createImage(overrides: Partial<WrapImageDTO>): WrapImageDTO {
+    const url = overrides.url ?? 'https://example.com/image.jpg'
     return {
         id: overrides.id ?? 'image-1',
-        url: overrides.url ?? 'https://example.com/image.jpg',
+        url,
         kind: overrides.kind ?? WrapImageKind.GALLERY,
         isActive: overrides.isActive ?? true,
         version: overrides.version ?? 1,
         contentHash: overrides.contentHash ?? 'hash',
         displayOrder: overrides.displayOrder ?? 0,
+        thumbnailUrl: overrides.thumbnailUrl ?? `${url}?variant=thumbnail`,
+        cardUrl: overrides.cardUrl ?? `${url}?variant=card`,
+        detailUrl: overrides.detailUrl ?? `${url}?variant=detail`,
     }
 }
 
@@ -31,11 +35,12 @@ describe('resolvePrimaryDisplayAsset', () => {
         expect(asset?.id).toBe('hero-1')
     })
 
-    it('does not fall back to non-display assets when hero and gallery are missing', () => {
+    it('returns null when only inactive display assets are present', () => {
         const asset = resolvePrimaryDisplayAsset([
             createImage({
-                id: 'texture-1',
-                kind: WrapImageKind.VISUALIZER_TEXTURE,
+                id: 'inactive-hero',
+                kind: WrapImageKind.HERO,
+                isActive: false,
             }),
         ])
 
@@ -80,7 +85,6 @@ describe('role-specific resolvers', () => {
         expect(gallery).toHaveLength(1)
         expect(gallery[0]?.id).toBe('active-gallery')
     })
-
 })
 
 describe('getCatalogAssetReadiness', () => {
@@ -99,12 +103,7 @@ describe('getCatalogAssetReadiness', () => {
     })
 
     it('marks wraps without hero or gallery assets as missing a display asset', () => {
-        const readiness = getCatalogAssetReadiness([
-            createImage({
-                id: 'texture-1',
-                kind: WrapImageKind.VISUALIZER_TEXTURE,
-            }),
-        ])
+        const readiness = getCatalogAssetReadiness([])
 
         expect(readiness.hasDisplayAsset).toBe(false)
         expect(readiness.canPublish).toBe(false)

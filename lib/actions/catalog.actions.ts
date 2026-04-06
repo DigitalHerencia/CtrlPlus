@@ -14,6 +14,7 @@ import { deletePersistedWrapImage, persistWrapImageFromBuffer } from '@/lib/uplo
 import { MAX_WRAP_IMAGE_BYTES, ALLOWED_WRAP_IMAGE_MIME_TYPES } from '@/lib/uploads/file-validation'
 import { readPhotoBuffer } from '@/lib/uploads/image-processing'
 import { getCatalogWrapById, getWrapById } from '@/lib/fetchers/catalog.fetchers'
+import { toCatalogAssetImage } from '@/lib/utils/catalog-assets'
 import {
     type CreateWrapCategoryInput,
     type CreateWrapInput,
@@ -32,19 +33,27 @@ type WrapImageRecord = {
     isActive: boolean
     version: number
     contentHash: string
+    cloudinaryPublicId: string | null
+    cloudinaryVersion: number | null
+    cloudinaryResourceType: string | null
+    cloudinaryDeliveryType: string | null
     displayOrder: number
 }
 
 function toWrapImageDTO(image: WrapImageRecord): WrapImageDTO {
-    return {
+    return toCatalogAssetImage({
         id: image.id,
         url: image.url,
         kind: image.kind as WrapImageKindType,
         isActive: image.isActive,
         version: image.version,
         contentHash: image.contentHash,
+        cloudinaryPublicId: image.cloudinaryPublicId,
+        cloudinaryVersion: image.cloudinaryVersion,
+        cloudinaryResourceType: image.cloudinaryResourceType,
+        cloudinaryDeliveryType: image.cloudinaryDeliveryType,
         displayOrder: image.displayOrder,
-    }
+    })
 }
 
 async function assertWrapExists(wrapId: string): Promise<void> {
@@ -137,6 +146,10 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
                     isActive: true,
                     version: true,
                     contentHash: true,
+                    cloudinaryPublicId: true,
+                    cloudinaryVersion: true,
+                    cloudinaryResourceType: true,
+                    cloudinaryDeliveryType: true,
                     displayOrder: true,
                 },
                 orderBy: { displayOrder: 'asc' },
@@ -183,13 +196,10 @@ export async function deleteWrap(wrapId: string): Promise<WrapDTO> {
         aiPromptTemplate: existing.aiPromptTemplate,
         aiNegativePrompt: existing.aiNegativePrompt,
         images: existing.images.map((image) => ({
-            id: image.id,
-            url: image.url,
-            kind: image.kind as WrapImageDTO['kind'],
-            isActive: image.isActive,
-            version: image.version,
-            contentHash: image.contentHash,
-            displayOrder: image.displayOrder,
+            ...toCatalogAssetImage({
+                ...image,
+                kind: image.kind as WrapImageDTO['kind'],
+            }),
         })),
         categories: existing.categoryMappings
             .map((mapping) => mapping.category)
@@ -359,6 +369,18 @@ export async function addWrapImage(input: WrapImageUploadInput): Promise<WrapIma
             isActive: parsed.isActive,
             version: 1,
             contentHash: stored.contentHash,
+            cloudinaryAssetId: stored.assetId,
+            cloudinaryPublicId: stored.publicId,
+            cloudinaryVersion: stored.version,
+            cloudinaryResourceType: stored.resourceType,
+            cloudinaryDeliveryType: stored.deliveryType,
+            cloudinaryAssetFolder: stored.assetFolder,
+            mimeType: stored.mimeType,
+            format: stored.format,
+            bytes: stored.bytes,
+            width: stored.width,
+            height: stored.height,
+            originalFileName: stored.originalFileName,
             displayOrder: (maxDisplayOrder._max.displayOrder ?? -1) + 1,
         },
         select: {
@@ -368,6 +390,10 @@ export async function addWrapImage(input: WrapImageUploadInput): Promise<WrapIma
             isActive: true,
             version: true,
             contentHash: true,
+            cloudinaryPublicId: true,
+            cloudinaryVersion: true,
+            cloudinaryResourceType: true,
+            cloudinaryDeliveryType: true,
             displayOrder: true,
         },
     })
@@ -389,6 +415,7 @@ export async function addWrapImage(input: WrapImageUploadInput): Promise<WrapIma
             details: JSON.stringify({
                 wrapImageId: image.id,
                 imageUrl: stored.url,
+                cloudinaryPublicId: stored.publicId,
                 kind: parsed.kind,
             }),
             timestamp: new Date(),
@@ -443,6 +470,10 @@ export async function updateWrapImageMetadata(
             isActive: true,
             version: true,
             contentHash: true,
+            cloudinaryPublicId: true,
+            cloudinaryVersion: true,
+            cloudinaryResourceType: true,
+            cloudinaryDeliveryType: true,
             displayOrder: true,
         },
     })
@@ -484,7 +515,13 @@ export async function removeWrapImage(wrapId: string, imageId: string): Promise<
             wrapId,
             deletedAt: null,
         },
-        select: { id: true, url: true },
+        select: {
+            id: true,
+            url: true,
+            cloudinaryPublicId: true,
+            cloudinaryResourceType: true,
+            cloudinaryDeliveryType: true,
+        },
     })
 
     if (!image) {
@@ -496,7 +533,12 @@ export async function removeWrapImage(wrapId: string, imageId: string): Promise<
         data: { deletedAt: new Date() },
     })
 
-    await deletePersistedWrapImage(image.url)
+    await deletePersistedWrapImage({
+        url: image.url,
+        cloudinaryPublicId: image.cloudinaryPublicId,
+        cloudinaryResourceType: image.cloudinaryResourceType,
+        cloudinaryDeliveryType: image.cloudinaryDeliveryType,
+    })
 
     await prisma.auditLog.create({
         data: {

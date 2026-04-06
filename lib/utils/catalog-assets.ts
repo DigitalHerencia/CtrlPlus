@@ -1,47 +1,101 @@
-import type { CatalogAssetImageDTO, WrapImageDTO } from '@/types/catalog.types'
-
-const CLOUDINARY_HOST = 'res.cloudinary.com'
+import type { CatalogAssetImageDTO } from '@/types/catalog.types'
 
 type CatalogDeliveryVariant = 'thumbnail' | 'card' | 'detail'
+
+const CLOUDINARY_HOST = 'res.cloudinary.com'
 
 const TRANSFORMATION_BY_VARIANT: Record<CatalogDeliveryVariant, string> = {
     thumbnail: 'f_auto,q_auto,c_fill,g_auto,w_320,h_240',
     card: 'f_auto,q_auto,c_fill,g_auto,w_960,h_720',
     detail: 'f_auto,q_auto,c_limit,w_1600,h_1200',
 }
+type CatalogAssetDeliverySource = {
+    id: string
+    url: string
+    kind: CatalogAssetImageDTO['kind']
+    isActive: boolean
+    version: number
+    contentHash: string
+    displayOrder: number
+    cloudinaryPublicId?: string | null
+    cloudinaryVersion?: number | null
+    cloudinaryResourceType?: string | null
+    cloudinaryDeliveryType?: string | null
+    thumbnailUrl?: string
+    cardUrl?: string
+    detailUrl?: string
+}
 
-function isCloudinaryUrl(url: string): boolean {
+function getCatalogAssetBaseUrl(url: string): string | null {
     try {
         const parsed = new URL(url)
-        return parsed.hostname.includes(CLOUDINARY_HOST)
+        if (!parsed.hostname.includes(CLOUDINARY_HOST)) {
+            return null
+        }
+
+        const [cloudName] = parsed.pathname.split('/').filter(Boolean)
+        if (!cloudName) {
+            return null
+        }
+
+        return `${parsed.origin}/${cloudName}`
     } catch {
-        return false
+        return null
     }
 }
 
-function insertCloudinaryTransformation(url: string, transformation: string): string {
-    if (!isCloudinaryUrl(url)) {
-        return url
+function buildCloudinaryCatalogDeliveryUrl(
+    image: CatalogAssetDeliverySource,
+    variant: CatalogDeliveryVariant
+): string | null {
+    if (!image.cloudinaryPublicId) {
+        return null
     }
 
-    const marker = '/upload/'
-    const index = url.indexOf(marker)
-    if (index === -1) {
-        return url
+    const baseUrl = getCatalogAssetBaseUrl(image.url)
+    if (!baseUrl) {
+        return null
     }
 
-    return `${url.slice(0, index + marker.length)}${transformation}/${url.slice(index + marker.length)}`
+    const resourceType = image.cloudinaryResourceType ?? 'image'
+    const deliveryType = image.cloudinaryDeliveryType ?? 'upload'
+    const versionSegment = image.cloudinaryVersion ? `/v${image.cloudinaryVersion}` : ''
+    const publicIdPath = image.cloudinaryPublicId.split('/').map(encodeURIComponent).join('/')
+
+    return `${baseUrl}/${resourceType}/${deliveryType}/${TRANSFORMATION_BY_VARIANT[variant]}${versionSegment}/${publicIdPath}`
 }
 
-export function getCatalogAssetDeliveryUrl(url: string, variant: CatalogDeliveryVariant): string {
-    return insertCloudinaryTransformation(url, TRANSFORMATION_BY_VARIANT[variant])
+export function getCatalogAssetDeliveryUrl(
+    image: CatalogAssetDeliverySource,
+    variant: CatalogDeliveryVariant
+): string {
+    const existing =
+        variant === 'thumbnail'
+            ? image.thumbnailUrl
+            : variant === 'card'
+              ? image.cardUrl
+              : image.detailUrl
+
+    if (existing?.trim()) {
+        return existing
+    }
+
+    const transformedUrl = buildCloudinaryCatalogDeliveryUrl(image, variant)
+
+    return transformedUrl ?? image.url
 }
 
-export function toCatalogAssetImage(image: WrapImageDTO): CatalogAssetImageDTO {
+export function toCatalogAssetImage(image: CatalogAssetDeliverySource): CatalogAssetImageDTO {
     return {
-        ...image,
-        thumbnailUrl: getCatalogAssetDeliveryUrl(image.url, 'thumbnail'),
-        cardUrl: getCatalogAssetDeliveryUrl(image.url, 'card'),
-        detailUrl: getCatalogAssetDeliveryUrl(image.url, 'detail'),
+        id: image.id,
+        url: image.url,
+        kind: image.kind,
+        isActive: image.isActive,
+        version: image.version,
+        contentHash: image.contentHash,
+        displayOrder: image.displayOrder,
+        thumbnailUrl: getCatalogAssetDeliveryUrl(image, 'thumbnail'),
+        cardUrl: getCatalogAssetDeliveryUrl(image, 'card'),
+        detailUrl: getCatalogAssetDeliveryUrl(image, 'detail'),
     }
 }

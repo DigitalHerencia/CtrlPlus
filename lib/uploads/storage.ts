@@ -1,16 +1,13 @@
 import { createHash, randomUUID } from 'crypto'
-import { unlink } from 'fs/promises'
-import path from 'path'
 
 import {
+    type BlobStoredAsset,
     buildBlobSignature,
+    destroyBlobAsset,
     extractBlobPublicId,
     getBlobCredentials,
+    normalizeBlobUploadResponse,
 } from '@/lib/integrations/blob'
-import {
-    normalizeCloudinaryUploadResponse,
-    type CloudinaryStoredAsset,
-} from '@/lib/integrations/cloudinary'
 import { validateWrapImageFile } from '@/lib/uploads/file-validation'
 
 const IMAGE_EXT_BY_TYPE: Record<string, string> = {
@@ -19,12 +16,12 @@ const IMAGE_EXT_BY_TYPE: Record<string, string> = {
     'image/webp': 'webp',
 }
 
-interface PersistedWrapImage {
+export interface PersistedWrapImage extends BlobStoredAsset {
     url: string
     contentHash: string
 }
 
-export interface PersistedVisualizerAsset extends CloudinaryStoredAsset {
+export interface PersistedVisualizerAsset extends BlobStoredAsset {
     contentHash: string
     legacyUrl: string | null
 }
@@ -58,7 +55,7 @@ async function uploadImageToCloudinary(params: {
     assetFolder?: string | null
     deliveryType?: 'upload' | 'authenticated'
     metadata?: Record<string, string | number | null | undefined>
-}): Promise<CloudinaryStoredAsset> {
+}): Promise<BlobStoredAsset> {
     const credentials = getBlobCredentials()
     if (!credentials) {
         throw new Error(
@@ -117,8 +114,8 @@ async function uploadImageToCloudinary(params: {
         throw new Error('Cloudinary upload failed')
     }
 
-    return normalizeCloudinaryUploadResponse(
-        (await response.json()) as Parameters<typeof normalizeCloudinaryUploadResponse>[0]
+    return normalizeBlobUploadResponse(
+        (await response.json()) as Parameters<typeof normalizeBlobUploadResponse>[0]
     )
 }
 
@@ -138,6 +135,12 @@ async function uploadWrapImageToCloudinary(params: {
         buffer: params.buffer,
         contentType: params.file.type,
         uploadPreset,
+        assetFolder: folder,
+        metadata: {
+            wrapId: params.wrapId,
+            assetRole: 'catalog_wrap_image',
+            contentHash: params.contentHash,
+        },
     })
 
     if (!payload.secureUrl) {
@@ -147,6 +150,19 @@ async function uploadWrapImageToCloudinary(params: {
     return {
         url: payload.secureUrl,
         contentHash: params.contentHash,
+        secureUrl: payload.secureUrl,
+        assetId: payload.assetId,
+        publicId: payload.publicId,
+        version: payload.version,
+        resourceType: payload.resourceType,
+        deliveryType: payload.deliveryType,
+        assetFolder: payload.assetFolder,
+        format: payload.format,
+        bytes: payload.bytes,
+        width: payload.width,
+        height: payload.height,
+        mimeType: payload.mimeType,
+        originalFileName: payload.originalFileName,
     }
 }
 
@@ -184,6 +200,12 @@ export async function persistWrapImageFromBuffer(params: {
         buffer: params.buffer,
         contentType: params.contentType,
         uploadPreset,
+        assetFolder: folder,
+        metadata: {
+            wrapId: params.wrapId,
+            assetRole: 'catalog_wrap_image',
+            contentHash,
+        },
     })
 
     if (!payload.secureUrl) {
@@ -193,49 +215,41 @@ export async function persistWrapImageFromBuffer(params: {
     return {
         url: payload.secureUrl,
         contentHash,
+        secureUrl: payload.secureUrl,
+        assetId: payload.assetId,
+        publicId: payload.publicId,
+        version: payload.version,
+        resourceType: payload.resourceType,
+        deliveryType: payload.deliveryType,
+        assetFolder: payload.assetFolder,
+        format: payload.format,
+        bytes: payload.bytes,
+        width: payload.width,
+        height: payload.height,
+        mimeType: payload.mimeType,
+        originalFileName: payload.originalFileName,
     }
 }
 
-export async function deletePersistedWrapImage(url: string): Promise<void> {
-    const credentials = getBlobCredentials()
-    const publicId = extractBlobPublicId(url)
+export async function deletePersistedWrapImage(params: {
+    url: string | null
+    cloudinaryPublicId?: string | null
+    cloudinaryResourceType?: string | null
+    cloudinaryDeliveryType?: string | null
+}): Promise<void> {
+    const publicId = params.cloudinaryPublicId ?? (params.url ? extractBlobPublicId(params.url) : null)
 
-    if (credentials && publicId) {
+    if (publicId) {
         try {
-            const timestamp = Math.floor(Date.now() / 1000).toString()
-            const signature = buildBlobSignature(
-                { public_id: publicId, timestamp },
-                credentials.apiSecret
-            )
-
-            await fetch(`https://api.cloudinary.com/v1_1/${credentials.cloudName}/image/destroy`, {
-                method: 'POST',
-                headers: {
-                    'content-type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({
-                    public_id: publicId,
-                    timestamp,
-                    api_key: credentials.apiKey,
-                    signature,
-                }),
+            await destroyBlobAsset({
+                publicId,
+                resourceType: params.cloudinaryResourceType,
+                deliveryType: params.cloudinaryDeliveryType,
             })
             return
         } catch {
-            // Fall through to the local cleanup path.
+            // DB soft-delete remains authoritative.
         }
-    }
-
-    if (!url.startsWith('/uploads/wraps/')) {
-        return
-    }
-
-    const absolutePath = path.join(process.cwd(), 'public', ...url.split('/').filter(Boolean))
-
-    try {
-        await unlink(absolutePath)
-    } catch {
-        // DB soft-delete remains authoritative.
     }
 }
 

@@ -214,16 +214,28 @@ model WrapCategoryMapping {
 
 /// Images for wrap designs
 model WrapImage {
-  id           String    @id @default(cuid())
-  wrapId       String
-  url          String
-  kind         String    @default("gallery")
-  isActive     Boolean   @default(true)
-  version      Int       @default(1)
-  contentHash  String    @default("")
-  displayOrder Int       @default(0)
-  createdAt    DateTime  @default(now())
-  deletedAt    DateTime?
+  id                     String    @id @default(cuid())
+  wrapId                 String
+  url                    String
+  kind                   String    @default("gallery")
+  isActive               Boolean   @default(true)
+  version                Int       @default(1)
+  contentHash            String    @default("")
+  cloudinaryAssetId      String?   @unique
+  cloudinaryPublicId     String?
+  cloudinaryVersion      Int?
+  cloudinaryResourceType String?
+  cloudinaryDeliveryType String?
+  cloudinaryAssetFolder  String?
+  mimeType               String?
+  format                 String?
+  bytes                  Int?
+  width                  Int?
+  height                 Int?
+  originalFileName       String?
+  displayOrder           Int       @default(0)
+  createdAt              DateTime  @default(now())
+  deletedAt              DateTime?
 
   wrap Wrap @relation(fields: [wrapId], references: [id], onDelete: Cascade)
 

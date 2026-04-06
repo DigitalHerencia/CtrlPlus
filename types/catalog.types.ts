@@ -10,13 +10,12 @@ export interface WrapImageDTO {
     version: number
     contentHash: string
     displayOrder: number
-}
-
-export interface CatalogAssetImageDTO extends WrapImageDTO {
     thumbnailUrl: string
     cardUrl: string
     detailUrl: string
 }
+
+export type CatalogAssetImageDTO = WrapImageDTO
 
 export interface WrapCategoryDTO {
     id: string

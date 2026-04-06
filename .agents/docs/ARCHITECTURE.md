@@ -42,6 +42,8 @@ domain logic is explicit, and security boundaries are enforced at server entry p
 ## Cross-domain architectural principles
 
 - Catalog is source of truth for wrap product and asset semantics.
+- Catalog wrap storefront imagery persists as Cloudinary-backed media with authority
+  fields stored on catalog assets.
 - Catalog hands the visualizer an explicit reference set built from active `hero`
   and `gallery` assets only.
 - Visualizer owns owner-scoped uploads, preview generation lifecycle, and preview

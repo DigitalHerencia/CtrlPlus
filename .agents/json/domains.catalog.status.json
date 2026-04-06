@@ -7,15 +7,17 @@
   "focus": [
     "asset role determinism",
     "hero-only publish readiness",
-    "visualizer reference handoff integrity"
+    "visualizer reference handoff integrity",
+    "Cloudinary-backed storefront media contract"
   ],
   "progress": {
-    "contract_alignment_pct": 95,
-    "instruction_alignment_pct": 95,
+    "contract_alignment_pct": 100,
+    "instruction_alignment_pct": 100,
     "prompt_alignment_pct": 60
   },
   "next_actions": [
-    "Run lint and build validation on the hero-plus-gallery contract cleanup",
-    "Verify no remaining texture-era publish assumptions remain outside deprecated migration fields"
+    "Keep the remaining hidden wraps unpublished until hero/gallery assets are manually re-uploaded",
+    "Monitor for any stale legacy local-path references during manual remediation",
+    "Retire any remaining dead soft-deleted local-path rows when remediation is complete"
   ]
 }

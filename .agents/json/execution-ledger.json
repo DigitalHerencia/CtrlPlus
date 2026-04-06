@@ -51,6 +51,26 @@
         "AGENTS.md",
         ".github/copilot-instructions.md"
       ]
+    },
+    {
+      "id": "LEDGER-005",
+      "timestamp": "2026-04-06T05:15:00Z",
+      "type": "edit",
+      "summary": "Refactored catalog wrap asset persistence and delivery to use Cloudinary authority-backed storage and delivery shaping, and removed live local-path behavior",
+      "files": [
+        "prisma/schema.prisma",
+        "prisma/migrations/20260406031500_catalog_wrapimage_cloudinary_authority/migration.sql",
+        "lib/uploads/storage.ts",
+        "lib/uploads/image-processing.ts",
+        "lib/utils/catalog-assets.ts",
+        "lib/actions/catalog.actions.ts",
+        "lib/fetchers/catalog.*",
+        "components/catalog/**",
+        "components/visualizer/WrapSelector.tsx",
+        ".agents/**",
+        "AGENTS.md",
+        ".github/copilot-instructions.md"
+      ]
     }
   ]
 }

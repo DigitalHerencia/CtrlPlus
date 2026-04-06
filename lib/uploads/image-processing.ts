@@ -1,7 +1,4 @@
 import crypto from 'crypto'
-import { readFile } from 'fs/promises'
-import path from 'path'
-
 import sharp from 'sharp'
 
 import {
@@ -84,37 +81,6 @@ async function readRemoteImage(url: URL): Promise<{ buffer: Buffer; contentType:
     return { buffer, contentType }
 }
 
-async function readLocalWrapImage(
-    urlPath: string
-): Promise<{ buffer: Buffer; contentType: string }> {
-    if (!urlPath.startsWith('/uploads/wraps/')) {
-        throw new Error('Unsupported local texture path')
-    }
-
-    const normalized = path.normalize(urlPath).replaceAll('\\', '/')
-    if (!normalized.startsWith('/uploads/wraps/')) {
-        throw new Error('Invalid local texture path')
-    }
-
-    const absolute = path.join(process.cwd(), 'public', ...normalized.split('/').filter(Boolean))
-    const extension = path.extname(absolute).toLowerCase()
-    const contentType =
-        extension === '.png'
-            ? 'image/png'
-            : extension === '.jpg' || extension === '.jpeg'
-              ? 'image/jpeg'
-              : extension === '.webp'
-                ? 'image/webp'
-                : ''
-
-    if (!contentType || !visualizerConfig.supportedMimeTypes.includes(contentType)) {
-        throw new Error('Unsupported image type')
-    }
-
-    const buffer = await readFile(absolute)
-    return { buffer, contentType }
-}
-
 export async function readPhotoBuffer(
     customerPhotoUrl: string
 ): Promise<{ buffer: Buffer; contentType: string }> {
@@ -138,7 +104,9 @@ export async function readImageBufferFromUrl(url: string): Promise<Buffer> {
     }
 
     if (url.startsWith('/')) {
-        return readLocalWrapImage(url).then((result) => result.buffer)
+        throw new Error(
+            'Legacy local catalog asset paths are no longer supported. Re-upload the wrap image to Cloudinary.'
+        )
     }
 
     return readRemoteImage(new URL(url)).then((result) => result.buffer)

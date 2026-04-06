@@ -130,6 +130,7 @@ export default function HomePage() {
                             src="/ctrlplus-fleet-night-showcase.png"
                             alt="CTRL+ vehicle wraps showcase"
                             fill
+                            sizes="100vw"
                             className="object-cover"
                             preload
                         />
@@ -207,6 +208,7 @@ export default function HomePage() {
                             src="/chili-truck-el-paso-downtown.png"
                             alt="Pricing section background"
                             fill
+                            sizes="100vw"
                             className="object-cover"
                         />
                         <div className="absolute inset-0 bg-neutral-900/80" />

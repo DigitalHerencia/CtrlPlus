@@ -18,6 +18,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                     alt="Premium Vehicle Wrap"
                     fill
                     priority
+                    sizes="(min-width: 1024px) 50vw, 0px"
                     className="object-cover"
                 />
             </div>

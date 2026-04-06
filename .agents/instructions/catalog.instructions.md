@@ -12,6 +12,9 @@ handoff.
 
 - Use explicit asset role semantics (`hero`, `gallery`) and never infer role from
   array position.
+- Treat active catalog wrap imagery as Cloudinary-backed durable storefront media.
+- Treat local `/uploads/wraps/**` paths as remediation-only and not a valid live
+  catalog delivery contract.
 - Keep publish-readiness checks deterministic and server-authoritative.
 - Keep browse/detail DTOs explicit by use-case.
 - Preserve `/visualizer?wrapId=...` handoff as a validated server-side contract.

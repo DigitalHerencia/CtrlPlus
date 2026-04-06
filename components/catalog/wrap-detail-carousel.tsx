@@ -28,7 +28,7 @@ export function WrapDetailCarousel({ name, images }: WrapDetailCarouselProps) {
                         alt={`${name} gallery asset`}
                         width={800}
                         height={560}
-                        unoptimized
+                        sizes="(min-width: 1280px) 26vw, (min-width: 768px) 50vw, 100vw"
                         className="h-56 w-full object-cover"
                     />
                 </div>

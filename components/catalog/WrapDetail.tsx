@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -31,10 +32,12 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
                 <Card className="overflow-hidden border-neutral-800 bg-neutral-950/80 text-neutral-100">
                     <div className="border-b border-neutral-800 bg-neutral-900">
                         {wrap.displayImage ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
+                            <Image
                                 src={wrap.displayImage.detailUrl}
                                 alt={wrap.name}
+                                width={1600}
+                                height={1200}
+                                sizes="(min-width: 1280px) 58vw, 100vw"
                                 className="h-104 w-full object-cover"
                             />
                         ) : (

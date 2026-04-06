@@ -8,17 +8,29 @@
  * underlying provider can be replaced with minimal changes.
  */
 import {
+    buildCloudinaryPublicDeliveryUrl,
     getCloudinaryCredentials,
     buildCloudinarySignature,
+    destroyCloudinaryAsset,
     extractCloudinaryPublicId,
+    getCloudinaryPublicTransformation,
+    normalizeCloudinaryUploadResponse,
+    type CloudinaryDeliveryVariant,
+    type CloudinaryStoredAsset,
 } from '@/lib/integrations/cloudinary'
 
 // Generic adapter-facing names
+export const buildBlobPublicDeliveryUrl = buildCloudinaryPublicDeliveryUrl
 export const getBlobCredentials = getCloudinaryCredentials
 export const buildBlobSignature = buildCloudinarySignature
+export const destroyBlobAsset = destroyCloudinaryAsset
 export const extractBlobPublicId = extractCloudinaryPublicId
+export const getBlobPublicTransformation = getCloudinaryPublicTransformation
+export const normalizeBlobUploadResponse = normalizeCloudinaryUploadResponse
 
 export type BlobCredentials = ReturnType<typeof getBlobCredentials>
+export type BlobDeliveryVariant = CloudinaryDeliveryVariant
+export type BlobStoredAsset = CloudinaryStoredAsset
 
 // Note: This file intentionally adapts the existing Cloudinary integration into a
 // generic "blob" integration surface. Future providers should implement the same

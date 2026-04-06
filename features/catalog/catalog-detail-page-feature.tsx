@@ -20,7 +20,7 @@ export async function generateCatalogWrapMetadata(params: WrapDetailPageParams['
         openGraph: {
             title: wrap.name,
             description: wrap.description ?? undefined,
-            images: wrap.heroImage ? [wrap.heroImage.detailUrl ?? wrap.heroImage.url] : undefined,
+            images: wrap.heroImage ? [wrap.heroImage.detailUrl] : undefined,
         },
     }
 }

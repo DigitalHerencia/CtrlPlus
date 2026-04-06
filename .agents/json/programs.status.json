@@ -17,13 +17,14 @@
     {
       "id": "catalog-visualizer-contract-hardening",
       "name": "Catalog + Visualizer Hand-off Hardening",
-      "status": "planned",
-      "progress_pct": 10,
+      "status": "done",
+      "progress_pct": 100,
       "owner": "catalog",
       "linked_contract_ids": [
-        "GOV-CATALOG-VISUALIZER-HANDOFF"
+        "GOV-CATALOG-VISUALIZER-HANDOFF",
+        "GOV-CATALOG-ASSET-STORAGE"
       ],
-      "next_milestone": "Operationalize contract checks in implementation prompts"
+      "next_milestone": "Manual catalog asset re-upload for the remaining hidden wraps"
     }
   ]
 }
