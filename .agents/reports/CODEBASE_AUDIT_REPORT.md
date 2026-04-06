@@ -1,5 +1,10 @@
 ## Codebase Audit Report (Dead Code, Import/Export Reachability, Redundancy)
 
+> **Freshness note (2026-04-05, refreshed):**
+> Previous report numbers in this file were stale. Current findings are sourced from fresh runs,
+> with `D:\CtrlPlus\knip.out.txt` as the live source of truth and synchronized copy at
+> `.agents/reports/knip.txt`.
+
 - **Repository**: `DigitalHerencia/CtrlPlus`
 - **Branch**: `main`
 - **Date**: 2026-04-05
@@ -26,21 +31,21 @@ subagent validation:
 - `eslint` override for `@typescript-eslint/no-unused-vars`
 - delegated reachability review subagent for false-positive filtering
 
-## Executive Summary
+## Executive Summary (Refreshed)
 
 | Area                                                          | Result |
 | ------------------------------------------------------------- | -----: |
-| Unused files (knip)                                           |    102 |
-| Unused exports (values/functions)                             |    112 |
-| Unused exported types/interfaces                              |     42 |
-| Duplicate export pairs                                        |      6 |
-| Unused functions (from unused exports)                        |     58 |
-| Unused values/constants (from unused exports)                 |     54 |
-| Unused interfaces                                             |     27 |
-| Unused types                                                  |     15 |
-| Confirmed unused local variable/function symbol via TS/ESLint |      1 |
+| Unused files (knip)                                           |      4 |
+| Unused exports (values/functions)                             |     93 |
+| Unused exported types/interfaces                              |     49 |
+| Duplicate export pairs                                        |      0 |
+| Confirmed unused local variable/function symbol via TS/ESLint |      0 |
 | Unused dependencies                                           |     10 |
-| Unused devDependencies                                        |      5 |
+| Unused devDependencies                                        |      6 |
+
+`tsc --noUnusedLocals --noUnusedParameters`: no diagnostics in current run.
+
+`eslint . --cache --max-warnings=0`: no diagnostics in current run.
 
 ## Remediation Flow
 

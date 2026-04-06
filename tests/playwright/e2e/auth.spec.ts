@@ -7,7 +7,7 @@
  *  - Sign-in and sign-up pages render correctly
  */
 
-import { expect, test } from '@playwright/test'
+import { expect, test } from './helpers/test'
 import { expectAuthRedirectWithContext } from './helpers/auth-redirect'
 
 // ─── Public page accessibility ────────────────────────────────────────────────

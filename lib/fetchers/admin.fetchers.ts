@@ -21,66 +21,6 @@ function resolveAdminTenantId(_tenantId?: string | null): string {
     return DEFAULT_TENANT_ID
 }
 
-function parseDateRange(input: { startDate?: string | null; endDate?: string | null }): {
-    startDate: Date | null
-    endDate: Date | null
-} {
-    return {
-        startDate: input.startDate ? new Date(input.startDate) : null,
-        endDate: input.endDate ? new Date(input.endDate) : null,
-    }
-}
-
-function stringifySummary(action: string, details: string | null): string {
-    if (!details) {
-        return action
-    }
-
-    try {
-        const parsed = JSON.parse(details) as Record<string, unknown>
-        if (typeof parsed.summary === 'string' && parsed.summary.length > 0) {
-            return parsed.summary
-        }
-
-        if (typeof parsed.reason === 'string' && parsed.reason.length > 0) {
-            return `${action}: ${parsed.reason}`
-        }
-    } catch {
-        return action
-    }
-
-    return action
-}
-
-function buildEventHref(resourceType: string | null, resourceId: string | null): string | null {
-    if (!resourceType || !resourceId) {
-        return null
-    }
-
-    switch (resourceType) {
-        case 'Booking':
-            return '/scheduling/bookings'
-        case 'Invoice':
-            return '/billing'
-        case 'Wrap':
-            return '/catalog/manage'
-        case 'VisualizerPreview':
-            return '/visualizer'
-        default:
-            return null
-    }
-}
-
-export interface OwnerDashboardStatsDTO {
-    wrapCount: number
-    hiddenWrapCount: number
-    bookingCount: number
-    upcomingBookingCount: number
-    openInvoiceCount: number
-    totalRevenue: number
-    customerCount: number
-}
-
 export async function getTenantMetrics(input: TenantMetricsFilterInput): Promise<TenantMetricsDTO> {
     await requireOwnerOrPlatformAdmin()
 
@@ -433,96 +373,65 @@ export async function getAnalyticsSeries(
         }))
 }
 
-// Legacy compatibility exports while transitioning to the new admin surface
-export async function getOwnerDashboardStats(): Promise<OwnerDashboardStatsDTO> {
-    const metrics = await getTenantMetrics({ tenantId: DEFAULT_TENANT_ID })
+function parseDateRange(input: {
+    startDate?: Date | string | null
+    endDate?: Date | string | null
+}): { startDate: Date | null; endDate: Date | null } {
+    const startDate =
+        input.startDate instanceof Date
+            ? input.startDate
+            : typeof input.startDate === 'string'
+              ? new Date(input.startDate)
+              : null
+    const endDate =
+        input.endDate instanceof Date
+            ? input.endDate
+            : typeof input.endDate === 'string'
+              ? new Date(input.endDate)
+              : null
 
-    const now = new Date()
-    const [wrapCount, hiddenWrapCount, upcomingBookingCount, openInvoiceCount, customers] =
-        await Promise.all([
-            prisma.wrap.count({ where: { deletedAt: null } }),
-            prisma.wrap.count({ where: { deletedAt: null, isHidden: true } }),
-            prisma.booking.count({
-                where: {
-                    deletedAt: null,
-                    status: { in: ['pending', 'confirmed'] },
-                    startTime: { gte: now },
-                },
-            }),
-            prisma.invoice.count({
-                where: { deletedAt: null, status: { in: ['draft', 'issued'] } },
-            }),
-            prisma.booking.findMany({
-                where: { deletedAt: null },
-                select: { customerId: true },
-                distinct: ['customerId'],
-            }),
-        ])
-
-    return {
-        wrapCount,
-        hiddenWrapCount,
-        bookingCount: metrics.bookingsCount,
-        upcomingBookingCount,
-        openInvoiceCount,
-        totalRevenue: metrics.revenueTotal,
-        customerCount: customers.length,
+    if (startDate && endDate && endDate < startDate) {
+        return { startDate: endDate, endDate: startDate }
     }
+
+    return { startDate, endDate }
 }
 
-export type ConfirmAppointmentExample = {
-    tenantId: string
-    bookingId: string
-    status: 'confirmed'
+function stringifySummary(action: string, details?: string | null): string {
+    if (!details) {
+        return action
+    }
+
+    try {
+        const parsed = JSON.parse(details) as Record<string, unknown>
+        if (typeof parsed.reason === 'string' && parsed.reason.trim()) {
+            return `${action}: ${parsed.reason}`
+        }
+        if (typeof parsed.description === 'string' && parsed.description.trim()) {
+            return `${action}: ${parsed.description}`
+        }
+    } catch {
+        // Keep fallback behavior for non-JSON details.
+    }
+
+    return action
 }
 
-export type CreateInvoiceExample = {
-    tenantId: string
-    bookingId: string
-    customerId: string
-    amountCents: number
-    currency: 'usd'
-    description: string
-}
+function buildEventHref(resourceType: string | null, resourceId: string | null): string {
+    if (!resourceType || !resourceId) {
+        return '/admin/audit'
+    }
 
-export type AdminManagementToolExamples = {
-    confirmAppointmentExample: ConfirmAppointmentExample | null
-    createInvoiceExample: CreateInvoiceExample | null
-}
-
-export async function getAdminManagementToolExamples(): Promise<AdminManagementToolExamples> {
-    await requireOwnerOrPlatformAdmin()
-
-    const [bookingToConfirm, bookingToInvoice] = await Promise.all([
-        prisma.booking.findFirst({
-            where: { deletedAt: null, status: 'pending' },
-            select: { id: true },
-            orderBy: { startTime: 'asc' },
-        }),
-        prisma.booking.findFirst({
-            where: { deletedAt: null, status: { in: ['confirmed', 'completed'] }, invoice: null },
-            select: { id: true, customerId: true, totalPrice: true },
-            orderBy: { startTime: 'asc' },
-        }),
-    ])
-
-    return {
-        confirmAppointmentExample: bookingToConfirm
-            ? {
-                  tenantId: DEFAULT_TENANT_ID,
-                  bookingId: bookingToConfirm.id,
-                  status: 'confirmed',
-              }
-            : null,
-        createInvoiceExample: bookingToInvoice
-            ? {
-                  tenantId: DEFAULT_TENANT_ID,
-                  bookingId: bookingToInvoice.id,
-                  customerId: bookingToInvoice.customerId,
-                  amountCents: bookingToInvoice.totalPrice,
-                  currency: 'usd',
-                  description: 'Admin dashboard example invoice',
-              }
-            : null,
+    switch (resourceType) {
+        case 'Wrap':
+            return `/catalog/manage/${resourceId}`
+        case 'Booking':
+            return `/scheduling/manage/${resourceId}`
+        case 'Invoice':
+            return `/billing/manage/${resourceId}`
+        case 'VisualizerPreview':
+            return `/visualizer/previews/${resourceId}`
+        default:
+            return '/admin/audit'
     }
 }

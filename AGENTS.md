@@ -84,6 +84,16 @@ Required quality gates when affected:
 - `lib/fetchers/*` owns reads.
 - `lib/db/transactions/*` must be either actively consumed by actions or removed.
 
+### Audit artifact freshness protocol
+
+- Treat `.agents/reports/*.txt` and `.agents/reports/CODEBASE_AUDIT_REPORT.md` as snapshots that can become stale.
+- Before acting on dead-code findings, regenerate artifacts using current runs:
+    - `pnpm knip --no-progress` (write to `knip.out.txt`, then copy to `.agents/reports/knip.txt`)
+    - `pnpm exec ts-prune` (write to `.agents/reports/ts-prune.txt`)
+    - `pnpm exec tsc --noEmit --noUnusedLocals --noUnusedParameters` (write to `.agents/reports/tsc-unused.txt`)
+    - `pnpm exec eslint . --cache --max-warnings=0` (write to `.agents/reports/eslint-unused-vars.txt`)
+- If `knip.out.txt` and `.agents/reports/knip.txt` differ, treat `knip.out.txt` as the source of truth until reports are refreshed.
+
 ## Operating workflow
 
 1. Read relevant `.agents/docs/*` for intent.

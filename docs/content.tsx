@@ -742,9 +742,9 @@ const pages: DocPage[] = [
     },
 ]
 
-export const DOC_PAGES = pages
+const DOC_PAGES = pages
 
-export function getDocBySlug(slug: string) {
+function getDocBySlug(slug: string) {
     return DOC_PAGES.find((page) => page.slug === slug)
 }
 
@@ -756,7 +756,7 @@ export function getDocsRoute(slug: string) {
     return `/docs/${slug}`
 }
 
-export function getFlattenedNavItems() {
+function getFlattenedNavItems() {
     return DOC_SECTIONS.flatMap((section) => section.items)
 }
 

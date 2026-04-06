@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './helpers/test'
 
 test.describe('Error Surface Smoke', () => {
     test('unknown route renders without leaking stack traces', async ({ page }) => {

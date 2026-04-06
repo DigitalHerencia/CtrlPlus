@@ -9,7 +9,7 @@ export function VisualizerWorkspaceSkeleton() {
                 <Skeleton className="h-12 rounded-lg" />
             </div>
             <div className="space-y-4">
-                <Skeleton className="h-[32rem] rounded-lg" />
+                <Skeleton className="h-128 rounded-lg" />
                 <Skeleton className="h-24 rounded-lg" />
             </div>
         </div>

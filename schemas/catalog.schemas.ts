@@ -11,8 +11,6 @@ export const createWrapCategorySchema = z.object({
         .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase letters, numbers, or dashes'),
 })
 
-export const updateWrapCategorySchema = createWrapCategorySchema.partial()
-
 export const setWrapCategoryMappingsSchema = z.object({
     wrapId: z.string().min(1),
     categoryIds: z.array(z.string().min(1)).max(50),
@@ -33,12 +31,6 @@ export const updateWrapImageMetadataSchema = z.object({
     isActive: z.boolean().optional(),
 })
 
-export const priceInCentsSchema = z.coerce
-    .number()
-    .int('Price must be an integer number of cents')
-    .positive('Price must be positive')
-    .max(10_000_000_00, 'Price exceeds supported maximum')
-
 export const searchWrapsSchema = z.object({
     query: z.string().max(200).optional(),
     sortBy: z.enum(['name', 'price', 'createdAt']).optional(),
@@ -56,7 +48,11 @@ export const wrapFilterFormSchema = z.object({
 export const createWrapSchema = z.object({
     name: z.string().min(1, 'Name is required').max(120),
     description: z.string().max(500).optional(),
-    price: priceInCentsSchema,
+    price: z.coerce
+        .number()
+        .int('Price must be an integer number of cents')
+        .positive('Price must be positive')
+        .max(10_000_000_00, 'Price exceeds supported maximum'),
     installationMinutes: z.coerce
         .number()
         .int()

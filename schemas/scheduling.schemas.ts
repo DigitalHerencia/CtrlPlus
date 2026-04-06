@@ -9,10 +9,6 @@ export const bookingListParamsSchema = paginationParamsSchema.extend({
     toDate: z.coerce.date().optional(),
 })
 
-export const availabilityListParamsSchema = paginationParamsSchema.extend({
-    dayOfWeek: z.number().int().min(0).max(6).optional(),
-})
-
 export const availabilityQuerySchema = z
     .object({
         startDate: z.coerce.date(),

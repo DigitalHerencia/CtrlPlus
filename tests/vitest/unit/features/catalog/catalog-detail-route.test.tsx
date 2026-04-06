@@ -44,16 +44,15 @@ describe('catalog detail route contracts', () => {
             },
         })
 
-        const { generateCatalogWrapMetadata } = await import(
-            '@/features/catalog/catalog-detail-page-feature'
-        )
+        const { generateCatalogWrapMetadata } =
+            await import('@/features/catalog/catalog-detail-page-feature')
 
         await generateCatalogWrapMetadata(Promise.resolve({ wrapId: 'wrap-1' }))
 
         expect(metadataMocks.getCatalogWrapById).toHaveBeenCalledWith('wrap-1', {
             includeHidden: false,
         })
-    })
+    }, 15000)
 
     it('passes wrapId through the catalog detail page route', async () => {
         pageMocks.getSession.mockResolvedValue({

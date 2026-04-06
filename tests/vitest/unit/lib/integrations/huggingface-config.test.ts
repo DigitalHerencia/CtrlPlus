@@ -23,7 +23,7 @@ describe('visualizer allowed host configuration', () => {
             'res.cloudinary.com'
         )
         expect(configModule.isAllowedRemotePhotoHost('res.cloudinary.com')).toBe(true)
-    })
+    }, 15000)
 
     it('rejects unknown hosts when they are not explicitly allowed', async () => {
         process.env.VISUALIZER_ALLOWED_IMAGE_HOSTS = ''

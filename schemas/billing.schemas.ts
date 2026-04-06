@@ -42,10 +42,3 @@ export const refundInvoiceSchema = z.object({
     amount: z.number().int().positive().optional(),
     notes: z.string().max(500).optional(),
 })
-
-export const invoiceFilterSchema = z.object({
-    status: z.enum(['draft', 'issued', 'paid', 'refunded', 'void']).optional(),
-    query: z.string().max(120).optional(),
-    from: z.coerce.date().optional(),
-    to: z.coerce.date().optional(),
-})
