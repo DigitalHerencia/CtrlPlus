@@ -263,8 +263,7 @@ describe('processVisualizerPreview', () => {
             .mockResolvedValueOnce(
                 makePreviewRecord({
                     status: 'complete',
-                    processedImageUrl:
-                        'https://app.local/api/visualizer/previews/preview-1/image',
+                    processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
                     generationModel: 'hf-generated-model',
                 })
             )
@@ -306,16 +305,14 @@ describe('processVisualizerPreview', () => {
             .mockResolvedValueOnce(
                 makePreviewRecord({
                     status: 'complete',
-                    processedImageUrl:
-                        'https://app.local/api/visualizer/previews/preview-1/image',
+                    processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
                     resultCloudinaryPublicId: 'ctrlplus/visualizer/previews/user-1/preview-1',
                 })
             )
             .mockResolvedValueOnce(
                 makePreviewRecord({
                     status: 'complete',
-                    processedImageUrl:
-                        'https://app.local/api/visualizer/previews/preview-1/image',
+                    processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
                     resultCloudinaryPublicId: 'ctrlplus/visualizer/previews/user-1/preview-1',
                 })
             )
@@ -366,5 +363,37 @@ describe('processVisualizerPreview', () => {
                 generationFallbackReason: 'Wrap not found or is not visualizer-ready.',
             },
         })
+    })
+
+    it('continues processing when one reference image is invalid but another is usable', async () => {
+        mocks.prisma.visualizerPreview.findFirst
+            .mockResolvedValueOnce(makePreviewRecord())
+            .mockResolvedValueOnce(
+                makePreviewRecord({
+                    status: 'complete',
+                    processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
+                    generationModel: 'hf-generated-model',
+                })
+            )
+
+        mocks.readImageBufferFromUrl
+            .mockRejectedValueOnce(new Error('Invalid URL'))
+            .mockResolvedValueOnce(Buffer.from('reference-bytes-2'))
+
+        const result = await processVisualizerPreview({ previewId: 'preview-1' })
+
+        expect(mocks.readImageBufferFromUrl).toHaveBeenCalledTimes(2)
+        expect(mocks.buildGenerationInputBoard).toHaveBeenCalledWith(
+            expect.objectContaining({
+                referenceBuffers: [expect.any(Buffer)],
+            })
+        )
+        expect(result).toEqual(
+            expect.objectContaining({
+                id: 'preview-1',
+                status: 'complete',
+                processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
+            })
+        )
     })
 })

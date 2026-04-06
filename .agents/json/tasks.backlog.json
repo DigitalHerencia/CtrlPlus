@@ -1,7 +1,7 @@
 {
   "artifact_type": "task-backlog",
   "version": "1.0.0",
-  "updated_at": "2026-04-05",
+  "updated_at": "2026-04-06",
   "tasks": [
     {
       "id": "CAT-ASSET-001",
@@ -167,6 +167,44 @@
       "acceptance": [
         "Governance layers describe the new hero+gallery visualizer contract",
         "Validation report reflects current lint/typecheck/build/test status"
+      ]
+    },
+    {
+      "id": "VIS-PIPE-005",
+      "title": "Cut visualizer preview generation over to a mask-guided Hugging Face Space pipeline",
+      "priority": "high",
+      "status": "planned",
+      "owner": "visualizer",
+      "dependencies": [
+        "VIS-REF-003",
+        "VIS-REF-004"
+      ],
+      "source_docs": [
+        ".agents/docs/ARCHITECTURE.md",
+        ".agents/docs/VISUALIZER-WRAP-PREVIEW-PIPELINE-PLAN.md"
+      ],
+      "contract_refs": [
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-002",
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-003",
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-004",
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-006"
+      ],
+      "impacted_paths": [
+        "lib/actions/visualizer.actions.ts",
+        "lib/visualizer/huggingface/**",
+        "lib/visualizer/preprocessing/**",
+        "lib/integrations/huggingface.ts",
+        "lib/uploads/image-processing.ts",
+        "package.json",
+        ".env.example",
+        "tests/vitest/unit/lib/visualizer/**",
+        ".agents/**"
+      ],
+      "acceptance": [
+        "Primary preview generation uses a mask-guided Hugging Face Space or equivalent mask-aware provider path",
+        "Preview attempts no longer depend on generic board-only image-to-image as the production default",
+        "Reference URL failures are classified with wrap-image context instead of raw Invalid URL errors",
+        "Preview audit/debug output captures enough provider and mask evidence to diagnose degraded runs"
       ]
     }
   ]

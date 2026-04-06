@@ -22,10 +22,7 @@ import {
     readImageBufferFromUrl,
     readPhotoBuffer,
 } from '@/lib/uploads/image-processing'
-import {
-    persistVisualizerPreviewAsset,
-    persistVisualizerUploadAsset,
-} from '@/lib/uploads/storage'
+import { persistVisualizerPreviewAsset, persistVisualizerUploadAsset } from '@/lib/uploads/storage'
 import { buildCloudinaryDeliveryUrl } from '@/lib/integrations/cloudinary'
 import { buildSimpleWrapPreview } from '@/lib/visualizer/fallback/build-simple-wrap-preview'
 import { getHfModelName } from '@/lib/visualizer/huggingface/client'
@@ -33,7 +30,10 @@ import { generateWrapPreview } from '@/lib/visualizer/huggingface/generate-wrap-
 import { buildGenerationInputBoard } from '@/lib/visualizer/preprocessing/build-generation-input-board'
 import { buildWrapPreviewPrompt } from '@/lib/visualizer/prompting/build-wrap-preview-prompt'
 import type { ProcessVisualizerPreviewInput, VisualizerPreviewDTO } from '@/types/visualizer.types'
-import type { RegenerateVisualizerPreviewInput, VisualizerUploadSnapshot } from '@/types/visualizer.types'
+import type {
+    RegenerateVisualizerPreviewInput,
+    VisualizerUploadSnapshot,
+} from '@/types/visualizer.types'
 import { toVisualizerUploadSnapshot } from '@/lib/fetchers/visualizer.mappers'
 
 type VisualizerSelectableWrap = NonNullable<
@@ -80,9 +80,31 @@ function buildVisualizerPromptForWrap(wrap: VisualizerSelectableWrap) {
 async function resolveVisualizerGenerationAssets(wrap: VisualizerSelectableWrap) {
     const references = buildVisualizerReferenceImages(wrap)
     const prompt = buildVisualizerPromptForWrap(wrap)
-    const referenceBuffers = await Promise.all(
+    const settledReferenceBuffers = await Promise.allSettled(
         references.map((image) => readImageBufferFromUrl(image.detailUrl))
     )
+
+    const referenceBuffers = settledReferenceBuffers.flatMap((result) =>
+        result.status === 'fulfilled' ? [result.value] : []
+    )
+
+    if (referenceBuffers.length === 0) {
+        const failureReasons = settledReferenceBuffers
+            .flatMap((result) =>
+                result.status === 'rejected'
+                    ? [result.reason instanceof Error ? result.reason.message : 'Unknown error']
+                    : []
+            )
+            .filter((reason) => reason.trim().length > 0)
+            .slice(0, 2)
+
+        const reasonSuffix =
+            failureReasons.length > 0 ? ` Reasons: ${failureReasons.join(' | ')}` : ''
+
+        throw new Error(
+            `No usable wrap reference assets were available for preview generation.${reasonSuffix}`
+        )
+    }
 
     return {
         prompt,

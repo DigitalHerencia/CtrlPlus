@@ -2,20 +2,22 @@
   "artifact_type": "domain-status",
   "domain": "visualizer",
   "version": "1.0.0",
-  "updated_at": "2026-04-05",
-  "state": "stable",
+  "updated_at": "2026-04-06",
+  "state": "in-progress",
   "focus": [
     "owner-scoped uploads",
     "reference-guided preview generation",
-    "authenticated preview delivery"
+    "authenticated preview delivery",
+    "mask-guided inpaint cutover"
   ],
   "progress": {
-    "contract_alignment_pct": 95,
+    "contract_alignment_pct": 92,
     "instruction_alignment_pct": 95,
-    "prompt_alignment_pct": 60
+    "prompt_alignment_pct": 70
   },
   "next_actions": [
-    "Run lint, build, and e2e validation against the reference-guided pipeline",
-    "Evaluate hosted Hugging Face fidelity versus deterministic fallback output quality"
+    "Replace the current generic image-to-image preview path with a mask-guided Hugging Face Space integration",
+    "Classify and eliminate live Invalid URL failures in wrap reference fetches",
+    "Run lint, typecheck, prisma validate, and targeted visualizer tests after the cutover"
   ]
 }
