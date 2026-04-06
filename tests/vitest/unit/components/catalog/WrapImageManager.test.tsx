@@ -32,19 +32,17 @@ describe('WrapImageManager', () => {
                 images={mockImages}
                 readiness={{
                     canPublish: false,
-                    isVisualizerReady: false,
-                    missingRequiredAssetRoles: ['visualizer_texture'],
-                    requiredAssetRoles: ['hero', 'visualizer_texture'],
+                    isVisualizerReady: true,
+                    missingRequiredAssetRoles: [],
+                    requiredAssetRoles: ['hero'],
                     activeAssetKinds: ['hero', 'gallery'],
                     hasDisplayAsset: true,
                     activeHeroCount: 1,
                     activeGalleryCount: 1,
-                    activeVisualizerTextureCount: 0,
-                    activeVisualizerMaskHintCount: 0,
                     issues: [
                         {
-                            code: 'missing_visualizer_texture',
-                            message: 'Add an active visualizer texture before publish.',
+                            code: 'invalid_price',
+                            message: 'Wrap price must be greater than zero before publish.',
                             blocking: true,
                         },
                     ],

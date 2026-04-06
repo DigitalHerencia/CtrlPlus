@@ -3,16 +3,21 @@ import { tintVehiclePanels } from './tint-vehicle-panels'
 
 export async function buildSimpleWrapPreview(params: {
     vehicleBuffer: Buffer
-    textureBuffer: Buffer
+    referenceBuffers: Buffer[]
 }): Promise<Buffer> {
+    const leadReference = params.referenceBuffers[0]
+    if (!leadReference) {
+        throw new Error('At least one reference image is required for fallback rendering.')
+    }
+
     const tinted = await tintVehiclePanels({
         vehicleBuffer: params.vehicleBuffer,
-        textureBuffer: params.textureBuffer,
+        textureBuffer: leadReference,
         opacity: 0.48,
     })
 
     return placeLogoOverlay({
         baseBuffer: tinted,
-        textureBuffer: params.textureBuffer,
+        textureBuffer: leadReference,
     })
 }

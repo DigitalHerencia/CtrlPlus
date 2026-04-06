@@ -7,8 +7,11 @@ import {
     listVisualizerSelectableWraps,
     type WrapVisibilityScope,
 } from '@/lib/fetchers/catalog.fetchers'
-import { toVisualizerPreviewDTO } from '@/lib/fetchers/visualizer.mappers'
-import { visualizerPreviewDTOFields } from '@/lib/db/selects/visualizer.selects'
+import { visualizerUploadSnapshotFields, visualizerPreviewDTOFields } from '@/lib/db/selects/visualizer.selects'
+import {
+    toVisualizerPreviewDTO,
+    toVisualizerUploadSnapshot,
+} from '@/lib/fetchers/visualizer.mappers'
 import type { VisualizerPreviewDTO } from '@/types/visualizer.types'
 import type { VisualizerUploadSnapshot } from '@/types/visualizer.types'
 
@@ -71,39 +74,46 @@ export async function listMyVisualizerPreviews(limit = 50): Promise<VisualizerPr
 }
 
 export async function listMyVisualizerUploads(limit = 50): Promise<VisualizerUploadSnapshot[]> {
-    const previews = await listMyVisualizerPreviews(limit)
-
-    const uploadsById = new Map<string, VisualizerUploadSnapshot>()
-
-    for (const preview of previews) {
-        if (!uploadsById.has(preview.id)) {
-            uploadsById.set(preview.id, {
-                id: preview.id,
-                customerPhotoUrl: preview.customerPhotoUrl,
-                wrapId: preview.wrapId,
-                createdAt: preview.createdAt,
-                updatedAt: preview.updatedAt,
-            })
-        }
+    const session = await getSession()
+    const userId = session.userId
+    if (!session.isAuthenticated || !userId) {
+        return []
     }
 
-    return [...uploadsById.values()]
+    requireCapability(session.authz, 'visualizer.use')
+
+    const uploads = await prisma.visualizerUpload.findMany({
+        where: {
+            ownerClerkUserId: userId,
+            deletedAt: null,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: visualizerUploadSnapshotFields,
+    })
+
+    return uploads.map(toVisualizerUploadSnapshot)
 }
 
 export async function getMyVisualizerUploadById(
     uploadId: string
 ): Promise<VisualizerUploadSnapshot | null> {
-    const preview = await getPreviewById(uploadId)
-
-    if (!preview) {
+    const session = await getSession()
+    const userId = session.userId
+    if (!session.isAuthenticated || !userId) {
         return null
     }
 
-    return {
-        id: preview.id,
-        customerPhotoUrl: preview.customerPhotoUrl,
-        wrapId: preview.wrapId,
-        createdAt: preview.createdAt,
-        updatedAt: preview.updatedAt,
-    }
+    requireCapability(session.authz, 'visualizer.use')
+
+    const upload = await prisma.visualizerUpload.findFirst({
+        where: {
+            id: uploadId,
+            ownerClerkUserId: userId,
+            deletedAt: null,
+        },
+        select: visualizerUploadSnapshotFields,
+    })
+
+    return upload ? toVisualizerUploadSnapshot(upload) : null
 }

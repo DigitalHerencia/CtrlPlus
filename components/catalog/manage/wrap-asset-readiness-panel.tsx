@@ -29,8 +29,10 @@ export function WrapAssetReadinessPanel({ readiness }: WrapAssetReadinessPanelPr
                 <Badge variant="outline">{readiness.activeGalleryCount}</Badge>
             </div>
             <div className="flex items-center justify-between">
-                <span className="text-neutral-400">Visualizer</span>
-                <Badge variant="outline">{readiness.activeVisualizerTextureCount}</Badge>
+                <span className="text-neutral-400">Reference Set</span>
+                <Badge variant="outline">
+                    {readiness.activeHeroCount + readiness.activeGalleryCount}
+                </Badge>
             </div>
         </div>
     )

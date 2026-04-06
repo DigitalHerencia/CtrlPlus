@@ -57,26 +57,6 @@ export function resolveDisplayImages(images: WrapImageDTO[]): CatalogAssetImageD
     return heroImage ? [heroImage, ...galleryImages] : galleryImages
 }
 
-export function resolveVisualizerTextureAsset(images: WrapImageDTO[]): CatalogAssetImageDTO | null {
-    const orderedImages = sortImages(images)
-    const textureImage = orderedImages.find(
-        (image) => image.isActive && image.kind === WrapImageKind.VISUALIZER_TEXTURE
-    )
-
-    return textureImage ? toCatalogAssetImage(textureImage) : null
-}
-
-export function resolveVisualizerMaskHintAsset(
-    images: WrapImageDTO[]
-): CatalogAssetImageDTO | null {
-    const orderedImages = sortImages(images)
-    const maskHintImage = orderedImages.find(
-        (image) => image.isActive && image.kind === WrapImageKind.VISUALIZER_MASK_HINT
-    )
-
-    return maskHintImage ? toCatalogAssetImage(maskHintImage) : null
-}
-
 export function getCatalogAssetReadiness(
     input:
         | WrapImageDTO[]
@@ -94,14 +74,6 @@ export function getCatalogAssetReadiness(
     const missingRequiredAssetRoles = getMissingRequiredAssetRolesForPublish(activeImages)
     const activeHeroCount = getActiveImagesByKind(images, WrapImageKind.HERO).length
     const activeGalleryCount = getActiveImagesByKind(images, WrapImageKind.GALLERY).length
-    const activeVisualizerTextureCount = getActiveImagesByKind(
-        images,
-        WrapImageKind.VISUALIZER_TEXTURE
-    ).length
-    const activeVisualizerMaskHintCount = getActiveImagesByKind(
-        images,
-        WrapImageKind.VISUALIZER_MASK_HINT
-    ).length
     const primaryDisplayAsset = resolvePrimaryDisplayAsset(images)
     const issues: CatalogAssetReadinessDTO['issues'] = []
 
@@ -137,14 +109,6 @@ export function getCatalogAssetReadiness(
         })
     }
 
-    if (missingRequiredAssetRoles.includes(WrapImageKind.VISUALIZER_TEXTURE)) {
-        issues.push({
-            code: 'missing_visualizer_texture',
-            message: 'Add an active visualizer texture before publish.',
-            blocking: true,
-        })
-    }
-
     if (activeHeroCount > 1) {
         issues.push({
             code: 'multiple_active_hero',
@@ -153,30 +117,17 @@ export function getCatalogAssetReadiness(
         })
     }
 
-    if (activeVisualizerTextureCount > 1) {
-        issues.push({
-            code: 'multiple_active_visualizer_texture',
-            message: 'Only one visualizer texture can stay active at a time.',
-            blocking: true,
-        })
-    }
-
     const canPublish = issues.every((issue) => !issue.blocking)
 
     return {
         canPublish,
-        isVisualizerReady:
-            activeHeroCount === 1 &&
-            activeVisualizerTextureCount === 1 &&
-            primaryDisplayAsset !== null,
+        isVisualizerReady: activeHeroCount === 1 && primaryDisplayAsset !== null,
         missingRequiredAssetRoles,
         requiredAssetRoles: [...PUBLISH_REQUIRED_WRAP_IMAGE_KINDS],
         activeAssetKinds,
         hasDisplayAsset: primaryDisplayAsset !== null,
         activeHeroCount,
         activeGalleryCount,
-        activeVisualizerTextureCount,
-        activeVisualizerMaskHintCount,
         issues,
     }
 }

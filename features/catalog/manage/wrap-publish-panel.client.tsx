@@ -120,9 +120,9 @@ export function WrapPublishPanel({ wrap }: WrapPublishPanelProps) {
                             <Badge variant="outline">{wrap.readiness.activeGalleryCount}</Badge>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-neutral-400">Visualizer Texture:</span>
+                            <span className="text-neutral-400">Visualizer References:</span>
                             <Badge variant="outline">
-                                {wrap.readiness.activeVisualizerTextureCount}
+                                {wrap.readiness.activeHeroCount + wrap.readiness.activeGalleryCount}
                             </Badge>
                         </div>
                     </div>
@@ -136,9 +136,7 @@ export function WrapPublishPanel({ wrap }: WrapPublishPanelProps) {
                     ) : (
                         <li>Resolve readiness issues before publishing this wrap.</li>
                     )}
-                    {!isVisualizerReady ? (
-                        <li>Attach one active visualizer texture asset.</li>
-                    ) : null}
+                    {!isVisualizerReady ? <li>Attach one active hero asset.</li> : null}
                 </ul>
             </CatalogCommandPanel>
         </div>

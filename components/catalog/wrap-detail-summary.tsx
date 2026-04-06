@@ -66,8 +66,10 @@ export function WrapDetailSummary({ wrap, canManageCatalog }: WrapDetailSummaryP
                         </div>
                         {canManageCatalog ? (
                             <div className="flex items-center justify-between gap-3">
-                                <dt>Visualizer texture</dt>
-                                <dd>{wrap.visualizerTextureImage ? 'Available' : 'Missing'}</dd>
+                                <dt>Visualizer references</dt>
+                                <dd>
+                                    {wrap.heroImage ? `${wrap.galleryImages.length + 1} ready` : 'Missing hero'}
+                                </dd>
                             </div>
                         ) : null}
                     </dl>

@@ -6,7 +6,7 @@ export function UploadDetailHeader({ upload }: { upload: VisualizerUploadSnapsho
         <WorkspacePageIntro
             label="Visualizer"
             title={`Upload ${upload.id.slice(0, 8)}`}
-            description={`Review source image details and provenance for wrap ${upload.wrapId} before generating additional previews.`}
+            description="Review the source vehicle image and reuse it when generating additional previews."
         />
     )
 }

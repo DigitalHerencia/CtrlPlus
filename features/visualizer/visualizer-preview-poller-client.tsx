@@ -2,11 +2,7 @@
 
 import { useEffect, useEffectEvent } from 'react'
 
-import {
-    isPreviewProcessingStatus,
-    isPreviewTerminalStatus,
-    PreviewStatus,
-} from '@/lib/constants/statuses'
+import { isPreviewProcessingStatus, isPreviewTerminalStatus, PreviewStatus } from '@/lib/constants/statuses'
 import type { VisualizerPreviewDTO } from '@/types/visualizer.types'
 import type { SerializedVisualizerPreview } from '@/types/visualizer.types'
 
@@ -85,9 +81,7 @@ export function VisualizerPreviewPollerClient({
                 }
 
                 if (isPreviewTerminalStatus(nextPreview.status)) {
-                    if (nextPreview.status === PreviewStatus.EXPIRED) {
-                        handleError('Preview expired before completion. Regenerate to continue.')
-                    } else if (nextPreview.status === PreviewStatus.FAILED) {
+                    if (nextPreview.status === PreviewStatus.FAILED) {
                         handleError('Preview generation failed. Adjust the upload or regenerate.')
                     } else {
                         handleError(null)

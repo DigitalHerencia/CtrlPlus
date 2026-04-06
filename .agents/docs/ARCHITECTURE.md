@@ -42,16 +42,35 @@ domain logic is explicit, and security boundaries are enforced at server entry p
 ## Cross-domain architectural principles
 
 - Catalog is source of truth for wrap product and asset semantics.
-- Visualizer owns preview generation lifecycle and output traceability.
+- Catalog hands the visualizer an explicit reference set built from active `hero`
+  and `gallery` assets only.
+- Visualizer owns owner-scoped uploads, preview generation lifecycle, and preview
+  output traceability.
+- Visualizer preview delivery remains server-authoritative through signed
+  application routes that redirect to authenticated Cloudinary assets.
 - Scheduling owns availability and booking state progression.
 - Billing owns invoice/payment lifecycle with integration resiliency.
 - Admin/platform own privileged operations and diagnostics.
+
+## Visualizer pipeline intent
+
+- Treat the visualizer as reference-guided image editing, not texture-only synthesis
+  and not pure text-to-image generation.
+- The base image is the authenticated, owner-scoped visualizer upload.
+- Catalog reference imagery is composed from the selected wrap's active `hero` plus
+  zero or more active `gallery` images.
+- Provider-specific conditioning details belong in `lib/integrations/**` and
+  `lib/visualizer/**`; they must not leak into catalog DTOs or route parameters.
+- Generated previews are persisted as authenticated Cloudinary assets with stable
+  authority fields stored in the database.
 
 ## Security and reliability intent
 
 - Keep authentication and authorization server-side.
 - Assume client input is untrusted for scope/ownership assertions.
 - Favor explicit state transitions and auditable mutation outcomes.
+- Do not treat raw `secure_url` values as a privacy boundary for visualizer media.
+- Issue short-lived signed application URLs for upload and preview access.
 
 ## Caching and responsiveness intent
 

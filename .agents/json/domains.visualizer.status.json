@@ -5,17 +5,17 @@
   "updated_at": "2026-04-05",
   "state": "stable",
   "focus": [
-    "preview lifecycle consistency",
-    "storage-backed artifacts",
-    "fallback resilience"
+    "owner-scoped uploads",
+    "reference-guided preview generation",
+    "authenticated preview delivery"
   ],
   "progress": {
-    "contract_alignment_pct": 75,
-    "instruction_alignment_pct": 80,
-    "prompt_alignment_pct": 30
+    "contract_alignment_pct": 95,
+    "instruction_alignment_pct": 95,
+    "prompt_alignment_pct": 60
   },
   "next_actions": [
-    "Ensure all preview workflows report status transitions clearly",
-    "Ensure prompts require error/fix logging in execution-ledger"
+    "Run lint, build, and e2e validation against the reference-guided pipeline",
+    "Evaluate hosted Hugging Face fidelity versus deterministic fallback output quality"
   ]
 }

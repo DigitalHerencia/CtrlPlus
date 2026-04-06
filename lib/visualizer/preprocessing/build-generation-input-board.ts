@@ -1,18 +1,28 @@
 import sharp from 'sharp'
 
+function getReferencePlacement(index: number) {
+    const positions = [
+        { left: 1160, top: 48 },
+        { left: 1472, top: 48 },
+        { left: 1160, top: 368 },
+        { left: 1472, top: 368 },
+    ]
+
+    return positions[index] ?? positions[positions.length - 1]
+}
+
 export async function buildGenerationInputBoard(params: {
     vehicleBuffer: Buffer
-    wrapTextureBuffer: Buffer
+    referenceBuffers: Buffer[]
+    wrapName: string
 }): Promise<Buffer> {
-    const canvasWidth = 1536
+    const canvasWidth = 1792
     const canvasHeight = 1024
-    const texturePanelWidth = 384
-    const gutter = 24
-    const vehiclePanelWidth = canvasWidth - texturePanelWidth - gutter * 3
-
+    const vehiclePanelWidth = 1080
+    const referenceSize = 280
     const normalizedVehicle = await sharp(params.vehicleBuffer)
         .rotate()
-        .resize(vehiclePanelWidth, canvasHeight - gutter * 2, {
+        .resize(vehiclePanelWidth, canvasHeight - 96, {
             fit: 'contain',
             withoutEnlargement: true,
             background: '#0a0a0a',
@@ -20,14 +30,30 @@ export async function buildGenerationInputBoard(params: {
         .png()
         .toBuffer()
 
-    const normalizedTexture = await sharp(params.wrapTextureBuffer)
-        .rotate()
-        .resize(texturePanelWidth, texturePanelWidth, {
-            fit: 'cover',
-            position: 'attention',
-        })
-        .png()
-        .toBuffer()
+    const referenceBuffers = await Promise.all(
+        params.referenceBuffers.slice(0, 4).map((buffer) =>
+            sharp(buffer)
+                .rotate()
+                .resize(referenceSize, referenceSize, {
+                    fit: 'cover',
+                    position: 'attention',
+                })
+                .png()
+                .toBuffer()
+        )
+    )
+
+    const labelSvg = Buffer.from(`
+        <svg width="${canvasWidth}" height="${canvasHeight}" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100%" height="100%" fill="#0a0a0a"/>
+          <text x="1160" y="760" fill="#f5f5f5" font-size="54" font-family="Arial, sans-serif" font-weight="700">
+            ${params.wrapName.replaceAll('&', '&amp;')}
+          </text>
+          <text x="1160" y="818" fill="#a3a3a3" font-size="24" font-family="Arial, sans-serif">
+            Hero and gallery reference board
+          </text>
+        </svg>
+    `)
 
     return sharp({
         create: {
@@ -38,8 +64,12 @@ export async function buildGenerationInputBoard(params: {
         },
     })
         .composite([
-            { input: normalizedVehicle, left: gutter, top: gutter },
-            { input: normalizedTexture, left: vehiclePanelWidth + gutter * 2, top: gutter },
+            { input: labelSvg },
+            { input: normalizedVehicle, left: 32, top: 48 },
+            ...referenceBuffers.map((input, index) => ({
+                input,
+                ...getReferencePlacement(index),
+            })),
         ])
         .png()
         .toBuffer()

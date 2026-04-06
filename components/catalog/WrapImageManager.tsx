@@ -28,8 +28,6 @@ interface WrapImageManagerProps {
 const kindOptions: Array<{ value: WrapImageKindType; label: string }> = [
     { value: WrapImageKindConst.HERO, label: 'Hero / display' },
     { value: WrapImageKindConst.GALLERY, label: 'Gallery' },
-    { value: WrapImageKindConst.VISUALIZER_TEXTURE, label: 'Visualizer texture' },
-    { value: WrapImageKindConst.VISUALIZER_MASK_HINT, label: 'Mask hint' },
 ]
 
 export function WrapImageManager({

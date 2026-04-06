@@ -5,27 +5,51 @@
   "checks": [
     {
       "id": "VAL-001",
-      "name": "layer-boundary-coherence",
+      "name": "catalog-visualizer-contract-alignment",
       "status": "pass",
-      "details": "Intent, interpretation, execution, and reporting artifacts are split by role"
+      "details": "Catalog handoff now uses hero plus gallery references; texture-era readiness and DTO coupling were removed."
     },
     {
       "id": "VAL-002",
-      "name": "contract-rule-id-coverage",
+      "name": "prisma-schema-and-client",
       "status": "pass",
-      "details": "All contracts include machine-readable rule IDs"
+      "details": "VisualizerUpload model and preview authority fields validate successfully with Prisma 7 client generation."
     },
     {
       "id": "VAL-003",
-      "name": "prompt-accountability-coverage",
-      "status": "in-progress",
-      "details": "Prompt library migration underway"
+      "name": "typecheck",
+      "status": "pass",
+      "details": "pnpm typecheck"
     },
     {
       "id": "VAL-004",
-      "name": "dead-code-governance-alignment",
+      "name": "unit-tests",
       "status": "pass",
-      "details": "Repository instructions now require dead-code prevention, CI enforcement, and action/fetcher/transaction layer integrity rules."
+      "details": "pnpm test:unit"
+    },
+    {
+      "id": "VAL-005",
+      "name": "lint",
+      "status": "pass",
+      "details": "pnpm lint"
+    },
+    {
+      "id": "VAL-006",
+      "name": "build",
+      "status": "pass",
+      "details": "pnpm build"
+    },
+    {
+      "id": "VAL-007",
+      "name": "e2e",
+      "status": "pass",
+      "details": "pnpm test:e2e --project=chromium --reporter=line"
+    },
+    {
+      "id": "VAL-008",
+      "name": "prisma-validate",
+      "status": "pass",
+      "details": "pnpm prisma:validate"
     }
   ]
 }

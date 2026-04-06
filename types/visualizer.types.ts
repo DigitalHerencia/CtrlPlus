@@ -4,12 +4,17 @@ import type { PreviewStatus } from '@/lib/constants/statuses'
 export interface VisualizerPreviewDTO {
     id: string
     wrapId: string
+    uploadId: string
     customerPhotoUrl: string
     processedImageUrl: string | null
     status: PreviewStatus
     cacheKey: string
-    sourceWrapImageId: string | null
-    sourceWrapImageVersion: number | null
+    referenceSignature: string
+    generationMode: string
+    generationProvider: string | null
+    generationModel: string | null
+    generationPromptVersion: string | null
+    generationFallbackReason: string | null
     expiresAt: Timestamp
     createdAt: Timestamp
     updatedAt: Timestamp
@@ -43,7 +48,9 @@ export interface VisualizerPageFeatureProps {
 export interface VisualizerUploadSnapshot {
     id: string
     customerPhotoUrl: string
-    wrapId: string
+    mimeType: string | null
+    width: number | null
+    height: number | null
     createdAt: string
     updatedAt: string
 }
@@ -52,11 +59,9 @@ export interface PreviewCacheKeyInput {
     wrapId: string
     ownerUserId: string
     customerPhotoHash: string
-    sourceWrapImageId: string
-    sourceAssetVersion: number
+    uploadId: string
+    referenceSignature: string
     generationMode: string
     generationModel: string
     promptVersion: string
-    blendMode?: 'multiply' | 'overlay'
-    opacity?: number
 }

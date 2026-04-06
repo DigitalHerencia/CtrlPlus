@@ -4,7 +4,7 @@ import { useMemo, useRef, useState, useTransition } from 'react'
 
 import { VisualizerClient } from '@/components/visualizer/VisualizerClient'
 import type { VisualizerWrapSelectionDTO } from '@/types/catalog.types'
-import { createVisualizerPreview, regenerateVisualizerPreview } from '@/lib/actions/visualizer.actions'
+import { regenerateVisualizerPreview, uploadAndGeneratePreview } from '@/lib/actions/visualizer.actions'
 import { isPreviewProcessingStatus, PreviewStatus } from '@/lib/constants/statuses'
 import type { VisualizerPreviewDTO } from '@/types/visualizer.types'
 import { VisualizerPreviewPollerClient } from './visualizer-preview-poller.client'
@@ -73,7 +73,7 @@ export function VisualizerWorkspaceShellClient({
 
         setError(null)
         startTransition(() => {
-            void createVisualizerPreview({
+            void uploadAndGeneratePreview({
                 wrapId: selectedWrap.id,
                 file,
             })
@@ -133,11 +133,6 @@ export function VisualizerWorkspaceShellClient({
 
                     if (nextPreview?.status === PreviewStatus.COMPLETE) {
                         setError(null)
-                        return
-                    }
-
-                    if (nextPreview?.status === PreviewStatus.EXPIRED) {
-                        setError('Preview expired before completion. Regenerate to continue.')
                         return
                     }
 

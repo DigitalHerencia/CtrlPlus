@@ -288,15 +288,61 @@ model BookingReservation {
 // VISUALIZER MODELS
 // ============================================================================
 
+/// Owner-scoped source uploads used by the visualizer.
+model VisualizerUpload {
+  id                  String    @id @default(cuid())
+  ownerClerkUserId    String
+  legacyUrl           String?
+  cloudinaryAssetId   String?   @unique
+  cloudinaryPublicId  String?
+  cloudinaryVersion   Int?
+  cloudinaryResourceType String?
+  cloudinaryDeliveryType String?
+  cloudinaryAssetFolder  String?
+  mimeType            String?
+  format              String?
+  bytes               Int?
+  width               Int?
+  height              Int?
+  contentHash         String    @default("")
+  originalFileName    String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
+
+  previews VisualizerPreview[]
+
+  @@index([ownerClerkUserId, deletedAt, createdAt])
+}
+
 /// Preview generation results (cached for 24h)
 model VisualizerPreview {
   id                     String    @id @default(cuid())
   wrapId                 String
+  uploadId               String
   ownerClerkUserId       String    @default("legacy")
   customerPhotoUrl       String
   processedImageUrl      String? // Filled after processing
   status                 String    @default("pending") // "pending" | "processing" | "complete" | "failed"
   cacheKey               String    @unique // Deterministic hash for caching
+  referenceSignature     String    @default("")
+  generationMode         String    @default("reference_edit")
+  generationProvider     String?
+  generationModel        String?
+  generationPromptVersion String?
+  generationFallbackReason String?
+  resultLegacyUrl        String?
+  resultCloudinaryAssetId   String? @unique
+  resultCloudinaryPublicId  String?
+  resultCloudinaryVersion   Int?
+  resultCloudinaryResourceType String?
+  resultCloudinaryDeliveryType String?
+  resultCloudinaryAssetFolder  String?
+  resultMimeType         String?
+  resultFormat           String?
+  resultBytes            Int?
+  resultWidth            Int?
+  resultHeight           Int?
   sourceWrapImageId      String?
   sourceWrapImageVersion Int?
   expiresAt              DateTime
@@ -304,11 +350,13 @@ model VisualizerPreview {
   updatedAt              DateTime  @updatedAt
   deletedAt              DateTime?
 
-  wrap Wrap @relation(fields: [wrapId], references: [id], onDelete: Cascade)
+  wrap   Wrap             @relation(fields: [wrapId], references: [id], onDelete: Cascade)
+  upload VisualizerUpload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
 
   @@index([wrapId, deletedAt, expiresAt, createdAt])
   @@index([status, expiresAt])
   @@index([ownerClerkUserId, deletedAt, expiresAt])
+  @@index([uploadId, deletedAt, createdAt])
 }
 
 // ============================================================================

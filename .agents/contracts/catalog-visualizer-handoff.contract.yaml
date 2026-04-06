@@ -1,5 +1,5 @@
 contract_id: GOV-CATALOG-VISUALIZER-HANDOFF
-version: 1.0.0
+version: 1.1.0
 scope: catalog-visualizer
 owner: catalog
 last_reviewed: 2026-04-05
@@ -19,3 +19,18 @@ rules:
     statement: Preview lifecycle states must be explicit and traceable.
     applies_to: "visualizer"
     validation_hint: "Status values limited to pending, processing, complete, failed."
+  - id: CVH-004
+    type: must
+    statement: Catalog-to-visualizer handoff must be based on active hero plus active gallery references only.
+    applies_to: "catalog, visualizer"
+    validation_hint: "Do not require visualizer_texture or visualizer_mask_hint in DTOs, readiness rules, or preview actions."
+  - id: CVH-005
+    type: must
+    statement: Visualizer preview creation must reference a first-class owner-scoped upload entity.
+    applies_to: "lib/actions/visualizer*.ts, lib/fetchers/visualizer*.ts, prisma/schema.prisma"
+    validation_hint: "Preview creation accepts wrapId + uploadId and preview records persist uploadId."
+  - id: CVH-006
+    type: must
+    statement: Visualizer uploads and previews must use authenticated storage plus server-authoritative delivery.
+    applies_to: "lib/uploads/**, lib/integrations/**, app/api/visualizer/**"
+    validation_hint: "Persist Cloudinary authority fields and issue signed application routes or signed URLs; do not rely on public secure_url values as the privacy boundary."

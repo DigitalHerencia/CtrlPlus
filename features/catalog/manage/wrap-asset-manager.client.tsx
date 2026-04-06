@@ -68,27 +68,18 @@ export function WrapAssetManager({ wrap }: WrapAssetManagerProps) {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Visualizer Texture</CardTitle>
-                    <CardDescription>Texture used for AI preview generation</CardDescription>
+                    <CardTitle>Visualizer References</CardTitle>
+                    <CardDescription>
+                        The visualizer now uses the active hero and gallery imagery as its
+                        reference set.
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {wrap.visualizerTextureImage ? (
-                        <WrapImageCard>
-                            <Image
-                                src={wrap.visualizerTextureImage.url}
-                                alt={wrap.visualizerTextureImage.id}
-                                width={1200}
-                                height={675}
-                                unoptimized
-                                className="h-48 w-full rounded object-cover"
-                            />
-                            <p className="text-sm text-neutral-400">
-                                UUID: {wrap.visualizerTextureImage.id}
-                            </p>
-                        </WrapImageCard>
-                    ) : (
-                        <p className="text-neutral-400">No visualizer texture assigned</p>
-                    )}
+                    <p className="text-sm text-neutral-400">
+                        Hero image plus {wrap.galleryImages.length} gallery image
+                        {wrap.galleryImages.length === 1 ? '' : 's'} available for preview
+                        generation.
+                    </p>
                 </CardContent>
             </Card>
         </WrapGalleryManager>

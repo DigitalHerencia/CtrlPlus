@@ -10,11 +10,15 @@ handoff.
 
 ## Interpretation guidance
 
-- Use explicit asset role semantics (`hero`, `gallery`, `visualizer_texture`,
-  `visualizer_mask_hint`) and never infer role from array position.
+- Use explicit asset role semantics (`hero`, `gallery`) and never infer role from
+  array position.
 - Keep publish-readiness checks deterministic and server-authoritative.
 - Keep browse/detail DTOs explicit by use-case.
 - Preserve `/visualizer?wrapId=...` handoff as a validated server-side contract.
+- Treat the catalog-to-visualizer handoff as `hero` plus active `gallery`
+  references only; do not reintroduce `visualizer_texture` or
+  `visualizer_mask_hint` into the canonical contract unless a new contract revision
+  explicitly permits it.
 
 ## Quality interpretation
 

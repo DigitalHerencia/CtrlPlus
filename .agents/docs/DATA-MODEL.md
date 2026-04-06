@@ -30,8 +30,16 @@ persistent store. The operating model is single-store with server-authoritative 
 
 ### Visualizer
 
-- Preview entities track request identity, source assets, and output artifacts.
-- Preview lifecycle is explicit and status-driven.
+- `VisualizerUpload` is the first-class, owner-scoped source image entity for the
+  visualizer. It stores Cloudinary authority fields, media metadata, content hash,
+  and ownership identifiers.
+- `VisualizerPreview` references `VisualizerUpload` via `uploadId` and tracks the
+  selected wrap, reference-set signature, generation metadata, and persisted preview
+  asset authority fields.
+- Preview lifecycle is explicit and status-driven (`pending`, `processing`,
+  `complete`, `failed`).
+- Legacy URL fields may exist only as transition/backfill surfaces; Cloudinary
+  authority fields are the durable storage contract.
 
 ### Scheduling
 
@@ -49,7 +57,9 @@ persistent store. The operating model is single-store with server-authoritative 
 ## Relationship and flow summary
 
 - Catalog entities provide inputs for visualizer and customer decision flows.
-- Visualizer entities connect wrap assets to generated preview outputs.
+- Visualizer uploads connect authenticated user media to generated preview outputs.
+- Catalog wrap assets connect to visualizer previews through explicit `hero` and
+  `gallery` reference images rather than texture-only contracts.
 - Scheduling and billing entities connect operational commitments to financial outcomes.
 - Audit entities track sensitive lifecycle-changing events.
 

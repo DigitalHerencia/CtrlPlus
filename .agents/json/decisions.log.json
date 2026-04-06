@@ -26,6 +26,38 @@
       "date": "2026-04-05",
       "impact": "medium",
       "summary": "Duplicate export names are consolidated to a single canonical surface, and orphan transaction/select/helper modules are removed once reachability is confirmed."
+    },
+    {
+      "id": "DEC-004",
+      "title": "Adopt staged hosted-first visualizer image editing",
+      "status": "accepted",
+      "date": "2026-04-05",
+      "impact": "high",
+      "summary": "Visualizer generation defaults to hosted Hugging Face reference-guided image editing and preserves a provider boundary for future richer multi-reference control."
+    },
+    {
+      "id": "DEC-005",
+      "title": "Promote VisualizerUpload to first-class persistence model",
+      "status": "accepted",
+      "date": "2026-04-05",
+      "impact": "high",
+      "summary": "Previews now reference owner-scoped uploads through uploadId instead of embedding source image lifecycle inside preview records."
+    },
+    {
+      "id": "DEC-006",
+      "title": "Use authenticated Cloudinary assets with server-signed delivery for visualizer media",
+      "status": "accepted",
+      "date": "2026-04-05",
+      "impact": "high",
+      "summary": "User uploads and generated previews persist Cloudinary authority fields and are delivered through signed application routes rather than public secure_url links."
+    },
+    {
+      "id": "DEC-007",
+      "title": "Replace texture-era visualizer contract with hero-plus-gallery references",
+      "status": "accepted",
+      "date": "2026-04-05",
+      "impact": "high",
+      "summary": "Catalog no longer treats visualizer_texture or visualizer_mask_hint as canonical publish or handoff requirements; the visualizer consumes active hero and gallery imagery only."
     }
   ],
   "open_questions": [
@@ -33,6 +65,12 @@
       "id": "Q-001",
       "question": "Should CI enforce AGENTS and .github/copilot-instructions byte equality?",
       "owner": "platform",
+      "status": "open"
+    },
+    {
+      "id": "Q-002",
+      "question": "Does hosted Hugging Face quality remain sufficient for multi-reference wrap fidelity, or should a richer custom control pipeline be scheduled next?",
+      "owner": "visualizer",
       "status": "open"
     }
   ]

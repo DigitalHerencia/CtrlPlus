@@ -13,7 +13,7 @@ function getHfApiKey(): string {
 }
 
 export function getHfModelName(): string {
-    return process.env.HF_IMAGE_TO_IMAGE_MODEL?.trim() || 'stabilityai/stable-diffusion-xl-base-1.0'
+    return process.env.HF_IMAGE_TO_IMAGE_MODEL?.trim() || 'Qwen/Qwen-Image-Edit'
 }
 
 export function getHfTimeoutMs(): number {

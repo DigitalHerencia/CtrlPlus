@@ -4,43 +4,131 @@
   "updated_at": "2026-04-05",
   "tasks": [
     {
-      "id": "TASK-001",
-      "title": "Sync AGENTS and .github/copilot-instructions",
+      "id": "VIS-REF-001",
+      "title": "Add first-class visualizer upload model and authenticated asset storage",
       "priority": "high",
-      "status": "in-progress",
-      "owner": "platform",
+      "status": "done",
+      "owner": "visualizer",
       "dependencies": [],
+      "source_docs": [
+        ".agents/docs/ARCHITECTURE.md",
+        ".agents/docs/DATA-MODEL.md",
+        ".agents/docs/PRD.md"
+      ],
+      "contract_refs": [
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-003",
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-005",
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-006"
+      ],
+      "impacted_paths": [
+        "prisma/schema.prisma",
+        "prisma/migrations/20260405143000_visualizer_reference_pipeline_refactor/migration.sql",
+        "lib/uploads/storage.ts",
+        "lib/integrations/cloudinary.ts",
+        "app/api/visualizer/**"
+      ],
       "acceptance": [
-        "Files are byte-identical",
-        "All resource references point to .agents canonical paths"
+        "VisualizerUpload exists as an owner-scoped model",
+        "VisualizerPreview stores uploadId and Cloudinary authority fields",
+        "Uploads and previews use authenticated Cloudinary storage and signed delivery"
       ]
     },
     {
-      "id": "TASK-002",
-      "title": "Refactor prompt library to accountability model",
+      "id": "VIS-REF-002",
+      "title": "Remove texture-era catalog readiness and handoff coupling",
       "priority": "high",
-      "status": "in-progress",
-      "owner": "platform",
+      "status": "done",
+      "owner": "catalog",
       "dependencies": [
-        "TASK-001"
+        "VIS-REF-001"
+      ],
+      "source_docs": [
+        ".agents/docs/ARCHITECTURE.md",
+        ".agents/docs/PRD.md"
+      ],
+      "contract_refs": [
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-001",
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-004"
+      ],
+      "impacted_paths": [
+        "types/catalog.types.ts",
+        "lib/fetchers/catalog.*",
+        "lib/actions/catalog.actions.ts",
+        "components/catalog/**",
+        "features/catalog/**",
+        "schemas/catalog.schemas.ts"
       ],
       "acceptance": [
-        "Each prompt references contract IDs",
-        "Each prompt requires reporting updates"
+        "Catalog DTOs no longer require visualizerTextureImage or visualizerMaskHintImage",
+        "Publish readiness requires hero only",
+        "Visualizer wrap selection exposes heroImage plus galleryImages"
       ]
     },
     {
-      "id": "TASK-003",
-      "title": "Publish governance validation report",
+      "id": "VIS-REF-003",
+      "title": "Replace visualizer preview creation with upload plus reference-guided pipeline",
       "priority": "medium",
-      "status": "todo",
-      "owner": "platform",
+      "status": "done",
+      "owner": "visualizer",
       "dependencies": [
-        "TASK-002"
+        "VIS-REF-001",
+        "VIS-REF-002"
+      ],
+      "source_docs": [
+        ".agents/docs/ARCHITECTURE.md",
+        ".agents/docs/DATA-MODEL.md"
+      ],
+      "contract_refs": [
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-002",
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-003",
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-004",
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-005"
+      ],
+      "impacted_paths": [
+        "lib/actions/visualizer.actions.ts",
+        "lib/fetchers/visualizer.*",
+        "lib/visualizer/**",
+        "components/visualizer/**",
+        "features/visualizer/**",
+        "schemas/visualizer.schemas.ts",
+        "types/visualizer.types.ts"
       ],
       "acceptance": [
-        "No layer-boundary violations",
-        "No duplicate policy statements across layers"
+        "Preview creation accepts wrapId plus uploadId",
+        "Reference signatures are persisted",
+        "Hosted inference failures fall back deterministically and remain auditable"
+      ]
+    },
+    {
+      "id": "VIS-REF-004",
+      "title": "Refresh governance/reporting artifacts and run validation sweep",
+      "priority": "medium",
+      "status": "done",
+      "owner": "platform",
+      "dependencies": [
+        "VIS-REF-001",
+        "VIS-REF-002",
+        "VIS-REF-003"
+      ],
+      "source_docs": [
+        ".agents/docs/ARCHITECTURE.md",
+        ".agents/docs/DATA-MODEL.md",
+        ".agents/docs/PRD.md"
+      ],
+      "contract_refs": [
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-003",
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-004",
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-006"
+      ],
+      "impacted_paths": [
+        ".agents/docs/**",
+        ".agents/instructions/**",
+        ".agents/contracts/**",
+        ".agents/json/**"
+      ],
+      "acceptance": [
+        "Governance layers describe the new hero+gallery visualizer contract",
+        "Validation report reflects current lint/typecheck/build/test status"
       ]
     }
   ]

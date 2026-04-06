@@ -841,7 +841,7 @@ export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps)
                     <SheetHeader>
                         <SheetTitle>Catalog Assets</SheetTitle>
                         <SheetDescription>
-                            Upload, reorder, and set active state for display and visualizer assets.
+                            Upload, reorder, and set active state for hero and gallery reference assets.
                         </SheetDescription>
                     </SheetHeader>
                     {metadataWrap ? (

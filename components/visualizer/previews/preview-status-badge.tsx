@@ -14,12 +14,7 @@ export function PreviewStatusBadge({ status }: { status: string }) {
                     colorClass: 'bg-red-600/20 text-red-300',
                     label: 'failed',
                 }
-              : normalizedStatus === PreviewStatus.EXPIRED
-                ? {
-                      colorClass: 'bg-amber-600/20 text-amber-300',
-                      label: 'expired',
-                  }
-                : normalizedStatus === PreviewStatus.PROCESSING
+              : normalizedStatus === PreviewStatus.PROCESSING
                   ? {
                         colorClass: 'bg-indigo-600/20 text-indigo-300',
                         label: 'processing',

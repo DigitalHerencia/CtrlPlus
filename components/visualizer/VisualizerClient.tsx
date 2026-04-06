@@ -92,11 +92,15 @@ export function VisualizerClient({
                         <CardContent className="space-y-3 text-sm text-neutral-300">
                             <div className="flex items-center justify-between gap-4">
                                 <span>Preview source</span>
-                                <span className="text-neutral-100">Visualizer texture</span>
+                                <span className="text-neutral-100">
+                                    Vehicle upload + hero/gallery references
+                                </span>
                             </div>
                             <div className="flex items-center justify-between gap-4">
                                 <span>Generation path</span>
-                                <span className="text-neutral-100">AI preview / fallback</span>
+                                <span className="text-neutral-100">
+                                    Reference-guided edit / fallback
+                                </span>
                             </div>
                             <div className="flex items-center justify-between gap-4">
                                 <span>Accepted uploads</span>

@@ -16,7 +16,6 @@ export const wrapImageKindValues = [
 
 export const PUBLISH_REQUIRED_WRAP_IMAGE_KINDS = [
     WrapImageKind.HERO,
-    WrapImageKind.VISUALIZER_TEXTURE,
 ] as const
 
 export type PublishRequiredWrapImageKind = (typeof PUBLISH_REQUIRED_WRAP_IMAGE_KINDS)[number]
@@ -26,7 +25,6 @@ export const PreviewStatus = {
     PROCESSING: 'processing',
     COMPLETE: 'complete',
     FAILED: 'failed',
-    EXPIRED: 'expired',
 } as const
 
 export type PreviewStatus = (typeof PreviewStatus)[keyof typeof PreviewStatus]
@@ -36,7 +34,6 @@ export const previewStatusValues = [
     PreviewStatus.PROCESSING,
     PreviewStatus.COMPLETE,
     PreviewStatus.FAILED,
-    PreviewStatus.EXPIRED,
 ] as const
 
 const previewStatusSet = new Set<PreviewStatus>(previewStatusValues)
@@ -56,11 +53,7 @@ export function isPreviewProcessingStatus(status: PreviewStatus): boolean {
 }
 
 export function isPreviewTerminalStatus(status: PreviewStatus): boolean {
-    return (
-        status === PreviewStatus.COMPLETE ||
-        status === PreviewStatus.FAILED ||
-        status === PreviewStatus.EXPIRED
-    )
+    return status === PreviewStatus.COMPLETE || status === PreviewStatus.FAILED
 }
 
 export const VisualizerGenerationMode = {

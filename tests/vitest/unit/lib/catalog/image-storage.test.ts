@@ -120,7 +120,7 @@ describe('persistWrapImage', () => {
 
         const file = new File(['asset'], 'wrap.png', { type: 'image/png' })
         await expect(persistWrapImage({ wrapId: 'wrap-credentials', file })).rejects.toThrow(
-            /requires Cloudinary/i
+            /Cloudinary is required/i
         )
         expect(vi.mocked(fetch)).not.toHaveBeenCalled()
     })
@@ -132,7 +132,7 @@ describe('persistWrapImage', () => {
 
         const file = new File(['asset'], 'wrap.png', { type: 'image/png' })
         await expect(persistWrapImage({ wrapId: 'wrap-2', file })).rejects.toThrow(
-            /requires Cloudinary/i
+            /Cloudinary is required/i
         )
         expect(vi.mocked(fetch)).not.toHaveBeenCalled()
     })

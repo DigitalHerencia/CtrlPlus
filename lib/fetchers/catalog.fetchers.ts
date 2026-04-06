@@ -9,8 +9,6 @@ import {
     resolveDisplayImages,
     resolveHeroAsset,
     resolvePrimaryDisplayAsset,
-    resolveVisualizerMaskHintAsset,
-    resolveVisualizerTextureAsset,
 } from '@/lib/fetchers/catalog.mappers'
 import type {
     CatalogBrowseCardDTO,
@@ -171,8 +169,6 @@ function toCatalogDetail(wrap: WrapDTO): CatalogDetailDTO {
     const displayImage = resolvePrimaryDisplayAsset(wrap.images)
     const galleryImages = resolveCatalogGalleryImages(wrap.images)
     const displayImages = resolveDisplayImages(wrap.images)
-    const visualizerTextureImage = resolveVisualizerTextureAsset(wrap.images)
-    const visualizerMaskHintImage = resolveVisualizerMaskHintAsset(wrap.images)
     const readiness = getWrapReadiness(wrap)
 
     return {
@@ -181,8 +177,6 @@ function toCatalogDetail(wrap: WrapDTO): CatalogDetailDTO {
         displayImage,
         displayImages,
         galleryImages,
-        visualizerTextureImage,
-        visualizerMaskHintImage,
         readiness,
     }
 }
@@ -200,11 +194,7 @@ function toCatalogManagerItem(wrap: WrapDTO): CatalogManagerItemDTO {
 function toVisualizerWrapSelection(wrap: WrapDTO): VisualizerWrapSelectionDTO | null {
     const detail = toCatalogDetail(wrap)
 
-    if (
-        !detail.heroImage ||
-        !detail.visualizerTextureImage ||
-        !detail.readiness.isVisualizerReady
-    ) {
+    if (!detail.heroImage || !detail.readiness.isVisualizerReady) {
         return null
     }
 
@@ -216,7 +206,7 @@ function toVisualizerWrapSelection(wrap: WrapDTO): VisualizerWrapSelectionDTO | 
         installationMinutes: detail.installationMinutes,
         categories: detail.categories,
         heroImage: detail.heroImage,
-        visualizerTextureImage: detail.visualizerTextureImage,
+        galleryImages: detail.galleryImages,
         aiPromptTemplate: detail.aiPromptTemplate,
         aiNegativePrompt: detail.aiNegativePrompt,
         readiness: detail.readiness,

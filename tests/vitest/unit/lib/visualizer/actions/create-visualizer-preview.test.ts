@@ -4,11 +4,14 @@ const mocks = vi.hoisted(() => ({
     getSession: vi.fn(),
     requireCapability: vi.fn(),
     getVisualizerWrapSelectionById: vi.fn(),
-    normalizeVehicleUpload: vi.fn(),
     buildWrapPreviewPrompt: vi.fn(),
-    storePreviewImage: vi.fn(),
+    getHfModelName: vi.fn(),
     buildVisualizerCacheKey: vi.fn(),
+    toVisualizerPreviewDTO: vi.fn(),
     prisma: {
+        visualizerUpload: {
+            findFirst: vi.fn(),
+        },
         visualizerPreview: {
             findFirst: vi.fn(),
             create: vi.fn(),
@@ -35,25 +38,28 @@ vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
     getVisualizerWrapSelectionById: mocks.getVisualizerWrapSelectionById,
 }))
 
-vi.mock('@/lib/uploads/image-processing', () => ({
-    normalizeVehicleUpload: mocks.normalizeVehicleUpload,
-}))
-
-vi.mock('@/lib/uploads/storage', () => ({
-    storePreviewImage: mocks.storePreviewImage,
-}))
-
 vi.mock('@/lib/visualizer/prompting/build-wrap-preview-prompt', () => ({
     buildWrapPreviewPrompt: mocks.buildWrapPreviewPrompt,
+}))
+
+vi.mock('@/lib/visualizer/huggingface/client', () => ({
+    getHfModelName: mocks.getHfModelName,
 }))
 
 vi.mock('@/lib/cache/cache-keys', () => ({
     buildVisualizerCacheKey: mocks.buildVisualizerCacheKey,
 }))
 
+vi.mock('@/lib/fetchers/visualizer.mappers', () => ({
+    toVisualizerPreviewDTO: mocks.toVisualizerPreviewDTO,
+    toVisualizerUploadSnapshot: vi.fn(),
+}))
+
 import { createVisualizerPreview } from '@/lib/actions/visualizer.actions'
 
-function makeSession(overrides: Partial<Awaited<ReturnType<typeof mocks.getSession>>> = {}) {
+function makeSession(
+    overrides: Partial<Awaited<ReturnType<typeof mocks.getSession>>> = {}
+) {
     return {
         isAuthenticated: true,
         userId: 'user-1',
@@ -72,34 +78,65 @@ function makeWrap() {
         price: 250000,
         installationMinutes: 180,
         categories: [],
-        heroImage: null,
-        visualizerTextureImage: {
-            id: 'texture-1',
-            url: 'https://example.com/texture.png',
-            kind: 'visualizer_texture',
+        heroImage: {
+            id: 'hero-1',
+            url: 'https://example.com/hero.png',
+            kind: 'hero',
             isActive: true,
             version: 4,
-            contentHash: 'texture-hash',
+            contentHash: 'hero-hash',
             displayOrder: 0,
-            thumbnailUrl: 'https://example.com/texture-thumb.png',
-            cardUrl: 'https://example.com/texture-card.png',
-            detailUrl: 'https://example.com/texture-detail.png',
+            thumbnailUrl: 'https://example.com/hero-thumb.png',
+            cardUrl: 'https://example.com/hero-card.png',
+            detailUrl: 'https://example.com/hero-detail.png',
         },
+        galleryImages: [
+            {
+                id: 'gallery-1',
+                url: 'https://example.com/gallery.png',
+                kind: 'gallery',
+                isActive: true,
+                version: 2,
+                contentHash: 'gallery-hash',
+                displayOrder: 1,
+                thumbnailUrl: 'https://example.com/gallery-thumb.png',
+                cardUrl: 'https://example.com/gallery-card.png',
+                detailUrl: 'https://example.com/gallery-detail.png',
+            },
+        ],
         aiPromptTemplate: null,
         aiNegativePrompt: null,
         readiness: {
             canPublish: true,
             isVisualizerReady: true,
             missingRequiredAssetRoles: [],
-            requiredAssetRoles: ['hero', 'visualizer_texture'],
-            activeAssetKinds: ['visualizer_texture'],
+            requiredAssetRoles: ['hero'],
+            activeAssetKinds: ['hero', 'gallery'],
             hasDisplayAsset: true,
-            activeHeroCount: 0,
-            activeGalleryCount: 0,
-            activeVisualizerTextureCount: 1,
-            activeVisualizerMaskHintCount: 0,
+            activeHeroCount: 1,
+            activeGalleryCount: 1,
             issues: [],
         },
+    }
+}
+
+function makeUploadRecord(overrides: Record<string, unknown> = {}) {
+    const now = new Date('2026-03-19T00:00:00Z')
+
+    return {
+        id: 'upload-1',
+        ownerClerkUserId: 'user-1',
+        legacyUrl: 'https://cloudinary.com/vehicle.png',
+        cloudinaryPublicId: 'ctrlplus/visualizer/uploads/user-1/upload-1',
+        cloudinaryVersion: 1,
+        cloudinaryResourceType: 'image',
+        cloudinaryDeliveryType: 'authenticated',
+        format: 'png',
+        contentHash: 'vehicle-hash',
+        createdAt: now,
+        updatedAt: now,
+        deletedAt: null,
+        ...overrides,
     }
 }
 
@@ -109,15 +146,42 @@ function makePreviewRecord(overrides: Record<string, unknown> = {}) {
     return {
         id: 'preview-1',
         wrapId: 'wrap-1',
+        uploadId: 'upload-1',
         customerPhotoUrl: 'https://cloudinary.com/vehicle.png',
         processedImageUrl: null,
         status: 'pending',
         cacheKey: 'cache-key',
-        sourceWrapImageId: 'texture-1',
-        sourceWrapImageVersion: 4,
+        referenceSignature: 'reference-signature',
+        generationMode: 'reference_guided_edit',
+        generationProvider: 'huggingface',
+        generationModel: 'hf-test-model',
+        generationPromptVersion: 'prompt-version',
+        generationFallbackReason: null,
         expiresAt: new Date('2026-03-20T00:00:00Z'),
         createdAt: now,
         updatedAt: now,
+        ...overrides,
+    }
+}
+
+function makePreviewDTO(overrides: Record<string, unknown> = {}) {
+    return {
+        id: 'preview-1',
+        wrapId: 'wrap-1',
+        uploadId: 'upload-1',
+        customerPhotoUrl: 'https://app.local/api/visualizer/uploads/upload-1/image',
+        processedImageUrl: null,
+        status: 'pending',
+        cacheKey: 'cache-key',
+        referenceSignature: 'reference-signature',
+        generationMode: 'reference_guided_edit',
+        generationProvider: 'huggingface',
+        generationModel: 'hf-test-model',
+        generationPromptVersion: 'prompt-version',
+        generationFallbackReason: null,
+        expiresAt: new Date('2026-03-20T00:00:00Z').toISOString(),
+        createdAt: new Date('2026-03-19T00:00:00Z').toISOString(),
+        updatedAt: new Date('2026-03-19T00:00:00Z').toISOString(),
         ...overrides,
     }
 }
@@ -128,85 +192,109 @@ describe('createVisualizerPreview', () => {
         mocks.getSession.mockResolvedValue(makeSession())
         mocks.requireCapability.mockReturnValue(undefined)
         mocks.getVisualizerWrapSelectionById.mockResolvedValue(makeWrap())
-        mocks.normalizeVehicleUpload.mockResolvedValue({
-            buffer: Buffer.from('vehicle-bytes'),
-            contentType: 'image/png',
-            width: 1024,
-            height: 768,
-            hash: 'vehicle-hash',
-        })
+        mocks.getHfModelName.mockReturnValue('hf-test-model')
         mocks.buildWrapPreviewPrompt.mockReturnValue({
             prompt: 'Apply Ocean Spectrum wrap',
             negativePrompt: 'No distortion',
-            promptVersion: expect.any(String),
+            promptVersion: 'prompt-version',
         })
-        mocks.storePreviewImage.mockResolvedValue('https://cloudinary.com/generated.png')
         mocks.buildVisualizerCacheKey.mockReturnValue('cache-key')
-        mocks.prisma.visualizerPreview.findFirst.mockResolvedValue(null)
-        mocks.prisma.visualizerPreview.create.mockResolvedValue(makePreviewRecord())
-        mocks.prisma.auditLog.create.mockResolvedValue(undefined)
-    })
+        mocks.prisma.visualizerUpload.findFirst.mockResolvedValue(makeUploadRecord())
+        mocks.prisma.visualizerPreview.findFirst.mockImplementation(async ({ where }) => {
+            if ('cacheKey' in where) {
+                return null
+            }
 
-    it('reuses an existing preview for the same normalized File input', async () => {
-        mocks.prisma.visualizerPreview.findFirst.mockResolvedValue(
-            makePreviewRecord({
-                processedImageUrl: 'https://cloudinary.com/result.png',
-                status: 'complete',
+            return makePreviewRecord({
+                id: where.id,
+            })
+        })
+        mocks.prisma.visualizerPreview.create.mockResolvedValue({ id: 'preview-1' })
+        mocks.prisma.auditLog.create.mockResolvedValue(undefined)
+        mocks.toVisualizerPreviewDTO.mockImplementation((preview) =>
+            makePreviewDTO({
+                id: preview.id,
+                status: preview.status,
+                processedImageUrl: preview.processedImageUrl ?? null,
             })
         )
+    })
+
+    it('reuses an existing complete preview for the same upload and reference set', async () => {
+        mocks.prisma.visualizerPreview.findFirst.mockImplementation(async ({ where }) => {
+            if ('cacheKey' in where) {
+                return makePreviewRecord({
+                    id: 'preview-existing',
+                    status: 'complete',
+                    processedImageUrl: 'https://app.local/api/visualizer/previews/preview-existing/image',
+                })
+            }
+
+            return makePreviewRecord({
+                id: 'preview-existing',
+                status: 'complete',
+                processedImageUrl: 'https://app.local/api/visualizer/previews/preview-existing/image',
+            })
+        })
 
         const result = await createVisualizerPreview({
             wrapId: 'wrap-1',
-            file: new File(['vehicle'], 'vehicle.png', { type: 'image/png' }),
+            uploadId: 'upload-1',
         })
 
-        expect(mocks.normalizeVehicleUpload).toHaveBeenCalledWith(expect.any(File))
         expect(mocks.buildVisualizerCacheKey).toHaveBeenCalledWith(
             expect.objectContaining({
                 wrapId: 'wrap-1',
                 ownerUserId: 'user-1',
                 customerPhotoHash: 'vehicle-hash',
-                sourceWrapImageId: 'texture-1',
-                sourceAssetVersion: 4,
-                generationMode: 'ai-preview-v1',
-                generationModel: expect.any(String),
-                promptVersion: expect.any(String),
+                uploadId: 'upload-1',
+                referenceSignature: expect.any(String),
+                generationMode: 'reference_guided_edit',
+                generationModel: 'hf-test-model',
+                promptVersion: 'prompt-version',
             })
         )
-        expect(mocks.storePreviewImage).not.toHaveBeenCalled()
         expect(mocks.prisma.visualizerPreview.create).not.toHaveBeenCalled()
         expect(result).toEqual(
             expect.objectContaining({
-                id: 'preview-1',
+                id: 'preview-existing',
                 status: 'complete',
-                processedImageUrl: 'https://cloudinary.com/result.png',
-                cacheKey: 'cache-key',
+                processedImageUrl:
+                    'https://app.local/api/visualizer/previews/preview-existing/image',
             })
         )
     })
 
-    it('creates a pending preview after storing the vehicle photo durably', async () => {
+    it('creates a pending preview against an owned upload', async () => {
         const result = await createVisualizerPreview({
             wrapId: 'wrap-1',
-            file: new File(['vehicle'], 'vehicle.png', { type: 'image/png' }),
+            uploadId: 'upload-1',
         })
 
         expect(mocks.getVisualizerWrapSelectionById).toHaveBeenCalledWith('wrap-1', {
             includeHidden: false,
         })
-        expect(mocks.storePreviewImage).toHaveBeenCalledWith(
+        expect(mocks.prisma.visualizerUpload.findFirst).toHaveBeenCalledWith(
             expect.objectContaining({
-                previewId: 'vehicle-cache-key',
-                buffer: Buffer.from('vehicle-bytes'),
-                contentType: 'image/png',
+                where: expect.objectContaining({
+                    id: 'upload-1',
+                    ownerClerkUserId: 'user-1',
+                }),
             })
         )
         expect(mocks.prisma.visualizerPreview.create).toHaveBeenCalledWith(
             expect.objectContaining({
                 data: expect.objectContaining({
+                    wrapId: 'wrap-1',
+                    uploadId: 'upload-1',
+                    ownerClerkUserId: 'user-1',
+                    customerPhotoUrl: 'https://cloudinary.com/vehicle.png',
                     status: 'pending',
-                    processedImageUrl: null,
-                    customerPhotoUrl: 'https://cloudinary.com/generated.png',
+                    generationMode: 'reference_guided_edit',
+                    generationProvider: 'huggingface',
+                    generationModel: 'hf-test-model',
+                    sourceWrapImageId: 'hero-1',
+                    sourceWrapImageVersion: 4,
                 }),
             })
         )
@@ -214,22 +302,10 @@ describe('createVisualizerPreview', () => {
             expect.objectContaining({
                 id: 'preview-1',
                 status: 'pending',
+                uploadId: 'upload-1',
                 processedImageUrl: null,
             })
         )
-    })
-
-    it('fails closed when durable storage cannot persist the upload', async () => {
-        mocks.storePreviewImage.mockRejectedValue(new Error('Preview image storage failed.'))
-
-        await expect(
-            createVisualizerPreview({
-                wrapId: 'wrap-1',
-                file: new File(['vehicle'], 'vehicle.png', { type: 'image/png' }),
-            })
-        ).rejects.toThrow('Preview image storage failed.')
-
-        expect(mocks.prisma.visualizerPreview.create).not.toHaveBeenCalled()
     })
 
     it('allows owners to resolve hidden wraps server-side', async () => {
@@ -241,7 +317,7 @@ describe('createVisualizerPreview', () => {
 
         await createVisualizerPreview({
             wrapId: 'wrap-1',
-            file: new File(['vehicle'], 'vehicle.png', { type: 'image/png' }),
+            uploadId: 'upload-1',
         })
 
         expect(mocks.getVisualizerWrapSelectionById).toHaveBeenCalledWith('wrap-1', {
@@ -249,15 +325,16 @@ describe('createVisualizerPreview', () => {
         })
     })
 
-    it('rejects non-File uploads when fileKey is not provided', async () => {
+    it('rejects preview creation when the upload is not owned by the current user', async () => {
+        mocks.prisma.visualizerUpload.findFirst.mockResolvedValue(null)
+
         await expect(
             createVisualizerPreview({
                 wrapId: 'wrap-1',
-                file: { name: 'vehicle.png' } as unknown as File,
+                uploadId: 'upload-missing',
             })
-        ).rejects.toThrow('File must be a browser File upload.')
+        ).rejects.toThrow('Upload not found.')
 
-        expect(mocks.normalizeVehicleUpload).not.toHaveBeenCalled()
         expect(mocks.prisma.visualizerPreview.create).not.toHaveBeenCalled()
     })
 })

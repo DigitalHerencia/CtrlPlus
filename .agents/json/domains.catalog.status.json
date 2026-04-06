@@ -6,16 +6,16 @@
   "state": "stable",
   "focus": [
     "asset role determinism",
-    "publish-readiness reliability",
-    "visualizer handoff integrity"
+    "hero-only publish readiness",
+    "visualizer reference handoff integrity"
   ],
   "progress": {
-    "contract_alignment_pct": 80,
-    "instruction_alignment_pct": 80,
-    "prompt_alignment_pct": 30
+    "contract_alignment_pct": 95,
+    "instruction_alignment_pct": 95,
+    "prompt_alignment_pct": 60
   },
   "next_actions": [
-    "Complete prompt migration to contract-aware templates",
-    "Validate no remaining images[0] role assumptions"
+    "Run lint and build validation on the hero-plus-gallery contract cleanup",
+    "Verify no remaining texture-era publish assumptions remain outside deprecated migration fields"
   ]
 }

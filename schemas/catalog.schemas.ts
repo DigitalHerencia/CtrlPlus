@@ -1,6 +1,8 @@
 import { z } from 'zod'
 
-import { wrapImageKindValues, WrapImageKind } from '@/lib/constants/statuses'
+import { WrapImageKind } from '@/lib/constants/statuses'
+
+const activeCatalogImageKinds = [WrapImageKind.HERO, WrapImageKind.GALLERY] as const
 
 export const createWrapCategorySchema = z.object({
     name: z.string().min(1).max(80),
@@ -18,7 +20,7 @@ export const setWrapCategoryMappingsSchema = z.object({
 
 export const wrapImageUploadSchema = z.object({
     wrapId: z.string().min(1),
-    kind: z.enum(wrapImageKindValues).default(WrapImageKind.GALLERY),
+    kind: z.enum(activeCatalogImageKinds).default(WrapImageKind.GALLERY),
     isActive: z.boolean().default(true),
     // Accept a server-side file key/reference (uploads handled by upload layer), not a browser File
     fileKey: z.string().min(1),
@@ -27,7 +29,7 @@ export const wrapImageUploadSchema = z.object({
 export const updateWrapImageMetadataSchema = z.object({
     wrapId: z.string().min(1),
     imageId: z.string().min(1),
-    kind: z.enum(wrapImageKindValues).optional(),
+    kind: z.enum(activeCatalogImageKinds).optional(),
     isActive: z.boolean().optional(),
 })
 

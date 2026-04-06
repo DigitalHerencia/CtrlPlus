@@ -10,12 +10,34 @@
  * `blob` adapter re-exports. Keep behavior unchanged when editing.
  */
 import { createHash } from 'crypto'
+import type { DeliveryType, ResourceType } from 'cloudinary'
 
 export interface CloudinaryCredentials {
     cloudName: string
     apiKey: string
     apiSecret: string
 }
+
+export interface CloudinaryStoredAsset {
+    secureUrl: string | null
+    assetId: string | null
+    publicId: string | null
+    version: number | null
+    resourceType: ResourceType | 'image'
+    deliveryType: DeliveryType | 'upload' | 'authenticated'
+    assetFolder: string | null
+    format: string | null
+    bytes: number | null
+    width: number | null
+    height: number | null
+    mimeType: string | null
+    originalFileName: string | null
+}
+
+export type CloudinaryAssetVariant = 'thumbnail' | 'detail' | 'download'
+type CloudinaryRuntime = (typeof import('cloudinary'))['v2']
+
+let cloudinaryRuntimePromise: Promise<CloudinaryRuntime> | null = null
 
 function parseCloudinaryUrl(value: string): {
     cloudName: string
@@ -74,6 +96,33 @@ export function getCloudinaryCredentials(): CloudinaryCredentials | null {
     }
 }
 
+export async function getConfiguredCloudinary() {
+    const credentials = getCloudinaryCredentials()
+    if (!credentials) {
+        return null
+    }
+
+    const configuredUrl = `cloudinary://${credentials.apiKey}:${credentials.apiSecret}@${credentials.cloudName}`
+    const currentCloudinaryUrl = process.env.CLOUDINARY_URL?.trim() ?? ''
+    if (!parseCloudinaryUrl(currentCloudinaryUrl)) {
+        process.env.CLOUDINARY_URL = configuredUrl
+    }
+
+    if (!cloudinaryRuntimePromise) {
+        cloudinaryRuntimePromise = import('cloudinary').then((runtime) => runtime.v2)
+    }
+
+    const cloudinaryRuntime = await cloudinaryRuntimePromise
+    cloudinaryRuntime.config({
+        secure: true,
+        cloud_name: credentials.cloudName,
+        api_key: credentials.apiKey,
+        api_secret: credentials.apiSecret,
+    })
+
+    return cloudinaryRuntime
+}
+
 export function buildCloudinarySignature(
     payload: Record<string, string>,
     apiSecret: string
@@ -84,6 +133,73 @@ export function buildCloudinarySignature(
         .join('&')
 
     return createHash('sha1').update(`${signingString}${apiSecret}`).digest('hex')
+}
+
+export function normalizeCloudinaryUploadResponse(payload: {
+    secure_url?: string
+    asset_id?: string
+    public_id?: string
+    version?: number
+    resource_type?: string
+    type?: string
+    asset_folder?: string
+    format?: string
+    bytes?: number
+    width?: number
+    height?: number
+    original_filename?: string
+}): CloudinaryStoredAsset {
+    return {
+        secureUrl: payload.secure_url ?? null,
+        assetId: payload.asset_id ?? null,
+        publicId: payload.public_id ?? null,
+        version: typeof payload.version === 'number' ? payload.version : null,
+        resourceType: (payload.resource_type as ResourceType | undefined) ?? 'image',
+        deliveryType: (payload.type as DeliveryType | undefined) ?? 'upload',
+        assetFolder: payload.asset_folder ?? null,
+        format: payload.format ?? null,
+        bytes: typeof payload.bytes === 'number' ? payload.bytes : null,
+        width: typeof payload.width === 'number' ? payload.width : null,
+        height: typeof payload.height === 'number' ? payload.height : null,
+        mimeType: payload.format ? `image/${payload.format}` : null,
+        originalFileName: payload.original_filename ?? null,
+    }
+}
+
+function getTransformationForVariant(variant: CloudinaryAssetVariant) {
+    if (variant === 'thumbnail') {
+        return [{ fetch_format: 'auto', quality: 'auto', crop: 'fill', gravity: 'auto', width: 480, height: 320 }]
+    }
+
+    if (variant === 'detail') {
+        return [{ fetch_format: 'auto', quality: 'auto', crop: 'limit', width: 1600, height: 1200 }]
+    }
+
+    return undefined
+}
+
+export async function buildCloudinaryDeliveryUrl(
+    asset: Pick<CloudinaryStoredAsset, 'publicId' | 'version' | 'resourceType' | 'deliveryType' | 'format'>,
+    variant: CloudinaryAssetVariant = 'detail'
+): Promise<string | null> {
+    if (!asset.publicId) {
+        return null
+    }
+
+    const configured = await getConfiguredCloudinary()
+    if (!configured) {
+        return null
+    }
+
+    return configured.url(asset.publicId, {
+        secure: true,
+        sign_url: true,
+        resource_type: asset.resourceType ?? 'image',
+        type: asset.deliveryType ?? 'authenticated',
+        version: asset.version ?? undefined,
+        format: asset.format ?? undefined,
+        transformation: getTransformationForVariant(variant),
+    })
 }
 
 export function extractCloudinaryPublicId(url: string): string | null {

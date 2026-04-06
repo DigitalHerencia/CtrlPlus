@@ -13,7 +13,8 @@ operations in one maintainable system.
 ## Product goals
 
 - Deliver a professional storefront and internal operations experience.
-- Enable deterministic visualizer previews from explicitly-role-tagged assets.
+- Enable reference-guided visualizer previews from a user vehicle upload plus
+  catalog `hero` and `gallery` reference assets.
 - Keep scheduling and billing lifecycles correct, auditable, and operator-friendly.
 - Maintain high trust through strong security posture and operational reliability.
 
@@ -52,6 +53,7 @@ operations in one maintainable system.
 ### Visualizer
 
 - Preview requests are traceable through explicit lifecycle states.
+- User uploads and generated previews remain owner-scoped and server-delivered.
 - Output quality degrades gracefully when external inference is unstable.
 
 ### Scheduling

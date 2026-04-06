@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
     getSession: vi.fn(),
     requireCapability: vi.fn(),
-    getVisualizerWrapSelectionById: vi.fn(),
+    toVisualizerPreviewDTO: vi.fn(),
     prisma: {
         visualizerPreview: {
             findFirst: vi.fn(),
@@ -28,7 +28,12 @@ vi.mock('@/lib/db/prisma', () => ({
 }))
 
 vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
-    getVisualizerWrapSelectionById: mocks.getVisualizerWrapSelectionById,
+    getVisualizerWrapSelectionById: vi.fn(),
+}))
+
+vi.mock('@/lib/fetchers/visualizer.mappers', () => ({
+    toVisualizerPreviewDTO: mocks.toVisualizerPreviewDTO,
+    toVisualizerUploadSnapshot: vi.fn(),
 }))
 
 import { regenerateVisualizerPreview } from '@/lib/actions/visualizer.actions'
@@ -43,60 +48,52 @@ function makeSession() {
     }
 }
 
-function makeWrap() {
-    return {
-        id: 'wrap-1',
-        name: 'Ocean Spectrum',
-        description: 'Electric gradient wrap',
-        price: 250000,
-        installationMinutes: 180,
-        categories: [],
-        heroImage: null,
-        visualizerTextureImage: {
-            id: 'texture-1',
-            url: 'https://example.com/texture.png',
-            kind: 'visualizer_texture',
-            isActive: true,
-            version: 4,
-            contentHash: 'texture-hash',
-            displayOrder: 0,
-            thumbnailUrl: 'https://example.com/texture-thumb.png',
-            cardUrl: 'https://example.com/texture-card.png',
-            detailUrl: 'https://example.com/texture-detail.png',
-        },
-        aiPromptTemplate: null,
-        aiNegativePrompt: null,
-        readiness: {
-            canPublish: true,
-            isVisualizerReady: true,
-            missingRequiredAssetRoles: [],
-            requiredAssetRoles: ['hero', 'visualizer_texture'],
-            activeAssetKinds: ['visualizer_texture'],
-            hasDisplayAsset: true,
-            activeHeroCount: 0,
-            activeGalleryCount: 0,
-            activeVisualizerTextureCount: 1,
-            activeVisualizerMaskHintCount: 0,
-            issues: [],
-        },
-    }
-}
-
 function makePreviewRecord(overrides: Record<string, unknown> = {}) {
     const now = new Date('2026-03-19T00:00:00Z')
 
     return {
         id: 'preview-1',
         wrapId: 'wrap-1',
+        uploadId: 'upload-1',
+        ownerClerkUserId: 'user-1',
         customerPhotoUrl: 'https://cloudinary.com/vehicle.png',
-        processedImageUrl: 'https://cloudinary.com/old-result.png',
+        processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
         status: 'complete',
         cacheKey: 'cache-key',
-        sourceWrapImageId: 'texture-1',
-        sourceWrapImageVersion: 4,
+        referenceSignature: 'reference-signature',
+        generationMode: 'reference_guided_edit',
+        generationProvider: 'huggingface',
+        generationModel: 'hf-test-model',
+        generationPromptVersion: 'prompt-version',
+        generationFallbackReason: null,
         expiresAt: new Date('2026-03-20T00:00:00Z'),
         createdAt: now,
         updatedAt: now,
+        upload: {
+            id: 'upload-1',
+        },
+        ...overrides,
+    }
+}
+
+function makePreviewDTO(overrides: Record<string, unknown> = {}) {
+    return {
+        id: 'preview-1',
+        wrapId: 'wrap-1',
+        uploadId: 'upload-1',
+        customerPhotoUrl: 'https://app.local/api/visualizer/uploads/upload-1/image',
+        processedImageUrl: null,
+        status: 'pending',
+        cacheKey: 'cache-key',
+        referenceSignature: 'reference-signature',
+        generationMode: 'reference_guided_edit',
+        generationProvider: 'huggingface',
+        generationModel: 'hf-test-model',
+        generationPromptVersion: 'prompt-version',
+        generationFallbackReason: null,
+        expiresAt: new Date('2026-03-20T00:00:00Z').toISOString(),
+        createdAt: new Date('2026-03-19T00:00:00Z').toISOString(),
+        updatedAt: new Date('2026-03-19T00:00:00Z').toISOString(),
         ...overrides,
     }
 }
@@ -106,18 +103,32 @@ describe('regenerateVisualizerPreview', () => {
         vi.clearAllMocks()
         mocks.getSession.mockResolvedValue(makeSession())
         mocks.requireCapability.mockReturnValue(undefined)
-        mocks.getVisualizerWrapSelectionById.mockResolvedValue(makeWrap())
-        mocks.prisma.visualizerPreview.findFirst.mockResolvedValue(makePreviewRecord())
-        mocks.prisma.visualizerPreview.update.mockResolvedValue(
-            makePreviewRecord({
-                status: 'pending',
-                processedImageUrl: null,
+        mocks.prisma.visualizerPreview.update.mockResolvedValue(undefined)
+        mocks.prisma.auditLog.create.mockResolvedValue(undefined)
+        mocks.toVisualizerPreviewDTO.mockImplementation((preview) =>
+            makePreviewDTO({
+                id: preview.id,
+                status: preview.status,
+                processedImageUrl: preview.processedImageUrl ?? null,
             })
         )
-        mocks.prisma.auditLog.create.mockResolvedValue(undefined)
     })
 
     it('resets a preview to pending and clears prior processed output', async () => {
+        mocks.prisma.visualizerPreview.findFirst
+            .mockResolvedValueOnce(
+                makePreviewRecord({
+                    processedImageUrl:
+                        'https://app.local/api/visualizer/previews/preview-1/image',
+                })
+            )
+            .mockResolvedValueOnce(
+                makePreviewRecord({
+                    status: 'pending',
+                    processedImageUrl: null,
+                })
+            )
+
         const result = await regenerateVisualizerPreview({ previewId: 'preview-1' })
 
         expect(mocks.prisma.visualizerPreview.update).toHaveBeenCalledWith(
@@ -126,8 +137,8 @@ describe('regenerateVisualizerPreview', () => {
                 data: expect.objectContaining({
                     status: 'pending',
                     processedImageUrl: null,
-                    sourceWrapImageId: 'texture-1',
-                    sourceWrapImageVersion: 4,
+                    resultCloudinaryPublicId: null,
+                    generationFallbackReason: null,
                 }),
             })
         )
@@ -149,12 +160,25 @@ describe('regenerateVisualizerPreview', () => {
         expect(mocks.prisma.visualizerPreview.update).not.toHaveBeenCalled()
     })
 
-    it('throws when wrap is not visualizer-ready during regeneration', async () => {
-        mocks.getVisualizerWrapSelectionById.mockResolvedValue(null)
+    it('records regeneration against the existing upload-backed preview', async () => {
+        mocks.prisma.visualizerPreview.findFirst
+            .mockResolvedValueOnce(makePreviewRecord())
+            .mockResolvedValueOnce(
+                makePreviewRecord({
+                    status: 'pending',
+                    processedImageUrl: null,
+                })
+            )
 
-        await expect(regenerateVisualizerPreview({ previewId: 'preview-1' })).rejects.toThrow(
-            'Wrap not found or is not visualizer-ready.'
+        await regenerateVisualizerPreview({ previewId: 'preview-1' })
+
+        expect(mocks.prisma.auditLog.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    action: 'visualizerPreview.regenerated',
+                    resourceId: 'preview-1',
+                }),
+            })
         )
-        expect(mocks.prisma.visualizerPreview.update).not.toHaveBeenCalled()
     })
 })

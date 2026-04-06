@@ -5,7 +5,6 @@ import {
     resolveCatalogGalleryImages,
     resolveHeroAsset,
     resolvePrimaryDisplayAsset,
-    resolveVisualizerTextureAsset,
 } from '@/lib/fetchers/catalog.mappers'
 import { WrapImageKind } from '@/lib/constants/statuses'
 import type { WrapImageDTO } from '@/types/catalog.types'
@@ -82,29 +81,11 @@ describe('role-specific resolvers', () => {
         expect(gallery[0]?.id).toBe('active-gallery')
     })
 
-    it('returns only active visualizer texture assets', () => {
-        const texture = resolveVisualizerTextureAsset([
-            createImage({
-                id: 'inactive-texture',
-                kind: WrapImageKind.VISUALIZER_TEXTURE,
-                isActive: false,
-            }),
-            createImage({
-                id: 'active-texture',
-                kind: WrapImageKind.VISUALIZER_TEXTURE,
-                isActive: true,
-                displayOrder: 1,
-            }),
-        ])
-
-        expect(texture?.id).toBe('active-texture')
-    })
 })
 
 describe('getCatalogAssetReadiness', () => {
-    it('requires both hero and visualizer texture roles before publish', () => {
+    it('requires a hero asset before publish', () => {
         const readiness = getCatalogAssetReadiness([
-            createImage({ kind: WrapImageKind.HERO }),
             createImage({
                 id: 'gallery-1',
                 kind: WrapImageKind.GALLERY,
@@ -114,7 +95,7 @@ describe('getCatalogAssetReadiness', () => {
 
         expect(readiness.canPublish).toBe(false)
         expect(readiness.hasDisplayAsset).toBe(true)
-        expect(readiness.missingRequiredAssetRoles).toEqual([WrapImageKind.VISUALIZER_TEXTURE])
+        expect(readiness.missingRequiredAssetRoles).toEqual([WrapImageKind.HERO])
     })
 
     it('marks wraps without hero or gallery assets as missing a display asset', () => {

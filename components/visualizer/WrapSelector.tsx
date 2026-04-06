@@ -81,9 +81,9 @@ export function WrapSelector({
                                     {isSelected ? 'Selected' : 'Choose Wrap'}
                                 </span>
                                 <span className="rounded-md border border-neutral-800 px-3 py-2 text-sm text-neutral-300">
-                                    {wrap.visualizerTextureImage
-                                        ? 'Texture ready'
-                                        : 'Texture missing'}
+                                    {wrap.galleryImages.length > 0
+                                        ? `${wrap.galleryImages.length + 1} references`
+                                        : 'Hero reference ready'}
                                 </span>
                             </div>
                         </div>

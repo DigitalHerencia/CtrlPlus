@@ -63,7 +63,7 @@ async function normalizeExclusiveActiveKinds(params: {
     kind: WrapImageKindType
     nextImageId?: string
 }): Promise<void> {
-    if (params.kind !== WrapImageKind.HERO && params.kind !== WrapImageKind.VISUALIZER_TEXTURE) {
+    if (params.kind !== WrapImageKind.HERO) {
         return
     }
 

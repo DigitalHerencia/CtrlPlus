@@ -30,9 +30,7 @@ export interface CatalogAssetReadinessIssue {
         | 'invalid_price'
         | 'missing_display_asset'
         | 'missing_hero'
-        | 'missing_visualizer_texture'
         | 'multiple_active_hero'
-        | 'multiple_active_visualizer_texture'
     message: string
     blocking: boolean
 }
@@ -46,8 +44,6 @@ export interface CatalogAssetReadinessDTO {
     hasDisplayAsset: boolean
     activeHeroCount: number
     activeGalleryCount: number
-    activeVisualizerTextureCount: number
-    activeVisualizerMaskHintCount: number
     issues: CatalogAssetReadinessIssue[]
 }
 
@@ -85,8 +81,6 @@ export interface WrapDetailViewDTO extends WrapDTO {
     displayImage: CatalogAssetImageDTO | null
     displayImages: CatalogAssetImageDTO[]
     galleryImages: CatalogAssetImageDTO[]
-    visualizerTextureImage: CatalogAssetImageDTO | null
-    visualizerMaskHintImage: CatalogAssetImageDTO | null
     readiness: CatalogAssetReadinessDTO
 }
 
@@ -103,7 +97,7 @@ export interface VisualizerWrapSelectionDTO {
     installationMinutes: number | null
     categories: WrapCategoryDTO[]
     heroImage: CatalogAssetImageDTO | null
-    visualizerTextureImage: CatalogAssetImageDTO
+    galleryImages: CatalogAssetImageDTO[]
     aiPromptTemplate: string | null
     aiNegativePrompt: string | null
     readiness: CatalogAssetReadinessDTO

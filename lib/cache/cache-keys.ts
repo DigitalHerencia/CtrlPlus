@@ -6,13 +6,11 @@ export function buildVisualizerCacheKey(input: PreviewCacheKeyInput): string {
         wrapId: input.wrapId,
         ownerUserId: input.ownerUserId,
         customerPhotoHash: input.customerPhotoHash,
-        sourceWrapImageId: input.sourceWrapImageId,
-        sourceAssetVersion: input.sourceAssetVersion,
+        uploadId: input.uploadId,
+        referenceSignature: input.referenceSignature,
         generationMode: input.generationMode,
         generationModel: input.generationModel,
         promptVersion: input.promptVersion,
-        blendMode: input.blendMode ?? 'multiply',
-        opacity: Number((input.opacity ?? 0.6).toFixed(2)),
     }
 
     return crypto.createHash('sha256').update(JSON.stringify(normalized)).digest('hex')

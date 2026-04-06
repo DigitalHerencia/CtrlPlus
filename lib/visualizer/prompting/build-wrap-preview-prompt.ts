@@ -3,7 +3,7 @@ import crypto from 'crypto'
 export interface BuildWrapPreviewPromptInput {
     wrapName: string
     wrapDescription: string | null
-    wrapTextureUrl: string
+    referenceImageCount: number
     aiPromptTemplate: string | null
     aiNegativePrompt?: string | null
 }
@@ -18,25 +18,24 @@ function applyTemplate(template: string, input: BuildWrapPreviewPromptInput): st
     return template
         .replaceAll('{{wrap_name}}', input.wrapName)
         .replaceAll('{{wrap_description}}', input.wrapDescription ?? '')
-        .replaceAll('{{wrap_texture_url}}', input.wrapTextureUrl)
+        .replaceAll('{{reference_image_count}}', String(input.referenceImageCount))
 }
 
 function buildDefaultPrompt(input: BuildWrapPreviewPromptInput): string {
     return [
         'Use the provided vehicle photo as the base image.',
-        'Create a professional commercial vehicle wrap concept on the same vehicle.',
-        'Apply branding inspired by the selected wrap reference texture.',
-        'Use the logo style, color palette, gradients, and graphic language from the wrap reference.',
-        'Keep the same vehicle, same camera angle, same wheels, same windows, same environment, and same overall composition.',
+        'Create a professional commercial vehicle wrap concept on the same vehicle using the supplied catalog hero and gallery references.',
+        'Only modify the vehicle exterior surfaces. Preserve the same vehicle identity, body shape, camera angle, wheels, windows, reflections, lighting, background, and overall composition.',
+        'Use the reference imagery to match the wrap color palette, branding, graphics, and layout style without changing the surrounding scene.',
         input.wrapDescription ? `Wrap details: ${input.wrapDescription}` : null,
-        `Wrap reference image URL: ${input.wrapTextureUrl}.`,
+        `Reference image count: ${input.referenceImageCount}.`,
     ]
         .filter(Boolean)
         .join(' ')
 }
 
 const DEFAULT_NEGATIVE_PROMPT =
-    'Do not change the vehicle model, body shape, wheels, windows, mirrors, or scene background. Do not add people, extra vehicles, text artifacts, duplicated body panels, distorted wheels, melted surfaces, blurry output, or incorrect perspective.'
+    'Do not change the vehicle model, body shape, wheels, windows, mirrors, reflections, shadows, or scene background. Do not add people, extra vehicles, text artifacts, duplicated body panels, distorted wheels, melted surfaces, blurry output, or incorrect perspective.'
 
 export function buildWrapPreviewPrompt(
     input: BuildWrapPreviewPromptInput

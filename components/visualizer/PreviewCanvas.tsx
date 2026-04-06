@@ -144,22 +144,6 @@ export function PreviewCanvas({
         )
     }
 
-    if (preview.status === PreviewStatus.EXPIRED) {
-        return (
-            <div
-                className={cn(
-                    'flex flex-col items-center justify-center gap-3 border border-amber-700 bg-amber-950 p-12 text-center',
-                    className
-                )}
-            >
-                <ImageOff className="h-10 w-10 text-amber-500" />
-                <p className="text-sm text-amber-200">
-                    This preview expired. Regenerate it to create a fresh result.
-                </p>
-            </div>
-        )
-    }
-
     if (preview.status !== PreviewStatus.COMPLETE) {
         return (
             <div

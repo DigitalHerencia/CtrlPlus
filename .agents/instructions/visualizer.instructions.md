@@ -13,7 +13,15 @@ states and storage-backed outputs.
 - Treat visualizer as concept preview, not manufacturing proofing.
 - Enforce preview status lifecycle: `pending`, `processing`, `complete`, `failed`.
 - Keep wrap selection and preview ownership validated server-side.
-- Persist source uploads and generated outputs via storage references (not inline blobs).
+- Persist source uploads and generated outputs via storage references, not inline blobs.
+- Treat `VisualizerUpload` as the canonical owner-scoped source image record.
+- Use authenticated Cloudinary assets for uploads and generated previews.
+- Deliver upload and preview imagery through server-issued signed URLs or signed
+  application routes, not raw public asset URLs.
+- Build generation inputs from the selected wrap's `hero` plus active `gallery`
+  references.
+- Treat the model workflow as reference-guided image editing that preserves the
+  uploaded vehicle scene and modifies exterior surfaces only.
 - Preserve fallback behavior when inference provider is unavailable.
 
 ## Reliability interpretation
