@@ -21,12 +21,24 @@ function applyTemplate(template: string, input: BuildWrapPreviewPromptInput): st
         .replaceAll('{{reference_image_count}}', String(input.referenceImageCount))
 }
 
+function hasBrokenTemplateArtifacts(template: string): boolean {
+    const normalized = template.replaceAll('\r\n', '\n')
+
+    return (
+        normalized.includes("supplied catalog hero and gallery references.',") ||
+        normalized.includes("overall composition.',") ||
+        normalized.includes('layout style without changing the surrounding scene.') ||
+        /['"],\s*\n\s*['"]/.test(normalized)
+    )
+}
+
 function buildDefaultPrompt(input: BuildWrapPreviewPromptInput): string {
     return [
-        'Use the provided vehicle photo as the base image.',
-        'Create a professional commercial vehicle wrap concept on the same vehicle using the supplied catalog hero and gallery references.',
-        'Only modify the vehicle exterior surfaces. Preserve the same vehicle identity, body shape, camera angle, wheels, windows, reflections, lighting, background, and overall composition.',
-        'Use the reference imagery to match the wrap color palette, branding, graphics, and layout style without changing the surrounding scene.',
+        'The first input image is the source vehicle photo and the remaining images are wrap reference examples.',
+        'Apply the reference wrap design to the exact same truck in the source photo.',
+        'Only change the painted exterior body panels and wrap graphics.',
+        'Preserve the exact same truck identity, body shape, grille, lights, wheels, windows, mirrors, camera angle, background, driveway, reflections, shadows, and time of day.',
+        'Match the reference wrap color palette, flame pattern, brand text treatment, and panel layout as closely as possible while keeping the source scene photorealistic.',
         input.wrapDescription ? `Wrap details: ${input.wrapDescription}` : null,
         `Reference image count: ${input.referenceImageCount}.`,
     ]
@@ -40,9 +52,11 @@ const DEFAULT_NEGATIVE_PROMPT =
 export function buildWrapPreviewPrompt(
     input: BuildWrapPreviewPromptInput
 ): WrapPreviewPromptResult {
-    const basePrompt = input.aiPromptTemplate?.trim()
-        ? applyTemplate(input.aiPromptTemplate, input)
-        : buildDefaultPrompt(input)
+    const trimmedTemplate = input.aiPromptTemplate?.trim() ?? ''
+    const basePrompt =
+        trimmedTemplate && !hasBrokenTemplateArtifacts(trimmedTemplate)
+            ? applyTemplate(trimmedTemplate, input)
+            : buildDefaultPrompt(input)
 
     const negativePrompt = input.aiNegativePrompt?.trim() || DEFAULT_NEGATIVE_PROMPT
 

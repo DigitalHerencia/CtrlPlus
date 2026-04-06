@@ -28,10 +28,8 @@ import {
 } from '@/lib/uploads/image-processing'
 import { persistVisualizerPreviewAsset, persistVisualizerUploadAsset } from '@/lib/uploads/storage'
 import { buildCloudinaryDeliveryUrl } from '@/lib/integrations/cloudinary'
-import { buildSimpleWrapPreview } from '@/lib/visualizer/fallback/build-simple-wrap-preview'
 import { getHfModelName } from '@/lib/visualizer/huggingface/client'
 import { generateWrapPreview } from '@/lib/visualizer/huggingface/generate-wrap-preview'
-import { buildGenerationInputBoard } from '@/lib/visualizer/preprocessing/build-generation-input-board'
 import { buildWrapPreviewPrompt } from '@/lib/visualizer/prompting/build-wrap-preview-prompt'
 import type {
     ProcessVisualizerPreviewInput,
@@ -51,12 +49,6 @@ type VisualizerReferenceImage = NonNullable<VisualizerSelectableWrap['heroImage'
 function getVisualizerInputsFolder(ownerClerkUserId: string) {
     const root =
         process.env.CLOUDINARY_VISUALIZER_UPLOAD_FOLDER?.trim() || 'ctrlplus/visualizer/inputs'
-    return `${root}/${ownerClerkUserId}`
-}
-
-function getVisualizerMasksFolder(ownerClerkUserId: string) {
-    const root =
-        process.env.CLOUDINARY_VISUALIZER_MASKS_FOLDER?.trim() || 'ctrlplus/visualizer/masks'
     return `${root}/${ownerClerkUserId}`
 }
 
@@ -500,33 +492,12 @@ async function processVisualizerPreviewForOwner({
     }
 
     try {
-        const board = await buildGenerationInputBoard({
-            vehicleBuffer,
-            referenceBuffers,
-            wrapName: wrap.name,
-        })
-
-        const maskAsset = await persistVisualizerPreviewAsset({
-            previewId: `${preview.id}-mask`,
-            buffer: board.boardMaskBuffer,
-            contentType: 'image/png',
-            folder: getVisualizerMasksFolder(ownerClerkUserId),
-            metadata: {
-                wrapId: wrap.id,
-                ownerClerkUserId,
-                uploadId: preview.uploadId,
-                referenceSignature,
-                assetRole: 'visualizer_mask',
-                maskStrategy: board.maskStrategy,
-            },
-        })
-
         const result = await generateWrapPreview({
             model: generationModel,
             prompt: prompt.prompt,
             negativePrompt: prompt.negativePrompt,
-            boardBuffer: board.boardBuffer,
-            boardMaskBuffer: board.boardMaskBuffer,
+            vehicleBuffer,
+            referenceBuffers,
             referenceUrls,
         })
 
@@ -543,18 +514,18 @@ async function processVisualizerPreviewForOwner({
                 generationMode: 'mask_guided_inpaint',
                 generationProvider: 'huggingface-space',
                 generationModel: result.model,
-                maskStrategy: board.maskStrategy,
+                referenceCount: referenceBuffers.length + 1,
             },
         })
 
         const pipelineResponse: VisualizerWrapPipelineResponse = {
             status: result.status,
             finalImageUrl: storedAsset.secureUrl,
-            maskUrl: maskAsset.secureUrl,
+            maskUrl: null,
             referenceUrls: result.referenceUrls,
             model: result.model,
             prompt: result.prompt,
-            notes: [...board.notes, ...result.notes],
+            notes: result.notes,
         }
 
         await prisma.auditLog.create({
@@ -572,8 +543,6 @@ async function processVisualizerPreviewForOwner({
                     generationMode: 'mask_guided_inpaint',
                     generationProvider: 'huggingface-space',
                     generationModel: result.model,
-                    maskAssetId: maskAsset.assetId,
-                    maskStrategy: board.maskStrategy,
                     pipeline: pipelineResponse,
                     fallbackReason: null,
                 }),
@@ -593,96 +562,38 @@ async function processVisualizerPreviewForOwner({
             generationFallbackReason: null,
         })
     } catch (error) {
-        const fallbackReason =
+        const failureReason =
             error instanceof Error ? error.message : 'Hugging Face preview generation failed.'
 
-        try {
-            const fallbackBuffer = await buildSimpleWrapPreview({
-                vehicleBuffer,
-                referenceBuffers,
-            })
-            const fallbackAsset = await persistVisualizerPreviewAsset({
-                previewId: preview.id,
-                buffer: fallbackBuffer,
-                contentType: 'image/png',
-                folder: getVisualizerOutputsFolder(ownerClerkUserId),
-                metadata: {
+        await prisma.visualizerPreview.update({
+            where: { id: preview.id },
+            data: {
+                status: 'failed',
+                generationFallbackReason: failureReason,
+            },
+        })
+
+        await prisma.auditLog.create({
+            data: {
+                userId: ownerClerkUserId,
+                action: 'visualizerPreview.processingFailed',
+                resourceType: 'VisualizerPreview',
+                resourceId: preview.id,
+                details: JSON.stringify({
                     wrapId: wrap.id,
-                    ownerClerkUserId,
+                    cacheKey: preview.cacheKey,
                     uploadId: preview.uploadId,
                     referenceSignature,
-                    generationMode: 'deterministic_fallback',
-                    generationProvider: 'fallback',
+                    generationMode: 'mask_guided_inpaint',
+                    generationProvider: 'huggingface-space',
                     generationModel,
-                },
-            })
+                    error: failureReason,
+                }),
+                timestamp: new Date(),
+            },
+        })
 
-            await prisma.auditLog.create({
-                data: {
-                    userId: ownerClerkUserId,
-                    action: 'visualizerPreview.processed',
-                    resourceType: 'VisualizerPreview',
-                    resourceId: preview.id,
-                    details: JSON.stringify({
-                        wrapId: wrap.id,
-                        cacheKey: preview.cacheKey,
-                        uploadId: preview.uploadId,
-                        referenceSignature,
-                        promptVersion: prompt.promptVersion,
-                        generationMode: 'deterministic_fallback',
-                        generationProvider: 'fallback',
-                        generationModel,
-                        fallbackReason,
-                    }),
-                    timestamp: new Date(),
-                },
-            })
-
-            return completePreviewWithAsset({
-                previewId: preview.id,
-                ownerClerkUserId,
-                storedAsset: fallbackAsset,
-                status: 'complete',
-                promptVersion: prompt.promptVersion,
-                generationMode: 'deterministic_fallback',
-                generationProvider: 'fallback',
-                generationModel,
-                generationFallbackReason: fallbackReason,
-            })
-        } catch (fallbackError) {
-            const finalReason =
-                fallbackError instanceof Error ? fallbackError.message : fallbackReason
-
-            await prisma.visualizerPreview.update({
-                where: { id: preview.id },
-                data: {
-                    status: 'failed',
-                    generationFallbackReason: finalReason,
-                },
-            })
-
-            await prisma.auditLog.create({
-                data: {
-                    userId: ownerClerkUserId,
-                    action: 'visualizerPreview.processingFailed',
-                    resourceType: 'VisualizerPreview',
-                    resourceId: preview.id,
-                    details: JSON.stringify({
-                        wrapId: wrap.id,
-                        cacheKey: preview.cacheKey,
-                        uploadId: preview.uploadId,
-                        referenceSignature,
-                        generationMode: 'mask_guided_inpaint',
-                        generationProvider: 'huggingface-space',
-                        generationModel,
-                        error: finalReason,
-                    }),
-                    timestamp: new Date(),
-                },
-            })
-
-            throw new Error(finalReason)
-        }
+        throw new Error(failureReason)
     }
 }
 

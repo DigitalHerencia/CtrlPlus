@@ -2,6 +2,9 @@ import { InferenceClient } from '@huggingface/inference'
 
 import { HuggingFaceGenerationError, mapHfError } from './map-hf-error'
 
+const DEFAULT_PUBLIC_SPACE_ID = 'black-forest-labs/FLUX.2-dev'
+const DEFAULT_PUBLIC_SPACE_API_NAME = '/infer'
+
 function getHfApiKey(): string {
     const apiKey = process.env.HF_API_KEY?.trim() || process.env.HUGGINGFACE_API_TOKEN?.trim()
 
@@ -13,20 +16,19 @@ function getHfApiKey(): string {
 }
 
 export function getHfModelName(): string {
-    return process.env.HF_IMAGE_TO_IMAGE_MODEL?.trim() || 'Qwen/Qwen-Image-Edit'
+    return process.env.HF_IMAGE_TO_IMAGE_MODEL?.trim() || DEFAULT_PUBLIC_SPACE_ID
 }
 
 export function getHfPreviewStrategy(): 'space_inpaint' | 'image_to_image' {
-    const strategy = process.env.HF_PREVIEW_STRATEGY?.trim().toLowerCase()
-    return strategy === 'image_to_image' ? 'image_to_image' : 'space_inpaint'
+    return 'space_inpaint'
 }
 
 export function getHfSpaceId(): string {
-    return process.env.HF_SPACE_ID?.trim() || ''
+    return process.env.HF_SPACE_ID?.trim() || DEFAULT_PUBLIC_SPACE_ID
 }
 
 export function getHfSpaceApiName(): string {
-    return process.env.HF_SPACE_API_NAME?.trim() || '/predict'
+    return process.env.HF_SPACE_API_NAME?.trim() || DEFAULT_PUBLIC_SPACE_API_NAME
 }
 
 export function getHfTimeoutMs(): number {

@@ -85,8 +85,8 @@ export interface GenerateWrapPreviewInput {
     model: string
     prompt: string
     negativePrompt: string
-    boardBuffer: Buffer
-    boardMaskBuffer: Buffer
+    vehicleBuffer: Buffer
+    referenceBuffers: Buffer[]
     referenceUrls: string[]
 }
 

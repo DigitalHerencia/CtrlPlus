@@ -7,9 +7,7 @@ const mocks = vi.hoisted(() => ({
     readPhotoBuffer: vi.fn(),
     readImageBufferFromUrl: vi.fn(),
     buildWrapPreviewPrompt: vi.fn(),
-    buildGenerationInputBoard: vi.fn(),
     generateWrapPreview: vi.fn(),
-    buildSimpleWrapPreview: vi.fn(),
     getHfModelName: vi.fn(),
     persistVisualizerPreviewAsset: vi.fn(),
     toVisualizerPreviewDTO: vi.fn(),
@@ -50,16 +48,8 @@ vi.mock('@/lib/visualizer/prompting/build-wrap-preview-prompt', () => ({
     buildWrapPreviewPrompt: mocks.buildWrapPreviewPrompt,
 }))
 
-vi.mock('@/lib/visualizer/preprocessing/build-generation-input-board', () => ({
-    buildGenerationInputBoard: mocks.buildGenerationInputBoard,
-}))
-
 vi.mock('@/lib/visualizer/huggingface/generate-wrap-preview', () => ({
     generateWrapPreview: mocks.generateWrapPreview,
-}))
-
-vi.mock('@/lib/visualizer/fallback/build-simple-wrap-preview', () => ({
-    buildSimpleWrapPreview: mocks.buildSimpleWrapPreview,
 }))
 
 vi.mock('@/lib/visualizer/huggingface/client', () => ({
@@ -218,12 +208,6 @@ describe('processVisualizerPreview', () => {
             negativePrompt: 'No distortion',
             promptVersion: 'prompt-version',
         })
-        mocks.buildGenerationInputBoard.mockResolvedValue({
-            boardBuffer: Buffer.from('board-bytes'),
-            boardMaskBuffer: Buffer.from('board-mask-bytes'),
-            maskStrategy: 'hf_segmentation',
-            notes: ['mask_source=hf_segmentation'],
-        })
         mocks.generateWrapPreview.mockResolvedValue({
             imageBuffer: Buffer.from('generated-preview'),
             status: 'ok',
@@ -234,7 +218,6 @@ describe('processVisualizerPreview', () => {
             prompt: 'Apply Ocean Spectrum wrap',
             notes: ['provider=huggingface-space:test/space'],
         })
-        mocks.buildSimpleWrapPreview.mockResolvedValue(Buffer.from('fallback-preview'))
         mocks.getHfModelName.mockReturnValue('hf-test-model')
         mocks.persistVisualizerPreviewAsset.mockResolvedValue({
             assetId: 'asset-1',
@@ -283,17 +266,10 @@ describe('processVisualizerPreview', () => {
 
         expect(mocks.readPhotoBuffer).toHaveBeenCalledWith('https://cloudinary.com/vehicle.png')
         expect(mocks.readImageBufferFromUrl).toHaveBeenCalledTimes(2)
-        expect(mocks.buildGenerationInputBoard).toHaveBeenCalledWith(
+        expect(mocks.generateWrapPreview).toHaveBeenCalledWith(
             expect.objectContaining({
                 vehicleBuffer: expect.any(Buffer),
                 referenceBuffers: expect.arrayContaining([expect.any(Buffer)]),
-                wrapName: 'Ocean Spectrum',
-            })
-        )
-        expect(mocks.generateWrapPreview).toHaveBeenCalledWith(
-            expect.objectContaining({
-                boardBuffer: expect.any(Buffer),
-                boardMaskBuffer: expect.any(Buffer),
                 referenceUrls: expect.any(Array),
             })
         )
@@ -401,7 +377,7 @@ describe('processVisualizerPreview', () => {
         const result = await processVisualizerPreview({ previewId: 'preview-1' })
 
         expect(mocks.readImageBufferFromUrl).toHaveBeenCalledTimes(2)
-        expect(mocks.buildGenerationInputBoard).toHaveBeenCalledWith(
+        expect(mocks.generateWrapPreview).toHaveBeenCalledWith(
             expect.objectContaining({
                 referenceBuffers: [expect.any(Buffer)],
             })

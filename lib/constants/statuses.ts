@@ -5,14 +5,9 @@ export const WrapImageKind = {
 
 export type WrapImageKind = (typeof WrapImageKind)[keyof typeof WrapImageKind]
 
-export const wrapImageKindValues = [
-    WrapImageKind.HERO,
-    WrapImageKind.GALLERY,
-] as const
+export const wrapImageKindValues = [WrapImageKind.HERO, WrapImageKind.GALLERY] as const
 
-export const PUBLISH_REQUIRED_WRAP_IMAGE_KINDS = [
-    WrapImageKind.HERO,
-] as const
+export const PUBLISH_REQUIRED_WRAP_IMAGE_KINDS = [WrapImageKind.HERO] as const
 
 export type PublishRequiredWrapImageKind = (typeof PUBLISH_REQUIRED_WRAP_IMAGE_KINDS)[number]
 
@@ -54,7 +49,6 @@ export function isPreviewTerminalStatus(status: PreviewStatus): boolean {
 
 export const VisualizerGenerationMode = {
     HUGGING_FACE: 'huggingface',
-    DETERMINISTIC_FALLBACK: 'deterministic_fallback',
 } as const
 
 export type VisualizerGenerationMode =

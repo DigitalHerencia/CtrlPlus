@@ -80,6 +80,36 @@
       "name": "visualizer-prisma-validate",
       "status": "pass",
       "details": "`pnpm prisma:validate` passed and Prisma schema remained valid."
+    },
+    {
+      "id": "VAL-014",
+      "name": "catalog-visualizer-browser-workflow",
+      "status": "pass",
+      "details": "Integrated-browser verification created Inferno, uploaded the hero asset, confirmed visualizer-ready selection, uploaded the customer vehicle image, and generated a persisted preview result with status=complete. The persisted preview metadata also confirmed the result came from deterministic_fallback rather than the HF path."
+    },
+    {
+      "id": "VAL-015",
+      "name": "visualizer-space-client-typecheck",
+      "status": "pass",
+      "details": "`pnpm typecheck` passed after updating lib/visualizer/huggingface/space-client.ts and installing @gradio/client."
+    },
+    {
+      "id": "VAL-016",
+      "name": "visualizer-hf-only-unit-tests",
+      "status": "pass",
+      "details": "`pnpm vitest run tests/vitest/unit/lib/visualizer/actions/process-visualizer-preview.test.ts tests/vitest/unit/lib/visualizer/actions/create-visualizer-preview.test.ts` passed after removing deterministic fallback execution from the action pipeline."
+    },
+    {
+      "id": "VAL-017",
+      "name": "visualizer-hf-only-lint",
+      "status": "pass",
+      "details": "`pnpm lint` passed after the HF-only visualizer refactor."
+    },
+    {
+      "id": "VAL-018",
+      "name": "visualizer-public-hf-space-inference",
+      "status": "pass",
+      "details": "A direct `@gradio/client` call to the public `black-forest-labs/FLUX.2-dev` Space succeeded with the real source vehicle photo plus three Inferno reference images, confirming the new default HF-only backend is callable and returns an edited image result."
     }
   ]
 }

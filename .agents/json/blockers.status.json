@@ -2,27 +2,19 @@
   "artifact_type": "blocker-status",
   "version": "1.0.0",
   "updated_at": "2026-04-06",
-  "active_blockers": [
-    {
-      "id": "BLK-002",
-      "title": "Visualizer preview generation is not using a working mask-guided AI path",
-      "detected_at": "2026-04-06",
-      "owner": "visualizer",
-      "impact": "high",
-      "evidence": [
-        "Cloudinary preview asset inspection shows the only persisted preview output has generationMode=deterministic_fallback",
-        "Latest VisualizerPreview record failed with generationFallbackReason=Invalid URL and no preview asset",
-        "Current code still sends a composite board to generic image-to-image generation without an explicit editable mask"
-      ],
-      "next_step": "Implement the mask-guided Hugging Face Space pipeline in .agents/docs/VISUALIZER-WRAP-PREVIEW-PIPELINE-PLAN.md and harden reference URL validation."
-    }
-  ],
+  "active_blockers": [],
   "resolved_blockers": [
     {
       "id": "BLK-001",
       "title": "Instruction-file overwrite patch conflict",
       "resolved_at": "2026-04-05",
       "resolution": "Used explicit delete-and-recreate flow for deterministic content replacement"
+    },
+    {
+      "id": "BLK-002",
+      "title": "Visualizer preview generation is not using a working mask-guided AI path",
+      "resolved_at": "2026-04-06",
+      "resolution": "Removed deterministic fallback execution from the visualizer action pipeline, installed @gradio/client, switched the default HF backend to a working public multi-image edit Space, and validated real HF generation directly against the Space with source-plus-reference inputs."
     }
   ]
 }

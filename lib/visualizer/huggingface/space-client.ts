@@ -1,3 +1,5 @@
+import sharp from 'sharp'
+
 import { getHfSpaceApiName, getHfSpaceId } from '@/lib/visualizer/huggingface/client'
 
 import { HuggingFaceGenerationError } from './map-hf-error'
@@ -51,19 +53,57 @@ function pickImageLikeValue(payload: unknown): string | Blob | null {
     return null
 }
 
+function clampDimension(value: number) {
+    const rounded = Math.round(value / 32) * 32
+    return Math.max(256, Math.min(1024, rounded))
+}
+
+async function getOutputDimensions(vehicleBuffer: Buffer) {
+    const metadata = await sharp(vehicleBuffer).metadata()
+    if (!metadata.width || !metadata.height) {
+        return { width: 768, height: 1024 }
+    }
+
+    const longestSide = Math.max(metadata.width, metadata.height)
+    const scale = Math.min(1, 1024 / longestSide)
+
+    return {
+        width: clampDimension(metadata.width * scale),
+        height: clampDimension(metadata.height * scale),
+    }
+}
+
+type ViewApiResponse = {
+    named_endpoints?: Record<
+        string,
+        {
+            parameters?: Array<{ parameter_name?: string }>
+        }
+    >
+}
+
+function buildGalleryPayload(
+    gradio: { handle_file: (input: Blob) => unknown },
+    input: { vehicleBuffer: Buffer; referenceBuffers: Buffer[] }
+) {
+    const sourceBuffers = [input.vehicleBuffer, ...input.referenceBuffers.slice(0, 3)]
+
+    return sourceBuffers.map((buffer, index) => ({
+        image: gradio.handle_file(new Blob([new Uint8Array(buffer)], { type: 'image/png' })),
+        caption: index === 0 ? 'source vehicle photo' : `wrap reference ${index}`,
+    }))
+}
+
 export async function generateViaHfSpace(input: {
-    boardBuffer: Buffer
-    boardMaskBuffer: Buffer
+    vehicleBuffer: Buffer
+    referenceBuffers: Buffer[]
     prompt: string
     negativePrompt: string
 }): Promise<Buffer> {
     const spaceId = getHfSpaceId()
-    if (!spaceId) {
-        throw new HuggingFaceGenerationError('config_missing:HF_SPACE_ID is not configured.')
-    }
 
     const moduleName = '@gradio/client'
-    const gradio = (await import(moduleName)) as {
+    const gradio = (await import(/* webpackIgnore: true */ moduleName)) as {
         Client: {
             connect: (spaceId: string, options?: Record<string, unknown>) => Promise<unknown>
         }
@@ -74,21 +114,52 @@ export async function generateViaHfSpace(input: {
     const hfToken = process.env.HF_API_KEY?.trim() || process.env.HUGGINGFACE_API_TOKEN?.trim()
     const app = (await gradio.Client.connect(spaceId, hfToken ? { hf_token: hfToken } : {})) as {
         predict: (apiName: string, payload: unknown[]) => Promise<unknown>
+        view_api?: () => Promise<unknown>
     }
 
-    const imageFile = gradio.handle_file(
-        new Blob([new Uint8Array(input.boardBuffer)], { type: 'image/png' })
-    )
-    const maskFile = gradio.handle_file(
-        new Blob([new Uint8Array(input.boardMaskBuffer)], { type: 'image/png' })
-    )
+    const gallery = buildGalleryPayload(gradio, input)
+    const dimensions = await getOutputDimensions(input.vehicleBuffer)
+    const combinedPrompt = `${input.prompt} Strictly avoid the following: ${input.negativePrompt}`
+    const viewApi = (
+        typeof app.view_api === 'function' ? await app.view_api() : null
+    ) as ViewApiResponse | null
+    const parameterNames =
+        viewApi?.named_endpoints?.[apiName]?.parameters
+            ?.map((parameter) => parameter.parameter_name ?? '')
+            .filter(Boolean) ?? []
 
-    const response = await app.predict(apiName, [
-        imageFile,
-        maskFile,
-        input.prompt,
-        input.negativePrompt,
-    ])
+    let response: unknown
+
+    if (parameterNames.includes('input_images')) {
+        response = await app.predict(apiName, [
+            combinedPrompt,
+            gallery,
+            0,
+            true,
+            dimensions.width,
+            dimensions.height,
+            12,
+            3.5,
+            true,
+        ])
+    } else if (parameterNames.includes('images')) {
+        response = await app.predict(apiName, [
+            gallery,
+            combinedPrompt,
+            0,
+            true,
+            4,
+            20,
+            dimensions.height,
+            dimensions.width,
+            true,
+        ])
+    } else {
+        throw new HuggingFaceGenerationError(
+            `space_response_invalid:Unsupported HF Space API contract for ${spaceId}:${apiName}.`
+        )
+    }
+
     const imageLike = pickImageLikeValue(response)
 
     if (!imageLike) {
