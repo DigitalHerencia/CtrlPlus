@@ -40,9 +40,7 @@ function serializeMetadataContext(metadata: Record<string, string | number | nul
     }
 
     return pairs
-        .map(
-            ([key, value]) => `${key}=${String(value).replaceAll('|', '/').replaceAll('=', ':')}`
-        )
+        .map(([key, value]) => `${key}=${String(value).replaceAll('|', '/').replaceAll('=', ':')}`)
         .join('|')
 }
 
@@ -237,7 +235,8 @@ export async function deletePersistedWrapImage(params: {
     cloudinaryResourceType?: string | null
     cloudinaryDeliveryType?: string | null
 }): Promise<void> {
-    const publicId = params.cloudinaryPublicId ?? (params.url ? extractBlobPublicId(params.url) : null)
+    const publicId =
+        params.cloudinaryPublicId ?? (params.url ? extractBlobPublicId(params.url) : null)
 
     if (publicId) {
         try {
@@ -275,12 +274,14 @@ export async function persistVisualizerUploadAsset(params: {
     buffer: Buffer
     contentType?: string
     fileName?: string | null
+    folder?: string
     metadata?: Record<string, string | number | null | undefined>
 }): Promise<PersistedVisualizerAsset> {
     const contentType = params.contentType ?? 'image/png'
     const contentHash = computeContentHash(params.buffer)
     const uploadPreset = process.env.CLOUDINARY_VISUALIZER_UPLOAD_PRESET?.trim() ?? null
     const folder =
+        params.folder?.trim() ||
         process.env.CLOUDINARY_VISUALIZER_UPLOAD_FOLDER?.trim() ||
         process.env.CLOUDINARY_VISUALIZER_FOLDER?.trim() ||
         `ctrlplus/visualizer/uploads/${params.ownerClerkUserId}`
@@ -323,8 +324,9 @@ export async function persistVisualizerPreviewAsset(params: {
     const uploadPreset = process.env.CLOUDINARY_VISUALIZER_UPLOAD_PRESET?.trim() ?? null
     const folder =
         params.folder?.trim() ||
+        process.env.CLOUDINARY_VISUALIZER_OUTPUTS_FOLDER?.trim() ||
         process.env.CLOUDINARY_VISUALIZER_FOLDER?.trim() ||
-        'ctrlplus/visualizer/previews'
+        'ctrlplus/visualizer/outputs'
     const publicId = `${folder}/${params.previewId}-${randomUUID()}`
     const asset = await uploadImageToCloudinary({
         publicId,

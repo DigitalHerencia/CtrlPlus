@@ -57,9 +57,7 @@ vi.mock('@/lib/fetchers/visualizer.mappers', () => ({
 
 import { createVisualizerPreview } from '@/lib/actions/visualizer.actions'
 
-function makeSession(
-    overrides: Partial<Awaited<ReturnType<typeof mocks.getSession>>> = {}
-) {
+function makeSession(overrides: Partial<Awaited<ReturnType<typeof mocks.getSession>>> = {}) {
     return {
         isAuthenticated: true,
         userId: 'user-1',
@@ -226,14 +224,16 @@ describe('createVisualizerPreview', () => {
                 return makePreviewRecord({
                     id: 'preview-existing',
                     status: 'complete',
-                    processedImageUrl: 'https://app.local/api/visualizer/previews/preview-existing/image',
+                    processedImageUrl:
+                        'https://app.local/api/visualizer/previews/preview-existing/image',
                 })
             }
 
             return makePreviewRecord({
                 id: 'preview-existing',
                 status: 'complete',
-                processedImageUrl: 'https://app.local/api/visualizer/previews/preview-existing/image',
+                processedImageUrl:
+                    'https://app.local/api/visualizer/previews/preview-existing/image',
             })
         })
 
@@ -249,7 +249,7 @@ describe('createVisualizerPreview', () => {
                 customerPhotoHash: 'vehicle-hash',
                 uploadId: 'upload-1',
                 referenceSignature: expect.any(String),
-                generationMode: 'reference_guided_edit',
+                generationMode: 'mask_guided_inpaint',
                 generationModel: 'hf-test-model',
                 promptVersion: 'prompt-version',
             })
@@ -290,8 +290,8 @@ describe('createVisualizerPreview', () => {
                     ownerClerkUserId: 'user-1',
                     customerPhotoUrl: 'https://cloudinary.com/vehicle.png',
                     status: 'pending',
-                    generationMode: 'reference_guided_edit',
-                    generationProvider: 'huggingface',
+                    generationMode: 'mask_guided_inpaint',
+                    generationProvider: 'huggingface-space',
                     generationModel: 'hf-test-model',
                     sourceWrapImageId: 'hero-1',
                     sourceWrapImageVersion: 4,

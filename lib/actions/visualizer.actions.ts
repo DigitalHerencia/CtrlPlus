@@ -5,12 +5,16 @@ import { createHash } from 'crypto'
 import { after } from 'next/server'
 
 import { buildVisualizerCacheKey } from '@/lib/cache/cache-keys'
+import { getVisualizerPreviewExpiresAt } from '@/lib/cache/visualizer-cache'
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
 import { visualizerPreviewDTOFields } from '@/lib/db/selects/visualizer.selects'
 import { getVisualizerWrapSelectionById } from '@/lib/fetchers/visualizer.fetchers'
-import { toVisualizerPreviewDTO } from '@/lib/fetchers/visualizer.mappers'
+import {
+    toVisualizerPreviewDTO,
+    toVisualizerUploadSnapshot,
+} from '@/lib/fetchers/visualizer.mappers'
 import {
     createVisualizerUploadSchema,
     createVisualizerPreviewSchema,
@@ -29,18 +33,38 @@ import { getHfModelName } from '@/lib/visualizer/huggingface/client'
 import { generateWrapPreview } from '@/lib/visualizer/huggingface/generate-wrap-preview'
 import { buildGenerationInputBoard } from '@/lib/visualizer/preprocessing/build-generation-input-board'
 import { buildWrapPreviewPrompt } from '@/lib/visualizer/prompting/build-wrap-preview-prompt'
-import type { ProcessVisualizerPreviewInput, VisualizerPreviewDTO } from '@/types/visualizer.types'
 import type {
+    ProcessVisualizerPreviewInput,
     RegenerateVisualizerPreviewInput,
+    ScheduledVisualizerProcessingInput,
+    VisualizerPreviewDTO,
+    VisualizerWrapPipelineResponse,
     VisualizerUploadSnapshot,
 } from '@/types/visualizer.types'
-import { toVisualizerUploadSnapshot } from '@/lib/fetchers/visualizer.mappers'
 
 type VisualizerSelectableWrap = NonNullable<
     Awaited<ReturnType<typeof getVisualizerWrapSelectionById>>
 >
 
 type VisualizerReferenceImage = NonNullable<VisualizerSelectableWrap['heroImage']>
+
+function getVisualizerInputsFolder(ownerClerkUserId: string) {
+    const root =
+        process.env.CLOUDINARY_VISUALIZER_UPLOAD_FOLDER?.trim() || 'ctrlplus/visualizer/inputs'
+    return `${root}/${ownerClerkUserId}`
+}
+
+function getVisualizerMasksFolder(ownerClerkUserId: string) {
+    const root =
+        process.env.CLOUDINARY_VISUALIZER_MASKS_FOLDER?.trim() || 'ctrlplus/visualizer/masks'
+    return `${root}/${ownerClerkUserId}`
+}
+
+function getVisualizerOutputsFolder(ownerClerkUserId: string) {
+    const root =
+        process.env.CLOUDINARY_VISUALIZER_OUTPUTS_FOLDER?.trim() || 'ctrlplus/visualizer/outputs'
+    return `${root}/${ownerClerkUserId}`
+}
 
 function buildVisualizerReferenceImages(
     wrap: VisualizerSelectableWrap
@@ -80,20 +104,38 @@ function buildVisualizerPromptForWrap(wrap: VisualizerSelectableWrap) {
 async function resolveVisualizerGenerationAssets(wrap: VisualizerSelectableWrap) {
     const references = buildVisualizerReferenceImages(wrap)
     const prompt = buildVisualizerPromptForWrap(wrap)
-    const settledReferenceBuffers = await Promise.allSettled(
-        references.map((image) => readImageBufferFromUrl(image.detailUrl))
+    const settledReferenceBuffers = await Promise.all(
+        references.map(async (image) => {
+            try {
+                const buffer = await readImageBufferFromUrl(image.detailUrl)
+                return {
+                    status: 'fulfilled' as const,
+                    value: buffer,
+                    imageId: image.id,
+                    detailUrl: image.detailUrl,
+                }
+            } catch (error) {
+                return {
+                    status: 'rejected' as const,
+                    reason: error instanceof Error ? error.message : 'Unknown error',
+                    imageId: image.id,
+                    detailUrl: image.detailUrl,
+                }
+            }
+        })
     )
 
     const referenceBuffers = settledReferenceBuffers.flatMap((result) =>
         result.status === 'fulfilled' ? [result.value] : []
     )
+    const referenceUrls = settledReferenceBuffers
+        .flatMap((result) => (result.status === 'fulfilled' ? [result.detailUrl] : []))
+        .slice(0, 3)
 
     if (referenceBuffers.length === 0) {
         const failureReasons = settledReferenceBuffers
             .flatMap((result) =>
-                result.status === 'rejected'
-                    ? [result.reason instanceof Error ? result.reason.message : 'Unknown error']
-                    : []
+                result.status === 'rejected' ? [`${result.imageId}:${result.reason}`] : []
             )
             .filter((reason) => reason.trim().length > 0)
             .slice(0, 2)
@@ -109,6 +151,7 @@ async function resolveVisualizerGenerationAssets(wrap: VisualizerSelectableWrap)
     return {
         prompt,
         referenceBuffers,
+        referenceUrls,
         referenceSignature: buildVisualizerReferenceSignature(wrap),
     }
 }
@@ -190,6 +233,7 @@ async function createVisualizerUploadInternal(params: {
         buffer: normalizedVehicle.buffer,
         contentType: normalizedVehicle.contentType,
         fileName: parsed.file.name || null,
+        folder: getVisualizerInputsFolder(params.ownerClerkUserId),
         metadata: {
             contentHash: normalizedVehicle.hash,
         },
@@ -292,7 +336,7 @@ async function completePreviewWithAsset(params: {
             generationModel: params.generationModel,
             generationPromptVersion: params.promptVersion,
             generationFallbackReason: params.generationFallbackReason,
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            expiresAt: getVisualizerPreviewExpiresAt(),
         },
     })
 
@@ -302,12 +346,6 @@ async function completePreviewWithAsset(params: {
     }
 
     return preview
-}
-
-interface ScheduledVisualizerProcessingInput {
-    previewId: string
-    ownerClerkUserId: string
-    includeHidden: boolean
 }
 
 async function processVisualizerPreviewForOwner({
@@ -398,8 +436,8 @@ async function processVisualizerPreviewForOwner({
             resultWidth: null,
             resultHeight: null,
             referenceSignature,
-            generationMode: 'reference_guided_edit',
-            generationProvider: 'huggingface',
+            generationMode: 'mask_guided_inpaint',
+            generationProvider: 'huggingface-space',
             generationModel: getHfModelName(),
             generationPromptVersion: null,
             generationFallbackReason: null,
@@ -412,6 +450,7 @@ async function processVisualizerPreviewForOwner({
     let vehicleBuffer: Buffer
     let prompt: ReturnType<typeof buildWrapPreviewPrompt>
     let referenceBuffers: Buffer[]
+    let referenceUrls: string[]
 
     try {
         const [uploadBufferResult, generationAssets] = await Promise.all([
@@ -422,6 +461,7 @@ async function processVisualizerPreviewForOwner({
         vehicleBuffer = uploadBufferResult.buffer
         prompt = generationAssets.prompt
         referenceBuffers = generationAssets.referenceBuffers
+        referenceUrls = generationAssets.referenceUrls
     } catch (error) {
         const failureReason =
             error instanceof Error
@@ -447,8 +487,8 @@ async function processVisualizerPreviewForOwner({
                     cacheKey: preview.cacheKey,
                     uploadId: preview.uploadId,
                     referenceSignature,
-                    generationMode: 'reference_guided_edit',
-                    generationProvider: 'huggingface',
+                    generationMode: 'mask_guided_inpaint',
+                    generationProvider: 'huggingface-space',
                     generationModel,
                     error: failureReason,
                 }),
@@ -460,34 +500,62 @@ async function processVisualizerPreviewForOwner({
     }
 
     try {
-        const boardBuffer = await buildGenerationInputBoard({
+        const board = await buildGenerationInputBoard({
             vehicleBuffer,
             referenceBuffers,
             wrapName: wrap.name,
+        })
+
+        const maskAsset = await persistVisualizerPreviewAsset({
+            previewId: `${preview.id}-mask`,
+            buffer: board.boardMaskBuffer,
+            contentType: 'image/png',
+            folder: getVisualizerMasksFolder(ownerClerkUserId),
+            metadata: {
+                wrapId: wrap.id,
+                ownerClerkUserId,
+                uploadId: preview.uploadId,
+                referenceSignature,
+                assetRole: 'visualizer_mask',
+                maskStrategy: board.maskStrategy,
+            },
         })
 
         const result = await generateWrapPreview({
             model: generationModel,
             prompt: prompt.prompt,
             negativePrompt: prompt.negativePrompt,
-            boardBuffer,
+            boardBuffer: board.boardBuffer,
+            boardMaskBuffer: board.boardMaskBuffer,
+            referenceUrls,
         })
 
         const storedAsset = await persistVisualizerPreviewAsset({
             previewId: preview.id,
             buffer: result.imageBuffer,
             contentType: 'image/png',
-            folder: `ctrlplus/visualizer/previews/${ownerClerkUserId}`,
+            folder: getVisualizerOutputsFolder(ownerClerkUserId),
             metadata: {
                 wrapId: wrap.id,
                 ownerClerkUserId,
                 uploadId: preview.uploadId,
                 referenceSignature,
-                generationMode: 'reference_guided_edit',
-                generationProvider: 'huggingface',
+                generationMode: 'mask_guided_inpaint',
+                generationProvider: 'huggingface-space',
                 generationModel: result.model,
+                maskStrategy: board.maskStrategy,
             },
         })
+
+        const pipelineResponse: VisualizerWrapPipelineResponse = {
+            status: result.status,
+            finalImageUrl: storedAsset.secureUrl,
+            maskUrl: maskAsset.secureUrl,
+            referenceUrls: result.referenceUrls,
+            model: result.model,
+            prompt: result.prompt,
+            notes: [...board.notes, ...result.notes],
+        }
 
         await prisma.auditLog.create({
             data: {
@@ -501,9 +569,12 @@ async function processVisualizerPreviewForOwner({
                     uploadId: preview.uploadId,
                     referenceSignature,
                     promptVersion: prompt.promptVersion,
-                    generationMode: 'reference_guided_edit',
-                    generationProvider: 'huggingface',
+                    generationMode: 'mask_guided_inpaint',
+                    generationProvider: 'huggingface-space',
                     generationModel: result.model,
+                    maskAssetId: maskAsset.assetId,
+                    maskStrategy: board.maskStrategy,
+                    pipeline: pipelineResponse,
                     fallbackReason: null,
                 }),
                 timestamp: new Date(),
@@ -516,8 +587,8 @@ async function processVisualizerPreviewForOwner({
             storedAsset,
             status: 'complete',
             promptVersion: prompt.promptVersion,
-            generationMode: 'reference_guided_edit',
-            generationProvider: 'huggingface',
+            generationMode: 'mask_guided_inpaint',
+            generationProvider: 'huggingface-space',
             generationModel: result.model,
             generationFallbackReason: null,
         })
@@ -534,7 +605,7 @@ async function processVisualizerPreviewForOwner({
                 previewId: preview.id,
                 buffer: fallbackBuffer,
                 contentType: 'image/png',
-                folder: `ctrlplus/visualizer/previews/${ownerClerkUserId}`,
+                folder: getVisualizerOutputsFolder(ownerClerkUserId),
                 metadata: {
                     wrapId: wrap.id,
                     ownerClerkUserId,
@@ -601,8 +672,8 @@ async function processVisualizerPreviewForOwner({
                         cacheKey: preview.cacheKey,
                         uploadId: preview.uploadId,
                         referenceSignature,
-                        generationMode: 'reference_guided_edit',
-                        generationProvider: 'huggingface',
+                        generationMode: 'mask_guided_inpaint',
+                        generationProvider: 'huggingface-space',
                         generationModel,
                         error: finalReason,
                     }),
@@ -673,7 +744,7 @@ export async function createVisualizerPreview(input: {
         customerPhotoHash: upload.contentHash,
         uploadId: upload.id,
         referenceSignature,
-        generationMode: 'reference_guided_edit',
+        generationMode: 'mask_guided_inpaint',
         generationModel,
         promptVersion: prompt.promptVersion,
     })
@@ -707,14 +778,14 @@ export async function createVisualizerPreview(input: {
             status: 'pending',
             cacheKey,
             referenceSignature,
-            generationMode: 'reference_guided_edit',
-            generationProvider: 'huggingface',
+            generationMode: 'mask_guided_inpaint',
+            generationProvider: 'huggingface-space',
             generationModel,
             generationPromptVersion: prompt.promptVersion,
             generationFallbackReason: null,
             sourceWrapImageId: wrap.heroImage?.id ?? null,
             sourceWrapImageVersion: wrap.heroImage?.version ?? null,
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            expiresAt: getVisualizerPreviewExpiresAt(),
         },
         select: { id: true },
     })
@@ -731,8 +802,8 @@ export async function createVisualizerPreview(input: {
                 cacheKey,
                 referenceSignature,
                 promptVersion: prompt.promptVersion,
-                generationMode: 'reference_guided_edit',
-                generationProvider: 'huggingface',
+                generationMode: 'mask_guided_inpaint',
+                generationProvider: 'huggingface-space',
                 generationModel,
             }),
             timestamp: new Date(),
@@ -801,7 +872,7 @@ export async function regenerateVisualizerPreview(
             resultWidth: null,
             resultHeight: null,
             generationFallbackReason: null,
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+            expiresAt: getVisualizerPreviewExpiresAt(),
         },
     })
 

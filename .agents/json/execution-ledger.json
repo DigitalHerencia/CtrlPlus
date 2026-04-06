@@ -83,6 +83,29 @@
         ".agents/json/domains.visualizer.status.json",
         ".agents/json/blockers.status.json"
       ]
+    },
+    {
+      "id": "LEDGER-007",
+      "timestamp": "2026-04-06T18:45:00Z",
+      "type": "edit",
+      "summary": "Implemented mask-aware visualizer preview pipeline with board+mask preprocessing, HF Space generation adapter, Cloudinary artifact persistence (inputs/masks/outputs), and refreshed unit validation.",
+      "files": [
+        "lib/actions/visualizer.actions.ts",
+        "lib/visualizer/preprocessing/build-generation-input-board.ts",
+        "lib/visualizer/preprocessing/build-vehicle-edit-mask.ts",
+        "lib/visualizer/huggingface/client.ts",
+        "lib/visualizer/huggingface/generate-wrap-preview.ts",
+        "lib/visualizer/huggingface/map-hf-error.ts",
+        "lib/visualizer/huggingface/space-client.ts",
+        "lib/visualizer/huggingface/types.ts",
+        "lib/uploads/storage.ts",
+        "tests/vitest/unit/lib/visualizer/actions/process-visualizer-preview.test.ts",
+        "tests/vitest/unit/lib/visualizer/actions/create-visualizer-preview.test.ts",
+        "tests/vitest/unit/lib/visualizer/preprocessing/build-generation-input-board.test.ts",
+        ".env.example",
+        ".agents/json/domains.visualizer.status.json",
+        ".agents/json/validation.report.json"
+      ]
     }
   ]
 }

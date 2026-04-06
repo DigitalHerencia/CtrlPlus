@@ -163,8 +163,8 @@ function makePreviewRecord(overrides: Record<string, unknown> = {}) {
         status: 'pending',
         cacheKey: 'cache-key',
         referenceSignature: 'reference-signature',
-        generationMode: 'reference_guided_edit',
-        generationProvider: 'huggingface',
+        generationMode: 'mask_guided_inpaint',
+        generationProvider: 'huggingface-space',
         generationModel: 'hf-test-model',
         generationPromptVersion: 'prompt-version',
         generationFallbackReason: null,
@@ -190,8 +190,8 @@ function makePreviewDTO(overrides: Record<string, unknown> = {}) {
         status: 'pending',
         cacheKey: 'cache-key',
         referenceSignature: 'reference-signature',
-        generationMode: 'reference_guided_edit',
-        generationProvider: 'huggingface',
+        generationMode: 'mask_guided_inpaint',
+        generationProvider: 'huggingface-space',
         generationModel: 'hf-test-model',
         generationPromptVersion: 'prompt-version',
         generationFallbackReason: null,
@@ -218,10 +218,21 @@ describe('processVisualizerPreview', () => {
             negativePrompt: 'No distortion',
             promptVersion: 'prompt-version',
         })
-        mocks.buildGenerationInputBoard.mockResolvedValue(Buffer.from('board-bytes'))
+        mocks.buildGenerationInputBoard.mockResolvedValue({
+            boardBuffer: Buffer.from('board-bytes'),
+            boardMaskBuffer: Buffer.from('board-mask-bytes'),
+            maskStrategy: 'hf_segmentation',
+            notes: ['mask_source=hf_segmentation'],
+        })
         mocks.generateWrapPreview.mockResolvedValue({
             imageBuffer: Buffer.from('generated-preview'),
+            status: 'ok',
+            finalImageUrl: null,
+            maskUrl: null,
+            referenceUrls: ['https://example.com/hero-detail.png'],
             model: 'hf-generated-model',
+            prompt: 'Apply Ocean Spectrum wrap',
+            notes: ['provider=huggingface-space:test/space'],
         })
         mocks.buildSimpleWrapPreview.mockResolvedValue(Buffer.from('fallback-preview'))
         mocks.getHfModelName.mockReturnValue('hf-test-model')
@@ -247,8 +258,8 @@ describe('processVisualizerPreview', () => {
                 id: preview.id,
                 status: preview.status,
                 processedImageUrl: preview.processedImageUrl ?? null,
-                generationMode: preview.generationMode ?? 'reference_guided_edit',
-                generationProvider: preview.generationProvider ?? 'huggingface',
+                generationMode: preview.generationMode ?? 'mask_guided_inpaint',
+                generationProvider: preview.generationProvider ?? 'huggingface-space',
                 generationModel: preview.generationModel ?? 'hf-generated-model',
                 generationFallbackReason: preview.generationFallbackReason ?? null,
             })
@@ -277,6 +288,13 @@ describe('processVisualizerPreview', () => {
                 vehicleBuffer: expect.any(Buffer),
                 referenceBuffers: expect.arrayContaining([expect.any(Buffer)]),
                 wrapName: 'Ocean Spectrum',
+            })
+        )
+        expect(mocks.generateWrapPreview).toHaveBeenCalledWith(
+            expect.objectContaining({
+                boardBuffer: expect.any(Buffer),
+                boardMaskBuffer: expect.any(Buffer),
+                referenceUrls: expect.any(Array),
             })
         )
         expect(mocks.persistVisualizerPreviewAsset).toHaveBeenCalled()

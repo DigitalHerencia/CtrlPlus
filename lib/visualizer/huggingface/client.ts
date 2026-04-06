@@ -16,6 +16,19 @@ export function getHfModelName(): string {
     return process.env.HF_IMAGE_TO_IMAGE_MODEL?.trim() || 'Qwen/Qwen-Image-Edit'
 }
 
+export function getHfPreviewStrategy(): 'space_inpaint' | 'image_to_image' {
+    const strategy = process.env.HF_PREVIEW_STRATEGY?.trim().toLowerCase()
+    return strategy === 'image_to_image' ? 'image_to_image' : 'space_inpaint'
+}
+
+export function getHfSpaceId(): string {
+    return process.env.HF_SPACE_ID?.trim() || ''
+}
+
+export function getHfSpaceApiName(): string {
+    return process.env.HF_SPACE_API_NAME?.trim() || '/predict'
+}
+
 export function getHfTimeoutMs(): number {
     const raw = Number(process.env.HF_TIMEOUT_MS ?? process.env.HUGGINGFACE_TIMEOUT_MS ?? 12000)
 
@@ -24,6 +37,15 @@ export function getHfTimeoutMs(): number {
     }
 
     return raw
+}
+
+export function getHfRetryCount(): number {
+    const raw = Number(process.env.HF_RETRIES ?? process.env.HUGGINGFACE_RETRIES ?? 2)
+    if (!Number.isFinite(raw) || raw < 0) {
+        return 2
+    }
+
+    return Math.min(Math.trunc(raw), 5)
 }
 
 export function createHfClient(): InferenceClient {

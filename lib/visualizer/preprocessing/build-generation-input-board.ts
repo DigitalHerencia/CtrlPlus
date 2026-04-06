@@ -1,5 +1,8 @@
 import sharp from 'sharp'
 
+import { buildVehicleEditMask } from '@/lib/visualizer/preprocessing/build-vehicle-edit-mask'
+import type { BuildGenerationInputBoardResult } from '@/types/visualizer.types'
+
 function getReferencePlacement(index: number) {
     const positions = [
         { left: 1160, top: 48 },
@@ -15,7 +18,7 @@ export async function buildGenerationInputBoard(params: {
     vehicleBuffer: Buffer
     referenceBuffers: Buffer[]
     wrapName: string
-}): Promise<Buffer> {
+}): Promise<BuildGenerationInputBoardResult> {
     const canvasWidth = 1792
     const canvasHeight = 1024
     const vehiclePanelWidth = 1080
@@ -29,6 +32,8 @@ export async function buildGenerationInputBoard(params: {
         })
         .png()
         .toBuffer()
+
+    const vehicleMask = await buildVehicleEditMask(normalizedVehicle)
 
     const referenceBuffers = await Promise.all(
         params.referenceBuffers.slice(0, 4).map((buffer) =>
@@ -55,7 +60,7 @@ export async function buildGenerationInputBoard(params: {
         </svg>
     `)
 
-    return sharp({
+    const boardBuffer = await sharp({
         create: {
             width: canvasWidth,
             height: canvasHeight,
@@ -73,4 +78,31 @@ export async function buildGenerationInputBoard(params: {
         ])
         .png()
         .toBuffer()
+
+    const boardMaskBuffer = await sharp({
+        create: {
+            width: canvasWidth,
+            height: canvasHeight,
+            channels: 4,
+            background: '#000000',
+        },
+    })
+        .composite([
+            {
+                input: vehicleMask.maskBuffer,
+                left: 32,
+                top: 48,
+            },
+        ])
+        .removeAlpha()
+        .greyscale()
+        .png()
+        .toBuffer()
+
+    return {
+        boardBuffer,
+        boardMaskBuffer,
+        maskStrategy: vehicleMask.strategy,
+        notes: vehicleMask.notes,
+    }
 }

@@ -1,6 +1,10 @@
 import { InferenceClient } from '@huggingface/inference'
 import sharp from 'sharp'
 import { getCloudinaryCredentials } from '@/lib/integrations/cloudinary'
+import type {
+    WrapPreviewGeneratorAdapter,
+    WrapPreviewGeneratorInput,
+} from '@/types/visualizer.types'
 
 function parseAllowedHosts(value: string | undefined): string[] {
     if (!value) {
@@ -28,7 +32,6 @@ function extractHostFromUrl(url: string | undefined): string | null {
 export const visualizerConfig = {
     maxUploadSizeBytes: Number(process.env.VISUALIZER_MAX_UPLOAD_SIZE_BYTES ?? 10 * 1024 * 1024),
     supportedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
-    previewTtlMs: 24 * 60 * 60 * 1000,
     maskModel: process.env.HUGGINGFACE_VISUALIZER_MODEL ?? 'keras/segformer_b1_cityscapes_1024',
     huggingFaceModelRevision: process.env.HUGGINGFACE_VISUALIZER_REVISION ?? 'main',
     huggingFaceProvider: process.env.HUGGINGFACE_VISUALIZER_PROVIDER ?? 'self-hosted',
@@ -36,7 +39,7 @@ export const visualizerConfig = {
     previewProvider: process.env.HUGGINGFACE_VISUALIZER_PREVIEW_PROVIDER ?? 'hf-inference',
     huggingFaceApiBase:
         process.env.HUGGINGFACE_INFERENCE_API_BASE ?? 'https://api-inference.huggingface.co/models',
-    huggingFaceToken: process.env.HUGGINGFACE_API_TOKEN,
+    huggingFaceToken: process.env.HF_API_KEY ?? process.env.HUGGINGFACE_API_TOKEN,
     huggingFaceTimeoutMs: Number(process.env.HUGGINGFACE_TIMEOUT_MS ?? 12000),
     huggingFaceRetries: Number(process.env.HUGGINGFACE_RETRIES ?? 2),
     blendMode:
@@ -165,16 +168,6 @@ export class HuggingFacePreviewUnavailableError extends Error {
         super(message)
         this.name = 'HuggingFacePreviewUnavailableError'
     }
-}
-
-export interface WrapPreviewGeneratorInput {
-    boardBuffer: Buffer
-    prompt: string
-    negativePrompt?: string | null
-}
-
-export interface WrapPreviewGeneratorAdapter {
-    generate(input: WrapPreviewGeneratorInput): Promise<Buffer>
 }
 
 class HuggingFaceWrapPreviewAdapter implements WrapPreviewGeneratorAdapter {

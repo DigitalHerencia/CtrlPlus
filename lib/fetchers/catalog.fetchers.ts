@@ -11,6 +11,7 @@ import {
     resolvePrimaryDisplayAsset,
 } from '@/lib/fetchers/catalog.mappers'
 import { toCatalogAssetImage } from '@/lib/utils/catalog-assets'
+import { createVisualizerHref } from '@/lib/utils/search-params'
 import type {
     CatalogBrowseCardDTO,
     CatalogBrowseResultDTO,
@@ -160,7 +161,7 @@ function toCatalogBrowseCard(wrap: WrapDTO): CatalogBrowseCardDTO {
         displayImage,
         previewHref: isExampleCatalogWrapId(wrap.id)
             ? `/catalog/${wrap.id}`
-            : `/visualizer?wrapId=${wrap.id}`,
+            : createVisualizerHref(wrap.id),
         readiness,
     }
 }

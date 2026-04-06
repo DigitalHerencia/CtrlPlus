@@ -3,21 +3,21 @@
   "domain": "visualizer",
   "version": "1.0.0",
   "updated_at": "2026-04-06",
-  "state": "in-progress",
+  "state": "active",
   "focus": [
     "owner-scoped uploads",
-    "reference-guided preview generation",
+    "mask-guided preview generation",
     "authenticated preview delivery",
     "mask-guided inpaint cutover"
   ],
   "progress": {
-    "contract_alignment_pct": 92,
-    "instruction_alignment_pct": 95,
-    "prompt_alignment_pct": 70
+    "contract_alignment_pct": 96,
+    "instruction_alignment_pct": 97,
+    "prompt_alignment_pct": 82
   },
   "next_actions": [
-    "Replace the current generic image-to-image preview path with a mask-guided Hugging Face Space integration",
-    "Classify and eliminate live Invalid URL failures in wrap reference fetches",
-    "Run lint, typecheck, prisma validate, and targeted visualizer tests after the cutover"
+    "Backfill dedicated preview-level persistence for mask artifact identifiers when schema change is approved",
+    "Run full build and e2e verification in CI with Hugging Face Space credentials configured",
+    "Add a provider health check endpoint for HF Space queue latency and timeout observability"
   ]
 }

@@ -65,3 +65,64 @@ export interface PreviewCacheKeyInput {
     generationModel: string
     promptVersion: string
 }
+
+export type VisualizerMaskStrategy = 'hf_segmentation' | 'fallback_center'
+
+export interface BuildVehicleEditMaskResult {
+    maskBuffer: Buffer
+    strategy: VisualizerMaskStrategy
+    notes: string[]
+}
+
+export interface BuildGenerationInputBoardResult {
+    boardBuffer: Buffer
+    boardMaskBuffer: Buffer
+    maskStrategy: VisualizerMaskStrategy
+    notes: string[]
+}
+
+export interface GenerateWrapPreviewInput {
+    model: string
+    prompt: string
+    negativePrompt: string
+    boardBuffer: Buffer
+    boardMaskBuffer: Buffer
+    referenceUrls: string[]
+}
+
+export interface GenerateWrapPreviewResult {
+    imageBuffer: Buffer
+    status: 'ok' | 'degraded'
+    finalImageUrl: string | null
+    maskUrl: string | null
+    referenceUrls: string[]
+    model: string
+    prompt: string
+    notes: string[]
+}
+
+export interface VisualizerWrapPipelineResponse {
+    status: 'ok' | 'degraded' | 'failed'
+    finalImageUrl: string | null
+    maskUrl: string | null
+    referenceUrls: string[]
+    model: string
+    prompt: string
+    notes: string[]
+}
+
+export interface ScheduledVisualizerProcessingInput {
+    previewId: string
+    ownerClerkUserId: string
+    includeHidden: boolean
+}
+
+export interface WrapPreviewGeneratorInput {
+    boardBuffer: Buffer
+    prompt: string
+    negativePrompt?: string | null
+}
+
+export interface WrapPreviewGeneratorAdapter {
+    generate(input: WrapPreviewGeneratorInput): Promise<Buffer>
+}

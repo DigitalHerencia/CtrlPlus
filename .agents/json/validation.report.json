@@ -1,7 +1,7 @@
 {
   "artifact_type": "validation-report",
   "version": "1.0.0",
-  "updated_at": "2026-04-05",
+  "updated_at": "2026-04-06",
   "checks": [
     {
       "id": "VAL-001",
@@ -56,6 +56,30 @@
       "name": "catalog-legacy-row-posture",
       "status": "pass",
       "details": "No active local `/uploads/wraps/**` rows remain; 19 soft-deleted local-path rows remain documented for remediation, and 4 wraps remain hidden pending manual hero/gallery re-upload."
+    },
+    {
+      "id": "VAL-010",
+      "name": "visualizer-mask-aware-unit-tests",
+      "status": "pass",
+      "details": "`pnpm test:unit` passed with 44 files and 150 tests after mask-aware inpaint refactor."
+    },
+    {
+      "id": "VAL-011",
+      "name": "visualizer-typecheck",
+      "status": "pass",
+      "details": "`pnpm typecheck` passed with no TypeScript errors."
+    },
+    {
+      "id": "VAL-012",
+      "name": "visualizer-lint",
+      "status": "pass",
+      "details": "`pnpm lint` passed with no lint violations."
+    },
+    {
+      "id": "VAL-013",
+      "name": "visualizer-prisma-validate",
+      "status": "pass",
+      "details": "`pnpm prisma:validate` passed and Prisma schema remained valid."
     }
   ]
 }

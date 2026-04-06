@@ -175,3 +175,19 @@ export function parseVisualizerSearchParams(
         requestedWrapId: parsed.success ? (parsed.data.wrapId ?? null) : null,
     }
 }
+
+export function createVisualizerQueryString(wrapId: string | null | undefined): string {
+    const normalizedWrapId = wrapId?.trim() ?? ''
+    if (!normalizedWrapId) {
+        return ''
+    }
+
+    const params = new URLSearchParams()
+    params.set('wrapId', normalizedWrapId)
+    return params.toString()
+}
+
+export function createVisualizerHref(wrapId: string | null | undefined): string {
+    const query = createVisualizerQueryString(wrapId)
+    return query ? `${APP_ROUTES.visualizer}?${query}` : APP_ROUTES.visualizer
+}
