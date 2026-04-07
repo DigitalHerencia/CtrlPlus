@@ -4,8 +4,15 @@ const mocks = vi.hoisted(() => ({
     getSession: vi.fn(),
     requireCapability: vi.fn(),
     getVisualizerWrapSelectionById: vi.fn(),
+    getMyVisualizerUploadRecordById: vi.fn(),
+    getReusableVisualizerPreviewByCacheKey: vi.fn(),
+    getVisualizerPreviewDTOForOwner: vi.fn(),
     buildWrapPreviewPrompt: vi.fn(),
     getHfModelName: vi.fn(),
+    getHfPreviewStrategy: vi.fn(),
+    getHfRetryCount: vi.fn(),
+    getHfTimeoutMs: vi.fn(),
+    getOptionalHfApiKey: vi.fn(),
     buildVisualizerCacheKey: vi.fn(),
     toVisualizerPreviewDTO: vi.fn(),
     prisma: {
@@ -36,6 +43,9 @@ vi.mock('@/lib/db/prisma', () => ({
 
 vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
     getVisualizerWrapSelectionById: mocks.getVisualizerWrapSelectionById,
+    getMyVisualizerUploadRecordById: mocks.getMyVisualizerUploadRecordById,
+    getReusableVisualizerPreviewByCacheKey: mocks.getReusableVisualizerPreviewByCacheKey,
+    getVisualizerPreviewDTOForOwner: mocks.getVisualizerPreviewDTOForOwner,
 }))
 
 vi.mock('@/lib/visualizer/prompting/build-wrap-preview-prompt', () => ({
@@ -44,6 +54,10 @@ vi.mock('@/lib/visualizer/prompting/build-wrap-preview-prompt', () => ({
 
 vi.mock('@/lib/visualizer/huggingface/client', () => ({
     getHfModelName: mocks.getHfModelName,
+    getHfPreviewStrategy: mocks.getHfPreviewStrategy,
+    getHfRetryCount: mocks.getHfRetryCount,
+    getHfTimeoutMs: mocks.getHfTimeoutMs,
+    getOptionalHfApiKey: mocks.getOptionalHfApiKey,
 }))
 
 vi.mock('@/lib/cache/cache-keys', () => ({
@@ -150,8 +164,8 @@ function makePreviewRecord(overrides: Record<string, unknown> = {}) {
         status: 'pending',
         cacheKey: 'cache-key',
         referenceSignature: 'reference-signature',
-        generationMode: 'reference_guided_edit',
-        generationProvider: 'huggingface',
+        generationMode: 'mask_guided_inpaint',
+        generationProvider: 'huggingface-space',
         generationModel: 'hf-test-model',
         generationPromptVersion: 'prompt-version',
         generationFallbackReason: null,
@@ -172,8 +186,8 @@ function makePreviewDTO(overrides: Record<string, unknown> = {}) {
         status: 'pending',
         cacheKey: 'cache-key',
         referenceSignature: 'reference-signature',
-        generationMode: 'reference_guided_edit',
-        generationProvider: 'huggingface',
+        generationMode: 'mask_guided_inpaint',
+        generationProvider: 'huggingface-space',
         generationModel: 'hf-test-model',
         generationPromptVersion: 'prompt-version',
         generationFallbackReason: null,
@@ -190,6 +204,17 @@ describe('createVisualizerPreview', () => {
         mocks.getSession.mockResolvedValue(makeSession())
         mocks.requireCapability.mockReturnValue(undefined)
         mocks.getVisualizerWrapSelectionById.mockResolvedValue(makeWrap())
+        mocks.getMyVisualizerUploadRecordById.mockResolvedValue(makeUploadRecord())
+        mocks.getReusableVisualizerPreviewByCacheKey.mockResolvedValue(null)
+        mocks.getVisualizerPreviewDTOForOwner.mockImplementation((previewId: string) =>
+            Promise.resolve(
+                makePreviewDTO({
+                    id: previewId,
+                    status: 'pending',
+                    processedImageUrl: null,
+                })
+            )
+        )
         mocks.getHfModelName.mockReturnValue('hf-test-model')
         mocks.buildWrapPreviewPrompt.mockReturnValue({
             prompt: 'Apply Ocean Spectrum wrap',
@@ -197,16 +222,6 @@ describe('createVisualizerPreview', () => {
             promptVersion: 'prompt-version',
         })
         mocks.buildVisualizerCacheKey.mockReturnValue('cache-key')
-        mocks.prisma.visualizerUpload.findFirst.mockResolvedValue(makeUploadRecord())
-        mocks.prisma.visualizerPreview.findFirst.mockImplementation(async ({ where }) => {
-            if ('cacheKey' in where) {
-                return null
-            }
-
-            return makePreviewRecord({
-                id: where.id,
-            })
-        })
         mocks.prisma.visualizerPreview.create.mockResolvedValue({ id: 'preview-1' })
         mocks.prisma.auditLog.create.mockResolvedValue(undefined)
         mocks.toVisualizerPreviewDTO.mockImplementation((preview) =>
@@ -219,23 +234,22 @@ describe('createVisualizerPreview', () => {
     })
 
     it('reuses an existing complete preview for the same upload and reference set', async () => {
-        mocks.prisma.visualizerPreview.findFirst.mockImplementation(async ({ where }) => {
-            if ('cacheKey' in where) {
-                return makePreviewRecord({
-                    id: 'preview-existing',
-                    status: 'complete',
-                    processedImageUrl:
-                        'https://app.local/api/visualizer/previews/preview-existing/image',
-                })
-            }
-
-            return makePreviewRecord({
+        mocks.getReusableVisualizerPreviewByCacheKey.mockResolvedValue(
+            makePreviewRecord({
                 id: 'preview-existing',
                 status: 'complete',
                 processedImageUrl:
                     'https://app.local/api/visualizer/previews/preview-existing/image',
             })
-        })
+        )
+        mocks.getVisualizerPreviewDTOForOwner.mockResolvedValue(
+            makePreviewDTO({
+                id: 'preview-existing',
+                status: 'complete',
+                processedImageUrl:
+                    'https://app.local/api/visualizer/previews/preview-existing/image',
+            })
+        )
 
         const result = await createVisualizerPreview({
             wrapId: 'wrap-1',
@@ -274,13 +288,10 @@ describe('createVisualizerPreview', () => {
         expect(mocks.getVisualizerWrapSelectionById).toHaveBeenCalledWith('wrap-1', {
             includeHidden: false,
         })
-        expect(mocks.prisma.visualizerUpload.findFirst).toHaveBeenCalledWith(
-            expect.objectContaining({
-                where: expect.objectContaining({
-                    id: 'upload-1',
-                    ownerClerkUserId: 'user-1',
-                }),
-            })
+        expect(mocks.getMyVisualizerUploadRecordById).toHaveBeenCalledWith('upload-1', 'user-1')
+        expect(mocks.getReusableVisualizerPreviewByCacheKey).toHaveBeenCalledWith(
+            'cache-key',
+            'user-1'
         )
         expect(mocks.prisma.visualizerPreview.create).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -326,7 +337,7 @@ describe('createVisualizerPreview', () => {
     })
 
     it('rejects preview creation when the upload is not owned by the current user', async () => {
-        mocks.prisma.visualizerUpload.findFirst.mockResolvedValue(null)
+        mocks.getMyVisualizerUploadRecordById.mockResolvedValue(null)
 
         await expect(
             createVisualizerPreview({

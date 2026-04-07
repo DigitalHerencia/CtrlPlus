@@ -1,6 +1,8 @@
-import sharp from 'sharp'
-
-import { getHfSpaceApiName, getHfSpaceId } from '@/lib/visualizer/huggingface/client'
+import {
+    getHfSpaceApiName,
+    getHfSpaceId,
+    getOptionalHfApiKey,
+} from '@/lib/visualizer/huggingface/client'
 
 import { HuggingFaceGenerationError } from './map-hf-error'
 
@@ -53,26 +55,6 @@ function pickImageLikeValue(payload: unknown): string | Blob | null {
     return null
 }
 
-function clampDimension(value: number) {
-    const rounded = Math.round(value / 32) * 32
-    return Math.max(256, Math.min(1024, rounded))
-}
-
-async function getOutputDimensions(vehicleBuffer: Buffer) {
-    const metadata = await sharp(vehicleBuffer).metadata()
-    if (!metadata.width || !metadata.height) {
-        return { width: 768, height: 1024 }
-    }
-
-    const longestSide = Math.max(metadata.width, metadata.height)
-    const scale = Math.min(1, 1024 / longestSide)
-
-    return {
-        width: clampDimension(metadata.width * scale),
-        height: clampDimension(metadata.height * scale),
-    }
-}
-
 type ViewApiResponse = {
     named_endpoints?: Record<
         string,
@@ -82,21 +64,79 @@ type ViewApiResponse = {
     >
 }
 
-function buildGalleryPayload(
-    gradio: { handle_file: (input: Blob) => unknown },
-    input: { vehicleBuffer: Buffer; referenceBuffers: Buffer[] }
-) {
-    const sourceBuffers = [input.vehicleBuffer, ...input.referenceBuffers.slice(0, 3)]
+function buildHandledFile(gradio: { handle_file: (input: Blob) => unknown }, buffer: Buffer) {
+    return gradio.handle_file(new Blob([new Uint8Array(buffer)], { type: 'image/png' }))
+}
 
-    return sourceBuffers.map((buffer, index) => ({
-        image: gradio.handle_file(new Blob([new Uint8Array(buffer)], { type: 'image/png' })),
-        caption: index === 0 ? 'source vehicle photo' : `wrap reference ${index}`,
-    }))
+function resolveParameterValue(
+    parameterName: string,
+    payload: {
+        boardImage: unknown
+        boardMask: unknown
+        prompt: string
+        negativePrompt: string
+    }
+) {
+    const normalizedName = parameterName.toLowerCase()
+
+    if (normalizedName === 'seed' || normalizedName.endsWith('_seed')) {
+        return Math.floor(Math.random() * 1_000_000_000)
+    }
+
+    if (normalizedName.includes('randomize') && normalizedName.includes('seed')) {
+        return true
+    }
+
+    if (normalizedName.includes('mask')) {
+        return payload.boardMask
+    }
+
+    if (
+        normalizedName === 'prompt' ||
+        normalizedName === 'text_prompt' ||
+        normalizedName === 'positive_prompt'
+    ) {
+        return payload.prompt
+    }
+
+    if (normalizedName === 'negative_prompt' || normalizedName === 'negative') {
+        return payload.negativePrompt
+    }
+
+    if (
+        normalizedName.includes('image') ||
+        normalizedName.includes('board') ||
+        normalizedName.includes('source')
+    ) {
+        return payload.boardImage
+    }
+
+    return null
+}
+
+function buildPredictPayload(
+    parameterNames: string[],
+    payload: {
+        boardImage: unknown
+        boardMask: unknown
+        prompt: string
+        negativePrompt: string
+    }
+) {
+    if (parameterNames.length === 0) {
+        return [payload.boardImage, payload.boardMask, payload.prompt, payload.negativePrompt]
+    }
+
+    return parameterNames.map((parameterName) => {
+        const resolved = resolveParameterValue(parameterName, payload)
+
+        return resolved
+    })
 }
 
 export async function generateViaHfSpace(input: {
-    vehicleBuffer: Buffer
-    referenceBuffers: Buffer[]
+    boardBuffer: Buffer
+    boardMaskBuffer: Buffer
     prompt: string
     negativePrompt: string
 }): Promise<Buffer> {
@@ -111,15 +151,18 @@ export async function generateViaHfSpace(input: {
     }
 
     const apiName = getHfSpaceApiName()
-    const hfToken = process.env.HF_API_KEY?.trim() || process.env.HUGGINGFACE_API_TOKEN?.trim()
+    const hfToken = getOptionalHfApiKey()
     const app = (await gradio.Client.connect(spaceId, hfToken ? { hf_token: hfToken } : {})) as {
         predict: (apiName: string, payload: unknown[]) => Promise<unknown>
         view_api?: () => Promise<unknown>
     }
 
-    const gallery = buildGalleryPayload(gradio, input)
-    const dimensions = await getOutputDimensions(input.vehicleBuffer)
-    const combinedPrompt = `${input.prompt} Strictly avoid the following: ${input.negativePrompt}`
+    const payload = {
+        boardImage: buildHandledFile(gradio, input.boardBuffer),
+        boardMask: buildHandledFile(gradio, input.boardMaskBuffer),
+        prompt: input.prompt,
+        negativePrompt: input.negativePrompt,
+    }
     const viewApi = (
         typeof app.view_api === 'function' ? await app.view_api() : null
     ) as ViewApiResponse | null
@@ -128,37 +171,7 @@ export async function generateViaHfSpace(input: {
             ?.map((parameter) => parameter.parameter_name ?? '')
             .filter(Boolean) ?? []
 
-    let response: unknown
-
-    if (parameterNames.includes('input_images')) {
-        response = await app.predict(apiName, [
-            combinedPrompt,
-            gallery,
-            0,
-            true,
-            dimensions.width,
-            dimensions.height,
-            12,
-            3.5,
-            true,
-        ])
-    } else if (parameterNames.includes('images')) {
-        response = await app.predict(apiName, [
-            gallery,
-            combinedPrompt,
-            0,
-            true,
-            4,
-            20,
-            dimensions.height,
-            dimensions.width,
-            true,
-        ])
-    } else {
-        throw new HuggingFaceGenerationError(
-            `space_response_invalid:Unsupported HF Space API contract for ${spaceId}:${apiName}.`
-        )
-    }
+    const response = await app.predict(apiName, buildPredictPayload(parameterNames, payload))
 
     const imageLike = pickImageLikeValue(response)
 

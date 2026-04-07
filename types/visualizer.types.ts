@@ -85,9 +85,11 @@ export interface GenerateWrapPreviewInput {
     model: string
     prompt: string
     negativePrompt: string
-    vehicleBuffer: Buffer
-    referenceBuffers: Buffer[]
+    boardBuffer: Buffer
+    boardMaskBuffer: Buffer
     referenceUrls: string[]
+    maskUrl?: string | null
+    notes?: string[]
 }
 
 export interface GenerateWrapPreviewResult {
@@ -115,14 +117,4 @@ export interface ScheduledVisualizerProcessingInput {
     previewId: string
     ownerClerkUserId: string
     includeHidden: boolean
-}
-
-export interface WrapPreviewGeneratorInput {
-    boardBuffer: Buffer
-    prompt: string
-    negativePrompt?: string | null
-}
-
-export interface WrapPreviewGeneratorAdapter {
-    generate(input: WrapPreviewGeneratorInput): Promise<Buffer>
 }

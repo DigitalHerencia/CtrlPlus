@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
-import { prisma } from '@/lib/db/prisma'
+import { getMyVisualizerUploadImageAssetById } from '@/lib/fetchers/visualizer.fetchers'
 import { resolveVisualizerAssetDeliveryUrl } from '@/lib/visualizer/asset-delivery'
 import { verifySignedVisualizerAssetRequest } from '@/lib/visualizer/signed-asset-urls'
 
@@ -33,21 +33,7 @@ export async function GET(request: Request, { params }: VisualizerUploadImageRou
             return NextResponse.json({ error: 'Invalid asset URL' }, { status: 403 })
         }
 
-        const upload = await prisma.visualizerUpload.findFirst({
-            where: {
-                id: uploadId,
-                ownerClerkUserId: userId,
-                deletedAt: null,
-            },
-            select: {
-                legacyUrl: true,
-                cloudinaryPublicId: true,
-                cloudinaryVersion: true,
-                cloudinaryResourceType: true,
-                cloudinaryDeliveryType: true,
-                format: true,
-            },
-        })
+        const upload = await getMyVisualizerUploadImageAssetById(uploadId, userId)
 
         if (!upload) {
             return NextResponse.json({ error: 'Upload not found' }, { status: 404 })

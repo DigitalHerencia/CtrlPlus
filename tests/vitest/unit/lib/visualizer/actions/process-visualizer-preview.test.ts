@@ -4,12 +4,20 @@ const mocks = vi.hoisted(() => ({
     getSession: vi.fn(),
     requireCapability: vi.fn(),
     getVisualizerWrapSelectionById: vi.fn(),
+    getVisualizerPreviewForProcessing: vi.fn(),
+    getVisualizerPreviewDTOForOwner: vi.fn(),
     readPhotoBuffer: vi.fn(),
     readImageBufferFromUrl: vi.fn(),
     buildWrapPreviewPrompt: vi.fn(),
+    buildGenerationInputBoard: vi.fn(),
     generateWrapPreview: vi.fn(),
     getHfModelName: vi.fn(),
+    getHfPreviewStrategy: vi.fn(),
+    getHfRetryCount: vi.fn(),
+    getHfTimeoutMs: vi.fn(),
+    getOptionalHfApiKey: vi.fn(),
     persistVisualizerPreviewAsset: vi.fn(),
+    persistVisualizerPreviewMaskAsset: vi.fn(),
     toVisualizerPreviewDTO: vi.fn(),
     prisma: {
         visualizerPreview: {
@@ -36,6 +44,8 @@ vi.mock('@/lib/db/prisma', () => ({
 
 vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
     getVisualizerWrapSelectionById: mocks.getVisualizerWrapSelectionById,
+    getVisualizerPreviewForProcessing: mocks.getVisualizerPreviewForProcessing,
+    getVisualizerPreviewDTOForOwner: mocks.getVisualizerPreviewDTOForOwner,
 }))
 
 vi.mock('@/lib/uploads/image-processing', () => ({
@@ -48,17 +58,26 @@ vi.mock('@/lib/visualizer/prompting/build-wrap-preview-prompt', () => ({
     buildWrapPreviewPrompt: mocks.buildWrapPreviewPrompt,
 }))
 
+vi.mock('@/lib/visualizer/preprocessing/build-generation-input-board', () => ({
+    buildGenerationInputBoard: mocks.buildGenerationInputBoard,
+}))
+
 vi.mock('@/lib/visualizer/huggingface/generate-wrap-preview', () => ({
     generateWrapPreview: mocks.generateWrapPreview,
 }))
 
 vi.mock('@/lib/visualizer/huggingface/client', () => ({
     getHfModelName: mocks.getHfModelName,
+    getHfPreviewStrategy: mocks.getHfPreviewStrategy,
+    getHfRetryCount: mocks.getHfRetryCount,
+    getHfTimeoutMs: mocks.getHfTimeoutMs,
+    getOptionalHfApiKey: mocks.getOptionalHfApiKey,
 }))
 
 vi.mock('@/lib/uploads/storage', () => ({
     persistVisualizerUploadAsset: vi.fn(),
     persistVisualizerPreviewAsset: mocks.persistVisualizerPreviewAsset,
+    persistVisualizerPreviewMaskAsset: mocks.persistVisualizerPreviewMaskAsset,
 }))
 
 vi.mock('@/lib/fetchers/visualizer.mappers', () => ({
@@ -198,6 +217,10 @@ describe('processVisualizerPreview', () => {
         mocks.getSession.mockResolvedValue(makeSession())
         mocks.requireCapability.mockReturnValue(undefined)
         mocks.getVisualizerWrapSelectionById.mockResolvedValue(makeWrap())
+        mocks.getVisualizerPreviewForProcessing.mockResolvedValue(makePreviewRecord())
+        mocks.getVisualizerPreviewDTOForOwner.mockImplementation((previewId: string) =>
+            Promise.resolve(makePreviewDTO({ id: previewId }))
+        )
         mocks.readPhotoBuffer.mockResolvedValue({
             buffer: Buffer.from('vehicle-bytes'),
             contentType: 'image/png',
@@ -208,17 +231,44 @@ describe('processVisualizerPreview', () => {
             negativePrompt: 'No distortion',
             promptVersion: 'prompt-version',
         })
+        mocks.buildGenerationInputBoard.mockResolvedValue({
+            boardBuffer: Buffer.from('board-bytes'),
+            boardMaskBuffer: Buffer.from('mask-bytes'),
+            maskStrategy: 'hf_segmentation',
+            notes: ['mask_source=hf_segmentation'],
+        })
         mocks.generateWrapPreview.mockResolvedValue({
             imageBuffer: Buffer.from('generated-preview'),
             status: 'ok',
             finalImageUrl: null,
-            maskUrl: null,
+            maskUrl: 'https://res.cloudinary.com/demo/image/authenticated/v2/preview-mask.png',
             referenceUrls: ['https://example.com/hero-detail.png'],
             model: 'hf-generated-model',
             prompt: 'Apply Ocean Spectrum wrap',
-            notes: ['provider=huggingface-space:test/space'],
+            notes: [
+                'mask_source=hf_segmentation',
+                'mask_strategy:hf_segmentation',
+                'provider=huggingface-space:test/space',
+            ],
         })
         mocks.getHfModelName.mockReturnValue('hf-test-model')
+        mocks.persistVisualizerPreviewMaskAsset.mockResolvedValue({
+            assetId: 'asset-mask-1',
+            publicId: 'ctrlplus/visualizer/outputs/user-1/masks/preview-1-mask',
+            version: 2,
+            resourceType: 'image',
+            deliveryType: 'authenticated',
+            assetFolder: 'ctrlplus/visualizer/outputs/user-1/masks',
+            secureUrl: 'https://res.cloudinary.com/demo/image/authenticated/v2/preview-mask.png',
+            format: 'png',
+            bytes: 256,
+            width: 1792,
+            height: 1024,
+            mimeType: 'image/png',
+            originalFileName: null,
+            contentHash: 'mask-hash',
+            legacyUrl: null,
+        })
         mocks.persistVisualizerPreviewAsset.mockResolvedValue({
             assetId: 'asset-1',
             publicId: 'ctrlplus/visualizer/previews/user-1/preview-1',
@@ -252,28 +302,55 @@ describe('processVisualizerPreview', () => {
     })
 
     it('processes a pending preview and records a terminal complete state', async () => {
-        mocks.prisma.visualizerPreview.findFirst
-            .mockResolvedValueOnce(makePreviewRecord())
-            .mockResolvedValueOnce(
-                makePreviewRecord({
-                    status: 'complete',
-                    processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
-                    generationModel: 'hf-generated-model',
-                })
-            )
+        mocks.getVisualizerPreviewForProcessing.mockResolvedValueOnce(makePreviewRecord())
+        mocks.getVisualizerPreviewDTOForOwner.mockResolvedValueOnce(
+            makePreviewDTO({
+                id: 'preview-1',
+                status: 'complete',
+                processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
+                generationModel: 'hf-generated-model',
+            })
+        )
 
         const result = await processVisualizerPreview({ previewId: 'preview-1' })
 
         expect(mocks.readPhotoBuffer).toHaveBeenCalledWith('https://cloudinary.com/vehicle.png')
         expect(mocks.readImageBufferFromUrl).toHaveBeenCalledTimes(2)
-        expect(mocks.generateWrapPreview).toHaveBeenCalledWith(
+        expect(mocks.buildGenerationInputBoard).toHaveBeenCalledWith(
             expect.objectContaining({
                 vehicleBuffer: expect.any(Buffer),
                 referenceBuffers: expect.arrayContaining([expect.any(Buffer)]),
+                wrapName: 'Ocean Spectrum',
+            })
+        )
+        expect(mocks.persistVisualizerPreviewMaskAsset).toHaveBeenCalledWith(
+            expect.objectContaining({
+                previewId: 'preview-1',
+                ownerClerkUserId: 'user-1',
+                buffer: Buffer.from('mask-bytes'),
+            })
+        )
+        expect(mocks.generateWrapPreview).toHaveBeenCalledWith(
+            expect.objectContaining({
+                boardBuffer: Buffer.from('board-bytes'),
+                boardMaskBuffer: Buffer.from('mask-bytes'),
                 referenceUrls: expect.any(Array),
+                maskUrl: 'https://res.cloudinary.com/demo/image/authenticated/v2/preview-mask.png',
+                notes: expect.arrayContaining([
+                    'mask_source=hf_segmentation',
+                    'mask_strategy:hf_segmentation',
+                ]),
             })
         )
         expect(mocks.persistVisualizerPreviewAsset).toHaveBeenCalled()
+        expect(mocks.prisma.auditLog.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    action: 'visualizerPreview.processed',
+                    details: expect.stringContaining('preview-mask.png'),
+                }),
+            })
+        )
         expect(result).toEqual(
             expect.objectContaining({
                 id: 'preview-1',
@@ -285,7 +362,7 @@ describe('processVisualizerPreview', () => {
     })
 
     it('throws when preview cannot be found for the current owner', async () => {
-        mocks.prisma.visualizerPreview.findFirst.mockResolvedValue(null)
+        mocks.getVisualizerPreviewForProcessing.mockResolvedValue(null)
 
         await expect(processVisualizerPreview({ previewId: 'missing' })).rejects.toThrow(
             'Preview not found.'
@@ -295,21 +372,19 @@ describe('processVisualizerPreview', () => {
     })
 
     it('returns an existing completed preview without reprocessing', async () => {
-        mocks.prisma.visualizerPreview.findFirst
-            .mockResolvedValueOnce(
-                makePreviewRecord({
-                    status: 'complete',
-                    processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
-                    resultCloudinaryPublicId: 'ctrlplus/visualizer/previews/user-1/preview-1',
-                })
-            )
-            .mockResolvedValueOnce(
-                makePreviewRecord({
-                    status: 'complete',
-                    processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
-                    resultCloudinaryPublicId: 'ctrlplus/visualizer/previews/user-1/preview-1',
-                })
-            )
+        mocks.getVisualizerPreviewForProcessing.mockResolvedValueOnce(
+            makePreviewRecord({
+                status: 'complete',
+                processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
+                resultCloudinaryPublicId: 'ctrlplus/visualizer/previews/user-1/preview-1',
+            })
+        )
+        mocks.getVisualizerPreviewDTOForOwner.mockResolvedValueOnce(
+            makePreviewDTO({
+                status: 'complete',
+                processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
+            })
+        )
 
         const result = await processVisualizerPreview({ previewId: 'preview-1' })
 
@@ -324,7 +399,7 @@ describe('processVisualizerPreview', () => {
     })
 
     it('marks the preview as failed when the source photo cannot be read', async () => {
-        mocks.prisma.visualizerPreview.findFirst.mockResolvedValueOnce(makePreviewRecord())
+        mocks.getVisualizerPreviewForProcessing.mockResolvedValueOnce(makePreviewRecord())
         mocks.readPhotoBuffer.mockRejectedValue(new Error('Preview generation failed.'))
 
         await expect(processVisualizerPreview({ previewId: 'preview-1' })).rejects.toThrow(
@@ -343,7 +418,7 @@ describe('processVisualizerPreview', () => {
     })
 
     it('marks preview failed when wrap selection is unavailable', async () => {
-        mocks.prisma.visualizerPreview.findFirst.mockResolvedValueOnce(makePreviewRecord())
+        mocks.getVisualizerPreviewForProcessing.mockResolvedValueOnce(makePreviewRecord())
         mocks.getVisualizerWrapSelectionById.mockResolvedValue(null)
 
         await expect(processVisualizerPreview({ previewId: 'preview-1' })).rejects.toThrow(
@@ -359,16 +434,45 @@ describe('processVisualizerPreview', () => {
         })
     })
 
+    it('includes failing reference asset context when wrap reference loading fails', async () => {
+        mocks.prisma.visualizerPreview.findFirst.mockResolvedValueOnce(makePreviewRecord())
+        mocks.readImageBufferFromUrl
+            .mockRejectedValueOnce(new Error('Invalid URL'))
+            .mockRejectedValueOnce(new Error('Invalid URL'))
+
+        const previewPromise = processVisualizerPreview({ previewId: 'preview-1' })
+
+        await expect(previewPromise).rejects.toThrow(
+            'No usable wrap reference assets were available for preview generation.'
+        )
+
+        await expect(previewPromise).rejects.toThrow(
+            'reference_image:hero-1:invalid_detail_url:https://example.com/hero-detail.png'
+        )
+
+        expect(mocks.prisma.visualizerPreview.update).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                where: { id: 'preview-1' },
+                data: expect.objectContaining({
+                    status: 'failed',
+                    generationFallbackReason: expect.stringContaining(
+                        'reference_image:hero-1:invalid_detail_url:https://example.com/hero-detail.png'
+                    ),
+                }),
+            })
+        )
+    })
+
     it('continues processing when one reference image is invalid but another is usable', async () => {
-        mocks.prisma.visualizerPreview.findFirst
-            .mockResolvedValueOnce(makePreviewRecord())
-            .mockResolvedValueOnce(
-                makePreviewRecord({
-                    status: 'complete',
-                    processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
-                    generationModel: 'hf-generated-model',
-                })
-            )
+        mocks.getVisualizerPreviewForProcessing.mockResolvedValueOnce(makePreviewRecord())
+        mocks.getVisualizerPreviewDTOForOwner.mockResolvedValueOnce(
+            makePreviewDTO({
+                id: 'preview-1',
+                status: 'complete',
+                processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
+                generationModel: 'hf-generated-model',
+            })
+        )
 
         mocks.readImageBufferFromUrl
             .mockRejectedValueOnce(new Error('Invalid URL'))
@@ -379,7 +483,7 @@ describe('processVisualizerPreview', () => {
         expect(mocks.readImageBufferFromUrl).toHaveBeenCalledTimes(2)
         expect(mocks.generateWrapPreview).toHaveBeenCalledWith(
             expect.objectContaining({
-                referenceBuffers: [expect.any(Buffer)],
+                referenceUrls: ['https://example.com/gallery-detail.png'],
             })
         )
         expect(result).toEqual(

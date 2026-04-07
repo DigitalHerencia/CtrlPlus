@@ -1,8 +1,60 @@
 {
   "artifact_type": "execution-ledger",
   "version": "1.0.0",
-  "updated_at": "2026-04-06",
+  "updated_at": "2026-04-07",
   "entries": [
+    {
+      "id": "LEDGER-012",
+      "timestamp": "2026-04-07T17:30:00Z",
+      "type": "refactor",
+      "summary": "Completed the visualizer fetcher-centralization pass, removed confirmed-unused legacy visualizer prompt/composite helpers and dead adapter types, repaired all affected Vitest mocks, and revalidated the domain with green typecheck, lint, prisma validation, unit tests, and production build. Integrated-browser verification reached the protected visualizer route but remains blocked on acquiring a Clerk-authenticated session for this automation pass.",
+      "files": [
+        "lib/fetchers/visualizer.fetchers.ts",
+        "lib/actions/visualizer.actions.ts",
+        "lib/uploads/image-processing.ts",
+        "types/visualizer.types.ts",
+        "tests/vitest/unit/lib/visualizer/actions/create-visualizer-preview.test.ts",
+        "tests/vitest/unit/lib/visualizer/actions/process-visualizer-preview.test.ts",
+        "tests/vitest/unit/lib/visualizer/actions/regenerate-visualizer-preview.test.ts",
+        ".agents/json/blockers.status.json",
+        ".agents/json/domains.visualizer.status.json",
+        ".agents/json/validation.report.json",
+        ".agents/json/execution-ledger.json"
+      ]
+    },
+    {
+      "id": "LEDGER-011",
+      "timestamp": "2026-04-07T18:20:00Z",
+      "type": "refactor",
+      "summary": "Re-audited the live visualizer route boundary, confirmed image routes already read via fetchers, removed the dead legacy HF preview adapter, tightened mask URL/debug threading in the action pipeline, refreshed stale blocker/task/domain artifacts, and validated the affected surfaces with focused Vitest coverage.",
+      "files": [
+        "lib/integrations/huggingface.ts",
+        "lib/actions/visualizer.actions.ts",
+        "tests/vitest/unit/lib/visualizer/actions/process-visualizer-preview.test.ts",
+        ".agents/json/blockers.status.json",
+        ".agents/json/domains.visualizer.status.json",
+        ".agents/json/tasks.backlog.json",
+        ".agents/json/execution-ledger.json",
+        ".agents/json/validation.report.json"
+      ]
+    },
+    {
+      "id": "LEDGER-010",
+      "timestamp": "2026-04-07T05:30:00Z",
+      "type": "investigation",
+      "summary": "Re-audited the current main branch before implementation, confirmed stale governance state versus actual code, identified direct Prisma reads in app/api visualizer routes, confirmed Hugging Face configuration duplication, and recorded the need to re-establish mask-consumption guarantees before continuing implementation.",
+      "files": [
+        "app/api/visualizer/previews/[previewId]/image/route.ts",
+        "app/api/visualizer/uploads/[uploadId]/image/route.ts",
+        "lib/integrations/huggingface.ts",
+        "lib/visualizer/huggingface/client.ts",
+        "lib/actions/visualizer.actions.ts",
+        "lib/visualizer/huggingface/generate-wrap-preview.ts",
+        "lib/visualizer/huggingface/space-client.ts",
+        ".agents/json/blockers.status.json",
+        ".agents/json/domains.visualizer.status.json"
+      ]
+    },
     {
       "id": "LEDGER-001",
       "timestamp": "2026-04-05T00:00:00Z",

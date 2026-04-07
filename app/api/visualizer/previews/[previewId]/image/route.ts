@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
-import { prisma } from '@/lib/db/prisma'
+import { getMyVisualizerPreviewImageAssetById } from '@/lib/fetchers/visualizer.fetchers'
 import { resolveVisualizerAssetDeliveryUrl } from '@/lib/visualizer/asset-delivery'
 import { verifySignedVisualizerAssetRequest } from '@/lib/visualizer/signed-asset-urls'
 
@@ -33,22 +33,7 @@ export async function GET(request: Request, { params }: VisualizerPreviewImageRo
             return NextResponse.json({ error: 'Invalid asset URL' }, { status: 403 })
         }
 
-        const preview = await prisma.visualizerPreview.findFirst({
-            where: {
-                id: previewId,
-                ownerClerkUserId: userId,
-                deletedAt: null,
-            },
-            select: {
-                resultLegacyUrl: true,
-                processedImageUrl: true,
-                resultCloudinaryPublicId: true,
-                resultCloudinaryVersion: true,
-                resultCloudinaryResourceType: true,
-                resultCloudinaryDeliveryType: true,
-                resultFormat: true,
-            },
-        })
+        const preview = await getMyVisualizerPreviewImageAssetById(previewId, userId)
 
         if (!preview) {
             return NextResponse.json({ error: 'Preview not found' }, { status: 404 })

@@ -2,22 +2,24 @@
   "artifact_type": "domain-status",
   "domain": "visualizer",
   "version": "1.0.0",
-  "updated_at": "2026-04-06",
+  "updated_at": "2026-04-07",
   "state": "active",
   "focus": [
     "owner-scoped uploads",
     "mask-guided preview generation",
     "authenticated preview delivery",
-    "mask-guided inpaint cutover"
+    "mask-guided inpaint cutover",
+    "architecture boundary repair",
+    "hf abstraction cleanup"
   ],
   "progress": {
-    "contract_alignment_pct": 96,
-    "instruction_alignment_pct": 97,
-    "prompt_alignment_pct": 82
+    "contract_alignment_pct": 95,
+    "instruction_alignment_pct": 96,
+    "prompt_alignment_pct": 94
   },
   "next_actions": [
-    "Backfill dedicated preview-level persistence for mask artifact identifiers when schema change is approved",
-    "Run full build and e2e verification in CI with Hugging Face Space credentials configured",
-    "Add a provider health check endpoint for HF Space queue latency and timeout observability"
+    "Decide whether persisted mask debug metadata should be exposed beyond audit logs without widening the current preview DTO/API contract",
+    "Acquire or inject a valid Clerk-authenticated browser session to complete integrated visualizer UI preview verification",
+    "Keep signed visualizer asset delivery and fetcher-backed route boundaries aligned as the preview DTO evolves"
   ]
 }

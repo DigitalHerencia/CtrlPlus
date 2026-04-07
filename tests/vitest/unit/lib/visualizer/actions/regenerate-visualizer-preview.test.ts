@@ -3,10 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
     getSession: vi.fn(),
     requireCapability: vi.fn(),
+    getMyVisualizerPreviewRecordById: vi.fn(),
+    getVisualizerPreviewDTOForOwner: vi.fn(),
     toVisualizerPreviewDTO: vi.fn(),
     prisma: {
         visualizerPreview: {
-            findFirst: vi.fn(),
             update: vi.fn(),
         },
         auditLog: {
@@ -29,6 +30,8 @@ vi.mock('@/lib/db/prisma', () => ({
 
 vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
     getVisualizerWrapSelectionById: vi.fn(),
+    getMyVisualizerPreviewRecordById: mocks.getMyVisualizerPreviewRecordById,
+    getVisualizerPreviewDTOForOwner: mocks.getVisualizerPreviewDTOForOwner,
 }))
 
 vi.mock('@/lib/fetchers/visualizer.mappers', () => ({
@@ -61,8 +64,8 @@ function makePreviewRecord(overrides: Record<string, unknown> = {}) {
         status: 'complete',
         cacheKey: 'cache-key',
         referenceSignature: 'reference-signature',
-        generationMode: 'reference_guided_edit',
-        generationProvider: 'huggingface',
+        generationMode: 'mask_guided_inpaint',
+        generationProvider: 'huggingface-space',
         generationModel: 'hf-test-model',
         generationPromptVersion: 'prompt-version',
         generationFallbackReason: null,
@@ -86,8 +89,8 @@ function makePreviewDTO(overrides: Record<string, unknown> = {}) {
         status: 'pending',
         cacheKey: 'cache-key',
         referenceSignature: 'reference-signature',
-        generationMode: 'reference_guided_edit',
-        generationProvider: 'huggingface',
+        generationMode: 'mask_guided_inpaint',
+        generationProvider: 'huggingface-space',
         generationModel: 'hf-test-model',
         generationPromptVersion: 'prompt-version',
         generationFallbackReason: null,
@@ -103,6 +106,10 @@ describe('regenerateVisualizerPreview', () => {
         vi.clearAllMocks()
         mocks.getSession.mockResolvedValue(makeSession())
         mocks.requireCapability.mockReturnValue(undefined)
+        mocks.getMyVisualizerPreviewRecordById.mockResolvedValue(makePreviewRecord())
+        mocks.getVisualizerPreviewDTOForOwner.mockImplementation((previewId: string) =>
+            Promise.resolve(makePreviewDTO({ id: previewId, status: 'pending' }))
+        )
         mocks.prisma.visualizerPreview.update.mockResolvedValue(undefined)
         mocks.prisma.auditLog.create.mockResolvedValue(undefined)
         mocks.toVisualizerPreviewDTO.mockImplementation((preview) =>
@@ -115,19 +122,18 @@ describe('regenerateVisualizerPreview', () => {
     })
 
     it('resets a preview to pending and clears prior processed output', async () => {
-        mocks.prisma.visualizerPreview.findFirst
-            .mockResolvedValueOnce(
-                makePreviewRecord({
-                    processedImageUrl:
-                        'https://app.local/api/visualizer/previews/preview-1/image',
-                })
-            )
-            .mockResolvedValueOnce(
-                makePreviewRecord({
-                    status: 'pending',
-                    processedImageUrl: null,
-                })
-            )
+        mocks.getMyVisualizerPreviewRecordById.mockResolvedValueOnce(
+            makePreviewRecord({
+                processedImageUrl: 'https://app.local/api/visualizer/previews/preview-1/image',
+            })
+        )
+        mocks.getVisualizerPreviewDTOForOwner.mockResolvedValueOnce(
+            makePreviewDTO({
+                id: 'preview-1',
+                status: 'pending',
+                processedImageUrl: null,
+            })
+        )
 
         const result = await regenerateVisualizerPreview({ previewId: 'preview-1' })
 
@@ -152,7 +158,7 @@ describe('regenerateVisualizerPreview', () => {
     })
 
     it('throws when preview cannot be found', async () => {
-        mocks.prisma.visualizerPreview.findFirst.mockResolvedValue(null)
+        mocks.getMyVisualizerPreviewRecordById.mockResolvedValue(null)
 
         await expect(regenerateVisualizerPreview({ previewId: 'missing' })).rejects.toThrow(
             'Preview not found.'
@@ -161,14 +167,14 @@ describe('regenerateVisualizerPreview', () => {
     })
 
     it('records regeneration against the existing upload-backed preview', async () => {
-        mocks.prisma.visualizerPreview.findFirst
-            .mockResolvedValueOnce(makePreviewRecord())
-            .mockResolvedValueOnce(
-                makePreviewRecord({
-                    status: 'pending',
-                    processedImageUrl: null,
-                })
-            )
+        mocks.getMyVisualizerPreviewRecordById.mockResolvedValueOnce(makePreviewRecord())
+        mocks.getVisualizerPreviewDTOForOwner.mockResolvedValueOnce(
+            makePreviewDTO({
+                id: 'preview-1',
+                status: 'pending',
+                processedImageUrl: null,
+            })
+        )
 
         await regenerateVisualizerPreview({ previewId: 'preview-1' })
 

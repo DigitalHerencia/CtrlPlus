@@ -1,9 +1,61 @@
 {
   "artifact_type": "blocker-status",
   "version": "1.0.0",
-  "updated_at": "2026-04-06",
-  "active_blockers": [],
+  "updated_at": "2026-04-07",
+  "active_blockers": [
+    {
+      "id": "BLK-006",
+      "title": "Live visualizer UI verification is blocked by Clerk-authenticated session access in the integrated browser",
+      "identified_at": "2026-04-07",
+      "severity": "medium",
+      "impact": "The visualizer route correctly redirects to sign-in, but completing an authenticated browser session for this automation pass is blocked by Clerk verification flow access in the current test browser. Code-level refactor validation is green; end-to-end browser proof of preview generation remains pending session acquisition.",
+      "affected_files": [
+        "features/auth/login-form-client.tsx",
+        "features/auth/signup-form-client.tsx",
+        "app/(tenant)/visualizer/page.tsx"
+      ],
+      "required_before_completion": true
+    },
+    {
+      "id": "BLK-005",
+      "title": "Persisted visualizer mask debug metadata is not exposed in preview DTO/API responses",
+      "identified_at": "2026-04-07",
+      "severity": "medium",
+      "impact": "The board-mask generation and Cloudinary mask persistence path are wired and audited server-side, but exposing persisted mask metadata to clients would widen the current preview DTO and preview lookup route contract.",
+      "affected_files": [
+        "lib/actions/visualizer.actions.ts",
+        "types/visualizer.types.ts",
+        "lib/fetchers/visualizer.mappers.ts",
+        "app/api/visualizer/previews/[previewId]/route.ts"
+      ],
+      "required_before_completion": false
+    }
+  ],
   "resolved_blockers": [
+    {
+      "id": "BLK-007",
+      "title": "Visualizer reads remained split between actions and fetchers",
+      "resolved_at": "2026-04-07",
+      "resolution": "Moved visualizer preview/upload reuse and preview DTO retrieval reads into lib/fetchers/visualizer.fetchers.ts and updated visualizer action tests to use the new fetcher-based contract."
+    },
+    {
+      "id": "BLK-003",
+      "title": "Visualizer app routes read directly from Prisma inside app/**",
+      "resolved_at": "2026-04-07",
+      "resolution": "Re-audited the live preview/upload image routes, confirmed they already read through lib/fetchers/visualizer.fetchers.ts, and validated signed asset delivery behavior with focused route tests."
+    },
+    {
+      "id": "BLK-004",
+      "title": "Hugging Face visualizer configuration is duplicated across legacy and visualizer-specific modules",
+      "resolved_at": "2026-04-07",
+      "resolution": "Removed the dead legacy image-to-image preview adapter from lib/integrations/huggingface.ts and kept preview-path configuration sourced from the canonical lib/visualizer/huggingface/client.ts surface."
+    },
+    {
+      "id": "BLK-005-BROAD",
+      "title": "Current main-branch visualizer generation path does not prove enforced mask consumption end to end",
+      "resolved_at": "2026-04-07",
+      "resolution": "Confirmed the live action path builds a board mask, passes boardMaskBuffer into the HF Space client, persists the mask asset when available, and records mask URL/strategy metadata in preview audit payloads."
+    },
     {
       "id": "BLK-001",
       "title": "Instruction-file overwrite patch conflict",

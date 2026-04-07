@@ -1,7 +1,7 @@
 {
   "artifact_type": "validation-report",
   "version": "1.0.0",
-  "updated_at": "2026-04-06",
+  "updated_at": "2026-04-07",
   "checks": [
     {
       "id": "VAL-001",
@@ -110,6 +110,36 @@
       "name": "visualizer-public-hf-space-inference",
       "status": "pass",
       "details": "A direct `@gradio/client` call to the public `black-forest-labs/FLUX.2-dev` Space succeeded with the real source vehicle photo plus three Inferno reference images, confirming the new default HF-only backend is callable and returns an edited image result."
+    },
+    {
+      "id": "VAL-019",
+      "name": "visualizer-refactor-focused-vitest",
+      "status": "pass",
+      "details": "`pnpm exec vitest run --passWithNoTests tests/vitest/unit/lib/visualizer/actions/process-visualizer-preview.test.ts tests/vitest/unit/lib/integrations/huggingface-config.test.ts tests/vitest/unit/test/api/visualizer-preview-image-route.test.ts tests/vitest/unit/test/api/visualizer-upload-image-route.test.ts` passed with 4 files and 22 tests after removing the dead legacy HF preview adapter, tightening mask audit threading, and correcting stale action-test expectations."
+    },
+    {
+      "id": "VAL-020",
+      "name": "visualizer-image-route-boundary-audit",
+      "status": "pass",
+      "details": "Live code audit confirmed app/api visualizer image routes already read through lib/fetchers/visualizer.fetchers.ts and preserve signed Cloudinary-backed delivery behavior; no Prisma reads remain in those routes."
+    },
+    {
+      "id": "VAL-021",
+      "name": "visualizer-full-unit-suite",
+      "status": "pass",
+      "details": "`pnpm test` passed with 46 test files and 191 tests after visualizer fetcher centralization and legacy-helper cleanup."
+    },
+    {
+      "id": "VAL-022",
+      "name": "visualizer-build-after-boundary-cleanup",
+      "status": "pass",
+      "details": "`pnpm build` passed after removing dead visualizer helper drift, centralizing action reads in fetchers, and updating action test mocks."
+    },
+    {
+      "id": "VAL-023",
+      "name": "visualizer-browser-auth-gate",
+      "status": "blocked",
+      "details": "Integrated browser reached `/visualizer` and confirmed protected-route auth behavior, but end-to-end preview generation could not be completed because this automation pass could not finish a Clerk-authenticated browser session in the current test browser."
     }
   ]
 }

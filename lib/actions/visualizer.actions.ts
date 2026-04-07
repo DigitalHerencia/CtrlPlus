@@ -9,12 +9,15 @@ import { getVisualizerPreviewExpiresAt } from '@/lib/cache/visualizer-cache'
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
-import { visualizerPreviewDTOFields } from '@/lib/db/selects/visualizer.selects'
-import { getVisualizerWrapSelectionById } from '@/lib/fetchers/visualizer.fetchers'
 import {
-    toVisualizerPreviewDTO,
-    toVisualizerUploadSnapshot,
-} from '@/lib/fetchers/visualizer.mappers'
+    getMyVisualizerPreviewRecordById,
+    getMyVisualizerUploadRecordById,
+    getReusableVisualizerPreviewByCacheKey,
+    getVisualizerPreviewDTOForOwner,
+    getVisualizerPreviewForProcessing,
+    getVisualizerWrapSelectionById,
+} from '@/lib/fetchers/visualizer.fetchers'
+import { toVisualizerUploadSnapshot } from '@/lib/fetchers/visualizer.mappers'
 import {
     createVisualizerUploadSchema,
     createVisualizerPreviewSchema,
@@ -26,10 +29,15 @@ import {
     readImageBufferFromUrl,
     readPhotoBuffer,
 } from '@/lib/uploads/image-processing'
-import { persistVisualizerPreviewAsset, persistVisualizerUploadAsset } from '@/lib/uploads/storage'
+import {
+    persistVisualizerPreviewAsset,
+    persistVisualizerPreviewMaskAsset,
+    persistVisualizerUploadAsset,
+} from '@/lib/uploads/storage'
 import { buildCloudinaryDeliveryUrl } from '@/lib/integrations/cloudinary'
 import { getHfModelName } from '@/lib/visualizer/huggingface/client'
 import { generateWrapPreview } from '@/lib/visualizer/huggingface/generate-wrap-preview'
+import { buildGenerationInputBoard } from '@/lib/visualizer/preprocessing/build-generation-input-board'
 import { buildWrapPreviewPrompt } from '@/lib/visualizer/prompting/build-wrap-preview-prompt'
 import type {
     ProcessVisualizerPreviewInput,
@@ -56,6 +64,10 @@ function getVisualizerOutputsFolder(ownerClerkUserId: string) {
     const root =
         process.env.CLOUDINARY_VISUALIZER_OUTPUTS_FOLDER?.trim() || 'ctrlplus/visualizer/outputs'
     return `${root}/${ownerClerkUserId}`
+}
+
+function getVisualizerMaskOutputsFolder(ownerClerkUserId: string) {
+    return `${getVisualizerOutputsFolder(ownerClerkUserId)}/masks`
 }
 
 function buildVisualizerReferenceImages(
@@ -93,6 +105,20 @@ function buildVisualizerPromptForWrap(wrap: VisualizerSelectableWrap) {
     })
 }
 
+function formatReferenceImageReadError(image: VisualizerReferenceImage, error: unknown): string {
+    if (!image.detailUrl?.trim()) {
+        return `reference_image:${image.id}:missing_detail_url`
+    }
+
+    const reason = error instanceof Error ? error.message : 'Unknown error'
+
+    if (/invalid url/i.test(reason)) {
+        return `reference_image:${image.id}:invalid_detail_url:${image.detailUrl}`
+    }
+
+    return `reference_image:${image.id}:${reason}`
+}
+
 async function resolveVisualizerGenerationAssets(wrap: VisualizerSelectableWrap) {
     const references = buildVisualizerReferenceImages(wrap)
     const prompt = buildVisualizerPromptForWrap(wrap)
@@ -109,7 +135,7 @@ async function resolveVisualizerGenerationAssets(wrap: VisualizerSelectableWrap)
             } catch (error) {
                 return {
                     status: 'rejected' as const,
-                    reason: error instanceof Error ? error.message : 'Unknown error',
+                    reason: formatReferenceImageReadError(image, error),
                     imageId: image.id,
                     detailUrl: image.detailUrl,
                 }
@@ -144,6 +170,7 @@ async function resolveVisualizerGenerationAssets(wrap: VisualizerSelectableWrap)
         prompt,
         referenceBuffers,
         referenceUrls,
+        referenceImageIds: references.map((image) => image.id),
         referenceSignature: buildVisualizerReferenceSignature(wrap),
     }
 }
@@ -175,19 +202,6 @@ async function readVisualizerUploadBuffer(upload: {
     }
 
     return readPhotoBuffer(sourceUrl)
-}
-
-async function getPreviewDTOForOwner(previewId: string, ownerClerkUserId: string) {
-    const preview = await prisma.visualizerPreview.findFirst({
-        where: {
-            id: previewId,
-            ownerClerkUserId,
-            deletedAt: null,
-        },
-        select: visualizerPreviewDTOFields,
-    })
-
-    return preview ? toVisualizerPreviewDTO(preview) : null
 }
 
 async function createVisualizerUploadInternal(params: {
@@ -332,7 +346,7 @@ async function completePreviewWithAsset(params: {
         },
     })
 
-    const preview = await getPreviewDTOForOwner(params.previewId, params.ownerClerkUserId)
+    const preview = await getVisualizerPreviewDTOForOwner(params.previewId, params.ownerClerkUserId)
     if (!preview) {
         throw new Error('Preview not found after completion.')
     }
@@ -345,16 +359,7 @@ async function processVisualizerPreviewForOwner({
     ownerClerkUserId,
     includeHidden,
 }: ScheduledVisualizerProcessingInput): Promise<VisualizerPreviewDTO> {
-    const preview = await prisma.visualizerPreview.findFirst({
-        where: {
-            id: previewId,
-            ownerClerkUserId,
-            deletedAt: null,
-        },
-        include: {
-            upload: true,
-        },
-    })
+    const preview = await getVisualizerPreviewForProcessing(previewId, ownerClerkUserId)
 
     if (!preview) {
         throw new Error('Preview not found.')
@@ -364,7 +369,7 @@ async function processVisualizerPreviewForOwner({
         preview.status === 'complete' &&
         (preview.resultCloudinaryPublicId || preview.resultLegacyUrl || preview.processedImageUrl)
     ) {
-        const existing = await getPreviewDTOForOwner(preview.id, ownerClerkUserId)
+        const existing = await getVisualizerPreviewDTOForOwner(preview.id, ownerClerkUserId)
         if (!existing) {
             throw new Error('Preview not found.')
         }
@@ -373,7 +378,10 @@ async function processVisualizerPreviewForOwner({
     }
 
     if (preview.status === 'processing') {
-        const processingPreview = await getPreviewDTOForOwner(preview.id, ownerClerkUserId)
+        const processingPreview = await getVisualizerPreviewDTOForOwner(
+            preview.id,
+            ownerClerkUserId
+        )
         if (!processingPreview) {
             throw new Error('Preview not found.')
         }
@@ -441,8 +449,15 @@ async function processVisualizerPreviewForOwner({
     const generationModel = getHfModelName()
     let vehicleBuffer: Buffer
     let prompt: ReturnType<typeof buildWrapPreviewPrompt>
-    let referenceBuffers: Buffer[]
-    let referenceUrls: string[]
+    let referenceBuffers: Buffer[] = []
+    let referenceUrls: string[] = []
+    let referenceImageIds: string[] = []
+    let boardBuffer: Buffer
+    let boardMaskBuffer: Buffer
+    let pipelineNotes: string[] = []
+    let maskUrl: string | null = null
+    let maskStrategy: string | null = null
+    let maskAssetPublicId: string | null = null
 
     try {
         const [uploadBufferResult, generationAssets] = await Promise.all([
@@ -454,6 +469,47 @@ async function processVisualizerPreviewForOwner({
         prompt = generationAssets.prompt
         referenceBuffers = generationAssets.referenceBuffers
         referenceUrls = generationAssets.referenceUrls
+        referenceImageIds = generationAssets.referenceImageIds
+
+        const generationInputBoard = await buildGenerationInputBoard({
+            vehicleBuffer,
+            referenceBuffers,
+            wrapName: wrap.name,
+        })
+
+        boardBuffer = generationInputBoard.boardBuffer
+        boardMaskBuffer = generationInputBoard.boardMaskBuffer
+        maskStrategy = generationInputBoard.maskStrategy
+        pipelineNotes = [
+            ...generationInputBoard.notes,
+            `mask_strategy:${generationInputBoard.maskStrategy}`,
+        ]
+
+        try {
+            const maskAsset = await persistVisualizerPreviewMaskAsset({
+                previewId: preview.id,
+                ownerClerkUserId,
+                buffer: generationInputBoard.boardMaskBuffer,
+                folder: getVisualizerMaskOutputsFolder(ownerClerkUserId),
+                metadata: {
+                    wrapId: wrap.id,
+                    uploadId: preview.uploadId,
+                    referenceSignature,
+                    maskStrategy: generationInputBoard.maskStrategy,
+                },
+            })
+
+            maskUrl = maskAsset.secureUrl ?? maskAsset.legacyUrl
+            maskAssetPublicId = maskAsset.publicId
+            if (maskAsset.publicId) {
+                pipelineNotes.push(`mask_asset_public_id:${maskAsset.publicId}`)
+            }
+        } catch (error) {
+            const maskPersistReason =
+                error instanceof Error ? error.message : 'unknown_mask_persist_failure'
+
+            pipelineNotes.push(`mask_asset_persist_failed:${maskPersistReason}`)
+        }
     } catch (error) {
         const failureReason =
             error instanceof Error
@@ -482,6 +538,7 @@ async function processVisualizerPreviewForOwner({
                     generationMode: 'mask_guided_inpaint',
                     generationProvider: 'huggingface-space',
                     generationModel,
+                    referenceImageIds: referenceImageIds ?? [],
                     error: failureReason,
                 }),
                 timestamp: new Date(),
@@ -496,9 +553,11 @@ async function processVisualizerPreviewForOwner({
             model: generationModel,
             prompt: prompt.prompt,
             negativePrompt: prompt.negativePrompt,
-            vehicleBuffer,
-            referenceBuffers,
+            boardBuffer,
+            boardMaskBuffer,
             referenceUrls,
+            maskUrl,
+            notes: pipelineNotes,
         })
 
         const storedAsset = await persistVisualizerPreviewAsset({
@@ -514,14 +573,16 @@ async function processVisualizerPreviewForOwner({
                 generationMode: 'mask_guided_inpaint',
                 generationProvider: 'huggingface-space',
                 generationModel: result.model,
-                referenceCount: referenceBuffers.length + 1,
+                referenceCount: referenceImageIds.length,
+                maskStrategy,
+                maskAssetPublicId,
             },
         })
 
         const pipelineResponse: VisualizerWrapPipelineResponse = {
             status: result.status,
             finalImageUrl: storedAsset.secureUrl,
-            maskUrl: null,
+            maskUrl: maskUrl ?? result.maskUrl,
             referenceUrls: result.referenceUrls,
             model: result.model,
             prompt: result.prompt,
@@ -543,6 +604,10 @@ async function processVisualizerPreviewForOwner({
                     generationMode: 'mask_guided_inpaint',
                     generationProvider: 'huggingface-space',
                     generationModel: result.model,
+                    referenceImageIds,
+                    maskStrategy,
+                    maskUrl: maskUrl ?? result.maskUrl,
+                    maskAssetPublicId,
                     pipeline: pipelineResponse,
                     fallbackReason: null,
                 }),
@@ -587,6 +652,10 @@ async function processVisualizerPreviewForOwner({
                     generationMode: 'mask_guided_inpaint',
                     generationProvider: 'huggingface-space',
                     generationModel,
+                    referenceImageIds,
+                    maskStrategy,
+                    maskUrl,
+                    maskAssetPublicId,
                     error: failureReason,
                 }),
                 timestamp: new Date(),
@@ -628,13 +697,7 @@ export async function createVisualizerPreview(input: {
 
     const [wrap, upload] = await Promise.all([
         getVisualizerWrapSelectionById(parsed.wrapId, { includeHidden }),
-        prisma.visualizerUpload.findFirst({
-            where: {
-                id: parsed.uploadId,
-                ownerClerkUserId: userId,
-                deletedAt: null,
-            },
-        }),
+        getMyVisualizerUploadRecordById(parsed.uploadId, userId),
     ])
 
     if (!wrap) {
@@ -660,20 +723,10 @@ export async function createVisualizerPreview(input: {
         promptVersion: prompt.promptVersion,
     })
 
-    const reusablePreview = await prisma.visualizerPreview.findFirst({
-        where: {
-            cacheKey,
-            ownerClerkUserId: userId,
-            deletedAt: null,
-            status: 'complete',
-            expiresAt: {
-                gt: new Date(),
-            },
-        },
-    })
+    const reusablePreview = await getReusableVisualizerPreviewByCacheKey(cacheKey, userId)
 
     if (reusablePreview) {
-        const existing = await getPreviewDTOForOwner(reusablePreview.id, userId)
+        const existing = await getVisualizerPreviewDTOForOwner(reusablePreview.id, userId)
         if (existing) {
             return existing
         }
@@ -727,7 +780,7 @@ export async function createVisualizerPreview(input: {
         includeHidden,
     })
 
-    const createdPreview = await getPreviewDTOForOwner(preview.id, userId)
+    const createdPreview = await getVisualizerPreviewDTOForOwner(preview.id, userId)
     if (!createdPreview) {
         throw new Error('Preview not found after creation.')
     }
@@ -747,19 +800,7 @@ export async function regenerateVisualizerPreview(
     requireCapability(session.authz, 'visualizer.use')
 
     const parsed = regenerateVisualizerPreviewSchema.parse(input)
-    const preview = await prisma.visualizerPreview.findFirst({
-        where: {
-            id: parsed.previewId,
-            ownerClerkUserId: userId,
-            deletedAt: null,
-        },
-        select: {
-            id: true,
-            wrapId: true,
-            uploadId: true,
-            cacheKey: true,
-        },
-    })
+    const preview = await getMyVisualizerPreviewRecordById(parsed.previewId, userId)
 
     if (!preview) {
         throw new Error('Preview not found.')
@@ -808,7 +849,7 @@ export async function regenerateVisualizerPreview(
         includeHidden: session.isOwner || session.isPlatformAdmin,
     })
 
-    const resetPreview = await getPreviewDTOForOwner(preview.id, userId)
+    const resetPreview = await getVisualizerPreviewDTOForOwner(preview.id, userId)
     if (!resetPreview) {
         throw new Error('Preview not found after reset.')
     }

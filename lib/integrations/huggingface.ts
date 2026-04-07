@@ -1,10 +1,12 @@
-import { InferenceClient } from '@huggingface/inference'
 import sharp from 'sharp'
 import { getCloudinaryCredentials } from '@/lib/integrations/cloudinary'
-import type {
-    WrapPreviewGeneratorAdapter,
-    WrapPreviewGeneratorInput,
-} from '@/types/visualizer.types'
+import {
+    getHfModelName,
+    getHfPreviewStrategy,
+    getHfRetryCount,
+    getHfTimeoutMs,
+    getOptionalHfApiKey,
+} from '@/lib/visualizer/huggingface/client'
 
 function parseAllowedHosts(value: string | undefined): string[] {
     if (!value) {
@@ -35,13 +37,13 @@ export const visualizerConfig = {
     maskModel: process.env.HUGGINGFACE_VISUALIZER_MODEL ?? 'keras/segformer_b1_cityscapes_1024',
     huggingFaceModelRevision: process.env.HUGGINGFACE_VISUALIZER_REVISION ?? 'main',
     huggingFaceProvider: process.env.HUGGINGFACE_VISUALIZER_PROVIDER ?? 'self-hosted',
-    previewModel: process.env.HUGGINGFACE_VISUALIZER_PREVIEW_MODEL ?? '',
-    previewProvider: process.env.HUGGINGFACE_VISUALIZER_PREVIEW_PROVIDER ?? 'hf-inference',
+    previewModel: getHfModelName(),
+    previewProvider: getHfPreviewStrategy(),
     huggingFaceApiBase:
         process.env.HUGGINGFACE_INFERENCE_API_BASE ?? 'https://api-inference.huggingface.co/models',
-    huggingFaceToken: process.env.HF_API_KEY ?? process.env.HUGGINGFACE_API_TOKEN,
-    huggingFaceTimeoutMs: Number(process.env.HUGGINGFACE_TIMEOUT_MS ?? 12000),
-    huggingFaceRetries: Number(process.env.HUGGINGFACE_RETRIES ?? 2),
+    huggingFaceToken: getOptionalHfApiKey(),
+    huggingFaceTimeoutMs: getHfTimeoutMs(),
+    huggingFaceRetries: getHfRetryCount(),
     blendMode:
         (process.env.VISUALIZER_BLEND_MODE as 'multiply' | 'overlay' | undefined) ?? 'multiply',
     overlayOpacity: Number(process.env.VISUALIZER_OVERLAY_OPACITY ?? 0.58),
@@ -161,73 +163,4 @@ export async function fallbackCenterMask(imageBuffer: Buffer): Promise<Buffer> {
   `
 
     return sharp(Buffer.from(svgMask)).png().toBuffer()
-}
-
-export class HuggingFacePreviewUnavailableError extends Error {
-    constructor(message: string) {
-        super(message)
-        this.name = 'HuggingFacePreviewUnavailableError'
-    }
-}
-
-class HuggingFaceWrapPreviewAdapter implements WrapPreviewGeneratorAdapter {
-    private readonly client: InferenceClient
-
-    constructor() {
-        if (!visualizerConfig.huggingFaceToken) {
-            throw new HuggingFacePreviewUnavailableError(
-                'Hugging Face preview generation is not configured.'
-            )
-        }
-
-        if (!visualizerConfig.previewModel) {
-            throw new HuggingFacePreviewUnavailableError(
-                'Hugging Face preview model is not configured.'
-            )
-        }
-
-        this.client = new InferenceClient(visualizerConfig.huggingFaceToken)
-    }
-
-    async generate(input: WrapPreviewGeneratorInput): Promise<Buffer> {
-        const prompt = input.negativePrompt
-            ? `${input.prompt}\nNegative prompt: ${input.negativePrompt}`
-            : input.prompt
-
-        const generationPromise = this.client.imageToImage({
-            model: visualizerConfig.previewModel,
-            inputs: new Blob([new Uint8Array(input.boardBuffer)], { type: 'image/png' }),
-            parameters: {
-                prompt,
-            },
-        })
-
-        const result = await Promise.race([
-            generationPromise,
-            new Promise<never>((_, reject) =>
-                setTimeout(
-                    () =>
-                        reject(
-                            new HuggingFacePreviewUnavailableError(
-                                'Hugging Face preview generation timed out.'
-                            )
-                        ),
-                    visualizerConfig.huggingFaceTimeoutMs
-                )
-            ),
-        ]).catch((error: unknown) => {
-            if (error instanceof HuggingFacePreviewUnavailableError) {
-                throw error
-            }
-
-            const message = error instanceof Error ? error.message : 'Hugging Face preview failed.'
-            throw new HuggingFacePreviewUnavailableError(message)
-        })
-
-        return Buffer.from(await result.arrayBuffer())
-    }
-}
-
-export function createWrapPreviewGeneratorAdapter(): WrapPreviewGeneratorAdapter {
-    return new HuggingFaceWrapPreviewAdapter()
 }

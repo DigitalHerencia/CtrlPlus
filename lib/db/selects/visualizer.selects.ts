@@ -52,3 +52,22 @@ export const visualizerUploadSnapshotFields = {
     cloudinaryDeliveryType: true,
     format: true,
 } as const
+
+export const visualizerPreviewImageAssetFields = {
+    resultLegacyUrl: true,
+    processedImageUrl: true,
+    resultCloudinaryPublicId: true,
+    resultCloudinaryVersion: true,
+    resultCloudinaryResourceType: true,
+    resultCloudinaryDeliveryType: true,
+    resultFormat: true,
+} as const
+
+export const visualizerUploadImageAssetFields = {
+    legacyUrl: true,
+    cloudinaryPublicId: true,
+    cloudinaryVersion: true,
+    cloudinaryResourceType: true,
+    cloudinaryDeliveryType: true,
+    format: true,
+} as const

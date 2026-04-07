@@ -7,7 +7,12 @@ import {
     listVisualizerSelectableWraps,
     type WrapVisibilityScope,
 } from '@/lib/fetchers/catalog.fetchers'
-import { visualizerUploadSnapshotFields, visualizerPreviewDTOFields } from '@/lib/db/selects/visualizer.selects'
+import {
+    visualizerPreviewDTOFields,
+    visualizerPreviewImageAssetFields,
+    visualizerUploadImageAssetFields,
+    visualizerUploadSnapshotFields,
+} from '@/lib/db/selects/visualizer.selects'
 import {
     toVisualizerPreviewDTO,
     toVisualizerUploadSnapshot,
@@ -116,4 +121,110 @@ export async function getMyVisualizerUploadById(
     })
 
     return upload ? toVisualizerUploadSnapshot(upload) : null
+}
+
+export async function getMyVisualizerPreviewImageAssetById(
+    previewId: string,
+    ownerClerkUserId: string
+) {
+    return prisma.visualizerPreview.findFirst({
+        where: {
+            id: previewId,
+            ownerClerkUserId,
+            deletedAt: null,
+        },
+        select: visualizerPreviewImageAssetFields,
+    })
+}
+
+export async function getVisualizerPreviewDTOForOwner(
+    previewId: string,
+    ownerClerkUserId: string
+): Promise<VisualizerPreviewDTO | null> {
+    const preview = await prisma.visualizerPreview.findFirst({
+        where: {
+            id: previewId,
+            ownerClerkUserId,
+            deletedAt: null,
+        },
+        select: visualizerPreviewDTOFields,
+    })
+
+    return preview ? toVisualizerPreviewDTO(preview) : null
+}
+
+export async function getVisualizerPreviewForProcessing(
+    previewId: string,
+    ownerClerkUserId: string
+) {
+    return prisma.visualizerPreview.findFirst({
+        where: {
+            id: previewId,
+            ownerClerkUserId,
+            deletedAt: null,
+        },
+        include: {
+            upload: true,
+        },
+    })
+}
+
+export async function getMyVisualizerUploadRecordById(uploadId: string, ownerClerkUserId: string) {
+    return prisma.visualizerUpload.findFirst({
+        where: {
+            id: uploadId,
+            ownerClerkUserId,
+            deletedAt: null,
+        },
+    })
+}
+
+export async function getReusableVisualizerPreviewByCacheKey(
+    cacheKey: string,
+    ownerClerkUserId: string
+) {
+    return prisma.visualizerPreview.findFirst({
+        where: {
+            cacheKey,
+            ownerClerkUserId,
+            deletedAt: null,
+            status: 'complete',
+            expiresAt: {
+                gt: new Date(),
+            },
+        },
+    })
+}
+
+export async function getMyVisualizerPreviewRecordById(
+    previewId: string,
+    ownerClerkUserId: string
+) {
+    return prisma.visualizerPreview.findFirst({
+        where: {
+            id: previewId,
+            ownerClerkUserId,
+            deletedAt: null,
+        },
+        select: {
+            id: true,
+            wrapId: true,
+            uploadId: true,
+            cacheKey: true,
+        },
+    })
+}
+
+export async function getMyVisualizerUploadImageAssetById(
+    uploadId: string,
+    ownerClerkUserId: string
+) {
+    return prisma.visualizerUpload.findFirst({
+        where: {
+            id: uploadId,
+            ownerClerkUserId,
+            deletedAt: null,
+        },
+        select: visualizerUploadImageAssetFields,
+    })
 }

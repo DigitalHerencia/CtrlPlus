@@ -1,7 +1,7 @@
 {
   "artifact_type": "task-backlog",
   "version": "1.0.0",
-  "updated_at": "2026-04-06",
+  "updated_at": "2026-04-07",
   "tasks": [
     {
       "id": "CAT-ASSET-001",
@@ -173,7 +173,7 @@
       "id": "VIS-PIPE-005",
       "title": "Cut visualizer preview generation over to a mask-guided Hugging Face Space pipeline",
       "priority": "high",
-      "status": "planned",
+      "status": "in-progress",
       "owner": "visualizer",
       "dependencies": [
         "VIS-REF-003",
@@ -204,7 +204,8 @@
         "Primary preview generation uses a mask-guided Hugging Face Space or equivalent mask-aware provider path",
         "Preview attempts no longer depend on generic board-only image-to-image as the production default",
         "Reference URL failures are classified with wrap-image context instead of raw Invalid URL errors",
-        "Preview audit/debug output captures enough provider and mask evidence to diagnose degraded runs"
+        "Preview audit/debug output captures enough provider and mask evidence to diagnose degraded runs",
+        "Route-level image delivery remains signed and fetcher-backed without Prisma reads in app/api"
       ]
     }
   ]

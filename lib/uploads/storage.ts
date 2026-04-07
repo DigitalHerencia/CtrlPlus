@@ -350,3 +350,46 @@ export async function persistVisualizerPreviewAsset(params: {
         mimeType: contentType,
     }
 }
+
+export async function persistVisualizerPreviewMaskAsset(params: {
+    previewId: string
+    ownerClerkUserId: string
+    buffer: Buffer
+    contentType?: string
+    folder?: string
+    metadata?: Record<string, string | number | null | undefined>
+}): Promise<PersistedVisualizerAsset> {
+    const contentType = params.contentType ?? 'image/png'
+    const contentHash = computeContentHash(params.buffer)
+    const uploadPreset = process.env.CLOUDINARY_VISUALIZER_UPLOAD_PRESET?.trim() ?? null
+    const folder =
+        params.folder?.trim() ||
+        `${
+            process.env.CLOUDINARY_VISUALIZER_OUTPUTS_FOLDER?.trim() ||
+            process.env.CLOUDINARY_VISUALIZER_FOLDER?.trim() ||
+            'ctrlplus/visualizer/outputs'
+        }/${params.ownerClerkUserId}/masks`
+    const publicId = `${folder}/${params.previewId}-mask-${randomUUID()}`
+    const asset = await uploadImageToCloudinary({
+        publicId,
+        fileName: `${publicId}.png`,
+        buffer: params.buffer,
+        contentType,
+        uploadPreset,
+        assetFolder: folder,
+        deliveryType: 'authenticated',
+        metadata: {
+            ownerClerkUserId: params.ownerClerkUserId,
+            visualizerPreviewId: params.previewId,
+            assetRole: 'visualizer_preview_mask',
+            ...params.metadata,
+        },
+    })
+
+    return {
+        ...asset,
+        contentHash,
+        legacyUrl: null,
+        mimeType: contentType,
+    }
+}

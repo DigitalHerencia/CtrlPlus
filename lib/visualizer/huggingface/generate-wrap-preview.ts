@@ -8,27 +8,27 @@ export async function generateWrapPreview(
 ): Promise<GenerateWrapPreviewResult> {
     const model = input.model || getHfModelName()
     const retries = getHfRetryCount()
-    const notes: string[] = []
+    const notes = [...(input.notes ?? [])]
 
     for (let attempt = 0; attempt <= retries; attempt += 1) {
         try {
             const imageBuffer = await withHfTimeout(
                 generateViaHfSpace({
-                    vehicleBuffer: input.vehicleBuffer,
-                    referenceBuffers: input.referenceBuffers,
+                    boardBuffer: input.boardBuffer,
+                    boardMaskBuffer: input.boardMaskBuffer,
                     prompt: input.prompt,
                     negativePrompt: input.negativePrompt,
                 })
             )
 
             notes.push(`provider=huggingface-space:${getHfSpaceId()}`)
-            notes.push(`reference_count:${input.referenceBuffers.length}`)
+            notes.push(`reference_count:${input.referenceUrls.length}`)
 
             return {
                 imageBuffer,
                 status: 'ok',
                 finalImageUrl: null,
-                maskUrl: null,
+                maskUrl: input.maskUrl ?? null,
                 referenceUrls: input.referenceUrls,
                 model,
                 prompt: input.prompt,
