@@ -87,6 +87,26 @@ function resolveParameterValue(
         return true
     }
 
+    if (normalizedName === 'width') {
+        return 1024
+    }
+
+    if (normalizedName === 'height') {
+        return 1024
+    }
+
+    if (normalizedName === 'guidance_scale' || normalizedName.includes('guidance')) {
+        return 7.5
+    }
+
+    if (
+        normalizedName === 'num_inference_steps' ||
+        normalizedName === 'inference_steps' ||
+        normalizedName.includes('steps')
+    ) {
+        return 30
+    }
+
     if (normalizedName.includes('mask')) {
         return payload.boardMask
     }
@@ -152,9 +172,30 @@ export async function generateViaHfSpace(input: {
 
     const apiName = getHfSpaceApiName()
     const hfToken = getOptionalHfApiKey()
-    const app = (await gradio.Client.connect(spaceId, hfToken ? { hf_token: hfToken } : {})) as {
+    const connectWithOptions = async (options?: Record<string, unknown>) =>
+        (await gradio.Client.connect(spaceId, options ?? {})) as {
+            predict: (apiName: string, payload: unknown[]) => Promise<unknown>
+            view_api?: () => Promise<unknown>
+        }
+
+    let app: {
         predict: (apiName: string, payload: unknown[]) => Promise<unknown>
         view_api?: () => Promise<unknown>
+    }
+
+    try {
+        app = await connectWithOptions(hfToken ? { hf_token: hfToken } : undefined)
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        const tokenRejected = /invalid username or password|unauthorized|401|403/i.test(message)
+
+        if (!hfToken || !tokenRejected) {
+            throw new HuggingFaceGenerationError(`space_connect_failed:${message}`)
+        }
+
+        // Public spaces can be used without a token. If the configured token is stale,
+        // retry once unauthenticated so generation can proceed.
+        app = await connectWithOptions()
     }
 
     const payload = {

@@ -13,10 +13,18 @@ export interface VisualizerHfConfig {
     apiKey: string | null
     modelName: string
     previewStrategy: HfPreviewStrategy
+    inferenceProvider: string
     spaceId: string
     spaceApiName: string
     timeoutMs: number
     retries: number
+    /**
+     * Img2img strength (0–1). Maps directly to the SD `strength` param:
+     * how much noise is added to the input latents before denoising.
+     * 0 = no change, 1 = fully regenerate (ignore original image).
+     * Default: 0.75
+     */
+    img2imgStrength: number
 }
 
 function trimEnvValue(value: string | undefined): string | null {
@@ -47,6 +55,24 @@ function parsePreviewStrategy(value: string | null): HfPreviewStrategy {
     return value === 'image_to_image' ? 'image_to_image' : 'space_inpaint'
 }
 
+function parseInferenceProvider(value: string | undefined): string {
+    const provider = trimEnvValue(value)
+    return provider ?? 'hf-inference'
+}
+
+/**
+ * Clamps to [0, 1]. Values outside that range are replaced with the default.
+ * Mirrors the Python SD pipeline's `strength` validation logic.
+ */
+function parseImg2ImgStrength(value: string | undefined): number {
+    const DEFAULT = 0.75
+    const parsed = Number(value)
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1) {
+        return DEFAULT
+    }
+    return parsed
+}
+
 export function getOptionalHfApiKey(): string | null {
     return trimEnvValue(process.env.HF_API_KEY) ?? trimEnvValue(process.env.HUGGINGFACE_API_TOKEN)
 }
@@ -62,10 +88,12 @@ export function getVisualizerHfConfig(): VisualizerHfConfig {
             trimEnvValue(process.env.HUGGINGFACE_VISUALIZER_PREVIEW_MODEL) ??
             spaceId,
         previewStrategy: parsePreviewStrategy(trimEnvValue(process.env.HF_PREVIEW_STRATEGY)),
+        inferenceProvider: parseInferenceProvider(process.env.HF_INFERENCE_PROVIDER),
         spaceId,
         spaceApiName: trimEnvValue(process.env.HF_SPACE_API_NAME) ?? DEFAULT_PUBLIC_SPACE_API_NAME,
         timeoutMs: parseTimeout(process.env.HF_TIMEOUT_MS ?? process.env.HUGGINGFACE_TIMEOUT_MS),
         retries: parseRetryCount(process.env.HF_RETRIES ?? process.env.HUGGINGFACE_RETRIES),
+        img2imgStrength: parseImg2ImgStrength(process.env.HF_IMG2IMG_STRENGTH),
     }
 }
 
@@ -87,6 +115,10 @@ export function getHfPreviewStrategy(): HfPreviewStrategy {
     return getVisualizerHfConfig().previewStrategy
 }
 
+export function getHfInferenceProvider(): string {
+    return getVisualizerHfConfig().inferenceProvider
+}
+
 export function getHfSpaceId(): string {
     return getVisualizerHfConfig().spaceId
 }
@@ -97,6 +129,10 @@ export function getHfSpaceApiName(): string {
 
 export function getHfTimeoutMs(): number {
     return getVisualizerHfConfig().timeoutMs
+}
+
+export function getHfImg2ImgStrength(): number {
+    return getVisualizerHfConfig().img2imgStrength
 }
 
 export function getHfRetryCount(): number {

@@ -90,6 +90,14 @@ export interface GenerateWrapPreviewInput {
     referenceUrls: string[]
     maskUrl?: string | null
     notes?: string[]
+    /**
+     * Img2img denoising strength (0–1).
+     * Mirrors SD `strength`: fraction of the full scheduler timestep range
+     * that is applied starting from the noised init image.
+     * 0 = keep original, 1 = fully regenerate. Default resolved from
+     * `HF_IMG2IMG_STRENGTH` env (fallback 0.75).
+     */
+    strength?: number
 }
 
 export interface GenerateWrapPreviewResult {
