@@ -35,17 +35,28 @@ export function TenantSidebar({
     children,
 }: TenantSidebarProps) {
     const pathname = usePathname()
-    const [open, setOpen] = useState(() => {
-        if (typeof window === 'undefined') {
-            return true
-        }
-
-        return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) !== 'false'
-    })
+    const [open, setOpen] = useState(true)
+    const [hasLoadedStoredPreference, setHasLoadedStoredPreference] = useState(false)
 
     useEffect(() => {
+        const frame = window.requestAnimationFrame(() => {
+            const storedPreference = window.localStorage.getItem(SIDEBAR_STORAGE_KEY)
+            setOpen(storedPreference !== 'false')
+            setHasLoadedStoredPreference(true)
+        })
+
+        return () => {
+            window.cancelAnimationFrame(frame)
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!hasLoadedStoredPreference) {
+            return
+        }
+
         window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(open))
-    }, [open])
+    }, [hasLoadedStoredPreference, open])
 
     const visibleNavItems = useMemo(
         () =>

@@ -26,6 +26,7 @@ import {
     getUserSettingsView,
     resolveSettingsTenantId,
 } from '@/lib/fetchers/settings.fetchers'
+import { DEFAULT_STORE_TIMEZONE } from '@/lib/constants/app'
 
 export async function updateUserPreferences(
     input: UpdateUserPreferencesInputDTO
@@ -54,19 +55,61 @@ export async function updateUserPreferences(
             preferredContact,
             appointmentReminders: parsed.appointmentReminders ?? current.appointmentReminders,
             marketingOptIn: parsed.marketingOptIn ?? current.marketingOptIn,
-            timezone: parsed.timezone ?? current.timezone ?? 'America/Denver',
+            timezone: parsed.timezone ?? current.timezone ?? DEFAULT_STORE_TIMEZONE,
+            fullName: parsed.fullName ?? current.fullName,
+            email: parsed.email ?? current.email,
+            phone: parsed.phone ?? current.phone,
+            billingAddressLine1: parsed.billingAddressLine1 ?? current.billingAddressLine1,
+            billingAddressLine2: parsed.billingAddressLine2 ?? current.billingAddressLine2,
+            billingCity: parsed.billingCity ?? current.billingCity,
+            billingState: parsed.billingState ?? current.billingState,
+            billingPostalCode: parsed.billingPostalCode ?? current.billingPostalCode,
+            billingCountry: parsed.billingCountry ?? current.billingCountry,
+            vehicleMake: parsed.vehicleMake ?? current.vehicleMake,
+            vehicleModel: parsed.vehicleModel ?? current.vehicleModel,
+            vehicleYear: parsed.vehicleYear ?? current.vehicleYear,
+            vehicleTrim: parsed.vehicleTrim ?? current.vehicleTrim,
         },
         update: {
             preferredContact,
             appointmentReminders: parsed.appointmentReminders ?? current.appointmentReminders,
             marketingOptIn: parsed.marketingOptIn ?? current.marketingOptIn,
-            timezone: parsed.timezone ?? current.timezone ?? 'America/Denver',
+            timezone: parsed.timezone ?? current.timezone ?? DEFAULT_STORE_TIMEZONE,
+            fullName: parsed.fullName ?? current.fullName,
+            email: parsed.email ?? current.email,
+            phone: parsed.phone ?? current.phone,
+            billingAddressLine1: parsed.billingAddressLine1 ?? current.billingAddressLine1,
+            billingAddressLine2: parsed.billingAddressLine2 ?? current.billingAddressLine2,
+            billingCity: parsed.billingCity ?? current.billingCity,
+            billingState: parsed.billingState ?? current.billingState,
+            billingPostalCode: parsed.billingPostalCode ?? current.billingPostalCode,
+            billingCountry: parsed.billingCountry ?? current.billingCountry,
+            vehicleMake: parsed.vehicleMake ?? current.vehicleMake,
+            vehicleModel: parsed.vehicleModel ?? current.vehicleModel,
+            vehicleYear: parsed.vehicleYear ?? current.vehicleYear,
+            vehicleTrim: parsed.vehicleTrim ?? current.vehicleTrim,
         },
         select: {
             preferredContact: true,
             appointmentReminders: true,
             marketingOptIn: true,
             timezone: true,
+            fullName: true,
+            email: true,
+            phone: true,
+            billingAddressLine1: true,
+            billingAddressLine2: true,
+            billingCity: true,
+            billingState: true,
+            billingPostalCode: true,
+            billingCountry: true,
+            vehicleMake: true,
+            vehicleModel: true,
+            vehicleYear: true,
+            vehicleTrim: true,
+            stripeCustomerId: true,
+            stripeDefaultPaymentMethodBrand: true,
+            stripeDefaultPaymentMethodLast4: true,
             updatedAt: true,
         },
     })
@@ -96,8 +139,53 @@ export async function updateUserPreferences(
         preferredContact: updated.preferredContact as 'email' | 'sms',
         appointmentReminders: updated.appointmentReminders,
         marketingOptIn: updated.marketingOptIn,
+        fullName: updated.fullName,
+        email: updated.email,
+        phone: updated.phone,
+        billingAddressLine1: updated.billingAddressLine1,
+        billingAddressLine2: updated.billingAddressLine2,
+        billingCity: updated.billingCity,
+        billingState: updated.billingState,
+        billingPostalCode: updated.billingPostalCode,
+        billingCountry: updated.billingCountry,
+        vehicleMake: updated.vehicleMake,
+        vehicleModel: updated.vehicleModel,
+        vehicleYear: updated.vehicleYear,
+        vehicleTrim: updated.vehicleTrim,
+        stripeCustomerId: updated.stripeCustomerId,
+        stripeDefaultPaymentMethodBrand: updated.stripeDefaultPaymentMethodBrand,
+        stripeDefaultPaymentMethodLast4: updated.stripeDefaultPaymentMethodLast4,
         updatedAt: updated.updatedAt.toISOString(),
     }
+}
+
+export async function syncStripePaymentSettingsSummary(input: {
+    clerkUserId: string
+    stripeCustomerId: string
+    stripeDefaultPaymentMethodId: string | null
+    stripeDefaultPaymentMethodBrand: string | null
+    stripeDefaultPaymentMethodLast4: string | null
+}): Promise<void> {
+    await prisma.websiteSettings.upsert({
+        where: { clerkUserId: input.clerkUserId },
+        create: {
+            clerkUserId: input.clerkUserId,
+            stripeCustomerId: input.stripeCustomerId,
+            stripeDefaultPaymentMethodId: input.stripeDefaultPaymentMethodId,
+            stripeDefaultPaymentMethodBrand: input.stripeDefaultPaymentMethodBrand,
+            stripeDefaultPaymentMethodLast4: input.stripeDefaultPaymentMethodLast4,
+            preferredContact: 'email',
+            appointmentReminders: true,
+            marketingOptIn: false,
+            timezone: DEFAULT_STORE_TIMEZONE,
+        },
+        update: {
+            stripeCustomerId: input.stripeCustomerId,
+            stripeDefaultPaymentMethodId: input.stripeDefaultPaymentMethodId,
+            stripeDefaultPaymentMethodBrand: input.stripeDefaultPaymentMethodBrand,
+            stripeDefaultPaymentMethodLast4: input.stripeDefaultPaymentMethodLast4,
+        },
+    })
 }
 
 export async function updateTenantSettings(

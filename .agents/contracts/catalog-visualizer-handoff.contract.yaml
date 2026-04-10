@@ -1,8 +1,8 @@
 contract_id: GOV-CATALOG-VISUALIZER-HANDOFF
-version: 1.1.0
+version: 1.2.0
 scope: catalog-visualizer
 owner: catalog
-last_reviewed: 2026-04-05
+last_reviewed: 2026-04-09
 rules:
   - id: CVH-001
     type: must
@@ -34,3 +34,13 @@ rules:
     statement: Visualizer uploads and previews must use authenticated storage plus server-authoritative delivery.
     applies_to: "lib/uploads/**, lib/integrations/**, app/api/visualizer/**"
     validation_hint: "Persist Cloudinary authority fields and issue signed application routes or signed URLs; do not rely on public secure_url values as the privacy boundary."
+  - id: CVH-007
+    type: must
+    statement: Catalog-to-visualizer-to-scheduling handoff must persist through a single active scheduling-owned booking draft keyed by the signed-in customer.
+    applies_to: "components/catalog/**, lib/actions/scheduling.actions.ts, lib/fetchers/visualizer.fetchers.ts, features/scheduling/**, prisma/schema.prisma"
+    validation_hint: "Catalog CTAs start or update the booking draft, /visualizer resolves wrapId from the request or draft, and /scheduling/book hydrates checkout state from the same draft."
+  - id: CVH-008
+    type: must
+    statement: Visualizer wrap selection must resolve from catalog-owned wrap IDs and persist preview output back into the active booking draft.
+    applies_to: "lib/actions/visualizer.actions.ts, lib/fetchers/visualizer.fetchers.ts, types/visualizer.types.ts"
+    validation_hint: "Reject static local wrap catalogs as the source of truth; persist wrapId, preview image URL, prompt metadata, and preview status for downstream scheduling reuse."

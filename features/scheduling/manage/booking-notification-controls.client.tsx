@@ -1,11 +1,7 @@
-'use client'
-
-import { useState } from 'react'
-
-import { BookingNotificationPanel } from '@/components/scheduling/manage/booking-notification-panel'
-
 export function BookingNotificationControlsClient() {
-    const [enabled, setEnabled] = useState(true)
-
-    return <BookingNotificationPanel enabled={enabled} onToggle={setEnabled} />
+    return (
+        <p className="text-sm text-neutral-300">
+            Booking emails are sent automatically when requests are created, confirmed, or rescheduled.
+        </p>
+    )
 }

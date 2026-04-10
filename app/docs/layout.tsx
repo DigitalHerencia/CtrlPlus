@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
+import { DocsHeader } from '@/components/shared/docs-header'
 import { SiteFooter } from '@/components/shared/site-footer'
-import { SiteHeader } from '@/components/shared/site-header'
 
 export const metadata: Metadata = {
     title: 'Documentation | CTRL+',
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
     return (
         <>
-            <SiteHeader />
+            <DocsHeader />
             <div className="min-h-screen bg-neutral-900 text-neutral-100">{children}</div>
             <SiteFooter />
         </>

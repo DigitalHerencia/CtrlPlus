@@ -12,7 +12,11 @@ export default async function VisualizerPage({ searchParams }: VisualizerPagePro
 
     requireCapability(session.authz, 'visualizer.use')
 
-    void searchParams
+    const resolvedSearchParams = await searchParams
+    const requestedWrapId =
+        typeof resolvedSearchParams.wrapId === 'string' && resolvedSearchParams.wrapId.trim().length > 0
+            ? resolvedSearchParams.wrapId
+            : null
 
     return (
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 md:px-6 md:py-6">
@@ -21,12 +25,11 @@ export default async function VisualizerPage({ searchParams }: VisualizerPagePro
                     Visualizer
                 </h1>
                 <p className="mt-1 text-sm text-neutral-400">
-                    Configure vehicle and wrap selections, then generate concepts with the HF Space
-                    backend.
+                    Preview the wrap you selected, tune the vehicle details, and carry the result straight into booking.
                 </p>
             </div>
 
-            <VisualizerHfPageFeature />
+            <VisualizerHfPageFeature requestedWrapId={requestedWrapId} />
         </div>
     )
 }

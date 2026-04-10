@@ -36,10 +36,9 @@ describe('parseSchedulingSearchParams', () => {
         })
 
         expect(result.filters).toMatchObject({
-            status: 'pending',
             page: 1,
             pageSize: 20,
         })
-        expect(result.hasActiveFilters).toBe(true)
+        expect(result.hasActiveFilters).toBe(false)
     })
 })

@@ -94,7 +94,7 @@ describe('scheduling booking fetchers', () => {
                 id: 'booking-1',
                 wrapName: 'Midnight Matte',
                 reservationExpiresAt: new Date('2030-03-23T15:30:00.000Z').toISOString(),
-                displayStatus: 'reserved',
+                displayStatus: 'requested',
             }),
             expect.objectContaining({
                 id: 'booking-2',
@@ -143,7 +143,7 @@ describe('scheduling booking fetchers', () => {
         await expect(getBookingById('booking-1')).resolves.toEqual(
             expect.objectContaining({
                 id: 'booking-1',
-                displayStatus: 'reserved',
+                displayStatus: 'requested',
             })
         )
     })

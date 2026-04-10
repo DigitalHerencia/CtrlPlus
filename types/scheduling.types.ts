@@ -20,6 +20,40 @@ export interface BookingDTO {
     totalPrice: number
     reservationExpiresAt: Timestamp | null
     displayStatus: SchedulingBookingDisplayStatus
+    customerName?: string | null
+    customerEmail?: string | null
+    customerPhone?: string | null
+    preferredContact?: 'email' | 'sms' | null
+    billingAddressLine1?: string | null
+    billingAddressLine2?: string | null
+    billingCity?: string | null
+    billingState?: string | null
+    billingPostalCode?: string | null
+    billingCountry?: string | null
+    vehicleMake?: string | null
+    vehicleModel?: string | null
+    vehicleYear?: string | null
+    vehicleTrim?: string | null
+    previewImageUrl?: string | null
+    previewPromptUsed?: string | null
+    notes?: string | null
+    createdAt: Timestamp
+    updatedAt: Timestamp
+}
+
+export interface BookingDraftDTO {
+    id: string
+    customerId: string
+    wrapId: string
+    wrapNameSnapshot: string
+    wrapPriceSnapshot: number
+    vehicleMake: string | null
+    vehicleModel: string | null
+    vehicleYear: string | null
+    vehicleTrim: string | null
+    previewImageUrl: string | null
+    previewPromptUsed: string | null
+    previewStatus: string | null
     createdAt: Timestamp
     updatedAt: Timestamp
 }
@@ -36,12 +70,27 @@ export interface BookingTimelineEventDTO {
 export interface BookingDetailViewDTO {
     id: string
     wrapId: string | null
+    wrapName: string | null
     scheduledAt: Timestamp
+    estimatedPickupAt: Timestamp
     durationMinutes: number
     status: BookingStatus
     customerName: string
     customerEmail: string
     customerPhone: string | null
+    preferredContact: 'email' | 'sms' | null
+    billingAddressLine1: string | null
+    billingAddressLine2: string | null
+    billingCity: string | null
+    billingState: string | null
+    billingPostalCode: string | null
+    billingCountry: string | null
+    vehicleMake: string | null
+    vehicleModel: string | null
+    vehicleYear: string | null
+    vehicleTrim: string | null
+    previewImageUrl: string | null
+    previewPromptUsed: string | null
     notes: string | null
     timeline: BookingTimelineEventDTO[]
     createdAt: Timestamp
@@ -51,7 +100,9 @@ export interface BookingDetailViewDTO {
 export interface BookingManagerRowDTO {
     id: string
     wrapId: string | null
+    wrapName: string | null
     scheduledAt: Timestamp
+    estimatedPickupAt: Timestamp
     durationMinutes: number
     status: BookingStatus
     customerName: string
@@ -60,9 +111,7 @@ export interface BookingManagerRowDTO {
     updatedAt: Timestamp
 }
 
-export interface CreatedBookingDTO extends BookingDTO {
-    invoiceId: string
-}
+export type CreatedBookingDTO = BookingDTO
 
 export interface BookingListResult {
     items: BookingDTO[]
@@ -118,6 +167,26 @@ export interface ReserveSlotInput {
     wrapId: string
     startTime: Timestamp
     endTime: Timestamp
+}
+
+export interface CreateBookingInput extends ReserveSlotInput {
+    customerName: string
+    customerEmail: string
+    customerPhone?: string | null
+    preferredContact: 'email' | 'sms'
+    billingAddressLine1: string
+    billingAddressLine2?: string | null
+    billingCity: string
+    billingState: string
+    billingPostalCode: string
+    billingCountry: string
+    vehicleMake: string
+    vehicleModel: string
+    vehicleYear: string
+    vehicleTrim?: string | null
+    previewImageUrl?: string | null
+    previewPromptUsed?: string | null
+    notes?: string | null
 }
 
 export interface ReservedBookingDTO {

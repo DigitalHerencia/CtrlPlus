@@ -7,7 +7,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
     return (
         <div className="grid min-h-svh lg:grid-cols-2">
-            <div className="flex flex-col items-center justify-center gap-6 bg-neutral-900 p-6 md:p-16">
+            <div className="flex flex-col items-center justify-center gap-6 bg-neutral-950 p-6 md:p-16">
                 <div className="w-full max-w-sm">
                     <LoginForm redirectUrl={redirectUrl} />
                 </div>

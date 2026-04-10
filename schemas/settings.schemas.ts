@@ -39,10 +39,28 @@ export const updateUserPreferencesSchema = z
             .refine(isValidIanaTimezone, 'Use a valid IANA timezone identifier.')
             .nullable()
             .optional(),
+        fullName: z.string().trim().max(200).nullable().optional(),
+        email: z.email().trim().max(320).nullable().optional(),
+        phone: z.string().trim().max(40).nullable().optional(),
         notifications: notificationPreferencesSchema.partial().optional(),
         preferredContact: z.enum(['email', 'sms']).optional(),
         appointmentReminders: z.boolean().optional(),
         marketingOptIn: z.boolean().optional(),
+        billingAddressLine1: z.string().trim().max(200).nullable().optional(),
+        billingAddressLine2: z.string().trim().max(200).nullable().optional(),
+        billingCity: z.string().trim().max(120).nullable().optional(),
+        billingState: z.string().trim().max(120).nullable().optional(),
+        billingPostalCode: z.string().trim().max(40).nullable().optional(),
+        billingCountry: z.string().trim().max(120).nullable().optional(),
+        vehicleMake: z.string().trim().max(120).nullable().optional(),
+        vehicleModel: z.string().trim().max(120).nullable().optional(),
+        vehicleYear: z
+            .string()
+            .trim()
+            .regex(/^\d{4}$/, 'Year must be a 4-digit value.')
+            .nullable()
+            .optional(),
+        vehicleTrim: z.string().trim().max(120).nullable().optional(),
     })
     .strict()
 

@@ -52,7 +52,7 @@ export async function EditManagedBookingPageFeature({
 
             <div className="grid gap-4 lg:grid-cols-2">
                 <BookingLifecyclePanel>
-                    <BookingStatusActionsClient bookingId={booking.id} />
+                    <BookingStatusActionsClient bookingId={booking.id} status={booking.status} />
                 </BookingLifecyclePanel>
                 <BookingCommandPanel>
                     <BookingNotificationControlsClient />

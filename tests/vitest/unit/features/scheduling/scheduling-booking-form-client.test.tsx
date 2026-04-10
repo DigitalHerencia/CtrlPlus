@@ -20,25 +20,92 @@ vi.mock('next/navigation', () => ({
     }),
 }))
 
-vi.mock('@/components/scheduling/calendar-client', () => ({
-    CalendarClient: ({ onDateSelect }: { onDateSelect?: (date: Date) => void }) => (
+vi.mock('@/features/scheduling/booking-calendar.client', () => ({
+    BookingCalendarClient: ({ onDateSelect }: { onDateSelect?: (date: Date) => void }) => (
         <button type="button" onClick={() => onDateSelect?.(new Date(2026, 2, 1))}>
             Select March 1
         </button>
     ),
 }))
 
+vi.mock('@/features/scheduling/booking-slot-picker.client', () => ({
+    BookingSlotPickerClient: ({
+        slots,
+        onSelectSlot,
+    }: {
+        slots: Array<{ id: string; startTime: string }>
+        onSelectSlot?: (slotId: string) => void
+    }) => (
+        <div>
+            {slots.map((slot) => (
+                <button key={slot.id} type="button" onClick={() => onSelectSlot?.(slot.id)}>
+                    {slot.startTime}
+                </button>
+            ))}
+        </div>
+    ),
+}))
+
 import { SchedulingBookingFormClient } from '@/features/scheduling/scheduling-booking-form-client'
+
+const draft = {
+    id: 'draft-1',
+    customerId: 'user-1',
+    wrapId: 'wrap-1',
+    wrapNameSnapshot: 'Standard Wrap',
+    wrapPriceSnapshot: 10000,
+    vehicleMake: 'Ford',
+    vehicleModel: 'Mustang',
+    vehicleYear: '2022',
+    vehicleTrim: 'GT',
+    previewImageUrl: 'https://image.test/preview.png',
+    previewPromptUsed: 'prompt used',
+    previewStatus: 'complete',
+    createdAt: '2026-03-01T00:00:00.000Z',
+    updatedAt: '2026-03-01T00:00:00.000Z',
+} as const
+
+const initialSettings = {
+    userId: 'user-1',
+    theme: 'system',
+    language: 'en',
+    timezone: 'America/Denver',
+    notifications: {
+        email: true,
+        sms: false,
+        push: false,
+    },
+    preferredContact: 'email',
+    appointmentReminders: true,
+    marketingOptIn: false,
+    fullName: 'Taylor Driver',
+    email: 'taylor@example.com',
+    phone: '5551234567',
+    billingAddressLine1: '123 Main St',
+    billingAddressLine2: null,
+    billingCity: 'Denver',
+    billingState: 'CO',
+    billingPostalCode: '80202',
+    billingCountry: 'US',
+    vehicleMake: 'Ford',
+    vehicleModel: 'Mustang',
+    vehicleYear: '2022',
+    vehicleTrim: 'GT',
+    stripeCustomerId: null,
+    stripeDefaultPaymentMethodBrand: 'visa',
+    stripeDefaultPaymentMethodLast4: '4242',
+    updatedAt: '2026-03-01T00:00:00.000Z',
+} as const
 
 describe('SchedulingBookingFormClient', () => {
     beforeEach(() => {
         vi.clearAllMocks()
         mocks.createBooking.mockResolvedValue({
-            invoiceId: 'invoice-1',
+            id: 'booking-1',
         })
     })
 
-    it('collects date, slot, and wrap selection before creating a booking', async () => {
+    it('submits the draft-backed checkout flow and redirects to the booking detail page', async () => {
         render(
             <SchedulingBookingFormClient
                 availabilityWindows={[
@@ -50,29 +117,40 @@ describe('SchedulingBookingFormClient', () => {
                         capacity: 2,
                     },
                 ]}
-                wraps={[
-                    {
-                        id: 'wrap-1',
-                        name: 'Standard Wrap',
-                        price: 10000,
-                    },
-                ]}
+                draft={draft}
+                initialSettings={initialSettings}
             />
         )
 
         fireEvent.click(screen.getByRole('button', { name: /Select March 1/i }))
-        fireEvent.click(screen.getByRole('button', { name: /9:00 AM/i }))
-        fireEvent.click(screen.getByRole('button', { name: /Standard Wrap/i }))
-        fireEvent.click(screen.getByRole('button', { name: /Confirm Booking/i }))
+        fireEvent.click(screen.getByRole('button', { name: /^09:00$/i }))
+        fireEvent.click(screen.getByRole('button', { name: /Submit Booking Request/i }))
 
         await waitFor(() =>
             expect(mocks.createBooking).toHaveBeenCalledWith({
                 wrapId: 'wrap-1',
                 startTime: new Date(2026, 2, 1, 9, 0, 0, 0).toISOString(),
                 endTime: new Date(2026, 2, 1, 10, 0, 0, 0).toISOString(),
+                customerName: 'Taylor Driver',
+                customerEmail: 'taylor@example.com',
+                customerPhone: '5551234567',
+                preferredContact: 'email',
+                billingAddressLine1: '123 Main St',
+                billingAddressLine2: '',
+                billingCity: 'Denver',
+                billingState: 'CO',
+                billingPostalCode: '80202',
+                billingCountry: 'US',
+                vehicleMake: 'Ford',
+                vehicleModel: 'Mustang',
+                vehicleYear: '2022',
+                vehicleTrim: 'GT',
+                previewImageUrl: 'https://image.test/preview.png',
+                previewPromptUsed: 'prompt used',
+                notes: '',
             })
         )
-        expect(mocks.push).toHaveBeenCalledWith('/billing/invoice-1')
+        expect(mocks.push).toHaveBeenCalledWith('/scheduling/booking-1')
         expect(mocks.refresh).toHaveBeenCalled()
     })
 
@@ -90,20 +168,14 @@ describe('SchedulingBookingFormClient', () => {
                         capacity: 2,
                     },
                 ]}
-                wraps={[
-                    {
-                        id: 'wrap-1',
-                        name: 'Standard Wrap',
-                        price: 10000,
-                    },
-                ]}
+                draft={draft}
+                initialSettings={initialSettings}
             />
         )
 
         fireEvent.click(screen.getByRole('button', { name: /Select March 1/i }))
-        fireEvent.click(screen.getByRole('button', { name: /9:00 AM/i }))
-        fireEvent.click(screen.getByRole('button', { name: /Standard Wrap/i }))
-        fireEvent.click(screen.getByRole('button', { name: /Confirm Booking/i }))
+        fireEvent.click(screen.getByRole('button', { name: /^09:00$/i }))
+        fireEvent.click(screen.getByRole('button', { name: /Submit Booking Request/i }))
 
         await expect(
             screen.findByText(/The requested time slot is fully booked/i)

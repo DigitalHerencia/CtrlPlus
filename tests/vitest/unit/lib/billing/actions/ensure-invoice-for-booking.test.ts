@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-    getSession: vi.fn(),
-    requireCustomerOwnedResourceAccess: vi.fn(),
+    requireOwnerOrPlatformAdmin: vi.fn(),
     prisma: {
         booking: {
             findFirst: vi.fn(),
@@ -10,19 +9,16 @@ const mocks = vi.hoisted(() => ({
         invoice: {
             findUnique: vi.fn(),
         },
+        auditLog: {
+            create: vi.fn(),
+        },
         $transaction: vi.fn(),
     },
+    getTenantNotificationEmail: vi.fn(),
+    sendNotificationEmail: vi.fn(),
 }))
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
-
-vi.mock('@/lib/auth/session', () => ({
-    getSession: mocks.getSession,
-}))
-
-vi.mock('@/lib/authz/policy', () => ({
-    requireCustomerOwnedResourceAccess: mocks.requireCustomerOwnedResourceAccess,
-}))
 
 vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
@@ -31,41 +27,44 @@ vi.mock('@/lib/db/prisma', () => ({
 vi.mock('@/lib/authz/guards', () => ({
     getBillingAccessContext: vi.fn(),
     requireInvoiceWriteAccess: vi.fn(),
-    requireOwnerOrPlatformAdmin: vi.fn(),
+    requireOwnerOrPlatformAdmin: mocks.requireOwnerOrPlatformAdmin,
+}))
+
+vi.mock('@/lib/integrations/notifications', () => ({
+    getTenantNotificationEmail: mocks.getTenantNotificationEmail,
+    sendNotificationEmail: mocks.sendNotificationEmail,
+}))
+
+vi.mock('@/lib/actions/settings.actions', () => ({
+    syncStripePaymentSettingsSummary: vi.fn(),
 }))
 
 import { ensureInvoiceForBooking } from '@/lib/actions/billing.actions'
 
-function makeSession(overrides: Record<string, unknown> = {}) {
-    return {
-        isAuthenticated: true,
-        userId: 'customer-1',
-        isOwner: false,
-        isPlatformAdmin: false,
-        authz: {
-            userId: 'customer-1',
-            role: 'customer',
-            isAuthenticated: true,
-            isOwner: false,
-            isPlatformAdmin: false,
-        },
-        ...overrides,
-    }
-}
-
 describe('ensureInvoiceForBooking', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        mocks.getSession.mockResolvedValue(makeSession())
-        mocks.requireCustomerOwnedResourceAccess.mockImplementation(() => undefined)
+        mocks.requireOwnerOrPlatformAdmin.mockResolvedValue({
+            isAuthenticated: true,
+            userId: 'owner-1',
+            isOwner: true,
+            isPlatformAdmin: false,
+            authz: { role: 'owner' },
+        })
+        mocks.getTenantNotificationEmail.mockResolvedValue('owner@example.com')
+        mocks.sendNotificationEmail.mockResolvedValue({ delivered: true })
     })
 
     it('returns existing invoice without creating a new record', async () => {
         mocks.prisma.booking.findFirst.mockResolvedValue({
             id: 'booking-1',
             customerId: 'customer-1',
+            customerEmail: 'customer@example.com',
+            customerName: 'Taylor Driver',
+            status: 'completed',
             wrapId: 'wrap-1',
             totalPrice: 1200,
+            wrapNameSnapshot: 'Stealth',
             wrap: { name: 'Stealth' },
             invoice: { id: 'inv-existing' },
         })
@@ -81,23 +80,27 @@ describe('ensureInvoiceForBooking', () => {
         mocks.prisma.booking.findFirst.mockResolvedValue({
             id: 'booking-2',
             customerId: 'customer-1',
+            customerEmail: 'customer@example.com',
+            customerName: 'Taylor Driver',
+            status: 'completed',
             wrapId: 'wrap-1',
             totalPrice: 1599.4,
+            wrapNameSnapshot: 'Stealth',
             wrap: { name: 'Stealth' },
             invoice: null,
         })
 
         mocks.prisma.$transaction.mockImplementation(
             async (callback: (tx: unknown) => Promise<unknown>) => {
-            const tx = {
-                invoice: {
-                    create: vi.fn().mockResolvedValue({ id: 'inv-created' }),
-                },
-                auditLog: {
-                    create: vi.fn().mockResolvedValue({}),
-                },
-            }
-            return callback(tx)
+                const tx = {
+                    invoice: {
+                        create: vi.fn().mockResolvedValue({ id: 'inv-created' }),
+                    },
+                    auditLog: {
+                        create: vi.fn().mockResolvedValue({}),
+                    },
+                }
+                return callback(tx)
             }
         )
 
@@ -105,14 +108,19 @@ describe('ensureInvoiceForBooking', () => {
             invoiceId: 'inv-created',
             created: true,
         })
+        expect(mocks.sendNotificationEmail).toHaveBeenCalledTimes(2)
     })
 
     it('returns winner invoice when create hits unique race', async () => {
         mocks.prisma.booking.findFirst.mockResolvedValue({
             id: 'booking-race',
             customerId: 'customer-1',
+            customerEmail: 'customer@example.com',
+            customerName: 'Taylor Driver',
+            status: 'completed',
             wrapId: 'wrap-1',
             totalPrice: 500,
+            wrapNameSnapshot: 'Stealth',
             wrap: { name: 'Stealth' },
             invoice: null,
         })
@@ -130,8 +138,12 @@ describe('ensureInvoiceForBooking', () => {
         mocks.prisma.booking.findFirst.mockResolvedValue({
             id: 'booking-race-missing',
             customerId: 'customer-1',
+            customerEmail: 'customer@example.com',
+            customerName: 'Taylor Driver',
+            status: 'completed',
             wrapId: 'wrap-1',
             totalPrice: 500,
+            wrapNameSnapshot: 'Stealth',
             wrap: { name: 'Stealth' },
             invoice: null,
         })
@@ -139,8 +151,8 @@ describe('ensureInvoiceForBooking', () => {
         mocks.prisma.$transaction.mockRejectedValue({ code: 'P2002' })
         mocks.prisma.invoice.findUnique.mockResolvedValue(null)
 
-        await expect(ensureInvoiceForBooking({ bookingId: 'booking-race-missing' })).rejects.toThrow(
-            'Invoice creation race detected but invoice could not be found'
-        )
+        await expect(
+            ensureInvoiceForBooking({ bookingId: 'booking-race-missing' })
+        ).rejects.toThrow('Invoice creation race detected but invoice could not be found')
     })
 })

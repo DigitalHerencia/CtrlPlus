@@ -3,13 +3,14 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
 interface SettingsSectionNavProps {
-    active: 'profile' | 'account' | 'data'
+    active?: 'profile' | 'account' | 'data' | 'docs'
 }
 
 const navItems = [
     { key: 'profile', href: '/settings/profile', label: 'Profile' },
     { key: 'account', href: '/settings/account', label: 'Account' },
     { key: 'data', href: '/settings/data', label: 'Data Export' },
+    { key: 'docs', href: '/docs', label: 'Documentation' },
 ] as const
 
 export function SettingsSectionNav({ active }: SettingsSectionNavProps) {

@@ -74,6 +74,43 @@
       "name": "eslint-unused-refresh",
       "status": "pass",
       "details": "Fresh `pnpm exec eslint . --cache --max-warnings=0` output was written to `.agents/reports/eslint-unused-vars.txt`."
+    },
+    {
+      "id": "VAL-037",
+      "name": "mvp-checkout-typecheck",
+      "status": "pass",
+      "details": "`pnpm typecheck` passed after the booking-draft, settings, billing, and test contract refactor."
+    },
+    {
+      "id": "VAL-038",
+      "name": "mvp-checkout-lint",
+      "status": "pass",
+      "details": "`pnpm lint` passed after removing stale warnings introduced by the checkout refactor."
+    },
+    {
+      "id": "VAL-039",
+      "name": "mvp-checkout-prisma-validate",
+      "status": "pass",
+      "details": "`pnpm prisma:validate` passed after adding BookingDraft plus booking, invoice, and website-settings snapshot fields."
+    },
+    {
+      "id": "VAL-040",
+      "name": "mvp-checkout-unit-tests",
+      "status": "pass",
+      "details": "`pnpm test` passed with 41 test files and 140 tests after realigning stale settings, scheduling, billing, visualizer, and catalog tests to the draft-backed flow."
+    },
+    {
+      "id": "VAL-041",
+      "name": "mvp-checkout-build",
+      "status": "pass",
+      "details": "`pnpm build` passed after wiring the existing routes through the scheduling-owned booking draft."
+    },
+    {
+      "id": "VAL-042",
+      "name": "mvp-checkout-e2e-chromium",
+      "status": "pass",
+      "details": "`PLAYWRIGHT_SKIP_WEBSERVER=true pnpm test:e2e --project=chromium --reporter=line` passed with 27 tests passing and 2 skipped after restarting a stale local Next dev server on port 3000."
     }
   ]
 }
+

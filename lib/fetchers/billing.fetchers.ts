@@ -11,10 +11,10 @@ import { invoiceListParamsSchema } from '@/schemas/billing.schemas'
 import type {
     BillingBalanceDTO,
     InvoiceDTO,
-    InvoiceListParams,
-    InvoiceListResult,
     InvoiceDetailDTO,
     InvoiceLineItemDTO,
+    InvoiceListParams,
+    InvoiceListResult,
     PaymentDTO,
 } from '@/types/billing.types'
 import { getBillingAccessContext } from '@/lib/authz/guards'
@@ -37,13 +37,7 @@ function buildInvoiceReadWhere(
 
 function normalizeInvoiceStatus(status: string): InvoiceStatus {
     if (status === 'sent') return 'issued'
-    if (
-        status === 'draft' ||
-        status === 'issued' ||
-        status === 'paid' ||
-        status === 'refunded' ||
-        status === 'void'
-    ) {
+    if (status === 'draft' || status === 'issued' || status === 'paid' || status === 'refunded' || status === 'void') {
         return status
     }
 
@@ -54,7 +48,13 @@ function toInvoiceDTO(row: {
     id: string
     bookingId: string
     status: string
+    subtotalAmount: number | null
+    taxAmount: number | null
     totalAmount: number
+    dueDate: Date | null
+    issuedAt: Date | null
+    stripeCheckoutSessionId: string | null
+    stripeCustomerId: string | null
     createdAt: Date
     updatedAt: Date
 }): InvoiceDTO {
@@ -63,9 +63,12 @@ function toInvoiceDTO(row: {
         bookingId: row.bookingId,
         status: normalizeInvoiceStatus(row.status),
         totalAmount: row.totalAmount,
-        subtotalAmount: row.totalAmount,
-        taxAmount: null,
-        dueDate: null,
+        subtotalAmount: row.subtotalAmount,
+        taxAmount: row.taxAmount,
+        dueDate: row.dueDate ? row.dueDate.toISOString() : null,
+        issuedAt: row.issuedAt ? row.issuedAt.toISOString() : null,
+        stripeCheckoutSessionId: row.stripeCheckoutSessionId,
+        stripeCustomerId: row.stripeCustomerId,
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
     }
@@ -137,24 +140,8 @@ export async function getInvoiceById(invoiceId: string): Promise<InvoiceDetailDT
     if (!row) return null
 
     return {
-        id: row.id,
-        bookingId: row.bookingId,
-        status: normalizeInvoiceStatus(row.status),
-        totalAmount: row.totalAmount,
-        subtotalAmount: row.totalAmount,
-        taxAmount: null,
-        dueDate: null,
-        createdAt: row.createdAt.toISOString(),
-        updatedAt: row.updatedAt.toISOString(),
-        paymentHistory: (
-            row.payments as Array<{
-                id: string
-                stripePaymentIntentId: string
-                status: string
-                amount: number
-                createdAt: Date
-            }>
-        ).map((p) => ({
+        ...toInvoiceDTO(row),
+        paymentHistory: row.payments.map((p) => ({
             id: p.id,
             type: p.amount < 0 ? ('refund' as const) : ('payment' as const),
             amount: p.amount,
@@ -162,15 +149,7 @@ export async function getInvoiceById(invoiceId: string): Promise<InvoiceDetailDT
             providerReference: p.stripePaymentIntentId,
             notes: p.status,
         })),
-        lineItems: (
-            row.lineItems as unknown as Array<{
-                id: string
-                description: string
-                quantity: number
-                unitPrice: number
-                totalPrice: number
-            }>
-        ).map(
+        lineItems: row.lineItems.map(
             (li): InvoiceLineItemDTO => ({
                 id: li.id,
                 description: li.description,
@@ -179,22 +158,14 @@ export async function getInvoiceById(invoiceId: string): Promise<InvoiceDetailDT
                 totalPrice: li.totalPrice,
             })
         ),
-        payments: (
-            row.payments as Array<{
-                id: string
-                stripePaymentIntentId: string
-                status: string
-                amount: number
-                createdAt: Date
-            }>
-        ).map(
+        payments: row.payments.map(
             (p): PaymentDTO => ({
                 id: p.id,
+                invoiceId,
                 stripePaymentIntentId: p.stripePaymentIntentId,
                 status: p.status as PaymentDTO['status'],
                 amount: p.amount,
                 createdAt: p.createdAt.toISOString(),
-                invoiceId,
             })
         ),
     }
@@ -239,9 +210,7 @@ export async function getBalance(_tenantId?: string): Promise<BillingBalanceDTO>
         .reduce((sum, invoice) => sum + invoice.totalAmount, 0)
 
     const creditAmount = Math.abs(
-        payments
-            .filter((payment) => payment.amount < 0)
-            .reduce((sum, payment) => sum + payment.amount, 0)
+        payments.filter((payment) => payment.amount < 0).reduce((sum, payment) => sum + payment.amount, 0)
     )
 
     return {
@@ -267,36 +236,12 @@ export async function getPaymentStatusForInvoice(invoiceId: string): Promise<Pay
         orderBy: { createdAt: 'asc' },
     })
 
-    const payments = rows.map(
-        (p: {
-            id: string
-            invoiceId: string
-            stripePaymentIntentId: string
-            status: string
-            amount: number
-            createdAt: Date
-        }) => ({
-            id: p.id,
-            invoiceId: p.invoiceId,
-            stripePaymentIntentId: p.stripePaymentIntentId,
-            status: p.status as PaymentDTO['status'],
-            amount: p.amount,
-            createdAt: p.createdAt.toISOString(),
-        })
-    )
-
-    if (payments.length > 0) {
-        return payments
-    }
-
-    const invoice = await prisma.invoice.findFirst({
-        where: {
-            id: invoiceId,
-            deletedAt: null,
-            ...buildInvoiceReadWhere(access.session.userId, access.canReadAllInvoices),
-        },
-        select: { id: true },
-    })
-
-    return invoice ? [] : null
+    return rows.map((p) => ({
+        id: p.id,
+        invoiceId: p.invoiceId,
+        stripePaymentIntentId: p.stripePaymentIntentId,
+        status: p.status as PaymentDTO['status'],
+        amount: p.amount,
+        createdAt: p.createdAt.toISOString(),
+    }))
 }

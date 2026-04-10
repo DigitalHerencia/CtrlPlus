@@ -10,7 +10,7 @@ import { BookingFormActions } from '@/components/scheduling/booking-form/booking
 import { BookingFormFields } from '@/components/scheduling/booking-form/booking-form-fields'
 import { BookingFormShell } from '@/components/scheduling/booking-form/booking-form-shell'
 import { BookingNotesFields } from '@/components/scheduling/booking-form/booking-notes-fields'
-import { createBooking, updateBooking } from '@/lib/actions/scheduling.actions'
+import { reserveSlot, updateBooking } from '@/lib/actions/scheduling.actions'
 
 import { BookingCalendarClient } from './booking-calendar.client'
 import { BookingSlotPickerClient } from './booking-slot-picker.client'
@@ -107,7 +107,7 @@ export function BookingFormClient({
                     : `/scheduling/${bookingId}`
                 router.push(detailPath)
             } else {
-                const created = await createBooking({
+                const created = await reserveSlot({
                     wrapId: values.wrapId,
                     startTime: startTime.toISOString(),
                     endTime: endTime.toISOString(),
@@ -178,3 +178,4 @@ export function BookingFormClient({
         </form>
     )
 }
+

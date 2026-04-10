@@ -1,9 +1,10 @@
 import 'server-only'
 
-import { VEHICLE_CATALOG } from '@/lib/constants/visualizer/vehicle-catalog'
-import { WRAP_CATALOG } from '@/lib/constants/visualizer/wrap-catalog'
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
+import { VEHICLE_CATALOG } from '@/lib/constants/visualizer/vehicle-catalog'
+import { prisma } from '@/lib/db/prisma'
+import { listVisualizerSelectableWraps } from '@/lib/fetchers/catalog.fetchers'
 import type {
     VisualizerHfCatalogData,
     VisualizerHfSelection,
@@ -17,39 +18,17 @@ function sortedUnique(values: string[]) {
     )
 }
 
-function mapWrapOptions(): VisualizerHfWrapOption[] {
-    const wraps = WRAP_CATALOG.wraps ?? []
-
-    return wraps
-        .map((wrap) => {
-            const { id, name, description, style_prompt, prompt_template, category } = wrap
-            const trimmedId = id.trim()
-            const trimmedName = name.trim()
-            const trimmedDescription = description.trim()
-            const stylePrompt = style_prompt.trim()
-            const promptTemplate = prompt_template.trim()
-            const categoryValue = category.trim()
-
-            if (
-                !trimmedId ||
-                !trimmedName ||
-                !trimmedDescription ||
-                !stylePrompt ||
-                !promptTemplate
-            ) {
-                return null
-            }
-
-            return {
-                id: trimmedId,
-                name: trimmedName,
-                description: trimmedDescription,
-                stylePrompt,
-                promptTemplate,
-                category: categoryValue || null,
-            } satisfies VisualizerHfWrapOption
-        })
-        .filter((wrap): wrap is VisualizerHfWrapOption => wrap != null)
+function mapWrapOptions(
+    wraps: Awaited<ReturnType<typeof listVisualizerSelectableWraps>>
+): VisualizerHfWrapOption[] {
+    return wraps.map((wrap) => ({
+        id: wrap.id,
+        name: wrap.name,
+        description: wrap.description ?? '',
+        stylePrompt: wrap.aiNegativePrompt ?? '',
+        promptTemplate: wrap.aiPromptTemplate ?? '',
+        category: wrap.categories[0]?.name ?? null,
+    }))
 }
 
 function getVehicleIndex(): VisualizerVehicleCatalogIndex {
@@ -58,10 +37,8 @@ function getVehicleIndex(): VisualizerVehicleCatalogIndex {
 
     for (const [make, models] of Object.entries(vehicles)) {
         vehicleIndex[make] = {}
-
         for (const [model, years] of Object.entries(models)) {
             vehicleIndex[make][model] = {}
-
             for (const [year, trims] of Object.entries(years)) {
                 vehicleIndex[make][model][year] = [...trims]
             }
@@ -75,27 +52,36 @@ function getFirstSelection(
     vehicleIndex: VisualizerVehicleCatalogIndex,
     wraps: VisualizerHfWrapOption[]
 ): VisualizerHfSelection {
-    const makes = sortedUnique(Object.keys(vehicleIndex))
-    const make = makes[0] ?? ''
-
-    const models = sortedUnique(Object.keys(vehicleIndex[make] ?? {}))
-    const model = models[0] ?? ''
-
-    const years = sortedUnique(Object.keys(vehicleIndex[make]?.[model] ?? {}))
-    const year = years[0] ?? ''
-
-    const trims = sortedUnique(vehicleIndex[make]?.[model]?.[year] ?? [])
-    const trim = trims[0] ?? ''
-
-    const wrapName = wraps[0]?.name ?? ''
+    const make = sortedUnique(Object.keys(vehicleIndex))[0] ?? ''
+    const model = sortedUnique(Object.keys(vehicleIndex[make] ?? {}))[0] ?? ''
+    const year = sortedUnique(Object.keys(vehicleIndex[make]?.[model] ?? {}))[0] ?? ''
+    const trim = sortedUnique(vehicleIndex[make]?.[model]?.[year] ?? [])[0] ?? ''
 
     return {
         make,
         model,
         year,
         trim,
-        wrapName,
+        wrapId: wraps[0]?.id ?? '',
     }
+}
+
+function clampSelection(
+    requested: Partial<VisualizerHfSelection>,
+    vehicleIndex: VisualizerVehicleCatalogIndex,
+    wraps: VisualizerHfWrapOption[]
+): VisualizerHfSelection {
+    const fallback = getFirstSelection(vehicleIndex, wraps)
+    const make = requested.make && vehicleIndex[requested.make] ? requested.make : fallback.make
+    const modelOptions = sortedUnique(Object.keys(vehicleIndex[make] ?? {}))
+    const model = requested.model && modelOptions.includes(requested.model) ? requested.model : modelOptions[0] ?? ''
+    const yearOptions = sortedUnique(Object.keys(vehicleIndex[make]?.[model] ?? {}))
+    const year = requested.year && yearOptions.includes(requested.year) ? requested.year : yearOptions[0] ?? ''
+    const trimOptions = sortedUnique(vehicleIndex[make]?.[model]?.[year] ?? [])
+    const trim = requested.trim && trimOptions.includes(requested.trim) ? requested.trim : trimOptions[0] ?? ''
+    const wrapId = requested.wrapId && wraps.some((wrap) => wrap.id === requested.wrapId) ? requested.wrapId : fallback.wrapId
+
+    return { make, model, year, trim, wrapId }
 }
 
 function assertCatalogUsable(
@@ -109,14 +95,11 @@ function assertCatalogUsable(
     if (wraps.length === 0) {
         throw new Error('Visualizer wrap catalog is not available.')
     }
-
-    const first = getFirstSelection(vehicleIndex, wraps)
-    if (!first.make || !first.model || !first.year || !first.trim || !first.wrapName) {
-        throw new Error('Visualizer catalogs are incomplete and cannot seed selections.')
-    }
 }
 
-export async function getVisualizerHfCatalogData(): Promise<VisualizerHfCatalogData> {
+export async function getVisualizerHfCatalogData(
+    requestedWrapId: string | null = null
+): Promise<VisualizerHfCatalogData> {
     const session = await getSession()
     if (!session.isAuthenticated || !session.userId) {
         throw new Error('Unauthorized: not authenticated')
@@ -124,15 +107,54 @@ export async function getVisualizerHfCatalogData(): Promise<VisualizerHfCatalogD
 
     requireCapability(session.authz, 'visualizer.use')
 
-    const vehicleIndex = getVehicleIndex()
-    const wraps = mapWrapOptions()
+    const [wraps, draft, settings] = await Promise.all([
+        listVisualizerSelectableWraps({ includeHidden: session.isOwner || session.isPlatformAdmin }),
+        prisma.bookingDraft.findUnique({
+            where: { customerId: session.userId },
+            select: {
+                wrapId: true,
+                vehicleMake: true,
+                vehicleModel: true,
+                vehicleYear: true,
+                vehicleTrim: true,
+            },
+        }),
+        prisma.websiteSettings.findUnique({
+            where: { clerkUserId: session.userId },
+            select: {
+                vehicleMake: true,
+                vehicleModel: true,
+                vehicleYear: true,
+                vehicleTrim: true,
+            },
+        }),
+    ])
 
-    assertCatalogUsable(vehicleIndex, wraps)
+    const vehicleIndex = getVehicleIndex()
+    const wrapOptions = mapWrapOptions(wraps)
+
+    assertCatalogUsable(vehicleIndex, wrapOptions)
+
+    const selectedWrapId =
+        requestedWrapId ?? draft?.wrapId ?? wrapOptions[0]?.id ?? null
+
+    const initialSelection = clampSelection(
+        {
+            make: draft?.vehicleMake ?? settings?.vehicleMake ?? undefined,
+            model: draft?.vehicleModel ?? settings?.vehicleModel ?? undefined,
+            year: draft?.vehicleYear ?? settings?.vehicleYear ?? undefined,
+            trim: draft?.vehicleTrim ?? settings?.vehicleTrim ?? undefined,
+            wrapId: selectedWrapId ?? undefined,
+        },
+        vehicleIndex,
+        wrapOptions
+    )
 
     return {
         makes: sortedUnique(Object.keys(vehicleIndex)),
         vehicleIndex,
-        wraps,
-        initialSelection: getFirstSelection(vehicleIndex, wraps),
+        wraps: wrapOptions,
+        initialSelection,
+        selectedWrapId,
     }
 }

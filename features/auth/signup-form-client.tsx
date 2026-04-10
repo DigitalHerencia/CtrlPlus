@@ -178,7 +178,7 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
             noValidate
             {...props}
         >
-            <FieldGroup className="gap-6 border border-neutral-800 bg-neutral-950/90 p-6 shadow-[0_24px_80px_-48px_rgba(0,0,0,0.9)] sm:p-8">
+            <FieldGroup className="gap-6 bg-neutral-950 p-6 sm:p-8">
                 <div className="flex flex-col items-center text-center">
                     <Link href="/" className="mb-8 inline-flex items-center">
                         <LogoMark className="mt-4 scale-150" />
@@ -186,7 +186,7 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
                     <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-50 sm:text-4xl">
                         Create your account
                     </h1>
-                    <p className="mt-2 max-w-sm text-sm text-neutral-400">Launch your project</p>
+                    <p className="mt-2 max-w-sm text-sm text-neutral-400">Get started today</p>
                 </div>
 
                 {notice ? (
@@ -254,7 +254,6 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
                             </Button>
                             <Button
                                 type="button"
-                                variant="outline"
                                 disabled={isBusy}
                                 className="h-12 border-neutral-800 bg-neutral-950 text-neutral-100 hover:border-blue-600 hover:bg-neutral-900"
                                 onClick={() => {
@@ -351,7 +350,7 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
                         <Button
                             type="submit"
                             disabled={isBusy}
-                            className="h-12 w-full bg-neutral-100 font-medium text-neutral-950 hover:bg-white"
+                            className="flex h-12 w-full items-center gap-2 bg-blue-600 text-xs font-semibold text-neutral-100 transition-all duration-300 hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600 sm:text-sm"
                         >
                             {form.formState.isSubmitting ? (
                                 <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />

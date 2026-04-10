@@ -6,8 +6,11 @@ const mocks = vi.hoisted(() => ({
     revalidatePath: vi.fn(),
     prisma: {
         websiteSettings: {
-            findFirst: vi.fn(),
             upsert: vi.fn(),
+            findFirst: vi.fn(),
+        },
+        user: {
+            findFirst: vi.fn(),
         },
         auditLog: {
             create: vi.fn(),
@@ -41,11 +44,32 @@ describe('updateUserWebsiteSettings', () => {
             isPlatformAdmin: false,
         })
         mocks.prisma.websiteSettings.findFirst.mockResolvedValue(null)
+        mocks.prisma.user.findFirst.mockResolvedValue({
+            email: 'user-1@example.com',
+            firstName: 'Taylor',
+            lastName: 'Driver',
+        })
         mocks.prisma.websiteSettings.upsert.mockResolvedValue({
             preferredContact: 'sms',
             appointmentReminders: false,
             marketingOptIn: true,
             timezone: 'America/New_York',
+            fullName: 'Taylor Driver',
+            email: 'taylor@example.com',
+            phone: '5551234567',
+            billingAddressLine1: null,
+            billingAddressLine2: null,
+            billingCity: null,
+            billingState: null,
+            billingPostalCode: null,
+            billingCountry: null,
+            vehicleMake: null,
+            vehicleModel: null,
+            vehicleYear: null,
+            vehicleTrim: null,
+            stripeCustomerId: null,
+            stripeDefaultPaymentMethodBrand: null,
+            stripeDefaultPaymentMethodLast4: null,
             updatedAt: new Date('2026-03-20T12:00:00Z'),
         })
         mocks.prisma.auditLog.create.mockResolvedValue(undefined)
@@ -82,7 +106,7 @@ describe('updateUserWebsiteSettings', () => {
         expect(mocks.prisma.auditLog.create).not.toHaveBeenCalled()
     })
 
-    it('writes an audit log entry and revalidates the settings route after save', async () => {
+    it('writes audit log entries and returns the persisted website settings view', async () => {
         const result = await updateUserWebsiteSettings({
             preferredContact: 'sms',
             appointmentReminders: false,
@@ -103,7 +127,6 @@ describe('updateUserWebsiteSettings', () => {
                 resourceId: 'user-1',
             }),
         })
-        expect(mocks.revalidatePath).toHaveBeenCalledWith('/settings')
         expect(result).toEqual({
             preferredContact: 'sms',
             appointmentReminders: false,

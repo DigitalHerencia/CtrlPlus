@@ -11,7 +11,7 @@ export async function SchedulingDashboardStatsSection({
 }) {
     const bookings = await getBookings({ ...filters, page: 1, pageSize: 100 })
 
-    const pending = bookings.items.filter((item) => item.status === 'pending').length
+    const pending = bookings.items.filter((item) => item.status === 'requested' || item.status === 'reschedule_requested').length
     const confirmed = bookings.items.filter((item) => item.status === 'confirmed').length
     const completed = bookings.items.filter((item) => item.status === 'completed').length
 
@@ -34,3 +34,4 @@ export async function SchedulingDashboardTableSection({
 
     return <SchedulingDashboardTableClient rows={rows} />
 }
+

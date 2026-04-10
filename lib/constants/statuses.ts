@@ -55,8 +55,9 @@ export type VisualizerGenerationMode =
     (typeof VisualizerGenerationMode)[keyof typeof VisualizerGenerationMode]
 
 export const BookingStatus = {
-    PENDING: 'pending',
+    REQUESTED: 'requested',
     CONFIRMED: 'confirmed',
+    RESCHEDULE_REQUESTED: 'reschedule_requested',
     COMPLETED: 'completed',
     CANCELLED: 'cancelled',
 } as const
@@ -68,23 +69,40 @@ export type BookingStatusValue = (typeof BookingStatus)[keyof typeof BookingStat
 export const VALID_BOOKING_STATUSES = new Set(Object.values(BookingStatus))
 
 export type SchedulingBookingDisplayStatus =
-    | 'reserved'
+    | 'requested'
+    | 'reschedule_requested'
     | 'confirmed'
     | 'completed'
     | 'cancelled'
     | 'expired'
+
+export function normalizeBookingStatus(status: string): BookingStatusValue {
+    if (status === 'pending') {
+        return BookingStatus.REQUESTED
+    }
+
+    if (VALID_BOOKING_STATUSES.has(status as BookingStatusValue)) {
+        return status as BookingStatusValue
+    }
+
+    return BookingStatus.REQUESTED
+}
 
 export function getBookingDisplayStatus(
     status: BookingStatusValue,
     reservationExpiresAt: Date | null,
     now: Date = new Date()
 ): SchedulingBookingDisplayStatus {
-    if (status === BookingStatus.PENDING) {
+    if (status === BookingStatus.REQUESTED) {
         if (reservationExpiresAt && reservationExpiresAt > now) {
-            return 'reserved'
+            return 'requested'
         }
 
         return 'expired'
+    }
+
+    if (status === BookingStatus.RESCHEDULE_REQUESTED) {
+        return 'reschedule_requested'
     }
 
     return status
@@ -109,7 +127,6 @@ export const PaymentStatus = {
 export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus]
 
 export const PAYABLE_INVOICE_STATUSES = new Set<InvoiceStatus>([
-    InvoiceStatus.DRAFT,
     InvoiceStatus.ISSUED,
 ])
 

@@ -18,6 +18,9 @@ export interface InvoiceDTO {
     subtotalAmount?: number | null
     taxAmount?: number | null
     dueDate?: Timestamp | null
+    issuedAt?: Timestamp | null
+    stripeCheckoutSessionId?: string | null
+    stripeCustomerId?: string | null
     createdAt: Timestamp
     updatedAt: Timestamp
 }

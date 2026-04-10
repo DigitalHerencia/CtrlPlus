@@ -17,7 +17,7 @@ export interface VisualizerHfSelection {
     model: string
     year: string
     trim: string
-    wrapName: string
+    wrapId: string
 }
 
 export interface VisualizerHfCatalogData {
@@ -25,17 +25,20 @@ export interface VisualizerHfCatalogData {
     vehicleIndex: VisualizerVehicleCatalogIndex
     wraps: VisualizerHfWrapOption[]
     initialSelection: VisualizerHfSelection
+    selectedWrapId: string | null
 }
 
 export interface GenerateVisualizerHfPreviewInput {
+    wrapId: string
     make: string
     model: string
     year: string
     trim: string
-    wrapName: string
 }
 
 export interface GenerateVisualizerHfPreviewResult {
+    wrapId: string
+    wrapName: string
     imageUrl: string
     promptUsed: string
 }

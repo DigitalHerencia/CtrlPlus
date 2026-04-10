@@ -2,7 +2,13 @@ export const invoiceDTOFields = {
     id: true,
     bookingId: true,
     status: true,
+    subtotalAmount: true,
+    taxAmount: true,
     totalAmount: true,
+    dueDate: true,
+    issuedAt: true,
+    stripeCheckoutSessionId: true,
+    stripeCustomerId: true,
     createdAt: true,
     updatedAt: true,
 } as const

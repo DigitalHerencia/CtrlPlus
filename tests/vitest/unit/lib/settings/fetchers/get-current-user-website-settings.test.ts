@@ -6,6 +6,9 @@ const mocks = vi.hoisted(() => ({
         websiteSettings: {
             findFirst: vi.fn(),
         },
+        user: {
+            findFirst: vi.fn(),
+        },
     },
 }))
 
@@ -32,6 +35,11 @@ describe('getCurrentUserWebsiteSettings', () => {
             isOwner: false,
             isPlatformAdmin: false,
         })
+        mocks.prisma.user.findFirst.mockResolvedValue({
+            email: 'user-1@example.com',
+            firstName: 'Taylor',
+            lastName: 'Driver',
+        })
     })
 
     it('returns default settings when the user has no saved record', async () => {
@@ -54,12 +62,36 @@ describe('getCurrentUserWebsiteSettings', () => {
             appointmentReminders: false,
             marketingOptIn: true,
             timezone: 'America/New_York',
+            fullName: 'Taylor Driver',
+            email: 'taylor@example.com',
+            phone: '5551234567',
+            billingAddressLine1: null,
+            billingAddressLine2: null,
+            billingCity: null,
+            billingState: null,
+            billingPostalCode: null,
+            billingCountry: null,
+            vehicleMake: 'Ford',
+            vehicleModel: 'Mustang',
+            vehicleYear: '2022',
+            vehicleTrim: 'GT',
+            stripeCustomerId: null,
+            stripeDefaultPaymentMethodBrand: null,
+            stripeDefaultPaymentMethodLast4: null,
             updatedAt: new Date('2026-03-20T12:00:00Z'),
         })
 
         await getCurrentUserWebsiteSettings()
 
         expect(mocks.prisma.websiteSettings.findFirst).toHaveBeenCalledWith(
+            expect.objectContaining({
+                where: {
+                    clerkUserId: 'user-1',
+                    deletedAt: null,
+                },
+            })
+        )
+        expect(mocks.prisma.user.findFirst).toHaveBeenCalledWith(
             expect.objectContaining({
                 where: {
                     clerkUserId: 'user-1',

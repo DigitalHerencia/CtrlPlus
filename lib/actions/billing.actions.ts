@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 
 import { getAppBaseUrl, getStripeClient } from '@/lib/integrations/stripe'
+import { getTenantNotificationEmail, sendNotificationEmail } from '@/lib/integrations/notifications'
 import { prisma } from '@/lib/db/prisma'
 import {
     applyCreditSchema,
@@ -31,11 +32,10 @@ import {
     requireInvoiceWriteAccess,
     requireOwnerOrPlatformAdmin,
 } from '@/lib/authz/guards'
-import { getSession } from '@/lib/auth/session'
-import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
+import { syncStripePaymentSettingsSummary } from '@/lib/actions/settings.actions'
 import type { Prisma } from '@prisma/client'
 import type Stripe from 'stripe'
-import { isInvoicePayable } from '../constants/statuses'
+import { BookingStatus, isInvoicePayable, normalizeBookingStatus } from '../constants/statuses'
 
 type InvoiceLineItemRow = Pick<InvoiceLineItemDTO, 'description' | 'quantity' | 'unitPrice'>
 
@@ -70,9 +70,12 @@ export async function createCheckoutSession(
             totalAmount: true,
             status: true,
             updatedAt: true,
+            stripeCustomerId: true,
             booking: {
                 select: {
                     customerId: true,
+                    customerName: true,
+                    customerEmail: true,
                 },
             },
             lineItems: {
@@ -89,6 +92,35 @@ export async function createCheckoutSession(
 
     if (!isInvoicePayable(invoice.status as Parameters<typeof isInvoicePayable>[0])) {
         throw new Error(`Forbidden: invoice is not payable from status ${invoice.status}`)
+    }
+
+    const stripe = getStripeClient()
+    let stripeCustomerId: string | null = invoice.stripeCustomerId
+
+    if (!stripeCustomerId && invoice.booking.customerEmail) {
+        const customer = await stripe.customers.create({
+            email: invoice.booking.customerEmail,
+            name: invoice.booking.customerName ?? undefined,
+            metadata: {
+                clerkUserId: invoice.booking.customerId,
+            },
+        })
+        stripeCustomerId = customer.id
+
+        await prisma.websiteSettings.upsert({
+            where: { clerkUserId: invoice.booking.customerId },
+            create: {
+                clerkUserId: invoice.booking.customerId,
+                preferredContact: 'email',
+                appointmentReminders: true,
+                marketingOptIn: false,
+                timezone: 'America/Denver',
+                stripeCustomerId,
+            },
+            update: {
+                stripeCustomerId,
+            },
+        })
     }
 
     const lineItems =
@@ -113,15 +145,21 @@ export async function createCheckoutSession(
               ]
 
     const baseUrl = getAppBaseUrl()
-    const stripe = getStripeClient()
     const idempotencyKey = `billing:checkout:${invoice.id}:${invoice.updatedAt.getTime()}`
 
     const checkoutSession = await stripe.checkout.sessions.create(
         {
-            payment_method_types: ['card'],
             line_items: lineItems,
             mode: 'payment',
             client_reference_id: invoice.id,
+            customer: stripeCustomerId ?? undefined,
+            customer_email: stripeCustomerId ? undefined : (invoice.booking.customerEmail ?? undefined),
+            payment_intent_data: {
+                setup_future_usage: 'off_session',
+                metadata: {
+                    invoiceId: invoice.id,
+                },
+            },
             success_url: `${baseUrl}/billing/${invoice.id}?payment=success`,
             cancel_url: `${baseUrl}/billing/${invoice.id}?payment=cancelled`,
             metadata: {
@@ -138,27 +176,30 @@ export async function createCheckoutSession(
         throw new Error('Stripe did not return a checkout URL')
     }
 
-    if (invoice.status === 'draft') {
-        await prisma.invoice.update({
+    await prisma.$transaction([
+        prisma.invoice.update({
             where: { id: invoice.id },
-            data: { status: 'issued' },
-        })
-    }
-
-    await prisma.auditLog.create({
-        data: {
-            userId: access.session.userId,
-            action: 'CREATE_CHECKOUT_SESSION',
-            resourceType: 'Invoice',
-            resourceId: invoice.id,
-            details: JSON.stringify({
-                sessionId: checkoutSession.id,
-                idempotencyKey,
-                invoiceStatus: invoice.status,
-            }),
-            timestamp: new Date(),
-        },
-    })
+            data: {
+                stripeCheckoutSessionId: checkoutSession.id,
+                stripeCustomerId: stripeCustomerId ?? undefined,
+            },
+        }),
+        prisma.auditLog.create({
+            data: {
+                userId: access.session.userId,
+                action: 'CREATE_CHECKOUT_SESSION',
+                resourceType: 'Invoice',
+                resourceId: invoice.id,
+                details: JSON.stringify({
+                    sessionId: checkoutSession.id,
+                    idempotencyKey,
+                    invoiceStatus: invoice.status,
+                    stripeCustomerId,
+                }),
+                timestamp: new Date(),
+            },
+        }),
+    ])
 
     revalidatePath('/billing')
     revalidatePath(`/billing/${invoice.id}`)
@@ -198,7 +239,7 @@ function mapStripeRefundStatus(status: Stripe.Refund['status']): 'pending' | 'su
 export async function ensureInvoiceForBooking(
     rawInput: EnsureInvoiceForBookingInput
 ): Promise<EnsureInvoiceResult> {
-    const session = await getSession()
+    const session = await requireOwnerOrPlatformAdmin()
     const userId = session.userId
 
     if (!session.isAuthenticated || !userId) {
@@ -211,13 +252,16 @@ export async function ensureInvoiceForBooking(
         where: {
             id: bookingId,
             deletedAt: null,
-            ...(!session.isOwner && !session.isPlatformAdmin ? { customerId: userId } : {}),
         },
         select: {
             id: true,
             customerId: true,
+            customerEmail: true,
+            customerName: true,
+            status: true,
             wrapId: true,
             totalPrice: true,
+            wrapNameSnapshot: true,
             invoice: {
                 where: { deletedAt: null },
                 select: { id: true },
@@ -232,7 +276,9 @@ export async function ensureInvoiceForBooking(
         throw new Error('Forbidden: booking not found')
     }
 
-    requireCustomerOwnedResourceAccess(session.authz, booking.customerId)
+    if (normalizeBookingStatus(booking.status) !== BookingStatus.COMPLETED) {
+        throw new Error('Invoices can only be issued after the booking is completed')
+    }
 
     if (booking.invoice) {
         return {
@@ -242,48 +288,68 @@ export async function ensureInvoiceForBooking(
     }
 
     const roundedTotalPrice = normalizeCents(booking.totalPrice)
-
-    const createInvoice = async (tx: Prisma.TransactionClient) => {
-        const created = await tx.invoice.create({
-            data: {
-                bookingId: booking.id,
-                status: 'draft',
-                totalAmount: roundedTotalPrice,
-                lineItems: {
-                    create: [
-                        {
-                            description: booking.wrap?.name ?? 'Wrap installation',
-                            quantity: 1,
-                            unitPrice: roundedTotalPrice,
-                            totalPrice: roundedTotalPrice,
-                        },
-                    ],
-                },
-            },
-            select: { id: true },
-        })
-
-        await tx.auditLog.create({
-            data: {
-                userId,
-                action: 'ENSURE_INVOICE_FOR_BOOKING',
-                resourceType: 'Invoice',
-                resourceId: created.id,
-                details: JSON.stringify({ bookingId: booking.id }),
-                timestamp: new Date(),
-            },
-        })
-
-        return created
-    }
+    const issuedAt = new Date()
+    const dueDate = new Date(issuedAt.getTime() + 7 * 24 * 60 * 60 * 1000)
+    const lineItemDescription = booking.wrapNameSnapshot ?? booking.wrap?.name ?? 'Wrap installation'
 
     try {
-        const created = await prisma.$transaction(createInvoice)
+        const created = await prisma.$transaction(async (tx) => {
+            const invoice = await tx.invoice.create({
+                data: {
+                    bookingId: booking.id,
+                    status: 'issued',
+                    subtotalAmount: roundedTotalPrice,
+                    taxAmount: 0,
+                    totalAmount: roundedTotalPrice,
+                    issuedAt,
+                    dueDate,
+                    lineItems: {
+                        create: [
+                            {
+                                description: lineItemDescription,
+                                quantity: 1,
+                                unitPrice: roundedTotalPrice,
+                                totalPrice: roundedTotalPrice,
+                            },
+                        ],
+                    },
+                },
+                select: { id: true },
+            })
 
-        return {
-            invoiceId: created.id,
-            created: true,
-        }
+            await tx.auditLog.create({
+                data: {
+                    userId,
+                    action: 'ENSURE_INVOICE_FOR_BOOKING',
+                    resourceType: 'Invoice',
+                    resourceId: invoice.id,
+                    details: JSON.stringify({ bookingId: booking.id, issuedAt: issuedAt.toISOString(), dueDate: dueDate.toISOString() }),
+                    timestamp: issuedAt,
+                },
+            })
+
+            return invoice
+        })
+
+        const ownerEmail = await getTenantNotificationEmail()
+        await Promise.all([
+            ownerEmail
+                ? sendNotificationEmail({
+                      to: ownerEmail,
+                      subject: `Invoice issued for ${lineItemDescription}`,
+                      text: `Invoice ${created.id} was issued for booking ${booking.id}.`,
+                  })
+                : Promise.resolve(),
+            booking.customerEmail
+                ? sendNotificationEmail({
+                      to: booking.customerEmail,
+                      subject: 'Your invoice is ready',
+                      text: `Your invoice for ${lineItemDescription} is now available in your account.`,
+                  })
+                : Promise.resolve(),
+        ])
+
+        return { invoiceId: created.id, created: true }
     } catch (error) {
         if (!isUniqueConstraintError(error)) {
             throw error
@@ -298,10 +364,7 @@ export async function ensureInvoiceForBooking(
             throw new Error('Invoice creation race detected but invoice could not be found')
         }
 
-        return {
-            invoiceId: existingInvoice.id,
-            created: false,
-        }
+        return { invoiceId: existingInvoice.id, created: false }
     }
 }
 
@@ -710,7 +773,7 @@ async function processCheckoutSessionCompleted(
     const invoiceId = resolveInvoiceId(session)
     const stripePaymentIntentId = resolveStripePaymentIntentId(session)
 
-    if (webhookState !== 'process') {
+    if (webhookState != 'process') {
         return buildDuplicatePaymentResult(invoiceId, stripePaymentIntentId)
     }
 
@@ -723,6 +786,13 @@ async function processCheckoutSessionCompleted(
             id: true,
             bookingId: true,
             totalAmount: true,
+            stripeCustomerId: true,
+            booking: {
+                select: {
+                    customerId: true,
+                    customerEmail: true,
+                },
+            },
         },
     })
 
@@ -737,7 +807,6 @@ async function processCheckoutSessionCompleted(
 
     if (existingPayment) {
         await finalizeStripeWebhookEvent(event.id, 'processed')
-
         return {
             invoiceId: invoice.id,
             paymentId: existingPayment.id,
@@ -746,6 +815,18 @@ async function processCheckoutSessionCompleted(
     }
 
     const amountPaid = session.amount_total ?? invoice.totalAmount
+    const stripe = getStripeClient()
+    const paymentIntent = await stripe.paymentIntents.retrieve(stripePaymentIntentId, {
+        expand: ['payment_method'],
+    })
+
+    const paymentMethod =
+        typeof paymentIntent.payment_method === 'object' && paymentIntent.payment_method
+            ? paymentIntent.payment_method
+            : null
+    const card = paymentMethod && 'card' in paymentMethod ? paymentMethod.card : null
+    const stripeCustomerId =
+        (typeof session.customer === 'string' ? session.customer : null) ?? invoice.stripeCustomerId ?? null
 
     let payment: { id: string }
     try {
@@ -760,11 +841,10 @@ async function processCheckoutSessionCompleted(
             }),
             prisma.invoice.update({
                 where: { id: invoice.id },
-                data: { status: 'paid' },
-            }),
-            prisma.booking.update({
-                where: { id: invoice.bookingId },
-                data: { status: 'confirmed' },
+                data: {
+                    status: 'paid',
+                    stripeCustomerId: stripeCustomerId ?? undefined,
+                },
             }),
         ])
         payment = createdPayment
@@ -776,7 +856,6 @@ async function processCheckoutSessionCompleted(
             })
             if (winner) {
                 await finalizeStripeWebhookEvent(event.id, 'processed')
-
                 return {
                     invoiceId: invoice.id,
                     paymentId: winner.id,
@@ -784,8 +863,17 @@ async function processCheckoutSessionCompleted(
                 }
             }
         }
-
         throw error
+    }
+
+    if (stripeCustomerId) {
+        await syncStripePaymentSettingsSummary({
+            clerkUserId: invoice.booking.customerId,
+            stripeCustomerId,
+            stripeDefaultPaymentMethodId: paymentMethod?.id ?? null,
+            stripeDefaultPaymentMethodBrand: card?.brand ?? null,
+            stripeDefaultPaymentMethodLast4: card?.last4 ?? null,
+        })
     }
 
     await prisma.auditLog.create({
@@ -799,9 +887,28 @@ async function processCheckoutSessionCompleted(
                 bookingId: invoice.bookingId,
                 stripePaymentIntentId,
                 amount: amountPaid,
+                stripeCustomerId,
             }),
         },
     })
+
+    const ownerEmail = await getTenantNotificationEmail()
+    await Promise.all([
+        ownerEmail
+            ? sendNotificationEmail({
+                  to: ownerEmail,
+                  subject: `Payment received for invoice ${invoice.id}`,
+                  text: `Stripe reported a successful payment for invoice ${invoice.id}.`,
+              })
+            : Promise.resolve(),
+        invoice.booking.customerEmail
+            ? sendNotificationEmail({
+                  to: invoice.booking.customerEmail,
+                  subject: 'Payment received',
+                  text: `We received your payment for invoice ${invoice.id}.`,
+              })
+            : Promise.resolve(),
+    ])
 
     await finalizeStripeWebhookEvent(event.id, 'processed')
 
@@ -843,3 +950,4 @@ export async function processStripeWebhookEvent({
         throw error
     }
 }
+

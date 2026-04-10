@@ -1,10 +1,3 @@
-/**
- * User Menu Component
- *
- * Dropdown menu with user profile, sign-out, and account settings.
- * Uses Clerk's UserButton component with custom appearance.
- */
-
 'use client'
 
 import { UserButton } from '@clerk/nextjs'

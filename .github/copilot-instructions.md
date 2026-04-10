@@ -34,6 +34,29 @@ Use `.agents` as the source of truth.
 
 `contracts > instructions > docs > prompts` (json is reporting only).
 
+## Frontend Design & UI Governance
+
+The frontend is optimized for **mobile-first responsive design** using Tailwind CSS and shadcn/ui primitives.
+All styling, component, and animation rules are documented in `.agents/docs/design.md` and enforced via `.agents/contracts/ui-component-governance.contract.yaml`.
+
+### Key Frontend Principles
+
+- **Mobile-First**: Optimize for small screens first, progressively enhance for larger viewports
+- **Semantic Simplicity**: Use shadcn/ui primitives exclusively; no custom UI components
+- **Color System**: Strict palette (blue-600 primary, neutral-700 borders, neutral-900 bg, neutral-100 text)
+- **Typography Scaling**: All font sizes responsive across breakpoints (mobile-first pattern)
+- **Button Template**: All buttons follow Header Button Template (primary = blue bg with border-invert hover, secondary = outline variant)
+- **Spacing System**: 4px increments with breakpoint scaling (px-4 sm:px-6 lg:px-8, etc.)
+- **Animations**: Tailwind-only (fade-in, slide-in-up, transition-all)
+- **No Rounded Corners**: All components use `--radius: 0` for sharp edges
+
+### Design & Component References
+
+- **Intent & Patterns**: `.agents/docs/design.md` (color system, typography scale, spacing, responsive grids, button styles, accessibility)
+- **Execution Rules**: `.agents/contracts/ui-component-governance.contract.yaml` (component usage, button anatomy, color constraints, violations)
+- **Example Implementation**: `app/page.tsx` (hero, features grid, pricing cards, animations)
+- **Shared Components**: `components/shared/site-header.tsx`, `components/shared/site-footer.tsx` (responsive mobile-first header/footer)
+
 ## Domain boundaries
 
 Active domains:

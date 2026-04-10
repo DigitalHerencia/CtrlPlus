@@ -180,6 +180,7 @@ model Wrap {
   images           WrapImage[]
   categoryMappings WrapCategoryMapping[]
   bookings         Booking[]
+  bookingDrafts    BookingDraft[]
   previews         VisualizerPreview[]
 
   @@index([deletedAt, createdAt])
@@ -268,8 +269,27 @@ model Booking {
   wrapId     String
   startTime  DateTime
   endTime    DateTime
-  status     String    @default("pending") // "pending" | "confirmed" | "completed" | "cancelled"
+  status     String    @default("requested") // "requested" | "confirmed" | "reschedule_requested" | "completed" | "cancelled"
   totalPrice Int // in cents
+  wrapNameSnapshot String?
+  wrapPriceSnapshot Int?
+  customerName String?
+  customerEmail String?
+  customerPhone String?
+  preferredContact String?
+  billingAddressLine1 String?
+  billingAddressLine2 String?
+  billingCity String?
+  billingState String?
+  billingPostalCode String?
+  billingCountry String?
+  vehicleMake String?
+  vehicleModel String?
+  vehicleYear String?
+  vehicleTrim String?
+  previewImageUrl String?
+  previewPromptUsed String?
+  notes      String?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
@@ -281,6 +301,28 @@ model Booking {
   @@index([deletedAt, status, startTime])
   @@index([customerId, deletedAt, status])
   @@index([deletedAt, startTime, endTime])
+}
+
+/// Active customer checkout draft that connects catalog, visualizer, and scheduling.
+model BookingDraft {
+  id               String   @id @default(cuid())
+  customerId       String   @unique
+  wrapId           String
+  wrapNameSnapshot String
+  wrapPriceSnapshot Int
+  vehicleMake      String?
+  vehicleModel     String?
+  vehicleYear      String?
+  vehicleTrim      String?
+  previewImageUrl  String?
+  previewPromptUsed String?
+  previewStatus    String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  wrap Wrap @relation(fields: [wrapId], references: [id], onDelete: Cascade)
+
+  @@index([wrapId, updatedAt])
 }
 
 /// 15-minute reservation hold on booking slots
@@ -380,7 +422,13 @@ model Invoice {
   id          String    @id @default(cuid())
   bookingId   String    @unique
   status      String    @default("draft") // "draft" | "issued" | "paid" | "refunded" | "void"
+  subtotalAmount Int?
+  taxAmount   Int?
   totalAmount Int // in cents
+  dueDate     DateTime?
+  issuedAt    DateTime?
+  stripeCheckoutSessionId String? @unique
+  stripeCustomerId String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
@@ -448,9 +496,26 @@ model StripeWebhookEvent {
 model WebsiteSettings {
   id                   String    @id @default(cuid())
   clerkUserId          String    @unique
+  fullName             String?
+  email                String?
+  phone                String?
   preferredContact     String    @default("email") // "email" | "sms"
   appointmentReminders Boolean   @default(true)
   marketingOptIn       Boolean   @default(false)
+  billingAddressLine1  String?
+  billingAddressLine2  String?
+  billingCity          String?
+  billingState         String?
+  billingPostalCode    String?
+  billingCountry       String?
+  vehicleMake          String?
+  vehicleModel         String?
+  vehicleYear          String?
+  vehicleTrim          String?
+  stripeCustomerId     String?   @unique
+  stripeDefaultPaymentMethodId String?
+  stripeDefaultPaymentMethodBrand String?
+  stripeDefaultPaymentMethodLast4 String?
   timezone             String    @default("America/Denver")
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
@@ -480,3 +545,4 @@ model AuditLog {
   @@index([action])
   @@index([deletedAt])
 }
+

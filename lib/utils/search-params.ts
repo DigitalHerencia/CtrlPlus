@@ -142,7 +142,6 @@ export function parseSchedulingSearchParams(searchParams: SearchParamRecord): {
     const normalized = parsed.success
         ? parsed.data
         : bookingListParamsSchema.parse({
-              status: candidate.status,
               page: DEFAULT_PAGE,
               pageSize: DEFAULT_PAGE_SIZE,
           })

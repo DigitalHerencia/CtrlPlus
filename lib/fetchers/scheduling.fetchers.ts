@@ -2,7 +2,11 @@ import 'server-only'
 import { prisma } from '@/lib/db/prisma'
 import { getWraps } from '@/lib/fetchers/catalog.fetchers'
 import type { WrapDTO } from '@/types/catalog.types'
-import { availabilitySelectFields, bookingSelectFields } from '@/lib/db/selects/scheduling.selects'
+import {
+    availabilitySelectFields,
+    bookingDraftSelectFields,
+    bookingSelectFields,
+} from '@/lib/db/selects/scheduling.selects'
 import { getSession } from '@/lib/auth/session'
 import { hasCapability } from '@/lib/authz/policy'
 import { availabilityQuerySchema } from '@/schemas/scheduling.schemas'
@@ -13,6 +17,7 @@ import type {
     AvailabilityRuleDTO,
     AvailabilityWindowDTO,
     BookingDTO,
+    BookingDraftDTO,
     BookingDetailViewDTO,
     BookingListParams,
     BookingListResult,
@@ -20,7 +25,10 @@ import type {
     BookingTimelineEventDTO,
 } from '@/types/scheduling.types'
 
-import { getBookingDisplayStatus, BookingStatusValue } from '@/lib/constants/statuses'
+import {
+    getBookingDisplayStatus,
+    normalizeBookingStatus,
+} from '@/lib/constants/statuses'
 
 function parseHHmmToDate(baseDate: Date, hhmm: string): Date {
     const [hours, minutes = '0'] = hhmm.split(':')
@@ -51,7 +59,7 @@ async function requireSchedulingReadSession() {
         throw new Error('Forbidden: insufficient permissions')
     }
 
-    return session
+    return session as typeof session & { userId: string }
 }
 
 function canViewAllSchedulingBookings(
@@ -166,7 +174,6 @@ export async function getAvailability(
     const parsed = availabilityQuerySchema.parse({ startDate, endDate })
     const rangeStart = parsed.startDate
     const rangeEnd = parsed.endDate
-    const now = new Date()
 
     const [rules, bookings] = await Promise.all([
         prisma.availabilityRule.findMany({
@@ -182,16 +189,10 @@ export async function getAvailability(
                 startTime: { lte: rangeEnd },
                 endTime: { gte: rangeStart },
                 OR: [
+                    { status: 'requested' },
                     { status: 'confirmed' },
+                    { status: 'reschedule_requested' },
                     { status: 'completed' },
-                    {
-                        status: 'pending',
-                        reservation: {
-                            is: {
-                                expiresAt: { gt: now },
-                            },
-                        },
-                    },
                 ],
             },
             select: {
@@ -239,6 +240,51 @@ export async function getAvailability(
     return slots.sort((a, b) => a.start.localeCompare(b.start))
 }
 
+function toBookingDraftDTO(record: {
+    id: string
+    customerId: string
+    wrapId: string
+    wrapNameSnapshot: string
+    wrapPriceSnapshot: number
+    vehicleMake: string | null
+    vehicleModel: string | null
+    vehicleYear: string | null
+    vehicleTrim: string | null
+    previewImageUrl: string | null
+    previewPromptUsed: string | null
+    previewStatus: string | null
+    createdAt: Date
+    updatedAt: Date
+}): BookingDraftDTO {
+    return {
+        id: record.id,
+        customerId: record.customerId,
+        wrapId: record.wrapId,
+        wrapNameSnapshot: record.wrapNameSnapshot,
+        wrapPriceSnapshot: record.wrapPriceSnapshot,
+        vehicleMake: record.vehicleMake,
+        vehicleModel: record.vehicleModel,
+        vehicleYear: record.vehicleYear,
+        vehicleTrim: record.vehicleTrim,
+        previewImageUrl: record.previewImageUrl,
+        previewPromptUsed: record.previewPromptUsed,
+        previewStatus: record.previewStatus,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
+    }
+}
+
+export async function getActiveBookingDraft(): Promise<BookingDraftDTO | null> {
+    const session = await requireSchedulingReadSession()
+
+    const row = await prisma.bookingDraft.findUnique({
+        where: { customerId: session.userId },
+        select: bookingDraftSelectFields,
+    })
+
+    return row ? toBookingDraftDTO(row) : null
+}
+
 // Bookings
 const DEFAULT_BOOKING_LIST_PARAMS: BookingListParams = {
     page: 1,
@@ -256,6 +302,25 @@ function toBookingDTO(record: {
     endTime: Date | string
     status: string
     totalPrice: number
+    wrapNameSnapshot: string | null
+    wrapPriceSnapshot: number | null
+    customerName: string | null
+    customerEmail: string | null
+    customerPhone: string | null
+    preferredContact: string | null
+    billingAddressLine1: string | null
+    billingAddressLine2: string | null
+    billingCity: string | null
+    billingState: string | null
+    billingPostalCode: string | null
+    billingCountry: string | null
+    vehicleMake: string | null
+    vehicleModel: string | null
+    vehicleYear: string | null
+    vehicleTrim: string | null
+    previewImageUrl: string | null
+    previewPromptUsed: string | null
+    notes: string | null
     reservation: {
         expiresAt: Date | string
     } | null
@@ -263,8 +328,9 @@ function toBookingDTO(record: {
     updatedAt: Date | string
 }): BookingDTO {
     const reservationExpiresAtDate: Date | string | null = record.reservation?.expiresAt ?? null
+    const normalizedStatus = normalizeBookingStatus(record.status)
     const displayStatus = getBookingDisplayStatus(
-        record.status as BookingStatusValue,
+        normalizedStatus,
         typeof reservationExpiresAtDate === 'string'
             ? reservationExpiresAtDate
                 ? new Date(reservationExpiresAtDate)
@@ -290,13 +356,33 @@ function toBookingDTO(record: {
         id: record.id,
         customerId: record.customerId,
         wrapId: record.wrapId,
-        wrapName: record.wrap.name,
+        wrapName: record.wrapNameSnapshot ?? record.wrap.name,
         startTime,
         endTime,
-        status: record.status as BookingDTO['status'],
-        totalPrice: record.totalPrice,
+        status: normalizedStatus as BookingDTO['status'],
+        totalPrice: record.wrapPriceSnapshot ?? record.totalPrice,
         reservationExpiresAt,
         displayStatus,
+        customerName: record.customerName,
+        customerEmail: record.customerEmail,
+        customerPhone: record.customerPhone,
+        preferredContact:
+            record.preferredContact === 'sms' || record.preferredContact === 'email'
+                ? record.preferredContact
+                : null,
+        billingAddressLine1: record.billingAddressLine1,
+        billingAddressLine2: record.billingAddressLine2,
+        billingCity: record.billingCity,
+        billingState: record.billingState,
+        billingPostalCode: record.billingPostalCode,
+        billingCountry: record.billingCountry,
+        vehicleMake: record.vehicleMake,
+        vehicleModel: record.vehicleModel,
+        vehicleYear: record.vehicleYear,
+        vehicleTrim: record.vehicleTrim,
+        previewImageUrl: record.previewImageUrl,
+        previewPromptUsed: record.previewPromptUsed,
+        notes: record.notes,
         createdAt,
         updatedAt,
     }
@@ -434,13 +520,28 @@ export async function getBooking(
     return {
         id: booking.id,
         wrapId: booking.wrapId,
+        wrapName: booking.wrapName ?? null,
         scheduledAt,
+        estimatedPickupAt: booking.endTime,
         durationMinutes,
         status: booking.status,
-        customerName: 'Customer',
-        customerEmail: booking.customerId ?? 'unknown@ctrlplus.local',
-        customerPhone: null,
-        notes: null,
+        customerName: booking.customerName ?? 'Customer',
+        customerEmail: booking.customerEmail ?? booking.customerId ?? 'unknown@ctrlplus.local',
+        customerPhone: booking.customerPhone ?? null,
+        preferredContact: booking.preferredContact ?? null,
+        billingAddressLine1: booking.billingAddressLine1 ?? null,
+        billingAddressLine2: booking.billingAddressLine2 ?? null,
+        billingCity: booking.billingCity ?? null,
+        billingState: booking.billingState ?? null,
+        billingPostalCode: booking.billingPostalCode ?? null,
+        billingCountry: booking.billingCountry ?? null,
+        vehicleMake: booking.vehicleMake ?? null,
+        vehicleModel: booking.vehicleModel ?? null,
+        vehicleYear: booking.vehicleYear ?? null,
+        vehicleTrim: booking.vehicleTrim ?? null,
+        previewImageUrl: booking.previewImageUrl ?? null,
+        previewPromptUsed: booking.previewPromptUsed ?? null,
+        notes: booking.notes ?? null,
         timeline,
         createdAt: booking.createdAt,
         updatedAt: booking.updatedAt,
@@ -455,7 +556,9 @@ export async function getBookingManagerRows(
     return result.items.map((booking) => ({
         id: booking.id,
         wrapId: booking.wrapId,
+        wrapName: booking.wrapName ?? null,
         scheduledAt: booking.startTime,
+        estimatedPickupAt: booking.endTime,
         durationMinutes: Math.max(
             0,
             Math.round(
@@ -464,8 +567,8 @@ export async function getBookingManagerRows(
             )
         ),
         status: booking.status,
-        customerName: 'Customer',
-        customerEmail: booking.customerId ?? 'unknown@ctrlplus.local',
+        customerName: booking.customerName ?? 'Customer',
+        customerEmail: booking.customerEmail ?? booking.customerId ?? 'unknown@ctrlplus.local',
         createdAt: booking.createdAt,
         updatedAt: booking.updatedAt,
     }))
@@ -494,3 +597,4 @@ export async function getWrapsForScheduling(opts?: {
 }): Promise<WrapDTO[]> {
     return getWraps({ includeHidden: opts?.includeHidden ?? false })
 }
+

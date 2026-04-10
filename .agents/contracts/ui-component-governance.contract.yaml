@@ -1,0 +1,282 @@
+---
+name: ui-component-governance
+description: UI Component and Styling Standards
+applies_to: components/**/*.tsx, app/**/*.tsx, features/**/*.tsx
+---
+
+## Purpose
+
+Define strict rules for UI component usage, button styling, and responsive design patterns across CtrlPlus frontend. This contract enforces the design system and prevents visual inconsistencies.
+
+## UI Component Primitives
+
+**Rule**: All UI components MUST come from `components/ui/**` (shadcn/ui primitives only).
+
+- `Button` — primary, secondary, outline variants
+- `Card`, `CardContent`, `CardDescription`, `CardHeader`, `CardTitle` — content containers
+- `Separator` — visual dividers
+- All other UI blocks created via primitive composition
+
+**Violation Example** ❌:
+```tsx
+// DON'T: Create custom button component
+export function CustomButton({ children }) {
+  return <button className="px-4 py-2  bg-blue-600">{children}</button>
+}
+```
+
+**Correct Pattern** ✅:
+```tsx
+// DO: Use Button from shadcn/ui
+import { Button } from '@/components/ui/button'
+<Button>Action</Button>
+```
+
+## Button Styling Template
+
+All buttons MUST follow the **Header Button Pattern**. There are only two approved variants:
+
+### Primary Button (CTA)
+Used for main calls-to-action, sign-up, booking actions.
+
+```tsx
+<Button
+  asChild
+  className="bg-blue-600 text-neutral-100 transition-all
+    hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600"
+>
+  <Link href="/path">Action Label</Link>
+</Button>
+```
+
+**Anatomy**:
+- Base: `bg-blue-600 text-neutral-100`
+- Hover: inverts to transparent with blue border and text
+- Icon support: use `<Icon className="h-5 w-5" />` inside
+
+### Secondary Button (Outline/Alternative)
+Used for optional actions, documentation links.
+
+```tsx
+<Button
+  asChild
+  variant="outline"
+  className="border-neutral-700 bg-transparent text-neutral-100
+    hover:border-blue-600 hover:bg-transparent hover:text-blue-600"
+>
+  <Link href="/path">Action Label</Link>
+</Button>
+```
+
+**Anatomy**:
+- Base: `border-neutral-700 bg-transparent text-neutral-100`
+- Hover: blue border and text, no fill
+- Never use outline as primary CTA
+
+### Button Sizes
+
+- **Mobile (default)**: `text-xs px-3 py-2` (no size prop needed)
+- **sm**: `size="sm"` — `text-xs px-3 py-1` for secondary actions
+- **Tablet+**: `text-sm px-4 py-2` (add via sm: prefix)
+- **Hero CTA**: `text-base px-6 py-3 sm:px-8 sm:py-4 sm:text-lg` (custom inline)
+
+**ℹ️ Rule**: Never use `size="lg"` or `size="xl"`. Use inline responsive classes instead for full control.
+
+### Button State Styling
+
+- **Hover**: Defined by variant (color inversion or opacity)
+- **Focus**: Default ring (handled by Tailwind config)
+- **Disabled**: Add `opacity-50 cursor-not-allowed` inline
+- **Loading**: Optional spinner inside, preserve layout
+
+## Color Constraints
+
+**Rule**: ONLY use these colors. No deviations, no color-500, no custom hex.
+
+**Color Hierarchy**:
+- **Base/Section backgrounds**: `bg-neutral-900`
+- **Layered components** (cards, headers, footers, menus, modals): `bg-neutral-950/80`
+- **Borders**: `border-neutral-700`
+- **Primary text**: `text-neutral-100`
+- **Secondary text**: `text-neutral-400` or `text-neutral-300`
+- **Accents**: `blue-600`
+
+| Usage | Class | Allowed for |
+|-------|-------|------------|
+| Primary/Accent | `text-blue-600`, `bg-blue-600`, `border-blue-600` | CTAs, highlights, hover states |
+| Border | `border-neutral-700` | Card borders, dividers, input outlines |
+| Background (Base) | `bg-neutral-900` | Page and section base backgrounds |
+| Surface (Layered) | `bg-neutral-950/80` | Cards, headers, footers, menus, modals (anything on top of bg) |
+| Text Primary | `text-neutral-100` | Body, headings, main content |
+| Text Secondary | `text-neutral-400` | Captions, metadata, muted text |
+| Text Muted | `text-neutral-300` | Descriptions, secondary text |
+| Hover Backgrounds | `bg-blue-600/10` | Icon boxes, subtle highlights |
+
+**Rule**: No custom colors in CSS modules. All colors come from Tailwind config.
+
+## Spacing Margins
+
+**Rule**: Use Tailwind's built-in spacing scale (4px increments).
+
+| Purpose | Pattern |
+|---------|---------|
+| Sections top/bottom | `py-16 sm:py-20 lg:py-24` |
+| Compact sections | `py-12 sm:py-16 lg:py-20` |
+| Cards padding | `p-4 sm:p-6 lg:p-8` |
+| Container padding | `px-4 sm:px-6 lg:px-8` |
+| Grid gaps | `gap-4 sm:gap-6 lg:gap-8` |
+| Element margins | `mb-4`, `mt-6`, etc. |
+
+**Never**: Use fixed padding like `px-12` or `py-32` without breakpoint scaling.
+
+## Typography Standards
+
+**Rule**: Font sizes MUST scale with breakpoints (mobile-first).
+
+| Element | Class Pattern | Example |
+|---------|----------|---------|
+| H1 (Hero) | `text-3xl sm:text-4xl lg:text-6xl font-black` | Main page heading |
+| H2 (Section) | `text-2xl sm:text-4xl lg:text-5xl font-black` | Section titles |
+| H3 (Card) | `text-lg sm:text-xl font-bold` | Card titles |
+| Body | `text-base sm:text-base` | Paragraphs |
+| Small | `text-sm` | Secondary text, metadata |
+| Label | `text-xs uppercase tracking-widest` | Labels, badges |
+
+**Rule**: Never use static `text-6xl` on mobile. Always include `sm:` and `lg:` breakpoints.
+
+## Animation Classes
+
+**Rule**: Use only defined Tailwind animations. No custom CSS animations.
+
+| Animation | Element | Duration |
+|-----------|---------|----------|
+| `animate-fade-in` | Hero sections, entrance effects | 200ms |
+| `animate-slide-in-up` | Cards on load, content reveal | 200ms |
+| `transition-all duration-300` | Hover states, color changes | 300ms |
+| `transition duration-200` | Quick interactions | 200ms |
+
+**Rule**: For hover states, always use `transition-all duration-300` or `transition duration-200`.
+
+**Never**: Use `animate-spin` or `animate-bounce` for decorative purposes.
+
+## Card Component Standard
+
+All cards MUST use this pattern:
+
+```tsx
+<Card className="border-neutral-700 bg-neutral-900
+  transition-all duration-300
+  hover:border-blue-600/50 hover:shadow-lg hover:shadow-blue-600/10">
+  <CardHeader className="pb-4">
+    <CardTitle className="text-lg font-bold text-blue-600">Title</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <p className="text-sm text-neutral-100">Content</p>
+  </CardContent>
+</Card>
+```
+
+**Anatomy**:
+- Border: `border-neutral-700`
+- Background: `bg-neutral-900`
+- Hover: lift border and add subtle shadow
+- Text colors: titles in `text-blue-600`, body in `text-neutral-100`
+
+**Rule**: No custom card styling. Always use this template.
+
+## Responsive Grid Patterns
+
+### Features/Testimonials Grid
+```tsx
+<div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+  {/* Cards */}
+</div>
+```
+
+### Pricing Cards (3 column)
+```tsx
+<div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+  {/* Pricing tiers */}
+</div>
+```
+
+### Hero Layout
+```tsx
+<div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+  {/* Content */}
+</div>
+```
+
+## Container Standard
+
+All sections must define a centered container:
+
+```tsx
+<section className="bg-neutral-900 px-4 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+  <div className="mx-auto max-w-7xl">
+    {/* Content */}
+  </div>
+</section>
+```
+
+- `mx-auto` — center container
+- `max-w-7xl` — max width 1280px
+- `px-4 sm:px-6 lg:px-8` — responsive horizontal padding
+- `py-16 sm:py-20 lg:py-24` — responsive vertical spacing
+
+## Image Standards
+
+All images MUST use Next.js `Image`:
+
+```tsx
+<Image
+  src="/image.png"
+  alt="Descriptive alt text"
+  fill                   // Hero/background
+  sizes="100vw"         // Responsive sizing
+  className="object-cover"
+  priority              // Hero only
+  loading="lazy"        // Non-hero
+/>
+```
+
+**Rules**:
+- Always provide `alt` text
+- Use `fill` for background/full-width
+- Use `sizes` for responsive optimization
+- Add `priority` to hero image only
+- Use `loading="lazy"` for below-fold images
+- Never use hardcoded width/height for responsive images
+
+## Link Styling
+
+Links in text MUST inherit styling or use explicit button:
+
+```tsx
+// In prose: inherit default link styling
+<a href="/path" className="hover:text-blue-600">Link</a>
+
+// As button: use Button component
+<Button asChild>
+  <Link href="/path">Button Label</Link>
+</Button>
+```
+
+Never create custom link classes that deviate from this.
+
+## Violations & Audit
+
+**CI Enforcement**:
+- Linting catches non-standard classes
+- Design review catches color or spacing deviations
+- QA tests verify animations don't break accessibility
+
+**Manual Review Checklist**:
+- [ ] All buttons follow Header Button Template
+- [ ] Only blue-600, neutral-700, neutral-900, neutral-100, neutral-400 used
+- [ ] All typography scales across breakpoints
+- [ ] Cards use Card component with standard styling
+- [ ] Spacing follows 4px increments with breakpoints
+- [ ] Images use Next.js Image with alt text
+- [ ] Animations are from approved list
+- [ ] No custom CSS in components/ui/**

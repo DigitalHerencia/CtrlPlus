@@ -13,7 +13,7 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
     return (
-        <Card className="border-neutral-800 bg-neutral-900">
+        <Card className="border-neutral-700 bg-neutral-950/80">
             <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-neutral-400">{label}</CardTitle>
             </CardHeader>

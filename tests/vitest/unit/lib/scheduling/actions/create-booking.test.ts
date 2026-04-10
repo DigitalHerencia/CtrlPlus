@@ -3,11 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
     getSession: vi.fn(),
     prisma: {
+        bookingDraft: { findUnique: vi.fn() },
+        auditLog: { create: vi.fn() },
         $transaction: vi.fn(),
     },
-    ensureInvoiceForBooking: vi.fn(),
+    assertSlotHasCapacity: vi.fn(),
     revalidateSchedulingPages: vi.fn(),
-    revalidateBillingBookingRoute: vi.fn(),
+    revalidatePath: vi.fn(),
+    getTenantNotificationEmail: vi.fn(),
+    sendNotificationEmail: vi.fn(),
 }))
 
 vi.mock('@/lib/auth/session', () => ({
@@ -18,13 +22,21 @@ vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
-vi.mock('@/lib/actions/billing.actions', () => ({
-    ensureInvoiceForBooking: mocks.ensureInvoiceForBooking,
+vi.mock('@/lib/db/transactions/scheduling.transactions', () => ({
+    assertSlotHasCapacity: mocks.assertSlotHasCapacity,
 }))
 
 vi.mock('@/lib/cache/revalidate-tags', () => ({
     revalidateSchedulingPages: mocks.revalidateSchedulingPages,
-    revalidateBillingBookingRoute: mocks.revalidateBillingBookingRoute,
+}))
+
+vi.mock('next/cache', () => ({
+    revalidatePath: mocks.revalidatePath,
+}))
+
+vi.mock('@/lib/integrations/notifications', () => ({
+    getTenantNotificationEmail: mocks.getTenantNotificationEmail,
+    sendNotificationEmail: mocks.sendNotificationEmail,
 }))
 
 import { createBooking } from '@/lib/actions/scheduling.actions'
@@ -32,9 +44,28 @@ import { createBooking } from '@/lib/actions/scheduling.actions'
 describe('createBooking', () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        mocks.getTenantNotificationEmail.mockResolvedValue('owner@example.com')
+        mocks.sendNotificationEmail.mockResolvedValue({ delivered: true })
+        mocks.prisma.auditLog.create.mockResolvedValue(undefined)
+        mocks.prisma.bookingDraft.findUnique.mockResolvedValue({
+            id: 'draft-1',
+            customerId: 'user-1',
+            wrapId: 'wrap-1',
+            wrapNameSnapshot: 'Midnight Matte',
+            wrapPriceSnapshot: 100000,
+            vehicleMake: 'Ford',
+            vehicleModel: 'Mustang',
+            vehicleYear: '2022',
+            vehicleTrim: 'GT',
+            previewImageUrl: 'https://image.test/preview.png',
+            previewPromptUsed: 'prompt used',
+            previewStatus: 'complete',
+            createdAt: new Date('2026-03-01T00:00:00.000Z'),
+            updatedAt: new Date('2026-03-01T00:00:00.000Z'),
+        })
     })
 
-    it('preserves the reservation handoff to billing and revalidates the affected routes', async () => {
+    it('creates a requested booking from the active draft, persists checkout defaults, and clears the draft', async () => {
         mocks.getSession.mockResolvedValue({
             isAuthenticated: true,
             userId: 'user-1',
@@ -45,58 +76,108 @@ describe('createBooking', () => {
 
         const tx = {
             wrap: { findFirst: vi.fn() },
-            bookingReservation: { findFirst: vi.fn() },
-            booking: { findFirst: vi.fn(), create: vi.fn(), count: vi.fn() },
+            booking: { findFirst: vi.fn(), create: vi.fn() },
+            websiteSettings: { upsert: vi.fn() },
+            bookingDraft: { delete: vi.fn() },
             auditLog: { create: vi.fn() },
-            availabilityRule: { findMany: vi.fn() },
         }
 
-        mocks.prisma.$transaction.mockImplementation(async (callback) => callback(tx))
+        mocks.prisma.$transaction.mockImplementation(async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx))
 
         tx.wrap.findFirst.mockResolvedValue({
             id: 'wrap-1',
             name: 'Midnight Matte',
             price: 100000,
-            isHidden: false,
         })
         tx.booking.findFirst.mockResolvedValue(null)
-        tx.bookingReservation.findFirst.mockResolvedValue(null)
-        tx.availabilityRule.findMany.mockResolvedValue([
-            {
-                startTime: '16:00',
-                endTime: '18:00',
-                capacitySlots: 2,
-            },
-        ])
         tx.booking.create.mockResolvedValue({
             id: 'booking-1',
+            customerId: 'user-1',
             wrapId: 'wrap-1',
+            wrap: { id: 'wrap-1', name: 'Midnight Matte' },
+            wrapNameSnapshot: 'Midnight Matte',
+            wrapPriceSnapshot: 100000,
             startTime: new Date('2026-03-23T16:00:00.000Z'),
             endTime: new Date('2026-03-23T18:00:00.000Z'),
-            status: 'pending',
+            status: 'requested',
             totalPrice: 100000,
+            customerName: 'Taylor Driver',
+            customerEmail: 'taylor@example.com',
+            customerPhone: '5551234567',
+            preferredContact: 'email',
+            billingAddressLine1: '123 Main St',
+            billingAddressLine2: null,
+            billingCity: 'Denver',
+            billingState: 'CO',
+            billingPostalCode: '80202',
+            billingCountry: 'US',
+            vehicleMake: 'Ford',
+            vehicleModel: 'Mustang',
+            vehicleYear: '2022',
+            vehicleTrim: 'GT',
+            previewImageUrl: 'https://image.test/preview.png',
+            previewPromptUsed: 'prompt used',
+            notes: 'Please call on arrival.',
+            reservation: null,
+            createdAt: new Date('2026-03-01T00:00:00.000Z'),
+            updatedAt: new Date('2026-03-01T00:00:00.000Z'),
         })
+        tx.websiteSettings.upsert.mockResolvedValue(undefined)
+        tx.bookingDraft.delete.mockResolvedValue(undefined)
         tx.auditLog.create.mockResolvedValue(undefined)
 
-        mocks.ensureInvoiceForBooking.mockResolvedValue({ invoiceId: 'invoice-1' })
+        const result = await createBooking({
+            wrapId: 'wrap-1',
+            startTime: new Date('2026-03-23T16:00:00.000Z').toISOString(),
+            endTime: new Date('2026-03-23T18:00:00.000Z').toISOString(),
+            customerName: 'Taylor Driver',
+            customerEmail: 'taylor@example.com',
+            customerPhone: '5551234567',
+            preferredContact: 'email',
+            billingAddressLine1: '123 Main St',
+            billingAddressLine2: null,
+            billingCity: 'Denver',
+            billingState: 'CO',
+            billingPostalCode: '80202',
+            billingCountry: 'US',
+            vehicleMake: 'Ford',
+            vehicleModel: 'Mustang',
+            vehicleYear: '2022',
+            vehicleTrim: 'GT',
+            previewImageUrl: 'https://image.test/preview.png',
+            previewPromptUsed: 'prompt used',
+            notes: 'Please call on arrival.',
+        })
 
-        await expect(
-            createBooking({
-                wrapId: 'wrap-1',
-                startTime: new Date('2026-03-23T16:00:00.000Z').toISOString(),
-                endTime: new Date('2026-03-23T18:00:00.000Z').toISOString(),
-            })
-        ).resolves.toEqual(
+        expect(result).toEqual(
             expect.objectContaining({
                 id: 'booking-1',
-                invoiceId: 'invoice-1',
+                status: 'requested',
                 wrapName: 'Midnight Matte',
-                reservationExpiresAt: expect.any(String),
+                customerName: 'Taylor Driver',
+                customerEmail: 'taylor@example.com',
+                vehicleMake: 'Ford',
+                previewImageUrl: 'https://image.test/preview.png',
+                notes: 'Please call on arrival.',
             })
         )
 
-        expect(mocks.ensureInvoiceForBooking).toHaveBeenCalledWith({ bookingId: 'booking-1' })
+        expect(tx.websiteSettings.upsert).toHaveBeenCalledWith(
+            expect.objectContaining({
+                where: { clerkUserId: 'user-1' },
+                update: expect.objectContaining({
+                    fullName: 'Taylor Driver',
+                    email: 'taylor@example.com',
+                    vehicleMake: 'Ford',
+                    vehicleModel: 'Mustang',
+                    vehicleYear: '2022',
+                }),
+            })
+        )
+        expect(tx.bookingDraft.delete).toHaveBeenCalledWith({ where: { customerId: 'user-1' } })
+        expect(mocks.sendNotificationEmail).toHaveBeenCalledTimes(2)
         expect(mocks.revalidateSchedulingPages).toHaveBeenCalledTimes(1)
-        expect(mocks.revalidateBillingBookingRoute).toHaveBeenCalledWith('invoice-1')
+        expect(mocks.revalidatePath).toHaveBeenCalledWith('/visualizer')
+        expect(mocks.revalidatePath).toHaveBeenCalledWith('/scheduling/book')
     })
 })

@@ -15,6 +15,22 @@ export interface UserSettingsViewDTO {
     preferredContact: 'email' | 'sms'
     appointmentReminders: boolean
     marketingOptIn: boolean
+    fullName: string | null
+    email: string | null
+    phone: string | null
+    billingAddressLine1: string | null
+    billingAddressLine2: string | null
+    billingCity: string | null
+    billingState: string | null
+    billingPostalCode: string | null
+    billingCountry: string | null
+    vehicleMake: string | null
+    vehicleModel: string | null
+    vehicleYear: string | null
+    vehicleTrim: string | null
+    stripeCustomerId: string | null
+    stripeDefaultPaymentMethodBrand: string | null
+    stripeDefaultPaymentMethodLast4: string | null
     updatedAt: Timestamp | null
 }
 
@@ -32,6 +48,9 @@ export interface UpdateUserPreferencesInputDTO {
     theme?: 'light' | 'dark' | 'system' | null
     language?: string | null
     timezone?: string | null
+    fullName?: string | null
+    email?: string | null
+    phone?: string | null
     notifications?: {
         email?: boolean
         sms?: boolean
@@ -40,6 +59,16 @@ export interface UpdateUserPreferencesInputDTO {
     preferredContact?: 'email' | 'sms'
     appointmentReminders?: boolean
     marketingOptIn?: boolean
+    billingAddressLine1?: string | null
+    billingAddressLine2?: string | null
+    billingCity?: string | null
+    billingState?: string | null
+    billingPostalCode?: string | null
+    billingCountry?: string | null
+    vehicleMake?: string | null
+    vehicleModel?: string | null
+    vehicleYear?: string | null
+    vehicleTrim?: string | null
 }
 
 export interface UpdateTenantSettingsInputDTO {

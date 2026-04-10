@@ -26,7 +26,7 @@ export async function BookingsManagerPageFeature({
         getBookings({ ...filters, page: 1, pageSize: 200 }),
     ])
 
-    const pending = bookings.items.filter((item) => item.status === 'pending').length
+    const pending = bookings.items.filter((item) => item.status === 'requested' || item.status === 'reschedule_requested').length
     const confirmed = bookings.items.filter((item) => item.status === 'confirmed').length
     const cancelled = bookings.items.filter((item) => item.status === 'cancelled').length
 
@@ -56,3 +56,4 @@ export async function BookingsManagerPageFeature({
         </div>
     )
 }
+

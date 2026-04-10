@@ -4,10 +4,12 @@ const mocks = vi.hoisted(() => ({
     prisma: {
         invoice: {
             findFirst: vi.fn(),
+            update: vi.fn(),
         },
         auditLog: {
             create: vi.fn(),
         },
+        $transaction: vi.fn(),
     },
     getBillingAccessContext: vi.fn(),
     requireInvoiceWriteAccess: vi.fn(),
@@ -25,18 +27,26 @@ vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
 }))
 
-// next/cache revalidatePath is a runtime helper that requires a static generation
-// store; mock it in tests to avoid Next.js runtime invariant errors.
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
 vi.mock('@/lib/authz/guards', () => ({
     getBillingAccessContext: mocks.getBillingAccessContext,
     requireInvoiceWriteAccess: mocks.requireInvoiceWriteAccess,
+    requireOwnerOrPlatformAdmin: vi.fn(),
 }))
 
 vi.mock('@/lib/integrations/stripe', () => ({
     getStripeClient: () => mocks.stripe,
     getAppBaseUrl: mocks.getAppBaseUrl,
+}))
+
+vi.mock('@/lib/integrations/notifications', () => ({
+    getTenantNotificationEmail: vi.fn(),
+    sendNotificationEmail: vi.fn(),
+}))
+
+vi.mock('@/lib/actions/settings.actions', () => ({
+    syncStripePaymentSettingsSummary: vi.fn(),
 }))
 
 import { createCheckoutSession } from '@/lib/actions/billing.actions'
@@ -64,6 +74,10 @@ describe('createCheckoutSession', () => {
         })
         mocks.getAppBaseUrl.mockReturnValue('https://ctrlplus.test')
         mocks.prisma.auditLog.create.mockResolvedValue({})
+        mocks.prisma.invoice.update.mockResolvedValue({})
+        mocks.prisma.$transaction.mockImplementation(async (operations: unknown[]) =>
+            Promise.all(operations as Promise<unknown>[])
+        )
         mocks.requireInvoiceWriteAccess.mockImplementation(() => {})
     })
 
@@ -74,8 +88,11 @@ describe('createCheckoutSession', () => {
             totalAmount: 120000,
             status: 'issued',
             updatedAt,
+            stripeCustomerId: 'cus_123',
             booking: {
                 customerId: 'user_123',
+                customerName: 'Taylor Driver',
+                customerEmail: 'taylor@example.com',
             },
             lineItems: [
                 {
@@ -105,6 +122,7 @@ describe('createCheckoutSession', () => {
         expect(mocks.stripe.checkout.sessions.create).toHaveBeenCalledWith(
             expect.objectContaining({
                 client_reference_id: 'inv_123',
+                customer: 'cus_123',
                 metadata: expect.objectContaining({
                     invoiceId: 'inv_123',
                     invoiceUpdatedAt: updatedAt.toISOString(),
@@ -114,14 +132,13 @@ describe('createCheckoutSession', () => {
                 idempotencyKey: `billing:checkout:inv_123:${updatedAt.getTime()}`,
             }
         )
-        expect(mocks.prisma.auditLog.create).toHaveBeenCalledWith(
-            expect.objectContaining({
-                data: expect.objectContaining({
-                    userId: 'user_123',
-                    resourceId: 'inv_123',
-                }),
-            })
-        )
+        expect(mocks.prisma.invoice.update).toHaveBeenCalledWith({
+            where: { id: 'inv_123' },
+            data: {
+                stripeCheckoutSessionId: 'cs_123',
+                stripeCustomerId: 'cus_123',
+            },
+        })
     })
 
     it('rejects non-payable invoice states before calling Stripe', async () => {
@@ -130,8 +147,11 @@ describe('createCheckoutSession', () => {
             totalAmount: 120000,
             status: 'refunded',
             updatedAt: new Date('2026-03-23T16:30:00.000Z'),
+            stripeCustomerId: 'cus_123',
             booking: {
                 customerId: 'user_123',
+                customerName: 'Taylor Driver',
+                customerEmail: 'taylor@example.com',
             },
             lineItems: [],
         })

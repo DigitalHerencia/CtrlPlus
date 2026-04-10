@@ -16,18 +16,37 @@ const mocks = vi.hoisted(() => ({
             findFirst: vi.fn(),
             update: vi.fn(),
         },
-        booking: {
-            update: vi.fn(),
-        },
         auditLog: {
             create: vi.fn(),
         },
         $transaction: vi.fn(),
     },
+    stripe: {
+        paymentIntents: {
+            retrieve: vi.fn(),
+        },
+    },
+    syncStripePaymentSettingsSummary: vi.fn(),
+    getTenantNotificationEmail: vi.fn(),
+    sendNotificationEmail: vi.fn(),
 }))
 
 vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
+}))
+
+vi.mock('@/lib/integrations/stripe', () => ({
+    getStripeClient: () => mocks.stripe,
+    getAppBaseUrl: vi.fn(),
+}))
+
+vi.mock('@/lib/actions/settings.actions', () => ({
+    syncStripePaymentSettingsSummary: mocks.syncStripePaymentSettingsSummary,
+}))
+
+vi.mock('@/lib/integrations/notifications', () => ({
+    getTenantNotificationEmail: mocks.getTenantNotificationEmail,
+    sendNotificationEmail: mocks.sendNotificationEmail,
 }))
 
 import { processStripeWebhookEvent } from '@/lib/actions/billing.actions'
@@ -38,6 +57,8 @@ describe('processStripeWebhookEvent', () => {
         mocks.prisma.$transaction.mockImplementation(async (operations: unknown[]) =>
             Promise.all(operations as Promise<unknown>[])
         )
+        mocks.getTenantNotificationEmail.mockResolvedValue('owner@example.com')
+        mocks.sendNotificationEmail.mockResolvedValue({ delivered: true })
     })
 
     it('processes a new checkout session and stores replayable payload metadata', async () => {
@@ -46,13 +67,26 @@ describe('processStripeWebhookEvent', () => {
             id: 'inv_123',
             bookingId: 'booking_123',
             totalAmount: 1200,
+            stripeCustomerId: 'cus_123',
+            booking: {
+                customerId: 'user_123',
+                customerEmail: 'customer@example.com',
+            },
         })
         mocks.prisma.payment.findUnique.mockResolvedValueOnce(null)
         mocks.prisma.payment.create.mockResolvedValue({ id: 'pay_123' })
         mocks.prisma.invoice.update.mockResolvedValue({})
-        mocks.prisma.booking.update.mockResolvedValue({})
         mocks.prisma.auditLog.create.mockResolvedValue({})
         mocks.prisma.stripeWebhookEvent.update.mockResolvedValue({})
+        mocks.stripe.paymentIntents.retrieve.mockResolvedValue({
+            payment_method: {
+                id: 'pm_123',
+                card: {
+                    brand: 'visa',
+                    last4: '4242',
+                },
+            },
+        })
 
         const event = {
             id: 'evt_123',
@@ -60,6 +94,7 @@ describe('processStripeWebhookEvent', () => {
             data: {
                 object: {
                     client_reference_id: 'inv_123',
+                    customer: 'cus_123',
                     payment_intent: 'pi_123',
                     amount_total: 1200,
                 },
@@ -80,6 +115,13 @@ describe('processStripeWebhookEvent', () => {
                 }),
             })
         )
+        expect(mocks.syncStripePaymentSettingsSummary).toHaveBeenCalledWith({
+            clerkUserId: 'user_123',
+            stripeCustomerId: 'cus_123',
+            stripeDefaultPaymentMethodId: 'pm_123',
+            stripeDefaultPaymentMethodBrand: 'visa',
+            stripeDefaultPaymentMethodLast4: '4242',
+        })
         expect(result).toEqual({
             kind: 'processed',
             result: {

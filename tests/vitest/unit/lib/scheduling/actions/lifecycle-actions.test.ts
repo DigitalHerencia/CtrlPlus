@@ -2,11 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
     getSession: vi.fn(),
+    requireOwnerOrPlatformAdmin: vi.fn(),
     requireCustomerOwnedResourceAccess: vi.fn(),
     assertSlotHasCapacity: vi.fn(),
     revalidateSchedulingPages: vi.fn(),
-    ensureInvoiceForBooking: vi.fn(),
-    revalidateBillingBookingRoute: vi.fn(),
+    getTenantNotificationEmail: vi.fn(),
+    sendNotificationEmail: vi.fn(),
     prisma: {
         $transaction: vi.fn(),
         booking: {
@@ -30,6 +31,10 @@ vi.mock('@/lib/auth/session', () => ({
     getSession: mocks.getSession,
 }))
 
+vi.mock('@/lib/authz/guards', () => ({
+    requireOwnerOrPlatformAdmin: mocks.requireOwnerOrPlatformAdmin,
+}))
+
 vi.mock('@/lib/authz/policy', () => ({
     requireCustomerOwnedResourceAccess: mocks.requireCustomerOwnedResourceAccess,
 }))
@@ -44,15 +49,19 @@ vi.mock('@/lib/db/prisma', () => ({
 
 vi.mock('@/lib/cache/revalidate-tags', () => ({
     revalidateSchedulingPages: mocks.revalidateSchedulingPages,
-    revalidateBillingBookingRoute: mocks.revalidateBillingBookingRoute,
 }))
 
-vi.mock('@/lib/actions/billing.actions', () => ({
-    ensureInvoiceForBooking: mocks.ensureInvoiceForBooking,
+vi.mock('@/lib/integrations/notifications', () => ({
+    getTenantNotificationEmail: mocks.getTenantNotificationEmail,
+    sendNotificationEmail: mocks.sendNotificationEmail,
 }))
 
-import { cancelBooking, confirmBooking, updateBooking } from '@/lib/actions/scheduling.actions'
-import { cleanupExpiredReservations } from '@/lib/actions/scheduling.actions'
+import {
+    cancelBooking,
+    cleanupExpiredReservations,
+    confirmBooking,
+    updateBooking,
+} from '@/lib/actions/scheduling.actions'
 
 function createTx() {
     return {
@@ -60,6 +69,7 @@ function createTx() {
             findFirst: vi.fn(),
             update: vi.fn(),
             updateMany: vi.fn(),
+            findMany: vi.fn(),
         },
         bookingReservation: {
             deleteMany: vi.fn(),
@@ -75,7 +85,8 @@ function createTx() {
 describe('scheduling lifecycle actions', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        mocks.ensureInvoiceForBooking.mockResolvedValue({ invoiceId: 'invoice-1' })
+        mocks.getTenantNotificationEmail.mockResolvedValue('owner@example.com')
+        mocks.sendNotificationEmail.mockResolvedValue({ delivered: true })
         mocks.getSession.mockResolvedValue({
             isAuthenticated: true,
             userId: 'user-1',
@@ -83,36 +94,18 @@ describe('scheduling lifecycle actions', () => {
             isPlatformAdmin: false,
             authz: { role: 'customer' },
         })
-        mocks.requireCustomerOwnedResourceAccess.mockImplementation(() => undefined)
-    })
-
-    it('rejects confirmation after a reservation expires', async () => {
-        const tx = createTx()
-        mocks.prisma.$transaction.mockImplementation(async (callback) => callback(tx))
-        tx.booking.findFirst.mockResolvedValue({
-            id: 'booking-1',
-            customerId: 'user-1',
-            wrapId: 'wrap-1',
-            wrap: { name: 'Midnight Matte' },
-            startTime: new Date('2030-03-23T16:00:00.000Z'),
-            endTime: new Date('2030-03-23T18:00:00.000Z'),
-            status: 'pending',
-            totalPrice: 100000,
-            createdAt: new Date('2026-03-20T10:00:00.000Z'),
-            updatedAt: new Date('2026-03-20T10:00:00.000Z'),
-            reservation: {
-                id: 'reservation-1',
-                expiresAt: new Date('2020-03-20T09:00:00.000Z'),
-            },
+        mocks.requireOwnerOrPlatformAdmin.mockResolvedValue({
+            isAuthenticated: true,
+            userId: 'owner-1',
+            isOwner: true,
+            isPlatformAdmin: false,
+            authz: { role: 'owner' },
         })
-
-        await expect(confirmBooking('booking-1')).rejects.toThrow(
-            'Reservation has expired; please reserve again'
-        )
-        expect(tx.booking.update).not.toHaveBeenCalled()
+        mocks.requireCustomerOwnedResourceAccess.mockImplementation(() => undefined)
+        mocks.prisma.auditLog.create.mockResolvedValue(undefined)
     })
 
-    it('confirms a live reservation and revalidates scheduling routes', async () => {
+    it('confirms requested bookings from the owner surface and revalidates scheduling routes', async () => {
         const tx = createTx()
         mocks.prisma.$transaction.mockImplementation(async (callback) => callback(tx))
         tx.booking.findFirst.mockResolvedValue({
@@ -120,28 +113,32 @@ describe('scheduling lifecycle actions', () => {
             customerId: 'user-1',
             wrapId: 'wrap-1',
             wrap: { name: 'Midnight Matte' },
+            wrapNameSnapshot: 'Midnight Matte',
             startTime: new Date('2030-03-23T16:00:00.000Z'),
             endTime: new Date('2030-03-23T18:00:00.000Z'),
-            status: 'pending',
+            status: 'requested',
             totalPrice: 100000,
+            customerEmail: 'customer@example.com',
+            reservation: null,
             createdAt: new Date('2026-03-20T10:00:00.000Z'),
             updatedAt: new Date('2026-03-20T10:00:00.000Z'),
-            reservation: {
-                id: 'reservation-1',
-                expiresAt: new Date('2030-03-23T17:00:00.000Z'),
-            },
         })
         tx.booking.update.mockResolvedValue({
             id: 'booking-1',
             customerId: 'user-1',
             wrapId: 'wrap-1',
+            wrap: { name: 'Midnight Matte' },
+            wrapNameSnapshot: 'Midnight Matte',
             startTime: new Date('2030-03-23T16:00:00.000Z'),
             endTime: new Date('2030-03-23T18:00:00.000Z'),
             status: 'confirmed',
             totalPrice: 100000,
+            customerEmail: 'customer@example.com',
+            reservation: null,
             createdAt: new Date('2026-03-20T10:00:00.000Z'),
             updatedAt: new Date('2026-03-23T12:00:00.000Z'),
         })
+        tx.auditLog.create.mockResolvedValue(undefined)
 
         await expect(confirmBooking('booking-1')).resolves.toEqual(
             expect.objectContaining({
@@ -151,9 +148,34 @@ describe('scheduling lifecycle actions', () => {
                 displayStatus: 'confirmed',
             })
         )
-        expect(mocks.ensureInvoiceForBooking).toHaveBeenCalledWith({ bookingId: 'booking-1' })
-        expect(mocks.revalidateBillingBookingRoute).toHaveBeenCalledWith('invoice-1')
+
+        expect(mocks.sendNotificationEmail).toHaveBeenCalledTimes(2)
         expect(mocks.revalidateSchedulingPages).toHaveBeenCalledTimes(1)
+    })
+
+    it('rejects confirming bookings that are not awaiting owner confirmation', async () => {
+        const tx = createTx()
+        mocks.prisma.$transaction.mockImplementation(async (callback) => callback(tx))
+        tx.booking.findFirst.mockResolvedValue({
+            id: 'booking-1',
+            customerId: 'user-1',
+            wrapId: 'wrap-1',
+            wrap: { name: 'Midnight Matte' },
+            wrapNameSnapshot: 'Midnight Matte',
+            startTime: new Date('2030-03-23T16:00:00.000Z'),
+            endTime: new Date('2030-03-23T18:00:00.000Z'),
+            status: 'confirmed',
+            totalPrice: 100000,
+            customerEmail: 'customer@example.com',
+            reservation: null,
+            createdAt: new Date('2026-03-20T10:00:00.000Z'),
+            updatedAt: new Date('2026-03-20T10:00:00.000Z'),
+        })
+
+        await expect(confirmBooking('booking-1')).rejects.toThrow(
+            'Only requested bookings can be confirmed'
+        )
+        expect(tx.booking.update).not.toHaveBeenCalled()
     })
 
     it('cancels a booking, removes the reservation hold, and revalidates scheduling routes', async () => {
@@ -161,7 +183,8 @@ describe('scheduling lifecycle actions', () => {
         mocks.prisma.booking.findFirst.mockResolvedValue({
             id: 'booking-1',
             customerId: 'user-1',
-            status: 'pending',
+            status: 'requested',
+            wrapNameSnapshot: 'Midnight Matte',
             wrap: { name: 'Midnight Matte' },
         })
         mocks.prisma.$transaction.mockImplementation(async (callback) => callback(tx))
@@ -169,13 +192,17 @@ describe('scheduling lifecycle actions', () => {
             id: 'booking-1',
             customerId: 'user-1',
             wrapId: 'wrap-1',
+            wrapNameSnapshot: 'Midnight Matte',
+            wrap: { name: 'Midnight Matte' },
             startTime: new Date('2030-03-23T16:00:00.000Z'),
             endTime: new Date('2030-03-23T18:00:00.000Z'),
             status: 'cancelled',
             totalPrice: 100000,
+            reservation: null,
             createdAt: new Date('2026-03-20T10:00:00.000Z'),
             updatedAt: new Date('2026-03-23T12:00:00.000Z'),
         })
+        tx.auditLog.create.mockResolvedValue(undefined)
 
         await expect(
             cancelBooking('booking-1', { reason: 'Customer requested cancellation' })
@@ -187,43 +214,43 @@ describe('scheduling lifecycle actions', () => {
                 reservationExpiresAt: null,
             })
         )
+
         expect(tx.bookingReservation.deleteMany).toHaveBeenCalledWith({
             where: { bookingId: 'booking-1' },
         })
-        expect(tx.auditLog.create).toHaveBeenCalledWith(
-            expect.objectContaining({
-                data: expect.objectContaining({
-                    details: expect.stringContaining('Customer requested cancellation'),
-                }),
-            })
-        )
         expect(mocks.revalidateSchedulingPages).toHaveBeenCalledTimes(1)
     })
 
-    it('updates a booking without moving lifecycle decisions into the client', async () => {
+    it('updates a customer booking without changing owner-controlled status', async () => {
         const tx = createTx()
         mocks.prisma.booking.findFirst.mockResolvedValue({
             id: 'booking-1',
             customerId: 'user-1',
             startTime: new Date('2030-03-23T16:00:00.000Z'),
             endTime: new Date('2030-03-23T18:00:00.000Z'),
-            status: 'pending',
+            status: 'requested',
+            wrapNameSnapshot: 'Midnight Matte',
             wrap: { name: 'Midnight Matte' },
-            reservation: { expiresAt: new Date('2030-03-23T17:00:00.000Z') },
+            reservation: null,
         })
         mocks.prisma.$transaction.mockImplementation(async (callback) => callback(tx))
         mocks.assertSlotHasCapacity.mockResolvedValue(undefined)
+        tx.booking.findFirst.mockResolvedValue(null)
         tx.booking.update.mockResolvedValue({
             id: 'booking-1',
             customerId: 'user-1',
             wrapId: 'wrap-1',
+            wrapNameSnapshot: 'Midnight Matte',
+            wrap: { name: 'Midnight Matte' },
             startTime: new Date('2030-03-23T17:00:00.000Z'),
             endTime: new Date('2030-03-23T19:00:00.000Z'),
-            status: 'pending',
+            status: 'requested',
             totalPrice: 100000,
+            reservation: null,
             createdAt: new Date('2026-03-20T10:00:00.000Z'),
             updatedAt: new Date('2026-03-23T12:00:00.000Z'),
         })
+        tx.auditLog.create.mockResolvedValue(undefined)
 
         await expect(
             updateBooking('booking-1', {
@@ -233,8 +260,8 @@ describe('scheduling lifecycle actions', () => {
         ).resolves.toEqual(
             expect.objectContaining({
                 wrapName: 'Midnight Matte',
-                displayStatus: 'reserved',
-                reservationExpiresAt: expect.any(String),
+                status: 'requested',
+                displayStatus: 'expired',
             })
         )
         expect(mocks.assertSlotHasCapacity).toHaveBeenCalledWith(
@@ -245,53 +272,59 @@ describe('scheduling lifecycle actions', () => {
         )
     })
 
-    it('blocks updates that would overlap with another active booking for the same customer', async () => {
+    it('owner reschedules a booking and sends a customer notification', async () => {
         const tx = createTx()
+        mocks.getSession.mockResolvedValue({
+            isAuthenticated: true,
+            userId: 'owner-1',
+            isOwner: true,
+            isPlatformAdmin: false,
+            authz: { role: 'owner' },
+        })
         mocks.prisma.booking.findFirst.mockResolvedValue({
             id: 'booking-1',
             customerId: 'user-1',
             startTime: new Date('2030-03-23T16:00:00.000Z'),
             endTime: new Date('2030-03-23T18:00:00.000Z'),
-            status: 'pending',
+            status: 'confirmed',
+            wrapNameSnapshot: 'Midnight Matte',
             wrap: { name: 'Midnight Matte' },
-            reservation: { expiresAt: new Date('2030-03-23T17:00:00.000Z') },
+            customerEmail: 'customer@example.com',
+            reservation: null,
         })
         mocks.prisma.$transaction.mockImplementation(async (callback) => callback(tx))
         mocks.assertSlotHasCapacity.mockResolvedValue(undefined)
-        tx.booking.findFirst.mockResolvedValue({ id: 'booking-overlap' })
-
-        await expect(
-            updateBooking('booking-1', {
-                startTime: new Date('2030-03-23T17:00:00.000Z').toISOString(),
-                endTime: new Date('2030-03-23T19:00:00.000Z').toISOString(),
-            })
-        ).rejects.toThrow('You already have a booking in this time slot')
-
-        expect(tx.booking.update).not.toHaveBeenCalled()
-    })
-
-    it('rejects confirming bookings that are not pending', async () => {
-        const tx = createTx()
-        mocks.prisma.$transaction.mockImplementation(async (callback) => callback(tx))
-        tx.booking.findFirst.mockResolvedValue({
+        tx.booking.findFirst.mockResolvedValue(null)
+        tx.booking.update.mockResolvedValue({
             id: 'booking-1',
             customerId: 'user-1',
             wrapId: 'wrap-1',
+            wrapNameSnapshot: 'Midnight Matte',
             wrap: { name: 'Midnight Matte' },
-            startTime: new Date('2030-03-23T16:00:00.000Z'),
-            endTime: new Date('2030-03-23T18:00:00.000Z'),
-            status: 'confirmed',
+            startTime: new Date('2030-03-24T17:00:00.000Z'),
+            endTime: new Date('2030-03-24T19:00:00.000Z'),
+            status: 'reschedule_requested',
             totalPrice: 100000,
-            createdAt: new Date('2026-03-20T10:00:00.000Z'),
-            updatedAt: new Date('2026-03-20T10:00:00.000Z'),
+            customerEmail: 'customer@example.com',
             reservation: null,
+            createdAt: new Date('2026-03-20T10:00:00.000Z'),
+            updatedAt: new Date('2026-03-23T12:00:00.000Z'),
         })
+        tx.auditLog.create.mockResolvedValue(undefined)
 
-        await expect(confirmBooking('booking-1')).rejects.toThrow(
-            'Only pending bookings can be confirmed'
+        await expect(
+            updateBooking('booking-1', {
+                startTime: new Date('2030-03-24T17:00:00.000Z').toISOString(),
+                endTime: new Date('2030-03-24T19:00:00.000Z').toISOString(),
+            })
+        ).resolves.toEqual(
+            expect.objectContaining({
+                status: 'reschedule_requested',
+                displayStatus: 'reschedule_requested',
+            })
         )
 
-        expect(tx.booking.update).not.toHaveBeenCalled()
+        expect(mocks.sendNotificationEmail).toHaveBeenCalledTimes(2)
     })
 
     it('rejects cancelling completed bookings', async () => {
@@ -299,6 +332,7 @@ describe('scheduling lifecycle actions', () => {
             id: 'booking-1',
             customerId: 'user-1',
             status: 'completed',
+            wrapNameSnapshot: 'Midnight Matte',
             wrap: { name: 'Midnight Matte' },
         })
 

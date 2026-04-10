@@ -24,7 +24,7 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
 
 export function InvoicesDashboardTable({ invoices }: InvoicesDashboardTableProps) {
     return (
-        <Card className="border-neutral-800 bg-neutral-900">
+        <Card className="border-neutral-700 bg-neutral-950/80">
             <CardContent className="p-0">
                 <Table>
                     <TableHeader>

@@ -252,6 +252,52 @@
         "Catalog manager detail assets use the interactive asset client and dead wrapper layers are removed",
         "Validation artifacts and dead-code reports are refreshed against the current codebase"
       ]
+    },
+    {
+      "id": "MVP-CHECKOUT-001",
+      "title": "Connect catalog, visualizer, scheduling, settings, and billing into a draft-backed MVP checkout flow",
+      "priority": "high",
+      "status": "done",
+      "owner": "platform",
+      "dependencies": [
+        "AUD-20260409"
+      ],
+      "source_docs": [
+        ".agents/docs/ARCHITECTURE.md",
+        ".agents/docs/PRD.md",
+        ".agents/reports/CtrlPlus — Full Codebase Audit Report.md"
+      ],
+      "contract_refs": [
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-007",
+        "GOV-CATALOG-VISUALIZER-HANDOFF/CVH-008",
+        "GOV-DOMAIN-BOUNDARIES/DOM-007",
+        "GOV-DOMAIN-BOUNDARIES/DOM-008",
+        "GOV-SECURITY/SEC-001"
+      ],
+      "impacted_paths": [
+        "prisma/schema.prisma",
+        "lib/actions/scheduling.actions.ts",
+        "lib/actions/visualizer.actions.ts",
+        "lib/actions/settings.actions.ts",
+        "lib/actions/billing.actions.ts",
+        "lib/fetchers/scheduling.fetchers.ts",
+        "lib/fetchers/visualizer.fetchers.ts",
+        "lib/fetchers/settings.fetchers.ts",
+        "features/scheduling/**",
+        "features/settings/**",
+        "components/catalog/**",
+        "components/auth/user-menu.tsx",
+        ".agents/contracts/**",
+        ".agents/json/**",
+        "tests/**"
+      ],
+      "acceptance": [
+        "Catalog CTAs create or update a single active booking draft and route the customer into the existing visualizer or scheduling flow.",
+        "The visualizer resolves real catalog wraps by wrapId and writes preview state back into the active booking draft.",
+        "Scheduling checkout hydrates wrap, vehicle, preview, contact, billing, and notification defaults from the draft and settings, then creates a booking request without auto-issuing an invoice.",
+        "Owner confirmation, completion, invoice issuance, Stripe checkout, and saved payment summaries follow the revised request-confirm-complete-invoice-pay flow."
+      ]
     }
   ]
 }
+

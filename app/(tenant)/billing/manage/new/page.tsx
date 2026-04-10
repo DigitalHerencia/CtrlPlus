@@ -2,11 +2,19 @@ import { NewInvoicePageFeature } from '@/features/billing/manage/new-invoice-pag
 import { getSession } from '@/lib/auth/session'
 import { redirect } from 'next/navigation'
 
-export default async function NewInvoicePage() {
+interface NewInvoicePageProps {
+    searchParams: Promise<Record<string, string | string[] | undefined>>
+}
+
+export default async function NewInvoicePage({ searchParams }: NewInvoicePageProps) {
     const { userId } = await getSession()
     if (!userId) {
         redirect('/sign-in')
     }
 
-    return <NewInvoicePageFeature />
+    const resolvedSearchParams = await searchParams
+    const initialBookingId =
+        typeof resolvedSearchParams.bookingId === 'string' ? resolvedSearchParams.bookingId : ''
+
+    return <NewInvoicePageFeature initialBookingId={initialBookingId} />
 }

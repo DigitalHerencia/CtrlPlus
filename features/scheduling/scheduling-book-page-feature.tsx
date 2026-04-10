@@ -9,7 +9,8 @@ import {
 } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { getWrapsForScheduling, getAvailabilityWindows } from '@/lib/fetchers/scheduling.fetchers'
+import { getAvailabilityWindows, getActiveBookingDraft } from '@/lib/fetchers/scheduling.fetchers'
+import { getUserSettingsView } from '@/lib/fetchers/settings.fetchers'
 
 import { SchedulingBookingFormClient } from './scheduling-booking-form-client'
 
@@ -20,9 +21,12 @@ interface SchedulingBookPageFeatureProps {
 export async function SchedulingBookPageFeature({
     canViewHiddenWraps,
 }: SchedulingBookPageFeatureProps) {
-    const [availabilityResult, wrapsResult] = await Promise.all([
+    void canViewHiddenWraps
+
+    const [availabilityResult, draft, settings] = await Promise.all([
         getAvailabilityWindows(),
-        getWrapsForScheduling({ includeHidden: canViewHiddenWraps }),
+        getActiveBookingDraft(),
+        getUserSettingsView(),
     ])
 
     const availabilityWindows = availabilityResult.items.map((window) => ({
@@ -33,35 +37,34 @@ export async function SchedulingBookPageFeature({
         capacity: window.capacitySlots,
     }))
 
-    const wraps = wrapsResult.map((wrap) => ({
-        id: wrap.id,
-        name: wrap.name,
-        price: wrap.price,
-    }))
-
     return (
         <div className="space-y-6">
             <WorkspacePageIntro
                 label="Booking"
-                title="Book an Appointment"
-                description="Guide customers from wrap selection to a confirmed install slot with a clear, premium booking experience."
+                title="Request Installation"
+                description="Carry the selected wrap, preview, and customer details through a single checkout step instead of restarting the journey."
             />
             <WorkspacePageContextCard
                 title="Booking Navigation"
-                description="Return to calendar planning at any time"
+                description="Return to your vehicle preview or browse wraps again before submitting the request."
             >
-                <Button asChild variant="outline">
-                    <Link href="/scheduling">Back to Calendar</Link>
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                    <Button asChild variant="outline">
+                        <Link href="/visualizer">Back to Visualizer</Link>
+                    </Button>
+                    <Button asChild variant="outline">
+                        <Link href="/catalog">Browse Catalog</Link>
+                    </Button>
+                </div>
             </WorkspacePageContextCard>
 
-            {wraps.length === 0 ? (
+            {!draft ? (
                 <WorkspaceEmptyState
-                    title="No wraps are available yet"
-                    description="Add wrap services to the catalog before customers can schedule an appointment."
+                    title="Choose a wrap first"
+                    description="Start from the catalog or visualizer so we can carry your selected wrap into scheduling."
                     action={
                         <Button asChild>
-                            <Link href="/catalog/manage">Open Catalog</Link>
+                            <Link href="/catalog">Open Catalog</Link>
                         </Button>
                     }
                     className="border border-neutral-700 bg-neutral-950/80"
@@ -81,22 +84,23 @@ export async function SchedulingBookPageFeature({
                 />
             ) : null}
 
-            {availabilityWindows.length > 0 && wraps.length > 0 ? (
+            {draft && availabilityWindows.length > 0 ? (
                 <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
                     <CardContent className="p-6">
                         <SchedulingBookingFormClient
                             availabilityWindows={availabilityWindows}
-                            wraps={wraps}
+                            draft={draft}
+                            initialSettings={settings}
                             minDate={new Date()}
                         />
                     </CardContent>
                 </Card>
             ) : null}
 
-            {availabilityWindows.length === 0 || wraps.length === 0 ? (
+            {!draft || availabilityWindows.length === 0 ? (
                 <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
                     <CardContent className="py-10 text-center text-sm text-neutral-400">
-                        The booking flow will become available once the missing setup is resolved.
+                        The booking checkout becomes available once the missing setup is resolved.
                     </CardContent>
                 </Card>
             ) : null}

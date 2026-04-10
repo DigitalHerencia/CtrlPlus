@@ -19,9 +19,7 @@ vi.mock('@/lib/authz/policy', () => ({
 }))
 
 vi.mock('next/navigation', async () => {
-    const actual = await vi.importActual<typeof import('next/navigation')>('next/navigation')
     return {
-        ...actual,
         redirect: pageMocks.redirect,
         notFound: vi.fn(),
     }
@@ -51,7 +49,7 @@ describe('catalog detail route contracts', () => {
         expect(metadataMocks.getCatalogWrapById).toHaveBeenCalledWith('wrap-1', {
             includeHidden: false,
         })
-    }, 15000)
+    })
 
     it('passes wrapId through the catalog detail page route', async () => {
         pageMocks.getSession.mockResolvedValue({

@@ -69,10 +69,10 @@ describe('getPaymentStatusForInvoice', () => {
         )
     })
 
-    it('returns null when the invoice is outside the caller scope and has no readable payments', async () => {
+    it('returns an empty list when the invoice is outside the caller scope and has no readable payments', async () => {
         mocks.prisma.payment.findMany.mockResolvedValue([])
         mocks.prisma.invoice.findFirst.mockResolvedValue(null)
 
-        await expect(getPaymentStatusForInvoice('inv_hidden')).resolves.toBeNull()
+        await expect(getPaymentStatusForInvoice('inv_hidden')).resolves.toEqual([])
     })
 })

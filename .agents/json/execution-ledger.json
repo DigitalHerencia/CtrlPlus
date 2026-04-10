@@ -4,6 +4,36 @@
   "updated_at": "2026-04-09",
   "entries": [
     {
+      "id": "LEDGER-015",
+      "timestamp": "2026-04-09T22:25:00Z",
+      "type": "refactor",
+      "summary": "Connected the existing catalog, visualizer, scheduling, settings, billing, and account surfaces through a scheduling-owned booking draft, added checkout snapshots to bookings, moved invoice issuance to the owner-complete stage, surfaced saved Stripe payment summaries in settings, replaced the overlapping Clerk user menu with a compact account menu, refreshed governance contracts, and revalidated the flow with green lint, typecheck, prisma validation, unit tests, build, and Chromium e2e.",
+      "files": [
+        "prisma/schema.prisma",
+        "components/auth/user-menu.tsx",
+        "components/catalog/wrap-detail-summary.tsx",
+        "components/visualizer/visualizer-hf-configurator.client.tsx",
+        "features/scheduling/**",
+        "features/settings/**",
+        "lib/actions/billing.actions.ts",
+        "lib/actions/scheduling.actions.ts",
+        "lib/actions/settings.actions.ts",
+        "lib/actions/visualizer.actions.ts",
+        "lib/fetchers/billing.fetchers.ts",
+        "lib/fetchers/scheduling.fetchers.ts",
+        "lib/fetchers/settings.fetchers.ts",
+        "lib/fetchers/visualizer.fetchers.ts",
+        "types/**/*.ts",
+        "schemas/**/*.ts",
+        ".agents/contracts/catalog-visualizer-handoff.contract.yaml",
+        ".agents/contracts/domain-boundaries.contract.yaml",
+        ".agents/json/tasks.backlog.json",
+        ".agents/json/validation.report.json",
+        ".agents/json/execution-ledger.json",
+        "tests/**"
+      ]
+    },
+    {
       "id": "LEDGER-014",
       "timestamp": "2026-04-09T19:30:00Z",
       "type": "audit-refresh",
@@ -231,3 +261,4 @@
     }
   ]
 }
+

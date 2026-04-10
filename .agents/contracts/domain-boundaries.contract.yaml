@@ -1,8 +1,8 @@
 contract_id: GOV-DOMAIN-BOUNDARIES
-version: 1.0.0
+version: 1.1.0
 scope: repository
 owner: architecture
-last_reviewed: 2026-04-05
+last_reviewed: 2026-04-09
 rules:
   - id: DOM-001
     type: must
@@ -34,3 +34,13 @@ rules:
     statement: Scheduling owns availability and booking transitions.
     applies_to: "scheduling"
     validation_hint: "Avoid booking state mutation outside scheduling actions."
+  - id: DOM-007
+    type: must
+    statement: Scheduling owns the active booking draft that connects catalog selection, visualizer output, and booking-request checkout state.
+    applies_to: "catalog, visualizer, scheduling"
+    validation_hint: "Cross-page checkout state must flow through scheduling fetchers/actions rather than ad hoc query-param or client-only state."
+  - id: DOM-008
+    type: must
+    statement: Settings owns reusable customer defaults, while scheduling snapshots contact, billing, vehicle, and preview data onto the booking at request time.
+    applies_to: "settings, scheduling, billing"
+    validation_hint: "Do not require customers to manage separate profile and checkout records by hand; bookings must remain renderable from their own snapshot data."
