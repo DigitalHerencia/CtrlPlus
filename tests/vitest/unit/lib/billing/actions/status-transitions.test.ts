@@ -15,9 +15,16 @@ const mocks = vi.hoisted(() => ({
         $transaction: vi.fn(),
     },
     requireOwnerOrPlatformAdmin: vi.fn(),
+    getStripeClient: vi.fn(),
+    stripeRefundsCreate: vi.fn(),
 }))
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+
+vi.mock('@/lib/integrations/stripe', () => ({
+    getAppBaseUrl: vi.fn(),
+    getStripeClient: mocks.getStripeClient,
+}))
 
 vi.mock('@/lib/db/prisma', () => ({
     prisma: mocks.prisma,
@@ -35,12 +42,21 @@ describe('billing status transitions', () => {
     beforeEach(() => {
         vi.clearAllMocks()
         mocks.requireOwnerOrPlatformAdmin.mockResolvedValue({ userId: 'owner-1' })
+        mocks.getStripeClient.mockReturnValue({
+            refunds: {
+                create: mocks.stripeRefundsCreate,
+            },
+        })
         mocks.prisma.$transaction.mockImplementation(async (ops: unknown[]) =>
             Promise.all(ops as Promise<unknown>[])
         )
         mocks.prisma.invoice.update.mockResolvedValue({})
         mocks.prisma.payment.create.mockResolvedValue({ id: 'payment-1' })
         mocks.prisma.auditLog.create.mockResolvedValue({})
+        mocks.stripeRefundsCreate.mockResolvedValue({
+            id: 're_123',
+            status: 'succeeded',
+        })
     })
 
     it('applyCredit rejects paid/refunded/void invoices', async () => {
@@ -131,6 +147,14 @@ describe('billing status transitions', () => {
             id: 'inv-paid',
             status: 'paid',
             totalAmount: 300,
+            payments: [
+                {
+                    id: 'pay-source',
+                    stripePaymentIntentId: 'pi_123',
+                    status: 'succeeded',
+                    amount: 300,
+                },
+            ],
         })
 
         await expect(refundInvoice({ invoiceId: 'inv-paid', amount: 900 })).resolves.toEqual({
@@ -138,10 +162,20 @@ describe('billing status transitions', () => {
             status: 'refunded',
         })
 
+        expect(mocks.stripeRefundsCreate).toHaveBeenCalledWith(
+            expect.objectContaining({
+                payment_intent: 'pi_123',
+                amount: 300,
+            }),
+            expect.objectContaining({
+                idempotencyKey: 'billing:refund:inv-paid:pay-source:300',
+            })
+        )
         expect(mocks.prisma.payment.create).toHaveBeenCalledWith(
             expect.objectContaining({
                 data: expect.objectContaining({
                     invoiceId: 'inv-paid',
+                    stripePaymentIntentId: 're_123',
                     amount: -300,
                 }),
             })

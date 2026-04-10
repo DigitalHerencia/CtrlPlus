@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { cache } from 'react'
 
-import { CatalogPagination } from '@/components/catalog/CatalogPagination'
-import { WrapGrid } from '@/components/catalog/WrapGrid'
+import { CatalogPagination } from '@/components/catalog/catalog-pagination'
+import { WrapGalleryGrid } from '@/components/catalog/wrap-gallery-grid'
 import { Button } from '@/components/ui/button'
 import { getWrapCategories, searchCatalogWraps } from '@/lib/fetchers/catalog.fetchers'
 import { createCatalogPageHref } from '@/lib/utils/search-params'
@@ -56,7 +56,7 @@ export async function CatalogResultsSection({
                     </Button>
                 </div>
             ) : null}
-            <WrapGrid wraps={data.wraps} canManageCatalog={canManageCatalog} />
+            <WrapGalleryGrid wraps={data.wraps} canManageCatalog={canManageCatalog} />
             <CatalogPagination
                 page={data.page}
                 totalPages={data.totalPages}

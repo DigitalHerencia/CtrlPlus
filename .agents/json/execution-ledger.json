@@ -4,6 +4,32 @@
   "updated_at": "2026-04-09",
   "entries": [
     {
+      "id": "LEDGER-014",
+      "timestamp": "2026-04-09T19:30:00Z",
+      "type": "audit-refresh",
+      "summary": "Refreshed the full codebase audit after the visualizer page cutover, fixed confirmed billing/catalog/auth issues, regenerated dead-code artifacts, and revalidated the repository with green typecheck, lint, prisma validation, build, unit tests, and Chromium e2e coverage.",
+      "files": [
+        "app/(tenant)/billing/**",
+        "app/(tenant)/catalog/manage/**",
+        "components/billing/**",
+        "components/catalog/**",
+        "features/billing/**",
+        "features/catalog/**",
+        "lib/actions/billing.actions.ts",
+        "lib/fetchers/billing.fetchers.ts",
+        "lib/fetchers/catalog.fetchers.ts",
+        "lib/integrations/clerk-webhook-env.ts",
+        "schemas/auth.schemas.ts",
+        "schemas/billing.schemas.ts",
+        "types/billing.types.ts",
+        "tests/vitest/unit/features/auth/signup-form-client.test.tsx",
+        "tests/vitest/unit/features/catalog/catalog-detail-route.test.tsx",
+        "tests/vitest/unit/lib/billing/actions/status-transitions.test.ts",
+        ".agents/reports/**",
+        ".agents/json/**"
+      ]
+    },
+    {
       "id": "LEDGER-013",
       "timestamp": "2026-04-09T00:00:00Z",
       "type": "fix",

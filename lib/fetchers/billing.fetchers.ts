@@ -37,7 +37,6 @@ function buildInvoiceReadWhere(
 
 function normalizeInvoiceStatus(status: string): InvoiceStatus {
     if (status === 'sent') return 'issued'
-    if (status === 'failed') return 'issued'
     if (
         status === 'draft' ||
         status === 'issued' ||

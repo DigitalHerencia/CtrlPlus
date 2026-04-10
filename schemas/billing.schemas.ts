@@ -22,8 +22,6 @@ export const createCheckoutSessionSchema = z.object({
 
 export const processPaymentSchema = z.object({
     invoiceId: z.string().min(1),
-    paymentMethod: z.string().min(1).optional(),
-    amount: z.number().int().positive().optional(),
 })
 
 export const applyCreditSchema = z.object({

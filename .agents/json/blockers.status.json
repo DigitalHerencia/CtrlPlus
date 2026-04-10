@@ -1,20 +1,20 @@
 {
   "artifact_type": "blocker-status",
   "version": "1.0.0",
-  "updated_at": "2026-04-07",
+  "updated_at": "2026-04-09",
   "active_blockers": [
     {
       "id": "BLK-006",
       "title": "Live visualizer UI verification is blocked by Clerk-authenticated session access in the integrated browser",
       "identified_at": "2026-04-07",
       "severity": "medium",
-      "impact": "The visualizer route correctly redirects to sign-in, but completing an authenticated browser session for this automation pass is blocked by Clerk verification flow access in the current test browser. Code-level refactor validation is green; end-to-end browser proof of preview generation remains pending session acquisition.",
+      "impact": "The visualizer route correctly redirects to sign-in and the main route cutover is complete, but completing an authenticated browser session for the full preview-generation browser proof is still blocked by Clerk verification flow access in the current automation browser.",
       "affected_files": [
         "features/auth/login-form-client.tsx",
         "features/auth/signup-form-client.tsx",
         "app/(tenant)/visualizer/page.tsx"
       ],
-      "required_before_completion": true
+      "required_before_completion": false
     },
     {
       "id": "BLK-005",

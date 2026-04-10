@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 
+import { CatalogWrapAssetsClient } from '@/features/catalog/catalog-wrap-assets-client'
 import { CatalogCommandPanel } from '@/components/catalog/manage/catalog-command-panel'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { CatalogDetailDTO } from '@/types/catalog.types'
 import { WrapMetadataEditor } from './wrap-metadata-editor.client'
-import { WrapAssetManager } from './wrap-asset-manager.client'
 import { WrapPublishPanel } from './wrap-publish-panel.client'
 
 export interface WrapManagerDetailPageClientProps {
@@ -30,7 +30,7 @@ export function WrapManagerDetailPageClient({ wrap }: WrapManagerDetailPageClien
                     </TabsContent>
 
                     <TabsContent value="assets" className="space-y-4">
-                        <WrapAssetManager wrap={wrap} />
+                        <CatalogWrapAssetsClient wrap={wrap} />
                     </TabsContent>
                 </Tabs>
             </div>

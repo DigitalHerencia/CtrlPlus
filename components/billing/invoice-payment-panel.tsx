@@ -1,14 +1,21 @@
 import Link from 'next/link'
 
+import { isInvoicePayable } from '@/lib/constants/statuses'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { type InvoiceDetailDTO } from '@/types/billing.types'
 
 interface InvoicePaymentPanelProps {
     invoice: InvoiceDetailDTO
+    canManageInvoice: boolean
 }
 
-export function InvoicePaymentPanel({ invoice }: InvoicePaymentPanelProps) {
+export function InvoicePaymentPanel({ invoice, canManageInvoice }: InvoicePaymentPanelProps) {
+    const canPayInvoice = isInvoicePayable(invoice.status)
+    const canAdjustInvoice =
+        canManageInvoice && (invoice.status === 'draft' || invoice.status === 'issued')
+    const canRefundInvoice = canManageInvoice && invoice.status === 'paid'
+
     return (
         <Card className="border-neutral-800 bg-neutral-900">
             <CardHeader>
@@ -18,17 +25,29 @@ export function InvoicePaymentPanel({ invoice }: InvoicePaymentPanelProps) {
                 <p className="text-sm text-neutral-400">
                     Complete payment or review refunds and adjustments for this invoice.
                 </p>
-                <div className="flex flex-wrap gap-2">
-                    <Button asChild size="sm">
-                        <Link href={`/billing/${invoice.id}/pay`}>Pay</Link>
-                    </Button>
-                    <Button asChild size="sm" variant="outline">
-                        <Link href={`/billing/${invoice.id}/refund`}>Refund</Link>
-                    </Button>
-                    <Button asChild size="sm" variant="outline">
-                        <Link href={`/billing/${invoice.id}/adjust`}>Adjust</Link>
-                    </Button>
-                </div>
+                {canPayInvoice || canRefundInvoice || canAdjustInvoice ? (
+                    <div className="flex flex-wrap gap-2">
+                        {canPayInvoice ? (
+                            <Button asChild size="sm">
+                                <Link href={`/billing/${invoice.id}/pay`}>Pay</Link>
+                            </Button>
+                        ) : null}
+                        {canRefundInvoice ? (
+                            <Button asChild size="sm" variant="outline">
+                                <Link href={`/billing/${invoice.id}/refund`}>Refund</Link>
+                            </Button>
+                        ) : null}
+                        {canAdjustInvoice ? (
+                            <Button asChild size="sm" variant="outline">
+                                <Link href={`/billing/${invoice.id}/adjust`}>Adjust</Link>
+                            </Button>
+                        ) : null}
+                    </div>
+                ) : (
+                    <p className="text-sm text-neutral-500">
+                        No payment actions are available for the current invoice status.
+                    </p>
+                )}
             </CardContent>
         </Card>
     )

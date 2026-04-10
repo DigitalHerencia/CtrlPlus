@@ -183,6 +183,18 @@ function normalizeCents(amount: number): number {
     return Math.round(amount)
 }
 
+function mapStripeRefundStatus(status: Stripe.Refund['status']): 'pending' | 'succeeded' | 'failed' {
+    if (status === 'succeeded') {
+        return 'succeeded'
+    }
+
+    if (status === 'failed' || status === 'canceled') {
+        return 'failed'
+    }
+
+    return 'pending'
+}
+
 export async function ensureInvoiceForBooking(
     rawInput: EnsureInvoiceForBookingInput
 ): Promise<EnsureInvoiceResult> {
@@ -357,7 +369,7 @@ export async function applyCredit(
     revalidatePath('/billing')
     revalidatePath(`/billing/${invoice.id}`)
 
-    return { invoiceId: invoice.id, status: 'issued' }
+    return { invoiceId: invoice.id, status: invoice.status }
 }
 
 export async function voidInvoice(
@@ -417,7 +429,21 @@ export async function refundInvoice(
 
     const invoice = await prisma.invoice.findFirst({
         where: { id: invoiceId, deletedAt: null },
-        select: { id: true, totalAmount: true, status: true },
+        select: {
+            id: true,
+            totalAmount: true,
+            status: true,
+            payments: {
+                where: { deletedAt: null },
+                orderBy: { createdAt: 'desc' },
+                select: {
+                    id: true,
+                    stripePaymentIntentId: true,
+                    status: true,
+                    amount: true,
+                },
+            },
+        },
     })
 
     if (!invoice) {
@@ -429,21 +455,52 @@ export async function refundInvoice(
     }
 
     const refundAmount = Math.min(amount ?? invoice.totalAmount, invoice.totalAmount)
+    const existingRefund = invoice.payments.find(
+        (payment) =>
+            payment.amount < 0 && (payment.status === 'pending' || payment.status === 'succeeded')
+    )
 
-    const providerReference = `manual_refund_${invoice.id}_${Date.now()}`
+    if (existingRefund) {
+        throw new Error('A refund has already been initiated for this invoice')
+    }
+
+    const sourcePayment = invoice.payments.find(
+        (payment) => payment.amount > 0 && payment.status === 'succeeded'
+    )
+
+    if (!sourcePayment) {
+        throw new Error('No succeeded Stripe payment was found for this invoice')
+    }
+
+    const stripe = getStripeClient()
+    const refund = await stripe.refunds.create(
+        {
+            payment_intent: sourcePayment.stripePaymentIntentId,
+            amount: refundAmount,
+            metadata: {
+                invoiceId: invoice.id,
+            },
+        },
+        {
+            idempotencyKey: `billing:refund:${invoice.id}:${sourcePayment.id}:${refundAmount}`,
+        }
+    )
+
+    const refundStatus = mapStripeRefundStatus(refund.status)
+    const nextInvoiceStatus = refundStatus === 'succeeded' ? 'refunded' : invoice.status
 
     await prisma.$transaction([
         prisma.payment.create({
             data: {
                 invoiceId: invoice.id,
-                stripePaymentIntentId: providerReference,
-                status: 'succeeded',
+                stripePaymentIntentId: refund.id,
+                status: refundStatus,
                 amount: -refundAmount,
             },
         }),
         prisma.invoice.update({
             where: { id: invoice.id },
-            data: { status: 'refunded' },
+            data: { status: nextInvoiceStatus },
         }),
         prisma.auditLog.create({
             data: {
@@ -451,7 +508,13 @@ export async function refundInvoice(
                 action: 'REFUND_INVOICE',
                 resourceType: 'Invoice',
                 resourceId: invoice.id,
-                details: JSON.stringify({ amount: refundAmount, notes: notes ?? null }),
+                details: JSON.stringify({
+                    amount: refundAmount,
+                    notes: notes ?? null,
+                    refundId: refund.id,
+                    refundStatus,
+                    stripePaymentIntentId: sourcePayment.stripePaymentIntentId,
+                }),
             },
         }),
     ])
@@ -459,7 +522,7 @@ export async function refundInvoice(
     revalidatePath('/billing')
     revalidatePath(`/billing/${invoice.id}`)
 
-    return { invoiceId: invoice.id, status: 'refunded' }
+    return { invoiceId: invoice.id, status: nextInvoiceStatus }
 }
 
 // --- webhook processor (kept here so callers import a single domain actions file)

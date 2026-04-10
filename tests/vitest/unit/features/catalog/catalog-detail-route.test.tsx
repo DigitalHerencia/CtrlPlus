@@ -29,7 +29,6 @@ vi.mock('next/navigation', async () => {
 
 vi.mock('@/lib/fetchers/catalog.fetchers', () => ({
     getCatalogWrapById: metadataMocks.getCatalogWrapById,
-    isExampleCatalogWrapId: vi.fn().mockReturnValue(false),
 }))
 
 describe('catalog detail route contracts', () => {

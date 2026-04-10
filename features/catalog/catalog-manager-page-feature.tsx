@@ -1,4 +1,4 @@
-import { CatalogPagination } from '@/components/catalog/CatalogPagination'
+import { CatalogPagination } from '@/components/catalog/catalog-pagination'
 import { CatalogManagerHeader } from '@/components/catalog/manage/catalog-manager-header'
 import { getCatalogManagerWraps, getWrapCategories } from '@/lib/fetchers/catalog.fetchers'
 import { createCatalogQueryString } from '@/lib/utils/search-params'

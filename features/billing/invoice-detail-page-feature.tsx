@@ -5,6 +5,8 @@ import { InvoicePaymentPanel } from '@/components/billing/invoice-payment-panel'
 import { InvoiceStatusBadge } from '@/components/billing/InvoiceStatusBadge'
 import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
+import { getSession } from '@/lib/auth/session'
+import { hasCapability } from '@/lib/authz/policy'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getInvoice } from '@/lib/fetchers/billing.fetchers'
 import { notFound } from 'next/navigation'
@@ -17,7 +19,13 @@ interface InvoiceDetailPageFeatureProps {
 }
 
 export async function InvoiceDetailPageFeature({ invoiceId }: InvoiceDetailPageFeatureProps) {
-    const invoice = (await getInvoice(invoiceId)) ?? notFound()
+    const [invoice, session] = await Promise.all([getInvoice(invoiceId), getSession()])
+
+    if (!invoice) {
+        notFound()
+    }
+
+    const canManageInvoice = hasCapability(session.authz, 'billing.write.all')
 
     return (
         <div className="space-y-6">
@@ -36,7 +44,7 @@ export async function InvoiceDetailPageFeature({ invoiceId }: InvoiceDetailPageF
                 <div className="md:col-span-2">
                     <InvoiceLineItemsTable lineItems={invoice.lineItems} />
                 </div>
-                <InvoicePaymentPanel invoice={invoice} />
+                <InvoicePaymentPanel invoice={invoice} canManageInvoice={canManageInvoice} />
             </div>
 
             <InvoiceDetailTabsClient

@@ -4,148 +4,76 @@
   "updated_at": "2026-04-09",
   "checks": [
     {
-      "id": "VAL-024",
-      "name": "visualizer-hf-space-next-image-host",
+      "id": "VAL-025",
+      "name": "billing-catalog-targeted-vitest",
       "status": "pass",
-      "details": "Replaced the stale `**.public.blob.vercel-storage.com` remote image pattern with the actual `cannatech-ctrlplus.hf.space` host and `/gradio_api/**` pathname used by the visualizer Hugging Face Space output URLs; `pnpm build` then passed successfully."
+      "details": "`pnpm exec vitest run tests/vitest/unit/lib/billing/actions/status-transitions.test.ts tests/vitest/unit/features/catalog/catalog-detail-route.test.tsx` passed after the refund, manager-route, and catalog-detail cleanup changes."
     },
     {
-      "id": "VAL-001",
-      "name": "catalog-visualizer-contract-alignment",
+      "id": "VAL-026",
+      "name": "auth-signup-verification-test",
       "status": "pass",
-      "details": "Catalog handoff now uses hero plus gallery references only, publish readiness remains hero-driven, and catalog DTOs no longer rely on texture-era asset roles."
+      "details": "`pnpm exec vitest run tests/vitest/unit/features/auth/signup-form-client.test.tsx` passed after raising the timeout for the slower Clerk verification branch."
     },
     {
-      "id": "VAL-002",
-      "name": "prisma-schema-and-client",
-      "status": "pass",
-      "details": "WrapImage now includes Cloudinary authority/media fields, the migration is applied, and Prisma Client was regenerated against the updated schema."
-    },
-    {
-      "id": "VAL-003",
+      "id": "VAL-027",
       "name": "typecheck",
       "status": "pass",
-      "details": "Included in `pnpm validate`."
+      "details": "`pnpm typecheck` passed."
     },
     {
-      "id": "VAL-004",
-      "name": "unit-tests",
-      "status": "pass",
-      "details": "Included in `pnpm validate`; 43 files and 148 tests passed."
-    },
-    {
-      "id": "VAL-005",
+      "id": "VAL-028",
       "name": "lint",
       "status": "pass",
-      "details": "Included in `pnpm validate`."
+      "details": "`pnpm lint` passed."
     },
     {
-      "id": "VAL-006",
-      "name": "build",
-      "status": "pass",
-      "details": "`pnpm build` passed after regenerating Prisma Client against the updated WrapImage schema."
-    },
-    {
-      "id": "VAL-007",
-      "name": "e2e",
-      "status": "pass",
-      "details": "`pnpm test:e2e --project=chromium --reporter=line` passed with 27 passing tests and 2 skipped tests."
-    },
-    {
-      "id": "VAL-008",
+      "id": "VAL-029",
       "name": "prisma-validate",
       "status": "pass",
-      "details": "Included in `pnpm validate`."
+      "details": "`pnpm prisma:validate` passed."
     },
     {
-      "id": "VAL-009",
-      "name": "catalog-legacy-row-posture",
+      "id": "VAL-030",
+      "name": "build",
       "status": "pass",
-      "details": "No active local `/uploads/wraps/**` rows remain; 19 soft-deleted local-path rows remain documented for remediation, and 4 wraps remain hidden pending manual hero/gallery re-upload."
+      "details": "`pnpm build` passed after the billing/catalog/auth cleanup."
     },
     {
-      "id": "VAL-010",
-      "name": "visualizer-mask-aware-unit-tests",
+      "id": "VAL-031",
+      "name": "unit-tests",
       "status": "pass",
-      "details": "`pnpm test:unit` passed with 44 files and 150 tests after mask-aware inpaint refactor."
+      "details": "`pnpm test` passed with 41 test files and 140 tests."
     },
     {
-      "id": "VAL-011",
-      "name": "visualizer-typecheck",
+      "id": "VAL-032",
+      "name": "e2e-chromium",
       "status": "pass",
-      "details": "`pnpm typecheck` passed with no TypeScript errors."
+      "details": "`pnpm test:e2e --project=chromium --reporter=line` passed with 27 tests passing and 2 skipped."
     },
     {
-      "id": "VAL-012",
-      "name": "visualizer-lint",
+      "id": "VAL-033",
+      "name": "dead-code-audit-refresh",
+      "status": "fail",
+      "details": "Artifact refresh completed, but `pnpm knip --no-progress` still reports 15 unused files, 1 unused dependency, 103 unused exports, and 55 unused exported types. See `knip.out.txt` and `.agents/reports/knip.txt`."
+    },
+    {
+      "id": "VAL-034",
+      "name": "ts-prune-refresh",
       "status": "pass",
-      "details": "`pnpm lint` passed with no lint violations."
+      "details": "Fresh `pnpm exec ts-prune` output was written to `.agents/reports/ts-prune.txt`."
     },
     {
-      "id": "VAL-013",
-      "name": "visualizer-prisma-validate",
+      "id": "VAL-035",
+      "name": "tsc-unused-refresh",
       "status": "pass",
-      "details": "`pnpm prisma:validate` passed and Prisma schema remained valid."
+      "details": "Fresh `pnpm exec tsc --noEmit --noUnusedLocals --noUnusedParameters` output was written to `.agents/reports/tsc-unused.txt`."
     },
     {
-      "id": "VAL-014",
-      "name": "catalog-visualizer-browser-workflow",
+      "id": "VAL-036",
+      "name": "eslint-unused-refresh",
       "status": "pass",
-      "details": "Integrated-browser verification created Inferno, uploaded the hero asset, confirmed visualizer-ready selection, uploaded the customer vehicle image, and generated a persisted preview result with status=complete. The persisted preview metadata also confirmed the result came from deterministic_fallback rather than the HF path."
-    },
-    {
-      "id": "VAL-015",
-      "name": "visualizer-space-client-typecheck",
-      "status": "pass",
-      "details": "`pnpm typecheck` passed after updating lib/visualizer/huggingface/space-client.ts and installing @gradio/client."
-    },
-    {
-      "id": "VAL-016",
-      "name": "visualizer-hf-only-unit-tests",
-      "status": "pass",
-      "details": "`pnpm vitest run tests/vitest/unit/lib/visualizer/actions/process-visualizer-preview.test.ts tests/vitest/unit/lib/visualizer/actions/create-visualizer-preview.test.ts` passed after removing deterministic fallback execution from the action pipeline."
-    },
-    {
-      "id": "VAL-017",
-      "name": "visualizer-hf-only-lint",
-      "status": "pass",
-      "details": "`pnpm lint` passed after the HF-only visualizer refactor."
-    },
-    {
-      "id": "VAL-018",
-      "name": "visualizer-public-hf-space-inference",
-      "status": "pass",
-      "details": "A direct `@gradio/client` call to the public `black-forest-labs/FLUX.2-dev` Space succeeded with the real source vehicle photo plus three Inferno reference images, confirming the new default HF-only backend is callable and returns an edited image result."
-    },
-    {
-      "id": "VAL-019",
-      "name": "visualizer-refactor-focused-vitest",
-      "status": "pass",
-      "details": "`pnpm exec vitest run --passWithNoTests tests/vitest/unit/lib/visualizer/actions/process-visualizer-preview.test.ts tests/vitest/unit/lib/integrations/huggingface-config.test.ts tests/vitest/unit/test/api/visualizer-preview-image-route.test.ts tests/vitest/unit/test/api/visualizer-upload-image-route.test.ts` passed with 4 files and 22 tests after removing the dead legacy HF preview adapter, tightening mask audit threading, and correcting stale action-test expectations."
-    },
-    {
-      "id": "VAL-020",
-      "name": "visualizer-image-route-boundary-audit",
-      "status": "pass",
-      "details": "Live code audit confirmed app/api visualizer image routes already read through lib/fetchers/visualizer.fetchers.ts and preserve signed Cloudinary-backed delivery behavior; no Prisma reads remain in those routes."
-    },
-    {
-      "id": "VAL-021",
-      "name": "visualizer-full-unit-suite",
-      "status": "pass",
-      "details": "`pnpm test` passed with 46 test files and 191 tests after visualizer fetcher centralization and legacy-helper cleanup."
-    },
-    {
-      "id": "VAL-022",
-      "name": "visualizer-build-after-boundary-cleanup",
-      "status": "pass",
-      "details": "`pnpm build` passed after removing dead visualizer helper drift, centralizing action reads in fetchers, and updating action test mocks."
-    },
-    {
-      "id": "VAL-023",
-      "name": "visualizer-browser-auth-gate",
-      "status": "blocked",
-      "details": "Integrated browser reached `/visualizer` and confirmed protected-route auth behavior, but end-to-end preview generation could not be completed because this automation pass could not finish a Clerk-authenticated browser session in the current test browser."
+      "details": "Fresh `pnpm exec eslint . --cache --max-warnings=0` output was written to `.agents/reports/eslint-unused-vars.txt`."
     }
   ]
 }

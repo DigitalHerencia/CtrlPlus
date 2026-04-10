@@ -36,11 +36,6 @@ export type WrapRecord = Prisma.WrapGetPayload<{
     select: typeof wrapDTOFields
 }>
 
-export function isExampleCatalogWrapId(wrapId: string): boolean {
-    void wrapId
-    return false
-}
-
 function normalizePriceInCents(value: number): number {
     return Number.isInteger(value) ? value : Math.round(value)
 }
@@ -159,9 +154,7 @@ function toCatalogBrowseCard(wrap: WrapDTO): CatalogBrowseCardDTO {
         categories: wrap.categories,
         heroImage,
         displayImage,
-        previewHref: isExampleCatalogWrapId(wrap.id)
-            ? `/catalog/${wrap.id}`
-            : createVisualizerHref(wrap.id),
+        previewHref: createVisualizerHref(wrap.id),
         readiness,
     }
 }

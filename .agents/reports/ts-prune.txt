@@ -1,0 +1,292 @@
+\next.config.ts:44 - default
+\playwright.config.ts:28 - default
+\prisma.config.ts:8 - default
+\proxy.ts:32 - default
+\proxy.ts:60 - config
+\tailwind.config.ts:57 - default
+\vitest.config.ts:4 - default
+\app\error.tsx:9 - default
+\app\layout.tsx:11 - default
+\app\layout.tsx:5 - metadata
+\app\loading.tsx:4 - default
+\app\not-found.tsx:6 - default
+\app\page.tsx:19 - default
+\schemas\auth.schemas.ts:16 - verificationCodeSchema (used in module)
+\schemas\common.schemas.ts:5 - identifierSchema
+\schemas\platform.schemas.ts:3 - platformHealthQuerySchema
+\schemas\platform.schemas.ts:16 - previewPruneSchema
+\schemas\platform.schemas.ts:20 - platformActionFilterSchema
+\schemas\platform.schemas.ts:27 - resetWebhookLocksSchema
+\schemas\settings.schemas.ts:24 - notificationPreferencesSchema (used in module)
+\types\admin.types.ts:17 - AdminDateRangeInput
+\types\admin.types.ts:65 - AdminDashboardDTO
+\types\auth.types.ts:38 - AuthRedirectSearchParams (used in module)
+\types\billing.types.ts:25 - InvoicePaymentEventDTO (used in module)
+\types\billing.types.ts:34 - InvoiceDetailViewDTO (used in module)
+\types\billing.types.ts:44 - InvoiceManagerRowDTO
+\types\catalog.types.ts:26 - CatalogAssetReadinessIssue (used in module)
+\types\catalog.types.ts:64 - WrapCatalogCardDTO (used in module)
+\types\catalog.types.ts:78 - WrapDetailViewDTO (used in module)
+\types\catalog.types.ts:86 - WrapManagerRowDTO (used in module)
+\types\catalog.types.ts:109 - WrapListDTO
+\types\catalog.types.ts:157 - UpdateWrapCategoryInput
+\types\catalog.types.ts:182 - WrapSortBy (used in module)
+\types\catalog.types.ts:211 - WrapRouteParams (used in module)
+\types\catalog.types.ts:238 - WrapManagerDetailPageProps
+\types\catalog.types.ts:242 - WrapManagerRowItemProps
+\types\common.types.ts:1 - SearchParamValue (used in module)
+\types\common.types.ts:7 - PaginatedParams (used in module)
+\types\common.types.ts:12 - PaginatedResult
+\types\platform.types.ts:1 - WebhookStatusCountsDTO (used in module)
+\types\platform.types.ts:8 - PlatformProvider
+\types\platform.types.ts:10 - PlatformIncidentSeverity (used in module)
+\types\platform.types.ts:28 - PlatformWebhookStatusDTO
+\types\platform.types.ts:35 - PlatformActionResultDTO
+\types\platform.types.ts:43 - PlatformIncidentDTO (used in module)
+\types\platform.types.ts:59 - PlatformDashboardDTO
+\types\platform.types.ts:87 - WebhookProviderOverviewDTO (used in module)
+\types\platform.types.ts:115 - ResetWebhookLocksInput
+\types\scheduling.client.types.ts:11 - BookingFormWrapOption (used in module)
+\types\scheduling.client.types.ts:17 - BookingFormErrors (used in module)
+\types\visualizer.types.ts:43 - VisualizerPreviewDTO (used in module)
+\types\visualizer.types.ts:62 - SerializedVisualizerPreview
+\types\visualizer.types.ts:72 - VisualizerPageFeatureProps
+\types\visualizer.types.ts:79 - VisualizerUploadSnapshot
+\types\visualizer.types.ts:100 - VisualizerMaskStrategy (used in module)
+\types\visualizer.types.ts:145 - VisualizerWrapPipelineResponse
+\types\visualizer.types.ts:155 - ScheduledVisualizerProcessingInput
+\.next\types\routes.d.ts:65 - ParamsOf
+\.next\types\routes.d.ts:76 - PageRoutes (used in module)
+\.next\types\routes.d.ts:76 - RedirectRoutes (used in module)
+\.next\types\routes.d.ts:76 - RewriteRoutes (used in module)
+\app\(auth)\error.tsx:11 - default
+\app\(auth)\layout.tsx:8 - default
+\app\(auth)\layout.tsx:3 - metadata
+\app\(auth)\loading.tsx:1 - default
+\app\(auth)\not-found.tsx:3 - default
+\app\(tenant)\error.tsx:11 - default
+\app\(tenant)\loading.tsx:3 - default
+\app\docs\layout.tsx:12 - default
+\app\docs\layout.tsx:6 - metadata
+\app\docs\not-found.tsx:5 - default
+\components\billing\billing-skeletons.tsx:45 - BillingInvoiceDetailSkeleton
+\components\catalog\catalog-skeletons.tsx:22 - CatalogHeaderSkeleton
+\components\scheduling\scheduling-skeletons.tsx:8 - SchedulingCalendarSkeleton
+\components\scheduling\scheduling-skeletons.tsx:16 - SchedulingBookingCardsSkeleton
+\components\scheduling\scheduling-skeletons.tsx:53 - SchedulingAvailabilitySkeleton
+\components\shared\tenant-nav-config.ts:12 - TenantNavItem (used in module)
+\components\ui\badge.tsx:26 - BadgeProps (used in module)
+\components\ui\badge.tsx:33 - badgeVariants (used in module)
+\components\ui\breadcrumb.tsx:100 - BreadcrumbEllipsis (used in module)
+\components\ui\button.tsx:37 - ButtonProps (used in module)
+\components\ui\button.tsx:56 - buttonVariants (used in module)
+\components\ui\field.tsx:228 - FieldContent (used in module)
+\components\ui\field.tsx:233 - FieldLegend (used in module)
+\components\ui\field.tsx:234 - FieldSeparator (used in module)
+\components\ui\field.tsx:235 - FieldSet (used in module)
+\components\ui\field.tsx:236 - FieldTitle (used in module)
+\components\ui\sheet.tsx:115 - SheetClose (used in module)
+\components\ui\sheet.tsx:118 - SheetFooter (used in module)
+\components\ui\sheet.tsx:120 - SheetOverlay (used in module)
+\components\ui\sheet.tsx:121 - SheetPortal (used in module)
+\components\ui\sidebar.tsx:726 - SidebarGroup (used in module)
+\components\ui\sidebar.tsx:727 - SidebarGroupAction (used in module)
+\components\ui\sidebar.tsx:728 - SidebarGroupContent (used in module)
+\components\ui\sidebar.tsx:729 - SidebarGroupLabel (used in module)
+\components\ui\sidebar.tsx:731 - SidebarInput (used in module)
+\components\ui\sidebar.tsx:734 - SidebarMenuAction (used in module)
+\components\ui\sidebar.tsx:735 - SidebarMenuBadge (used in module)
+\components\ui\sidebar.tsx:738 - SidebarMenuSkeleton (used in module)
+\components\ui\sidebar.tsx:739 - SidebarMenuSub (used in module)
+\components\ui\sidebar.tsx:740 - SidebarMenuSubButton (used in module)
+\components\ui\sidebar.tsx:741 - SidebarMenuSubItem (used in module)
+\components\ui\sidebar.tsx:744 - SidebarSeparator (used in module)
+\components\ui\sidebar.tsx:745 - SidebarTrigger (used in module)
+\components\ui\sidebar.tsx:746 - useSidebar (used in module)
+\components\ui\table.tsx:98 - TableCaption (used in module)
+\components\ui\table.tsx:98 - TableFooter (used in module)
+\components\ui\textarea.tsx:5 - TextareaProps (used in module)
+\components\visualizer\visualizer-skeletons.tsx:3 - VisualizerWorkspaceSkeleton
+\lib\actions\admin.actions.ts:43 - flagContent
+\lib\actions\admin.actions.ts:119 - createInvoice
+\lib\actions\admin.actions.ts:146 - confirmAppointment
+\lib\actions\billing.actions.ts:533 - ProcessStripeWebhookEventResult (used in module)
+\lib\actions\scheduling.actions.ts:538 - CleanupExpiredReservationsInput (used in module)
+\lib\actions\scheduling.actions.ts:543 - CleanupExpiredReservationsResult (used in module)
+\lib\auth\identity.ts:10 - getStoreOwnerClerkUserId (used in module)
+\lib\auth\identity.ts:14 - getPlatformDevClerkUserId (used in module)
+\lib\auth\identity.ts:22 - resolveGlobalRoleOverrideForClerkUserId (used in module)
+\lib\auth\session.ts:55 - requireAuth
+\lib\auth\session.ts:65 - Session (used in module)
+\lib\auth\session.ts:65 - SessionContext (used in module)
+\lib\auth\session.ts:65 - SessionUser (used in module)
+\lib\authz\guards.ts:13 - BillingAccessContext (used in module)
+\lib\cache\cache-keys.ts:4 - buildVisualizerCacheKey
+\lib\cache\revalidate-tags.ts:77 - revalidateBillingInvoice
+\lib\cache\revalidate-tags.ts:83 - revalidateBillingAll
+\lib\cache\revalidate-tags.ts:87 - revalidateSchedulingAvailability
+\lib\cache\revalidate-tags.ts:93 - revalidateSchedulingBooking
+\lib\cache\revalidate-tags.ts:100 - revalidateSchedulingAll
+\lib\cache\revalidate-tags.ts:106 - revalidateCatalogWrap
+\lib\cache\revalidate-tags.ts:113 - revalidateCatalogCategories
+\lib\cache\revalidate-tags.ts:118 - revalidateCatalogAll
+\lib\cache\revalidate-tags.ts:124 - revalidateVisualizerPreview
+\lib\cache\revalidate-tags.ts:129 - revalidateVisualizerPreviewsByWrap
+\lib\cache\revalidate-tags.ts:134 - revalidateVisualizerPreviewsByUser
+\lib\cache\revalidate-tags.ts:139 - revalidateAuthUser
+\lib\cache\revalidate-tags.ts:145 - revalidateSettingsUser
+\lib\cache\revalidate-tags.ts:150 - revalidateSettingsTenant
+\lib\cache\revalidate-tags.ts:155 - revalidateAdminFlaggedItems
+\lib\cache\revalidate-tags.ts:159 - revalidateAdminFlag
+\lib\cache\revalidate-tags.ts:164 - revalidateAdminAuditLog
+\lib\cache\revalidate-tags.ts:168 - revalidatePlatformHealth
+\lib\cache\revalidate-tags.ts:13 - CacheTags
+\lib\cache\visualizer-cache.ts:16 - getVisualizerPreviewTtlMs (used in module)
+\lib\cache\visualizer-cache.ts:23 - getVisualizerPreviewExpiresAt
+\lib\constants\app.ts:1 - APP_NAME
+\lib\constants\app.ts:3 - DEFAULT_POST_AUTH_REDIRECT
+\lib\constants\app.ts:33 - SCHEDULING_REVALIDATION_PATHS
+\lib\constants\statuses.ts:32 - normalizePreviewStatus
+\lib\constants\statuses.ts:42 - isPreviewProcessingStatus
+\lib\constants\statuses.ts:46 - isPreviewTerminalStatus
+\lib\constants\statuses.ts:8 - wrapImageKindValues
+\lib\constants\statuses.ts:23 - previewStatusValues (used in module)
+\lib\constants\statuses.ts:50 - VisualizerGenerationMode (used in module)
+\lib\constants\statuses.ts:68 - VALID_BOOKING_STATUSES
+\lib\constants\statuses.ts:111 - PAYABLE_INVOICE_STATUSES (used in module)
+\lib\fetchers\billing.fetchers.ts:115 - getInvoiceById (used in module)
+\lib\fetchers\catalog.fetchers.ts:372 - getVisualizerSelectableWrapById
+\lib\fetchers\catalog.fetchers.ts:385 - listVisualizerSelectableWraps
+\lib\fetchers\catalog.fetchers.ts:30 - WrapVisibilityScope (used in module)
+\lib\fetchers\catalog.fetchers.ts:35 - WrapRecord (used in module)
+\lib\fetchers\catalog.mappers.ts:18 - getCatalogAssetDeliveryUrl (used in module)
+\lib\fetchers\catalog.mappers.ts:18 - toCatalogAssetImage (used in module)
+\lib\integrations\blob.ts:23 - buildBlobPublicDeliveryUrl
+\lib\integrations\blob.ts:28 - getBlobPublicTransformation
+\lib\integrations\blob.ts:31 - BlobCredentials
+\lib\integrations\blob.ts:32 - BlobDeliveryVariant
+\lib\uploads\image-processing.ts:37 - assertApprovedRemoteHost (used in module)
+\lib\uploads\image-processing.ts:88 - readImageBufferFromUrl
+\lib\uploads\image-processing.ts:102 - normalizeVehicleUpload
+\lib\uploads\image-processing.ts:144 - normalizeVehicleBuffer
+\lib\uploads\image-processing.ts:10 - NormalizedVehicleUpload (used in module)
+\lib\uploads\storage.ts:255 - storePreviewImage
+\lib\uploads\storage.ts:271 - persistVisualizerUploadAsset
+\lib\uploads\storage.ts:315 - persistVisualizerPreviewAsset (used in module)
+\lib\uploads\storage.ts:354 - persistVisualizerPreviewMaskAsset
+\lib\uploads\storage.ts:19 - PersistedWrapImage (used in module)
+\lib\uploads\storage.ts:24 - PersistedVisualizerAsset (used in module)
+\lib\utils\assertions.ts:20 - assertApprovedRemoteHost
+\lib\utils\search-params.ts:167 - parseVisualizerSearchParams
+\lib\utils\search-params.ts:179 - createVisualizerQueryString (used in module)
+\lib\visualizer\asset-delivery.ts:17 - resolveVisualizerAssetDeliveryUrl
+\.next\dev\types\routes.d.ts:65 - ParamsOf
+\.next\dev\types\routes.d.ts:76 - PageRoutes (used in module)
+\.next\dev\types\routes.d.ts:76 - RedirectRoutes (used in module)
+\.next\dev\types\routes.d.ts:76 - RewriteRoutes (used in module)
+\app\(tenant)\admin\error.tsx:7 - default
+\app\(tenant)\admin\layout.tsx:11 - default
+\app\(tenant)\admin\loading.tsx:3 - default
+\app\(tenant)\admin\page.tsx:3 - default
+\app\(tenant)\billing\error.tsx:11 - default
+\app\(tenant)\billing\loading.tsx:3 - default
+\app\(tenant)\billing\not-found.tsx:3 - default
+\app\(tenant)\billing\page.tsx:10 - default
+\app\(tenant)\catalog\error.tsx:7 - default
+\app\(tenant)\catalog\loading.tsx:3 - default
+\app\(tenant)\catalog\not-found.tsx:3 - default
+\app\(tenant)\catalog\page.tsx:9 - default
+\app\(tenant)\platform\error.tsx:8 - default
+\app\(tenant)\platform\layout.tsx:11 - default
+\app\(tenant)\platform\loading.tsx:3 - default
+\app\(tenant)\platform\page.tsx:3 - default
+\app\(tenant)\scheduling\error.tsx:8 - default
+\app\(tenant)\scheduling\loading.tsx:3 - default
+\app\(tenant)\scheduling\not-found.tsx:6 - default
+\app\(tenant)\scheduling\page.tsx:10 - default
+\app\(tenant)\settings\error.tsx:8 - default
+\app\(tenant)\settings\layout.tsx:3 - default
+\app\(tenant)\settings\loading.tsx:3 - default
+\app\(tenant)\settings\page.tsx:4 - default
+\app\(tenant)\visualizer\error.tsx:8 - default
+\app\(tenant)\visualizer\loading.tsx:4 - default
+\app\(tenant)\visualizer\not-found.tsx:3 - default
+\app\(tenant)\visualizer\page.tsx:7 - default
+\app\api\health\route.ts:5 - GET
+\app\docs\[[...slug]]\page.tsx:17 - generateMetadata
+\app\docs\[[...slug]]\page.tsx:42 - default
+\components\billing\manage\invoice-lifecycle-panel.tsx:9 - InvoiceLifecyclePanel
+\components\catalog\wrap-images\wrap-gallery-manager.tsx:7 - WrapGalleryManager
+\components\catalog\wrap-images\wrap-image-card.tsx:7 - WrapImageCard
+\components\catalog\wrap-images\wrap-image-list.tsx:7 - WrapImageList
+\features\catalog\manage\wrap-manager-detail-page-feature.tsx:10 - WrapManagerDetailPageProps (used in module)
+\features\catalog\manage\wrap-manager-detail-page.client.tsx:12 - WrapManagerDetailPageClientProps (used in module)
+\features\catalog\manage\wrap-metadata-editor.client.tsx:21 - WrapMetadataEditorProps (used in module)
+\features\catalog\manage\wrap-publish-panel.client.tsx:15 - WrapPublishPanelProps (used in module)
+\lib\db\selects\visualizer.selects.ts:1 - visualizerPreviewDTOFields
+\lib\db\selects\visualizer.selects.ts:41 - visualizerUploadSnapshotFields
+\lib\db\selects\visualizer.selects.ts:56 - visualizerPreviewImageAssetFields
+\lib\db\selects\visualizer.selects.ts:66 - visualizerUploadImageAssetFields
+\lib\db\transactions\billing.transactions.ts:5 - CreateAdminInvoiceParams (used in module)
+\lib\db\transactions\scheduling.transactions.ts:7 - SlotRange (used in module)
+\lib\db\transactions\scheduling.transactions.ts:12 - AssertSlotCapacityInput (used in module)
+\lib\db\transactions\scheduling.transactions.ts:17 - ConfirmAdminAppointmentParams (used in module)
+\lib\visualizer\fallback\build-simple-wrap-preview.ts:4 - buildSimpleWrapPreview
+\lib\visualizer\huggingface\client.ts:80 - getVisualizerHfConfig (used in module)
+\lib\visualizer\huggingface\client.ts:10 - HfPreviewStrategy (used in module)
+\lib\visualizer\huggingface\client.ts:12 - VisualizerHfConfig (used in module)
+\lib\visualizer\huggingface\generate-wrap-preview.ts:63 - generateWrapPreview
+\lib\visualizer\huggingface\image-to-image-client.ts:35 - Img2ImgInput (used in module)
+\lib\visualizer\prompting\build-wrap-preview-prompt.ts:79 - buildWrapPreviewPrompt
+\lib\visualizer\prompting\build-wrap-preview-prompt.ts:3 - BuildWrapPreviewPromptInput (used in module)
+\lib\visualizer\prompting\build-wrap-preview-prompt.ts:11 - WrapPreviewPromptResult (used in module)
+\tests\playwright\helpers\db.ts:5 - resetTestDb (used in module)
+\tests\playwright\helpers\db.ts:10 - default
+\app\(auth)\sign-in\[[...sign-in]]\page.tsx:5 - default
+\app\(auth)\sign-up\[[...sign-up]]\page.tsx:5 - default
+\app\(tenant)\admin\analytics\loading.tsx:4 - default
+\app\(tenant)\admin\analytics\page.tsx:8 - default
+\app\(tenant)\admin\audit\loading.tsx:4 - default
+\app\(tenant)\admin\audit\page.tsx:8 - default
+\app\(tenant)\admin\moderation\loading.tsx:4 - default
+\app\(tenant)\admin\moderation\page.tsx:3 - default
+\app\(tenant)\billing\[invoiceId]\loading.tsx:3 - default
+\app\(tenant)\billing\[invoiceId]\page.tsx:9 - default
+\app\(tenant)\billing\manage\error.tsx:10 - default
+\app\(tenant)\billing\manage\loading.tsx:3 - default
+\app\(tenant)\billing\manage\page.tsx:11 - default
+\app\(tenant)\catalog\[wrapId]\loading.tsx:4 - default
+\app\(tenant)\catalog\manage\page.tsx:9 - default
+\app\(tenant)\platform\db\page.tsx:3 - default
+\app\(tenant)\platform\health\page.tsx:3 - default
+\app\(tenant)\platform\jobs\page.tsx:3 - default
+\app\(tenant)\platform\visualizer\page.tsx:3 - default
+\app\(tenant)\platform\webhooks\page.tsx:3 - default
+\app\(tenant)\scheduling\[bookingId]\page.tsx:10 - default
+\app\(tenant)\scheduling\book\loading.tsx:4 - default
+\app\(tenant)\scheduling\book\page.tsx:7 - default
+\app\(tenant)\scheduling\bookings\page.tsx:10 - default
+\app\(tenant)\scheduling\manage\error.tsx:8 - default
+\app\(tenant)\scheduling\manage\loading.tsx:3 - default
+\app\(tenant)\scheduling\manage\page.tsx:11 - default
+\app\(tenant)\scheduling\new\loading.tsx:4 - default
+\app\(tenant)\scheduling\new\page.tsx:7 - default
+\app\(tenant)\settings\account\page.tsx:5 - default
+\app\(tenant)\settings\data\page.tsx:5 - default
+\app\(tenant)\settings\profile\page.tsx:5 - default
+\app\api\health\deep\route.ts:6 - GET
+\app\(tenant)\billing\[invoiceId]\adjust\page.tsx:10 - default
+\app\(tenant)\billing\[invoiceId]\pay\page.tsx:9 - default
+\app\(tenant)\billing\[invoiceId]\refund\page.tsx:10 - default
+\app\(tenant)\billing\manage\[invoiceId]\page.tsx:10 - default
+\app\(tenant)\billing\manage\new\page.tsx:5 - default
+\app\(tenant)\catalog\manage\[wrapId]\loading.tsx:4 - default
+\app\(tenant)\catalog\manage\[wrapId]\page.tsx:13 - default
+\app\(tenant)\catalog\manage\[wrapId]\page.tsx:8 - metadata
+\app\(tenant)\catalog\manage\new\page.tsx:12 - default
+\app\(tenant)\catalog\manage\new\page.tsx:7 - metadata
+\app\(tenant)\scheduling\[bookingId]\edit\page.tsx:10 - default
+\app\(tenant)\scheduling\manage\[bookingId]\page.tsx:11 - default
+\app\(tenant)\scheduling\manage\new\page.tsx:7 - default
+\app\(tenant)\billing\manage\[invoiceId]\edit\page.tsx:9 - default
+\app\(tenant)\scheduling\manage\[bookingId]\edit\page.tsx:11 - default

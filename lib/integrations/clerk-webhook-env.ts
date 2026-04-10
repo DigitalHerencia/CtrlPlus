@@ -1,14 +1,10 @@
 const DEV_ONLY_EVENT_PREFIXES = ['subscription.', 'subscriptionItem.', 'paymentAttempt.']
 
+const CLERK_WEBHOOK_SIGNING_SECRET =
+    process.env.CLERK_WEBHOOK_SIGNING_SECRET ?? process.env.CLERK_WEBHOOK_SECRET ?? null
+
 export function ensureClerkWebhookSigningSecret(): string | null {
-    const signingSecret =
-        process.env.CLERK_WEBHOOK_SIGNING_SECRET ?? process.env.CLERK_WEBHOOK_SECRET ?? null
-
-    if (signingSecret && !process.env.CLERK_WEBHOOK_SIGNING_SECRET) {
-        process.env.CLERK_WEBHOOK_SIGNING_SECRET = signingSecret
-    }
-
-    return signingSecret
+    return CLERK_WEBHOOK_SIGNING_SECRET
 }
 
 export function isClerkSubscriptionSyncEnabled(): boolean {

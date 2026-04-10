@@ -39,14 +39,6 @@ export function WrapGalleryCard({ wrap }: WrapGalleryCardProps) {
                         No display asset
                     </div>
                 )}
-                <div className="absolute inset-x-0 top-0 flex items-start justify-end p-4">
-                    <Badge
-                        variant="secondary"
-                        className="border border-neutral-800 bg-black/70 text-neutral-100"
-                    >
-                        Featured Wrap
-                    </Badge>
-                </div>
             </Link>
 
             <CardHeader className="gap-3 pb-3">

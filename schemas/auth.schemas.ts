@@ -30,6 +30,6 @@ export const upsertUserFromClerkSchema = z
         firstName: z.string().trim().min(1).nullable().optional(),
         lastName: z.string().trim().min(1).nullable().optional(),
         imageUrl: z.url().trim().nullable().optional(),
-        globalRole: z.enum(['owner', 'admin', 'employee', 'customer']).nullable().optional(),
+        globalRole: z.enum(['owner', 'admin', 'customer']).nullable().optional(),
     })
     .strict()

@@ -1,7 +1,6 @@
 import Link from 'next/link'
 
 import { InvoiceCommandPanel } from '@/components/billing/manage/invoice-command-panel'
-import { InvoiceLifecyclePanel } from '@/components/billing/manage/invoice-lifecycle-panel'
 import { InvoiceManagerHeader } from '@/components/billing/manage/invoice-manager-header'
 import { InvoiceManagerStats } from '@/components/billing/manage/invoice-manager-stats'
 import { InvoiceNotificationPanel } from '@/components/billing/manage/invoice-notification-panel'
@@ -9,10 +8,8 @@ import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { getBalance, getInvoices } from '@/lib/fetchers/billing.fetchers'
 import { parseBillingSearchParams } from '@/lib/utils/search-params'
-import { voidInvoice } from '@/lib/actions/billing.actions'
 import type { SearchParamRecord } from '@/types/common.types'
 
-import { InvoiceLifecycleActionsClient } from './invoice-lifecycle-actions.client'
 import { InvoiceManagerTableClient } from './invoice-manager-table.client'
 import { InvoiceManagerToolbarClient } from './invoice-manager-toolbar.client'
 import { InvoiceNotificationControlsClient } from './invoice-notification-controls.client'
@@ -55,16 +52,15 @@ export async function InvoiceManagerPageFeature({ searchParams }: InvoiceManager
                     </Button>
                 </InvoiceCommandPanel>
 
-                <InvoiceLifecyclePanel>
-                    {invoices[0] ? (
-                        <InvoiceLifecycleActionsClient
-                            invoiceId={invoices[0].id}
-                            onVoid={voidInvoice}
-                        />
-                    ) : (
-                        <p className="text-sm text-neutral-400">No invoices available.</p>
-                    )}
-                </InvoiceLifecyclePanel>
+                <WorkspacePageContextCard
+                    title="Lifecycle Actions"
+                    description="Open a specific invoice row before running void, refund, or adjustment actions."
+                >
+                    <p className="text-sm text-neutral-400">
+                        Lifecycle operations are intentionally scoped to the invoice detail page so
+                        they cannot target the wrong record from the manager dashboard.
+                    </p>
+                </WorkspacePageContextCard>
 
                 <InvoiceNotificationPanel>
                     <InvoiceNotificationControlsClient />

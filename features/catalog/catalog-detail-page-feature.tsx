@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 
 import { WrapDetail } from '@/components/catalog/WrapDetail'
-import { getCatalogWrapById, isExampleCatalogWrapId } from '@/lib/fetchers/catalog.fetchers'
+import { getCatalogWrapById } from '@/lib/fetchers/catalog.fetchers'
 import type { CatalogDetailPageFeatureProps, WrapDetailPageParams } from '@/types/catalog.types'
 
 import { CatalogWrapAssetsClient } from './catalog-wrap-assets-client'
@@ -38,7 +38,7 @@ export async function CatalogDetailPageFeature({
     return (
         <div className="space-y-6">
             <WrapDetail wrap={wrap} canManageCatalog={canManageCatalog} />
-            {canManageCatalog && !isExampleCatalogWrapId(wrap.id) ? (
+            {canManageCatalog ? (
                 <CatalogWrapAssetsClient wrap={wrap} />
             ) : null}
         </div>

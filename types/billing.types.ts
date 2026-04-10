@@ -105,8 +105,6 @@ export interface CreateCheckoutSessionInput {
 
 export interface ProcessPaymentInput {
     invoiceId: string
-    paymentMethod?: string
-    amount?: number
 }
 
 export interface ApplyCreditInput {

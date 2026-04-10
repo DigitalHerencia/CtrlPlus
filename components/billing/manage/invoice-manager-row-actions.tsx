@@ -8,12 +8,9 @@ interface InvoiceManagerRowActionsProps {
 
 export function InvoiceManagerRowActions({ invoiceId }: InvoiceManagerRowActionsProps) {
     return (
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end">
             <Button asChild size="sm" variant="outline">
                 <Link href={`/billing/manage/${invoiceId}`}>Open</Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-                <Link href={`/billing/manage/${invoiceId}/edit`}>Edit</Link>
             </Button>
         </div>
     )

@@ -38,10 +38,10 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
                                 width={1600}
                                 height={1200}
                                 sizes="(min-width: 1280px) 58vw, 100vw"
-                                className="h-104 w-full object-cover"
+                                className="h-[26rem] w-full object-cover"
                             />
                         ) : (
-                            <div className="h-104 flex items-center justify-center text-sm text-neutral-500">
+                            <div className="flex h-[26rem] items-center justify-center text-sm text-neutral-500">
                                 No display asset available
                             </div>
                         )}

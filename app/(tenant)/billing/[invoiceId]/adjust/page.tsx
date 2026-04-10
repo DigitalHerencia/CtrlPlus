@@ -1,5 +1,6 @@
 import { InvoiceAdjustPageFeature } from '@/features/billing/invoice-adjust-page-feature'
 import { getSession } from '@/lib/auth/session'
+import { hasCapability } from '@/lib/authz/policy'
 import { redirect } from 'next/navigation'
 
 interface InvoiceAdjustPageProps {
@@ -7,11 +8,16 @@ interface InvoiceAdjustPageProps {
 }
 
 export default async function InvoiceAdjustPage({ params }: InvoiceAdjustPageProps) {
-    const { userId } = await getSession()
-    if (!userId) {
+    const session = await getSession()
+    if (!session.userId) {
         redirect('/sign-in')
     }
 
     const { invoiceId } = await params
+
+    if (!hasCapability(session.authz, 'billing.write.all')) {
+        redirect(`/billing/${invoiceId}`)
+    }
+
     return <InvoiceAdjustPageFeature invoiceId={invoiceId} />
 }
