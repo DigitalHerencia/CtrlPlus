@@ -430,7 +430,7 @@ function buildEventHref(resourceType: string | null, resourceId: string | null):
         case 'Invoice':
             return `/billing/manage/${resourceId}`
         case 'VisualizerPreview':
-            return `/visualizer/previews/${resourceId}`
+            return '/visualizer'
         default:
             return '/admin/audit'
     }

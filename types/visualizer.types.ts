@@ -1,6 +1,45 @@
 import type { SearchParamRecord, Timestamp } from '@/types/common.types'
 import type { PreviewStatus } from '@/lib/constants/statuses'
 
+export type VisualizerVehicleCatalogIndex = Record<string, Record<string, Record<string, string[]>>>
+
+export interface VisualizerHfWrapOption {
+    id: string
+    name: string
+    category: string | null
+    description: string
+    stylePrompt: string
+    promptTemplate: string
+}
+
+export interface VisualizerHfSelection {
+    make: string
+    model: string
+    year: string
+    trim: string
+    wrapName: string
+}
+
+export interface VisualizerHfCatalogData {
+    makes: string[]
+    vehicleIndex: VisualizerVehicleCatalogIndex
+    wraps: VisualizerHfWrapOption[]
+    initialSelection: VisualizerHfSelection
+}
+
+export interface GenerateVisualizerHfPreviewInput {
+    make: string
+    model: string
+    year: string
+    trim: string
+    wrapName: string
+}
+
+export interface GenerateVisualizerHfPreviewResult {
+    imageUrl: string
+    promptUsed: string
+}
+
 export interface VisualizerPreviewDTO {
     id: string
     wrapId: string
@@ -21,14 +60,6 @@ export interface VisualizerPreviewDTO {
 }
 
 export type SerializedVisualizerPreview = VisualizerPreviewDTO
-
-export type RegenerateVisualizerPreviewInput = {
-    previewId: string
-}
-
-export type ProcessVisualizerPreviewInput = {
-    previewId: string
-}
 
 export interface VisualizerSearchParamsResult {
     requestedWrapId: string | null

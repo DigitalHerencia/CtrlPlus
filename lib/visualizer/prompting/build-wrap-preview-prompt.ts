@@ -14,6 +14,34 @@ export interface WrapPreviewPromptResult {
     promptVersion: string
 }
 
+const DEFAULT_CLIP_WORD_BUDGET = 55
+
+function parseClipWordBudget(): number {
+    const raw = process.env.HF_CLIP_PROMPT_WORD_BUDGET
+    const parsed = Number(raw)
+
+    if (!Number.isFinite(parsed)) {
+        return DEFAULT_CLIP_WORD_BUDGET
+    }
+
+    const normalized = Math.trunc(parsed)
+    if (normalized < 20 || normalized > 120) {
+        return DEFAULT_CLIP_WORD_BUDGET
+    }
+
+    return normalized
+}
+
+function clampPromptWords(value: string, maxWords = parseClipWordBudget()): string {
+    const words = value.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean)
+
+    if (words.length <= maxWords) {
+        return words.join(' ')
+    }
+
+    return `${words.slice(0, maxWords).join(' ')}.`
+}
+
 function applyTemplate(template: string, input: BuildWrapPreviewPromptInput): string {
     return template
         .replaceAll('{{wrap_name}}', input.wrapName)
@@ -34,11 +62,10 @@ function hasBrokenTemplateArtifacts(template: string): boolean {
 
 function buildDefaultPrompt(input: BuildWrapPreviewPromptInput): string {
     return [
-        'The first input image is the source vehicle photo and the remaining images are wrap reference examples.',
-        'Apply the reference wrap design to the exact same truck in the source photo.',
-        'Only change the painted exterior body panels and wrap graphics.',
-        'Preserve the exact same truck identity, body shape, grille, lights, wheels, windows, mirrors, camera angle, background, driveway, reflections, shadows, and time of day.',
-        'Match the reference wrap color palette, flame pattern, brand text treatment, and panel layout as closely as possible while keeping the source scene photorealistic.',
+        'Use image 1 as the source truck and the other images as wrap references.',
+        'Apply the wrap only to exterior body panels.',
+        'Preserve truck identity, body shape, wheels, windows, camera angle, lighting, and background.',
+        'Match reference colors, flame style, brand text look, and panel layout.',
         input.wrapDescription ? `Wrap details: ${input.wrapDescription}` : null,
         `Reference image count: ${input.referenceImageCount}.`,
     ]
@@ -47,7 +74,7 @@ function buildDefaultPrompt(input: BuildWrapPreviewPromptInput): string {
 }
 
 const DEFAULT_NEGATIVE_PROMPT =
-    'Do not change the vehicle model, body shape, wheels, windows, mirrors, reflections, shadows, or scene background. Do not add people, extra vehicles, text artifacts, duplicated body panels, distorted wheels, melted surfaces, blurry output, or incorrect perspective.'
+    'Do not alter vehicle identity, body shape, wheels, windows, reflections, lighting, or background. No extra people, vehicles, warped geometry, duplicate panels, blur, or unreadable text artifacts.'
 
 export function buildWrapPreviewPrompt(
     input: BuildWrapPreviewPromptInput
@@ -58,15 +85,18 @@ export function buildWrapPreviewPrompt(
             ? applyTemplate(trimmedTemplate, input)
             : buildDefaultPrompt(input)
 
-    const negativePrompt = input.aiNegativePrompt?.trim() || DEFAULT_NEGATIVE_PROMPT
+    const negativePrompt = clampPromptWords(
+        input.aiNegativePrompt?.trim() || DEFAULT_NEGATIVE_PROMPT
+    )
+    const prompt = clampPromptWords(basePrompt)
 
     const promptVersion = crypto
         .createHash('sha256')
-        .update(`${basePrompt}\n---\n${negativePrompt}`)
+        .update(`${prompt}\n---\n${negativePrompt}`)
         .digest('hex')
 
     return {
-        prompt: basePrompt,
+        prompt,
         negativePrompt,
         promptVersion,
     }

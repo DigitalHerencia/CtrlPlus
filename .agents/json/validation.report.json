@@ -1,8 +1,14 @@
 {
   "artifact_type": "validation-report",
   "version": "1.0.0",
-  "updated_at": "2026-04-07",
+  "updated_at": "2026-04-09",
   "checks": [
+    {
+      "id": "VAL-024",
+      "name": "visualizer-hf-space-next-image-host",
+      "status": "pass",
+      "details": "Replaced the stale `**.public.blob.vercel-storage.com` remote image pattern with the actual `cannatech-ctrlplus.hf.space` host and `/gradio_api/**` pathname used by the visualizer Hugging Face Space output URLs; `pnpm build` then passed successfully."
+    },
     {
       "id": "VAL-001",
       "name": "catalog-visualizer-contract-alignment",

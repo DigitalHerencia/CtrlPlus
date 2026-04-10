@@ -37,6 +37,7 @@ describe('visualizer allowed host configuration', () => {
     })
 
     it('derives preview config from the canonical client env surface', async () => {
+        delete process.env.HF_API_KEY
         process.env.HUGGINGFACE_API_TOKEN = 'hf_test_token'
         process.env.HUGGINGFACE_VISUALIZER_PREVIEW_MODEL = 'legacy-preview-model'
         process.env.HF_PREVIEW_STRATEGY = 'space_inpaint'

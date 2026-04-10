@@ -1,8 +1,19 @@
 {
   "artifact_type": "execution-ledger",
   "version": "1.0.0",
-  "updated_at": "2026-04-07",
+  "updated_at": "2026-04-09",
   "entries": [
+    {
+      "id": "LEDGER-013",
+      "timestamp": "2026-04-09T00:00:00Z",
+      "type": "fix",
+      "summary": "Replaced the unused Vercel Blob next/image remote host entry with the actual Hugging Face Space hf.space delivery host used by the visualizer configurator, and revalidated the app with a successful production build.",
+      "files": [
+        "next.config.ts",
+        ".agents/json/execution-ledger.json",
+        ".agents/json/validation.report.json"
+      ]
+    },
     {
       "id": "LEDGER-012",
       "timestamp": "2026-04-07T17:30:00Z",
