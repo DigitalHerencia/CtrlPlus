@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of export-format-fields.tsx
+ *
+ * @description TODO: longer description for export-format-fields.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 
@@ -6,6 +13,10 @@ interface ExportFormatFieldsProps {
     onFormatChange: (value: 'json' | 'csv') => void
 }
 
+/**
+ * ExportFormatFields — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function ExportFormatFields({ format, onFormatChange }: ExportFormatFieldsProps) {
     return (
         <div className="space-y-2">

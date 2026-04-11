@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Components — TODO: brief module description.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 
 import { CheckCircle2, LoaderCircle } from 'lucide-react'
 import { type FormEventHandler } from 'react'
@@ -28,6 +33,10 @@ interface WebsiteSettingsFormProps {
     }
 }
 
+/**
+ * WebsiteSettingsForm — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function WebsiteSettingsForm({
     values,
     errors,

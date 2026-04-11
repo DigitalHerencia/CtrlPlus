@@ -1,3 +1,10 @@
+/**
+ * @introduction Features — TODO: short one-line summary of wrap-manager-detail-page-feature.tsx
+ *
+ * @description TODO: longer description for wrap-manager-detail-page-feature.tsx. Keep it short — one or two sentences.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 import Link from 'next/link'
 
 import { CatalogManagerHeader } from '@/components/catalog/manage/catalog-manager-header'
@@ -7,6 +14,9 @@ import { getCatalogWrapById } from '@/lib/fetchers/catalog.fetchers'
 import { WrapManagerDetailPageClient } from './wrap-manager-detail-page.client'
 import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
 
+/**
+ * WrapManagerDetailPageProps — TODO: brief description of this type.
+ */
 export interface WrapManagerDetailPageProps {
     id: string
 }

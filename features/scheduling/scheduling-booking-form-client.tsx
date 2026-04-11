@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import Image from 'next/image'
 import Link from 'next/link'
@@ -41,6 +46,10 @@ function formatPrice(priceInCents: number): string {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(priceInCents / 100)
 }
 
+/**
+ * SchedulingBookingFormClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function SchedulingBookingFormClient({
     availabilityWindows,
     draft,

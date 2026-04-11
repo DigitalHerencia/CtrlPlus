@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of admin-moderation-queue.tsx
+ *
+ * @description TODO: longer description for admin-moderation-queue.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import type { FlaggedItemDTO } from '@/types/admin.types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { ReactNode } from 'react'
@@ -7,6 +14,10 @@ interface AdminModerationQueueProps {
     actionsSlot?: ReactNode
 }
 
+/**
+ * AdminModerationQueue — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function AdminModerationQueue({ items, actionsSlot }: AdminModerationQueueProps) {
     return (
         <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">

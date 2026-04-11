@@ -1,3 +1,10 @@
+/**
+ * @introduction Features — TODO: short one-line summary of catalog-browse-page-feature.tsx
+ *
+ * @description TODO: longer description for catalog-browse-page-feature.tsx. Keep it short — one or two sentences.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 import { Suspense } from 'react'
 
 import { CatalogPageHeader } from '@/components/catalog/catalog-page-header'
@@ -24,6 +31,10 @@ function CatalogResultsRegionSkeleton() {
     )
 }
 
+/**
+ * CatalogBrowsePageFeature — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function CatalogBrowsePageFeature({
     filters,
     canManageCatalog,

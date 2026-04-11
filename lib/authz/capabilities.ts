@@ -1,5 +1,15 @@
+/**
+ * @introduction Authz — TODO: short one-line summary of capabilities.ts
+ *
+ * @description TODO: longer description for capabilities.ts. Keep it short — one or two sentences.
+ * Domain: authz
+ * Public: TODO (yes/no)
+ */
 import { type Capability, type GlobalRole } from '@/types/auth.types'
 
+/**
+ * ROLE_CAPABILITIES — TODO: brief description.
+ */
 export const ROLE_CAPABILITIES: Record<GlobalRole, Set<Capability>> = {
     customer: new Set<Capability>([
         'catalog.read',

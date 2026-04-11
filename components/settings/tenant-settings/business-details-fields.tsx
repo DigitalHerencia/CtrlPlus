@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of business-details-fields.tsx
+ *
+ * @description TODO: longer description for business-details-fields.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -10,6 +17,10 @@ interface BusinessDetailsFieldsProps {
     onTaxIdChange: (value: string) => void
 }
 
+/**
+ * BusinessDetailsFields — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function BusinessDetailsFields({
     businessName,
     address,

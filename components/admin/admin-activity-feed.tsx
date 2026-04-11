@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of admin-activity-feed.tsx
+ *
+ * @description TODO: longer description for admin-activity-feed.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import Link from 'next/link'
 import type { AdminActivityEventDTO } from '@/types/admin.types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -6,6 +13,10 @@ interface AdminActivityFeedProps {
     events: AdminActivityEventDTO[]
 }
 
+/**
+ * AdminActivityFeed — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function AdminActivityFeed({ events }: AdminActivityFeedProps) {
     return (
         <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">

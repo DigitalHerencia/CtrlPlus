@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of platform-failure-table.tsx
+ *
+ * @description TODO: longer description for platform-failure-table.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Badge } from '@/components/ui/badge'
 import {
     Table,
@@ -14,6 +21,10 @@ interface PlatformFailureTableProps {
     failures: WebhookFailureDTO[]
 }
 
+/**
+ * PlatformFailureTable — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function PlatformFailureTable({ failures }: PlatformFailureTableProps) {
     return (
         <Table>

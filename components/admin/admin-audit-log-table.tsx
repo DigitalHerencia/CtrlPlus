@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of admin-audit-log-table.tsx
+ *
+ * @description TODO: longer description for admin-audit-log-table.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import type { AuditLogRowDTO } from '@/types/admin.types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -5,6 +12,10 @@ interface AdminAuditLogTableProps {
     rows: AuditLogRowDTO[]
 }
 
+/**
+ * AdminAuditLogTable — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function AdminAuditLogTable({ rows }: AdminAuditLogTableProps) {
     return (
         <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">

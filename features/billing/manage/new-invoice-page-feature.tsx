@@ -1,3 +1,10 @@
+/**
+ * @introduction Features — TODO: short one-line summary of new-invoice-page-feature.tsx
+ *
+ * @description TODO: longer description for new-invoice-page-feature.tsx. Keep it short — one or two sentences.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 import Link from 'next/link'
 
 import { WorkspacePageContextCard, WorkspacePageIntro } from '@/components/shared/tenant-elements'
@@ -8,6 +15,10 @@ interface NewInvoicePageFeatureProps {
     initialBookingId?: string
 }
 
+/**
+ * NewInvoicePageFeature — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function NewInvoicePageFeature({ initialBookingId = '' }: NewInvoicePageFeatureProps) {
     return (
         <div className="space-y-6">

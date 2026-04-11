@@ -1,3 +1,10 @@
+/**
+ * @introduction Types — TODO: short one-line summary of scheduling.types.ts
+ *
+ * @description TODO: longer description for scheduling.types.ts. Keep it short — one or two sentences.
+ * Domain: types
+ * Public: TODO (yes/no)
+ */
 import type {
     BookingStatus,
     BookingStatusValue,
@@ -8,6 +15,15 @@ import type { Timestamp } from './common.types'
 /**
  * Scheduling domain — API-facing DTOs
  * Per repository canonical rules: DTO timestamps are ISO strings (Timestamp)
+ */
+/**
+ * BookingDTO — TODO: brief description of this type.
+ */
+/**
+ * BookingDTO — TODO: brief description of this type.
+ */
+/**
+ * BookingDTO — TODO: brief description of this type.
  */
 export interface BookingDTO {
     id: string
@@ -41,6 +57,15 @@ export interface BookingDTO {
     updatedAt: Timestamp
 }
 
+/**
+ * BookingDraftDTO — TODO: brief description of this type.
+ */
+/**
+ * BookingDraftDTO — TODO: brief description of this type.
+ */
+/**
+ * BookingDraftDTO — TODO: brief description of this type.
+ */
 export interface BookingDraftDTO {
     id: string
     customerId: string
@@ -58,6 +83,15 @@ export interface BookingDraftDTO {
     updatedAt: Timestamp
 }
 
+/**
+ * BookingTimelineEventDTO — TODO: brief description of this type.
+ */
+/**
+ * BookingTimelineEventDTO — TODO: brief description of this type.
+ */
+/**
+ * BookingTimelineEventDTO — TODO: brief description of this type.
+ */
 export interface BookingTimelineEventDTO {
     id: string
     type: string
@@ -67,6 +101,15 @@ export interface BookingTimelineEventDTO {
     notes: string | null
 }
 
+/**
+ * BookingDetailViewDTO — TODO: brief description of this type.
+ */
+/**
+ * BookingDetailViewDTO — TODO: brief description of this type.
+ */
+/**
+ * BookingDetailViewDTO — TODO: brief description of this type.
+ */
 export interface BookingDetailViewDTO {
     id: string
     wrapId: string | null
@@ -97,6 +140,15 @@ export interface BookingDetailViewDTO {
     updatedAt: Timestamp
 }
 
+/**
+ * BookingManagerRowDTO — TODO: brief description of this type.
+ */
+/**
+ * BookingManagerRowDTO — TODO: brief description of this type.
+ */
+/**
+ * BookingManagerRowDTO — TODO: brief description of this type.
+ */
 export interface BookingManagerRowDTO {
     id: string
     wrapId: string | null
@@ -111,8 +163,26 @@ export interface BookingManagerRowDTO {
     updatedAt: Timestamp
 }
 
+/**
+ * CreatedBookingDTO — TODO: brief description of this type.
+ */
+/**
+ * CreatedBookingDTO — TODO: brief description of this type.
+ */
+/**
+ * CreatedBookingDTO — TODO: brief description of this type.
+ */
 export type CreatedBookingDTO = BookingDTO
 
+/**
+ * BookingListResult — TODO: brief description of this type.
+ */
+/**
+ * BookingListResult — TODO: brief description of this type.
+ */
+/**
+ * BookingListResult — TODO: brief description of this type.
+ */
 export interface BookingListResult {
     items: BookingDTO[]
     total: number
@@ -121,6 +191,15 @@ export interface BookingListResult {
     totalPages: number
 }
 
+/**
+ * BookingListParams — TODO: brief description of this type.
+ */
+/**
+ * BookingListParams — TODO: brief description of this type.
+ */
+/**
+ * BookingListParams — TODO: brief description of this type.
+ */
 export interface BookingListParams {
     page: number
     pageSize: number
@@ -129,6 +208,15 @@ export interface BookingListParams {
     toDate?: Timestamp
 }
 
+/**
+ * AvailabilityRuleDTO — TODO: brief description of this type.
+ */
+/**
+ * AvailabilityRuleDTO — TODO: brief description of this type.
+ */
+/**
+ * AvailabilityRuleDTO — TODO: brief description of this type.
+ */
 export interface AvailabilityRuleDTO {
     id: string
     dayOfWeek: number
@@ -139,8 +227,26 @@ export interface AvailabilityRuleDTO {
     updatedAt: Timestamp
 }
 
+/**
+ * AvailabilityWindowDTO — TODO: brief description of this type.
+ */
+/**
+ * AvailabilityWindowDTO — TODO: brief description of this type.
+ */
+/**
+ * AvailabilityWindowDTO — TODO: brief description of this type.
+ */
 export type AvailabilityWindowDTO = AvailabilityRuleDTO
 
+/**
+ * AvailabilitySlotDTO — TODO: brief description of this type.
+ */
+/**
+ * AvailabilitySlotDTO — TODO: brief description of this type.
+ */
+/**
+ * AvailabilitySlotDTO — TODO: brief description of this type.
+ */
 export interface AvailabilitySlotDTO {
     start: Timestamp
     end: Timestamp
@@ -149,6 +255,15 @@ export interface AvailabilitySlotDTO {
     isAvailable: boolean
 }
 
+/**
+ * AvailabilityListResult — TODO: brief description of this type.
+ */
+/**
+ * AvailabilityListResult — TODO: brief description of this type.
+ */
+/**
+ * AvailabilityListResult — TODO: brief description of this type.
+ */
 export interface AvailabilityListResult {
     items: AvailabilityRuleDTO[]
     total: number
@@ -157,18 +272,45 @@ export interface AvailabilityListResult {
     totalPages: number
 }
 
+/**
+ * AvailabilityListParams — TODO: brief description of this type.
+ */
+/**
+ * AvailabilityListParams — TODO: brief description of this type.
+ */
+/**
+ * AvailabilityListParams — TODO: brief description of this type.
+ */
 export interface AvailabilityListParams {
     page: number
     pageSize: number
     dayOfWeek?: number
 }
 
+/**
+ * ReserveSlotInput — TODO: brief description of this type.
+ */
+/**
+ * ReserveSlotInput — TODO: brief description of this type.
+ */
+/**
+ * ReserveSlotInput — TODO: brief description of this type.
+ */
 export interface ReserveSlotInput {
     wrapId: string
     startTime: Timestamp
     endTime: Timestamp
 }
 
+/**
+ * CreateBookingInput — TODO: brief description of this type.
+ */
+/**
+ * CreateBookingInput — TODO: brief description of this type.
+ */
+/**
+ * CreateBookingInput — TODO: brief description of this type.
+ */
 export interface CreateBookingInput extends ReserveSlotInput {
     customerName: string
     customerEmail: string
@@ -189,6 +331,15 @@ export interface CreateBookingInput extends ReserveSlotInput {
     notes?: string | null
 }
 
+/**
+ * ReservedBookingDTO — TODO: brief description of this type.
+ */
+/**
+ * ReservedBookingDTO — TODO: brief description of this type.
+ */
+/**
+ * ReservedBookingDTO — TODO: brief description of this type.
+ */
 export interface ReservedBookingDTO {
     id: string
     wrapId: string
@@ -201,15 +352,42 @@ export interface ReservedBookingDTO {
     displayStatus: 'reserved'
 }
 
+/**
+ * UpdateBookingInput — TODO: brief description of this type.
+ */
+/**
+ * UpdateBookingInput — TODO: brief description of this type.
+ */
+/**
+ * UpdateBookingInput — TODO: brief description of this type.
+ */
 export interface UpdateBookingInput {
     startTime: Timestamp
     endTime: Timestamp
 }
 
+/**
+ * CancelBookingInput — TODO: brief description of this type.
+ */
+/**
+ * CancelBookingInput — TODO: brief description of this type.
+ */
+/**
+ * CancelBookingInput — TODO: brief description of this type.
+ */
 export interface CancelBookingInput {
     reason: string
 }
 
+/**
+ * BookingActionDTO — TODO: brief description of this type.
+ */
+/**
+ * BookingActionDTO — TODO: brief description of this type.
+ */
+/**
+ * BookingActionDTO — TODO: brief description of this type.
+ */
 export interface BookingActionDTO {
     id: string
     customerId: string

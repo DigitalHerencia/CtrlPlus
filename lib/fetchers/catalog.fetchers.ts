@@ -1,3 +1,10 @@
+/**
+ * @introduction Fetchers — TODO: short one-line summary of catalog.fetchers.ts
+ *
+ * @description TODO: longer description for catalog.fetchers.ts. Keep it short — one or two sentences.
+ * Domain: fetchers
+ * Public: TODO (yes/no)
+ */
 import 'server-only'
 import { Prisma } from '@prisma/client'
 
@@ -27,11 +34,29 @@ import type {
 
 import { WrapImageKind } from '../constants/statuses'
 
+/**
+ * WrapVisibilityScope — TODO: brief description of this type.
+ */
+/**
+ * WrapVisibilityScope — TODO: brief description of this type.
+ */
+/**
+ * WrapVisibilityScope — TODO: brief description of this type.
+ */
 export interface WrapVisibilityScope {
     includeHidden?: boolean
     requireVisualizerReady?: boolean
 }
 
+/**
+ * WrapRecord — TODO: brief description of this type.
+ */
+/**
+ * WrapRecord — TODO: brief description of this type.
+ */
+/**
+ * WrapRecord — TODO: brief description of this type.
+ */
 export type WrapRecord = Prisma.WrapGetPayload<{
     select: typeof wrapDTOFields
 }>

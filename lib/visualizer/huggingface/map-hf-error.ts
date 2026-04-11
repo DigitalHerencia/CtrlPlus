@@ -1,3 +1,13 @@
+/**
+ * Error wrapper specific to Hugging Face generation-related failures.
+ * Using a dedicated error class makes mapping and handling clearer in callers.
+ */
+/**
+ * HuggingFaceGenerationError — TODO: brief description of this class.
+ */
+/**
+ * HuggingFaceGenerationError — TODO: brief description of this class.
+ */
 export class HuggingFaceGenerationError extends Error {
     constructor(message: string) {
         super(message)
@@ -5,6 +15,18 @@ export class HuggingFaceGenerationError extends Error {
     }
 }
 
+/**
+ * Map an unknown error into a HuggingFaceGenerationError with a compact
+ * machine-readable prefix to aid triage and metrics.
+ */
+/**
+ * mapHfError — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * mapHfError — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function mapHfError(error: unknown): HuggingFaceGenerationError {
     if (error instanceof HuggingFaceGenerationError) {
         return error

@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of InvoiceStatusBadge.tsx
+ *
+ * @description TODO: longer description for InvoiceStatusBadge.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils/cn'
 import { type InvoiceStatus } from '@/lib/constants/statuses'
@@ -37,6 +44,10 @@ const STATUS_CONFIG: Record<
     },
 }
 
+/**
+ * InvoiceStatusBadge — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function InvoiceStatusBadge({ status }: InvoiceStatusBadgeProps) {
     const config = STATUS_CONFIG[status] ?? { label: status, variant: 'outline' as const }
     return (

@@ -144,3 +144,11 @@ Quick take:
 ## Contributing
 
 See `CONTRIBUTING.md` for contribution workflow, validation expectations, and pull request guidance.
+
+## Developer: Dependency Graph & TSDoc
+
+See `docs/DEPENDENCYGRAPH.md` for step-by-step guidance on generating
+TSDoc comments (using `cschlosser.doxdocgen`), running the VS Code
+Dependency Graph extension (`sz-p.dependencygraph`), and using the
+helper script `scripts/tsdoc-suggester.js` to suggest conservative
+TSDoc templates across the codebase.

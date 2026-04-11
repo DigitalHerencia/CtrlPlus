@@ -1,3 +1,10 @@
+/**
+ * @introduction Integrations — TODO: short one-line summary of notifications.ts
+ *
+ * @description TODO: longer description for notifications.ts. Keep it short — one or two sentences.
+ * Domain: integrations
+ * Public: TODO (yes/no)
+ */
 import 'server-only'
 
 import { prisma } from '@/lib/db/prisma'
@@ -5,12 +12,24 @@ import { prisma } from '@/lib/db/prisma'
 const RESEND_API_URL = 'https://api.resend.com/emails'
 const DEFAULT_TENANT_ID = 'default-tenant'
 
+/**
+ * SendNotificationEmailInput — TODO: brief description of this type.
+ */
+/**
+ * SendNotificationEmailInput — TODO: brief description of this type.
+ */
 export interface SendNotificationEmailInput {
     to: string
     subject: string
     text: string
 }
 
+/**
+ * SendNotificationEmailResult — TODO: brief description of this type.
+ */
+/**
+ * SendNotificationEmailResult — TODO: brief description of this type.
+ */
 export interface SendNotificationEmailResult {
     delivered: boolean
     skipped: boolean

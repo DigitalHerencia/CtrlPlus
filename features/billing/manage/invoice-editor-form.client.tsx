@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import { useTransition } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -20,6 +25,10 @@ interface InvoiceEditorFormClientProps {
     onSubmitInvoice?: (input: { bookingId: string }) => Promise<unknown>
 }
 
+/**
+ * InvoiceEditorFormClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function InvoiceEditorFormClient({
     initialBookingId = '',
     submitLabel = 'Create Invoice',

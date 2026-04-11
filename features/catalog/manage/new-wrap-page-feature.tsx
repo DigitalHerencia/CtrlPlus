@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
@@ -29,6 +34,10 @@ function parsePriceInput(value: number): number {
     return Math.round(value * 100)
 }
 
+/**
+ * NewWrapPageFeature — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function NewWrapPageFeature() {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()

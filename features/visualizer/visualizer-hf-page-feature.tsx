@@ -3,10 +3,14 @@ import { VisualizerHfConfiguratorClient } from '@/components/visualizer/visualiz
 
 interface VisualizerHfPageFeatureProps {
     requestedWrapId: string | null
+    canViewPrompt: boolean
 }
 
-export async function VisualizerHfPageFeature({ requestedWrapId }: VisualizerHfPageFeatureProps) {
+export async function VisualizerHfPageFeature({
+    requestedWrapId,
+    canViewPrompt,
+}: VisualizerHfPageFeatureProps) {
     const catalog = await getVisualizerHfCatalogData(requestedWrapId)
 
-    return <VisualizerHfConfiguratorClient catalog={catalog} />
+    return <VisualizerHfConfiguratorClient catalog={catalog} canViewPrompt={canViewPrompt} />
 }

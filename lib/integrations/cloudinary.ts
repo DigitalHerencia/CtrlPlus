@@ -12,12 +12,24 @@
 import { createHash } from 'crypto'
 import type { DeliveryType, ResourceType } from 'cloudinary'
 
+/**
+ * CloudinaryCredentials — TODO: brief description of this type.
+ */
+/**
+ * CloudinaryCredentials — TODO: brief description of this type.
+ */
 export interface CloudinaryCredentials {
     cloudName: string
     apiKey: string
     apiSecret: string
 }
 
+/**
+ * CloudinaryStoredAsset — TODO: brief description of this type.
+ */
+/**
+ * CloudinaryStoredAsset — TODO: brief description of this type.
+ */
 export interface CloudinaryStoredAsset {
     secureUrl: string | null
     assetId: string | null
@@ -34,7 +46,19 @@ export interface CloudinaryStoredAsset {
     originalFileName: string | null
 }
 
+/**
+ * CloudinaryAssetVariant — TODO: brief description of this type.
+ */
+/**
+ * CloudinaryAssetVariant — TODO: brief description of this type.
+ */
 export type CloudinaryAssetVariant = 'thumbnail' | 'detail' | 'download'
+/**
+ * CloudinaryDeliveryVariant — TODO: brief description of this type.
+ */
+/**
+ * CloudinaryDeliveryVariant — TODO: brief description of this type.
+ */
 export type CloudinaryDeliveryVariant = 'thumbnail' | 'card' | 'detail'
 type CloudinaryRuntime = (typeof import('cloudinary'))['v2']
 
@@ -74,6 +98,14 @@ function parseCloudinaryUrl(value: string): {
     }
 }
 
+/**
+ * getCloudinaryCredentials — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getCloudinaryCredentials — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getCloudinaryCredentials(): CloudinaryCredentials | null {
     const parsedCloudinaryUrl = parseCloudinaryUrl(process.env.CLOUDINARY_URL?.trim() ?? '')
 
@@ -124,6 +156,14 @@ export async function getConfiguredCloudinary() {
     return cloudinaryRuntime
 }
 
+/**
+ * buildCloudinarySignature — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * buildCloudinarySignature — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function buildCloudinarySignature(
     payload: Record<string, string>,
     apiSecret: string
@@ -136,6 +176,14 @@ export function buildCloudinarySignature(
     return createHash('sha1').update(`${signingString}${apiSecret}`).digest('hex')
 }
 
+/**
+ * normalizeCloudinaryUploadResponse — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * normalizeCloudinaryUploadResponse — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function normalizeCloudinaryUploadResponse(payload: {
     secure_url?: string
     asset_id?: string
@@ -185,12 +233,28 @@ const PUBLIC_TRANSFORMATION_BY_VARIANT: Record<CloudinaryDeliveryVariant, string
     detail: 'f_auto,q_auto,c_limit,w_1600,h_1200',
 }
 
+/**
+ * getCloudinaryPublicTransformation — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getCloudinaryPublicTransformation — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getCloudinaryPublicTransformation(
     variant: CloudinaryDeliveryVariant
 ): string {
     return PUBLIC_TRANSFORMATION_BY_VARIANT[variant]
 }
 
+/**
+ * buildCloudinaryPublicDeliveryUrl — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * buildCloudinaryPublicDeliveryUrl — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function buildCloudinaryPublicDeliveryUrl(
     asset: Pick<
         CloudinaryStoredAsset,
@@ -235,6 +299,14 @@ export async function buildCloudinaryDeliveryUrl(
     })
 }
 
+/**
+ * extractCloudinaryPublicId — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * extractCloudinaryPublicId — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function extractCloudinaryPublicId(url: string): string | null {
     try {
         const parsed = new URL(url)

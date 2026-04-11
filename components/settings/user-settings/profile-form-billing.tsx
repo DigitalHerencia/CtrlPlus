@@ -1,0 +1,115 @@
+'use client'
+/**
+ * Components — TODO: brief module description.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
+
+import { Input } from '@/components/ui/input'
+import { FormField } from './form-field'
+import { ProfileFormGroup } from './profile-form-group'
+
+interface ProfileFormBillingProps {
+    billingAddressLine1: string
+    billingAddressLine2: string
+    billingCity: string
+    billingState: string
+    billingPostalCode: string
+    billingCountry: string
+    onAddressLine1Change: (value: string) => void
+    onAddressLine2Change: (value: string) => void
+    onCityChange: (value: string) => void
+    onStateChange: (value: string) => void
+    onPostalCodeChange: (value: string) => void
+    onCountryChange: (value: string) => void
+}
+
+/**
+ * ProfileFormBilling — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+export function ProfileFormBilling({
+    billingAddressLine1,
+    billingAddressLine2,
+    billingCity,
+    billingState,
+    billingPostalCode,
+    billingCountry,
+    onAddressLine1Change,
+    onAddressLine2Change,
+    onCityChange,
+    onStateChange,
+    onPostalCodeChange,
+    onCountryChange,
+}: ProfileFormBillingProps) {
+    return (
+        <ProfileFormGroup
+            title="Billing Address"
+            description="Used for invoicing and payment correspondence"
+        >
+            <FormField label="Address Line 1">
+                <Input
+                    id="billing-address-1"
+                    value={billingAddressLine1}
+                    onChange={(e) => onAddressLine1Change(e.target.value)}
+                    placeholder="123 Main Street"
+                    className="bg-neutral-800 text-neutral-100 placeholder:text-neutral-500"
+                />
+            </FormField>
+
+            <FormField label="Address Line 2">
+                <Input
+                    id="billing-address-2"
+                    value={billingAddressLine2}
+                    onChange={(e) => onAddressLine2Change(e.target.value)}
+                    placeholder="Suite 200 (optional)"
+                    className="bg-neutral-800 text-neutral-100 placeholder:text-neutral-500"
+                />
+            </FormField>
+
+            <div className="grid grid-cols-2 gap-4">
+                <FormField label="City">
+                    <Input
+                        id="billing-city"
+                        value={billingCity}
+                        onChange={(e) => onCityChange(e.target.value)}
+                        placeholder="Denver"
+                        className="bg-neutral-800 text-neutral-100 placeholder:text-neutral-500"
+                    />
+                </FormField>
+
+                <FormField label="State">
+                    <Input
+                        id="billing-state"
+                        value={billingState}
+                        onChange={(e) => onStateChange(e.target.value)}
+                        placeholder="CO"
+                        className="bg-neutral-800 text-neutral-100 placeholder:text-neutral-500"
+                    />
+                </FormField>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <FormField label="Postal Code">
+                    <Input
+                        id="billing-postal"
+                        value={billingPostalCode}
+                        onChange={(e) => onPostalCodeChange(e.target.value)}
+                        placeholder="80202"
+                        className="bg-neutral-800 text-neutral-100 placeholder:text-neutral-500"
+                    />
+                </FormField>
+
+                <FormField label="Country">
+                    <Input
+                        id="billing-country"
+                        value={billingCountry}
+                        onChange={(e) => onCountryChange(e.target.value)}
+                        placeholder="US"
+                        className="bg-neutral-800 text-neutral-100 placeholder:text-neutral-500"
+                    />
+                </FormField>
+            </div>
+        </ProfileFormGroup>
+    )
+}

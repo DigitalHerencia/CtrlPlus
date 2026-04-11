@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of invoice-command-panel.tsx
+ *
+ * @description TODO: longer description for invoice-command-panel.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { type ReactNode } from 'react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -6,6 +13,10 @@ interface InvoiceCommandPanelProps {
     children: ReactNode
 }
 
+/**
+ * InvoiceCommandPanel — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function InvoiceCommandPanel({ children }: InvoiceCommandPanelProps) {
     return (
         <Card className="border-neutral-800 bg-neutral-900">

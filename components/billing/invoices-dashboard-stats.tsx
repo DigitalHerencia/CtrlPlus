@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of invoices-dashboard-stats.tsx
+ *
+ * @description TODO: longer description for invoices-dashboard-stats.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface InvoicesDashboardStatsProps {
@@ -22,6 +29,10 @@ function StatCard({ label, value }: { label: string; value: string | number }) {
     )
 }
 
+/**
+ * InvoicesDashboardStats — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function InvoicesDashboardStats({
     totalInvoices,
     outstandingAmount,

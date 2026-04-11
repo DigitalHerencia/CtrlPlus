@@ -1,3 +1,10 @@
+/**
+ * @introduction Auth — TODO: short one-line summary of identity.ts
+ *
+ * @description TODO: longer description for identity.ts. Keep it short — one or two sentences.
+ * Domain: auth
+ * Public: TODO (yes/no)
+ */
 import 'server-only'
 import { type GlobalRole } from '@/types/auth.types'
 import { prisma } from '@/lib/db/prisma'
@@ -7,10 +14,18 @@ function readOptionalEnv(name: 'STORE_OWNER_CLERK_USER_ID' | 'PLATFORM_DEV_CLERK
     return value && value.length > 0 ? value : null
 }
 
+/**
+ * getStoreOwnerClerkUserId — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getStoreOwnerClerkUserId(): string | null {
     return readOptionalEnv('STORE_OWNER_CLERK_USER_ID')
 }
 
+/**
+ * getPlatformDevClerkUserId — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getPlatformDevClerkUserId(): string | null {
     return readOptionalEnv('PLATFORM_DEV_CLERK_USER_ID')
 }
@@ -19,6 +34,10 @@ function isGlobalRole(value: string | null | undefined): value is GlobalRole {
     return value === 'customer' || value === 'owner' || value === 'admin'
 }
 
+/**
+ * resolveGlobalRoleOverrideForClerkUserId — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function resolveGlobalRoleOverrideForClerkUserId(clerkUserId: string): GlobalRole | null {
     const platformDevClerkUserId = getPlatformDevClerkUserId()
     if (platformDevClerkUserId && clerkUserId === platformDevClerkUserId) {

@@ -1,4 +1,14 @@
 'use server'
+/**
+ * Actions — TODO: brief module description.
+ * Domain: actions
+ * Public: TODO (yes/no)
+ */
+/**
+ * Actions — TODO: brief module description.
+ * Domain: actions
+ * Public: TODO (yes/no)
+ */
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
@@ -950,11 +960,23 @@ export async function cancelBooking(
     return toBookingActionDTO(updated, null)
 }
 
+/**
+ * CleanupExpiredReservationsInput — TODO: brief description of this type.
+ */
+/**
+ * CleanupExpiredReservationsInput — TODO: brief description of this type.
+ */
 export interface CleanupExpiredReservationsInput {
     now?: Date
     limit?: number
 }
 
+/**
+ * CleanupExpiredReservationsResult — TODO: brief description of this type.
+ */
+/**
+ * CleanupExpiredReservationsResult — TODO: brief description of this type.
+ */
 export interface CleanupExpiredReservationsResult {
     processedReservationIds: string[]
     processedBookingIds: string[]

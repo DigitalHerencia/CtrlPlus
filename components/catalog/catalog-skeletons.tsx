@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of catalog-skeletons.tsx
+ *
+ * @description TODO: longer description for catalog-skeletons.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Skeleton } from '@/components/ui/skeleton'
 
 /**
@@ -5,6 +12,10 @@ import { Skeleton } from '@/components/ui/skeleton'
  * Mapped 1:1 to real catalog UI structure
  */
 
+/**
+ * CatalogGridSkeleton — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function CatalogGridSkeleton() {
     return (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -19,6 +30,10 @@ export function CatalogGridSkeleton() {
     )
 }
 
+/**
+ * CatalogHeaderSkeleton — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function CatalogHeaderSkeleton() {
     return (
         <div className="space-y-3">
@@ -29,6 +44,10 @@ export function CatalogHeaderSkeleton() {
     )
 }
 
+/**
+ * CatalogResultsSummarySkeleton — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function CatalogResultsSummarySkeleton() {
     return (
         <div className="space-y-2 text-right">
@@ -38,6 +57,10 @@ export function CatalogResultsSummarySkeleton() {
     )
 }
 
+/**
+ * CatalogFiltersSkeleton — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function CatalogFiltersSkeleton() {
     return (
         <div className="border border-neutral-700 bg-neutral-950/80 px-6 py-7">
@@ -53,6 +76,10 @@ export function CatalogFiltersSkeleton() {
     )
 }
 
+/**
+ * CatalogPaginationSkeleton — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function CatalogPaginationSkeleton() {
     return (
         <div className="flex items-center justify-between">

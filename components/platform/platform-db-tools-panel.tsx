@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of platform-db-tools-panel.tsx
+ *
+ * @description TODO: longer description for platform-db-tools-panel.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { PlatformActionPanel } from '@/components/platform/platform-action-panel'
 
 import type { PlatformToolCardDTO } from '@/types/platform.types'
@@ -6,6 +13,10 @@ interface PlatformDbToolsPanelProps {
     tools: PlatformToolCardDTO[]
 }
 
+/**
+ * PlatformDbToolsPanel — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function PlatformDbToolsPanel({ tools }: PlatformDbToolsPanelProps) {
     return (
         <PlatformActionPanel

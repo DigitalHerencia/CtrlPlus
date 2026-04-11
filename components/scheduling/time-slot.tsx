@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of time-slot.tsx
+ *
+ * @description TODO: longer description for time-slot.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { cn } from '@/lib/utils/cn'
 
 interface TimeSlotProps {
@@ -19,6 +26,10 @@ function formatTime(time: string): string {
     return `${displayHour}:${minute} ${period}`
 }
 
+/**
+ * TimeSlot — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function TimeSlot({
     startTime,
     endTime,

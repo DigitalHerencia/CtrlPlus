@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of scheduling-skeletons.tsx
+ *
+ * @description TODO: longer description for scheduling-skeletons.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Skeleton } from '@/components/ui/skeleton'
 
 /**
@@ -5,6 +12,10 @@ import { Skeleton } from '@/components/ui/skeleton'
  * Mapped 1:1 to real scheduling UI structure
  */
 
+/**
+ * SchedulingCalendarSkeleton — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function SchedulingCalendarSkeleton() {
     return (
         <div className="space-y-4">
@@ -13,6 +24,10 @@ export function SchedulingCalendarSkeleton() {
     )
 }
 
+/**
+ * SchedulingBookingCardsSkeleton — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function SchedulingBookingCardsSkeleton() {
     return (
         <div className="grid gap-4 md:grid-cols-2">
@@ -23,6 +38,10 @@ export function SchedulingBookingCardsSkeleton() {
     )
 }
 
+/**
+ * SchedulingDashboardStatsSkeleton — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function SchedulingDashboardStatsSkeleton() {
     return (
         <div className="grid gap-4 md:grid-cols-3">
@@ -33,6 +52,10 @@ export function SchedulingDashboardStatsSkeleton() {
     )
 }
 
+/**
+ * SchedulingBookingTableSkeleton — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function SchedulingBookingTableSkeleton() {
     return (
         <div className="space-y-2">
@@ -50,6 +73,10 @@ export function SchedulingBookingTableSkeleton() {
     )
 }
 
+/**
+ * SchedulingAvailabilitySkeleton — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function SchedulingAvailabilitySkeleton() {
     return (
         <div className="space-y-3">

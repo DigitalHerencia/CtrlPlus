@@ -1,8 +1,17 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import Link from 'next/link'
 import { AdminActionPanel } from '@/components/admin/admin-action-panel'
 
+/**
+ * AdminQuickActionsClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function AdminQuickActionsClient() {
     return (
         <AdminActionPanel

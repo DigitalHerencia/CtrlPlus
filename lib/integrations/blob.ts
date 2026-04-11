@@ -20,16 +20,76 @@ import {
 } from '@/lib/integrations/cloudinary'
 
 // Generic adapter-facing names
+/**
+ * buildBlobPublicDeliveryUrl — TODO: brief description.
+ */
+/**
+ * buildBlobPublicDeliveryUrl — TODO: brief description.
+ */
 export const buildBlobPublicDeliveryUrl = buildCloudinaryPublicDeliveryUrl
+/**
+ * getBlobCredentials — TODO: brief description.
+ */
+/**
+ * getBlobCredentials — TODO: brief description.
+ */
 export const getBlobCredentials = getCloudinaryCredentials
+/**
+ * buildBlobSignature — TODO: brief description.
+ */
+/**
+ * buildBlobSignature — TODO: brief description.
+ */
 export const buildBlobSignature = buildCloudinarySignature
+/**
+ * destroyBlobAsset — TODO: brief description.
+ */
+/**
+ * destroyBlobAsset — TODO: brief description.
+ */
 export const destroyBlobAsset = destroyCloudinaryAsset
+/**
+ * extractBlobPublicId — TODO: brief description.
+ */
+/**
+ * extractBlobPublicId — TODO: brief description.
+ */
 export const extractBlobPublicId = extractCloudinaryPublicId
+/**
+ * getBlobPublicTransformation — TODO: brief description.
+ */
+/**
+ * getBlobPublicTransformation — TODO: brief description.
+ */
 export const getBlobPublicTransformation = getCloudinaryPublicTransformation
+/**
+ * normalizeBlobUploadResponse — TODO: brief description.
+ */
+/**
+ * normalizeBlobUploadResponse — TODO: brief description.
+ */
 export const normalizeBlobUploadResponse = normalizeCloudinaryUploadResponse
 
+/**
+ * BlobCredentials — TODO: brief description of this type.
+ */
+/**
+ * BlobCredentials — TODO: brief description of this type.
+ */
 export type BlobCredentials = ReturnType<typeof getBlobCredentials>
+/**
+ * BlobDeliveryVariant — TODO: brief description of this type.
+ */
+/**
+ * BlobDeliveryVariant — TODO: brief description of this type.
+ */
 export type BlobDeliveryVariant = CloudinaryDeliveryVariant
+/**
+ * BlobStoredAsset — TODO: brief description of this type.
+ */
+/**
+ * BlobStoredAsset — TODO: brief description of this type.
+ */
 export type BlobStoredAsset = CloudinaryStoredAsset
 
 // Note: This file intentionally adapts the existing Cloudinary integration into a

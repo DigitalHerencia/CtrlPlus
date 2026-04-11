@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of booking-slot-picker.tsx
+ *
+ * @description TODO: longer description for booking-slot-picker.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { TimeSlot } from '@/components/scheduling/time-slot'
 
 interface Slot {
@@ -14,6 +21,10 @@ interface BookingSlotPickerProps {
     disabled?: boolean
 }
 
+/**
+ * BookingSlotPicker — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function BookingSlotPicker({
     slots,
     selectedSlotId,

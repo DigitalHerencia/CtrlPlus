@@ -1,3 +1,13 @@
+/**
+ * @introduction Db — TODO: short one-line summary of billing.selects.ts
+ *
+ * @description TODO: longer description for billing.selects.ts. Keep it short — one or two sentences.
+ * Domain: db
+ * Public: TODO (yes/no)
+ */
+/**
+ * invoiceDTOFields — TODO: brief description.
+ */
 export const invoiceDTOFields = {
     id: true,
     bookingId: true,
@@ -13,6 +23,9 @@ export const invoiceDTOFields = {
     updatedAt: true,
 } as const
 
+/**
+ * paymentDTOFields — TODO: brief description.
+ */
 export const paymentDTOFields = {
     id: true,
     invoiceId: true,
@@ -22,6 +35,9 @@ export const paymentDTOFields = {
     createdAt: true,
 } as const
 
+/**
+ * invoiceLineItemDTOFields — TODO: brief description.
+ */
 export const invoiceLineItemDTOFields = {
     id: true,
     description: true,

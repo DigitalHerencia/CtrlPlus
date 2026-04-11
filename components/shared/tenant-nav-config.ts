@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of tenant-nav-config.ts
+ *
+ * @description TODO: longer description for tenant-nav-config.ts. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import type { LucideIcon } from 'lucide-react'
 import {
     CalendarDays,
@@ -9,6 +16,9 @@ import {
     TerminalIcon,
 } from 'lucide-react'
 
+/**
+ * TenantNavItem — TODO: brief description of this type.
+ */
 export type TenantNavItem = {
     title: string
     href: string
@@ -16,6 +26,9 @@ export type TenantNavItem = {
     access?: 'owner_dashboard' | 'admin_dashboard'
 }
 
+/**
+ * tenantNavItems — TODO: brief description.
+ */
 export const tenantNavItems: TenantNavItem[] = [
     { title: 'Catalog', href: '/catalog', icon: Grid3x3 },
     { title: 'Visualizer', href: '/visualizer', icon: ImageIcon },
@@ -26,6 +39,10 @@ export const tenantNavItems: TenantNavItem[] = [
     { title: 'Admin Console', href: '/platform', icon: TerminalIcon, access: 'admin_dashboard' },
 ]
 
+/**
+ * isTenantNavActive — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function isTenantNavActive(pathname: string, href: string) {
     return pathname === href || pathname.startsWith(`${href}/`)
 }

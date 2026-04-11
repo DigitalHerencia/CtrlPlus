@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of admin-chart-panel.tsx
+ *
+ * @description TODO: longer description for admin-chart-panel.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { AdminAnalyticsSeriesPointDTO } from '@/types/admin.types'
 
@@ -6,6 +13,10 @@ interface AdminChartPanelProps {
     series: AdminAnalyticsSeriesPointDTO[]
 }
 
+/**
+ * AdminChartPanel — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function AdminChartPanel({ title, series }: AdminChartPanelProps) {
     return (
         <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">

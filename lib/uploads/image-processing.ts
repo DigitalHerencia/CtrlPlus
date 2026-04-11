@@ -1,3 +1,10 @@
+/**
+ * @introduction Uploads — TODO: short one-line summary of image-processing.ts
+ *
+ * @description TODO: longer description for image-processing.ts. Keep it short — one or two sentences.
+ * Domain: uploads
+ * Public: TODO (yes/no)
+ */
 import crypto from 'crypto'
 import sharp from 'sharp'
 
@@ -7,6 +14,9 @@ const MIN_DIMENSION = 512
 const MAX_DIMENSION = 4096
 const NORMALIZED_MAX_DIMENSION = 1536
 
+/**
+ * NormalizedVehicleUpload — TODO: brief description of this type.
+ */
 export interface NormalizedVehicleUpload {
     buffer: Buffer
     contentType: 'image/png'
@@ -34,6 +44,10 @@ function parseDataUrl(customerPhotoUrl: string): { buffer: Buffer; contentType: 
     return { buffer, contentType }
 }
 
+/**
+ * assertApprovedRemoteHost — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function assertApprovedRemoteHost(url: URL): void {
     const host = url.hostname.toLowerCase()
     if (!isAllowedRemotePhotoHost(host)) {

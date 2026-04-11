@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of docs-sidebar.tsx
+ *
+ * @description TODO: longer description for docs-sidebar.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import Link from 'next/link'
 
 import { DOC_SECTIONS, getDocsRoute } from '@/docs/content'
@@ -7,6 +14,10 @@ type DocsSidebarProps = {
     currentSlug?: string
 }
 
+/**
+ * DocsSidebar — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function DocsSidebar({ currentSlug }: DocsSidebarProps) {
     return (
         <aside className="sticky top-24 hidden h-[calc(100vh-8rem)] w-72 overflow-y-auto border-r border-neutral-700 pr-6 lg:block">

@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of platform-health-overview.tsx
+ *
+ * @description TODO: longer description for platform-health-overview.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -7,6 +14,10 @@ interface PlatformHealthOverviewProps {
     status: PlatformStatusOverviewDTO
 }
 
+/**
+ * PlatformHealthOverview — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function PlatformHealthOverview({ status }: PlatformHealthOverviewProps) {
     return (
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_repeat(4,minmax(0,1fr))]">

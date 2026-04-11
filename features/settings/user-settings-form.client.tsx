@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import { useState, useTransition } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -65,6 +70,10 @@ function textOrNull(value: string): string | null {
     return trimmed.length > 0 ? trimmed : null
 }
 
+/**
+ * UserSettingsFormClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function UserSettingsFormClient({ initialSettings, onSave }: UserSettingsFormClientProps) {
     const [serverMessage, setServerMessage] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()

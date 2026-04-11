@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of billing-skeletons.tsx
+ *
+ * @description TODO: longer description for billing-skeletons.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -6,6 +13,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
  * Mapped 1:1 to real billing UI structure
  */
 
+/**
+ * BillingInvoiceTableSkeleton — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function BillingInvoiceTableSkeleton() {
     return (
         <div className="space-y-2">
@@ -23,6 +34,10 @@ export function BillingInvoiceTableSkeleton() {
     )
 }
 
+/**
+ * BillingKpiCardsSkeleton — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function BillingKpiCardsSkeleton() {
     return (
         <div className="grid gap-4 md:grid-cols-2">
@@ -42,6 +57,10 @@ export function BillingKpiCardsSkeleton() {
     )
 }
 
+/**
+ * BillingInvoiceDetailSkeleton — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function BillingInvoiceDetailSkeleton() {
     return (
         <Card className="border-neutral-800 bg-neutral-950/90">

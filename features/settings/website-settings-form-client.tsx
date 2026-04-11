@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import { useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -29,6 +34,10 @@ function getErrorMessage(error: unknown): string {
         : 'Failed to save settings.'
 }
 
+/**
+ * WebsiteSettingsFormClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function WebsiteSettingsFormClient({ initialSettings }: WebsiteSettingsFormClientProps) {
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
     const form = useForm<WebsiteSettingsInput>({

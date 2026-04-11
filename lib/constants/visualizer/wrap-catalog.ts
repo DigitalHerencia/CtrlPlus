@@ -1,5 +1,15 @@
+/**
+ * @introduction Constants — TODO: short one-line summary of wrap-catalog.ts
+ *
+ * @description TODO: longer description for wrap-catalog.ts. Keep it short — one or two sentences.
+ * Domain: constants
+ * Public: TODO (yes/no)
+ */
 // Auto-generated from hf-space-CtrlPlus/*.json
 
+/**
+ * WRAP_CATALOG — TODO: brief description.
+ */
 export const WRAP_CATALOG = {
   "wraps": [
     {

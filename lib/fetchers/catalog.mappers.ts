@@ -1,3 +1,10 @@
+/**
+ * @introduction Fetchers — TODO: short one-line summary of catalog.mappers.ts
+ *
+ * @description TODO: longer description for catalog.mappers.ts. Keep it short — one or two sentences.
+ * Domain: fetchers
+ * Public: TODO (yes/no)
+ */
 import { PUBLISH_REQUIRED_WRAP_IMAGE_KINDS, WrapImageKind } from '@/lib/constants/statuses'
 import type { PublishRequiredWrapImageKind } from '@/lib/constants/statuses'
 import { getCatalogAssetDeliveryUrl, toCatalogAssetImage } from '@/lib/utils/catalog-assets'
@@ -17,6 +24,18 @@ function getActiveImagesByKind(images: WrapImageDTO[], kind: WrapImageKind): Wra
 
 export { getCatalogAssetDeliveryUrl, toCatalogAssetImage }
 
+/**
+ * resolvePrimaryDisplayAsset — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * resolvePrimaryDisplayAsset — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * resolvePrimaryDisplayAsset — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function resolvePrimaryDisplayAsset(images: WrapImageDTO[]): CatalogAssetImageDTO | null {
     const orderedImages = sortImages(images)
     const displayCandidates = orderedImages.filter(
@@ -32,6 +51,18 @@ export function resolvePrimaryDisplayAsset(images: WrapImageDTO[]): CatalogAsset
     return heroImage ? toCatalogAssetImage(heroImage) : null
 }
 
+/**
+ * resolveHeroAsset — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * resolveHeroAsset — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * resolveHeroAsset — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function resolveHeroAsset(images: WrapImageDTO[]): CatalogAssetImageDTO | null {
     const orderedImages = sortImages(images)
     const heroImage = orderedImages.find(
@@ -41,6 +72,18 @@ export function resolveHeroAsset(images: WrapImageDTO[]): CatalogAssetImageDTO |
     return heroImage ? toCatalogAssetImage(heroImage) : null
 }
 
+/**
+ * resolveCatalogGalleryImages — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * resolveCatalogGalleryImages — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * resolveCatalogGalleryImages — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function resolveCatalogGalleryImages(images: WrapImageDTO[]): CatalogAssetImageDTO[] {
     const orderedImages = sortImages(images)
     const activeDisplayImages = orderedImages.filter(
@@ -50,6 +93,18 @@ export function resolveCatalogGalleryImages(images: WrapImageDTO[]): CatalogAsse
     return activeDisplayImages.map(toCatalogAssetImage)
 }
 
+/**
+ * resolveDisplayImages — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * resolveDisplayImages — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * resolveDisplayImages — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function resolveDisplayImages(images: WrapImageDTO[]): CatalogAssetImageDTO[] {
     const heroImage = resolveHeroAsset(images)
     const galleryImages = resolveCatalogGalleryImages(images)
@@ -57,6 +112,18 @@ export function resolveDisplayImages(images: WrapImageDTO[]): CatalogAssetImageD
     return heroImage ? [heroImage, ...galleryImages] : galleryImages
 }
 
+/**
+ * getCatalogAssetReadiness — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getCatalogAssetReadiness — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getCatalogAssetReadiness — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getCatalogAssetReadiness(
     input:
         | WrapImageDTO[]
@@ -133,6 +200,18 @@ export function getCatalogAssetReadiness(
 }
 
 // Catalog-specific asset publish helpers
+/**
+ * getMissingRequiredAssetRolesForPublish — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getMissingRequiredAssetRolesForPublish — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getMissingRequiredAssetRolesForPublish — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getMissingRequiredAssetRolesForPublish(
     images: { kind: WrapImageKind; isActive: boolean }[]
 ): PublishRequiredWrapImageKind[] {
@@ -145,6 +224,18 @@ export function getMissingRequiredAssetRolesForPublish(
     ) as PublishRequiredWrapImageKind[]
 }
 
+/**
+ * assertWrapCanBePublished — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * assertWrapCanBePublished — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * assertWrapCanBePublished — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function assertWrapCanBePublished(images: { kind: string; isActive: boolean }[]): void {
     const missingKinds = getMissingRequiredAssetRolesForPublish(
         images as { kind: WrapImageKind; isActive: boolean }[]
@@ -157,6 +248,18 @@ export function assertWrapCanBePublished(images: { kind: string; isActive: boole
     throw new Error(`Cannot publish wrap. Missing active asset roles: ${missingKinds.join(', ')}`)
 }
 
+/**
+ * assertWrapIsPublishReady — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * assertWrapIsPublishReady — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * assertWrapIsPublishReady — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function assertWrapIsPublishReady(readiness: CatalogAssetReadinessDTO): void {
     if (readiness.canPublish) {
         return

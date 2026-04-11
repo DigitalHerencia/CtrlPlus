@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of tenant-elements.tsx
+ *
+ * @description TODO: longer description for tenant-elements.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -12,6 +19,10 @@ interface WorkspacePageIntroProps {
     className?: string
 }
 
+/**
+ * WorkspacePageIntro — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function WorkspacePageIntro({
     label,
     title,
@@ -42,6 +53,10 @@ interface WorkspacePageContextCardProps {
     children: ReactNode
 }
 
+/**
+ * WorkspacePageContextCard — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function WorkspacePageContextCard({
     title,
     description,
@@ -80,6 +95,10 @@ interface WorkspaceMetricCardProps {
     className?: string
 }
 
+/**
+ * WorkspaceMetricCard — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function WorkspaceMetricCard({
     label,
     value,
@@ -128,6 +147,10 @@ interface WorkspaceEmptyStateProps {
     className?: string
 }
 
+/**
+ * WorkspaceEmptyState — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function WorkspaceEmptyState({
     title,
     description,

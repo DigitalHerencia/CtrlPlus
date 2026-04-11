@@ -1,9 +1,19 @@
 'use server'
+/**
+ * Actions — TODO: brief module description.
+ * Domain: actions
+ * Public: TODO (yes/no)
+ */
+/**
+ * Actions — TODO: brief module description.
+ * Domain: actions
+ * Public: TODO (yes/no)
+ */
 
 import { resolveGlobalRoleForClerkUserId } from '@/lib/auth/identity'
 import { upsertUserFromClerk } from '@/lib/actions/auth.actions'
 import { prisma } from '@/lib/db/prisma'
-import type { Prisma } from '@prisma/client'
+import { handleClerkUserDelete } from '@/lib/db/transactions/auth-webhook.transactions'
 import type { ClerkWebhookEvent } from '@/lib/integrations/clerk'
 import {
     resolveClerkDevWebhookBaseUrl,
@@ -44,6 +54,12 @@ const SUPPORTED_EVENTS = new Set([
     'user.updated',
 ])
 
+/**
+ * ProcessClerkWebhookEventResult — TODO: brief description of this type.
+ */
+/**
+ * ProcessClerkWebhookEventResult — TODO: brief description of this type.
+ */
 export type ProcessClerkWebhookEventResult =
     | {
           kind: 'ignored'
@@ -131,22 +147,21 @@ function deriveSubscriptionItemStatus(eventType: string, fallback?: string): str
     return fallback ?? 'unknown'
 }
 
-function isPrismaUniqueConstraintError(error: unknown): boolean {
-    return (
-        typeof error === 'object' &&
-        error !== null &&
-        'code' in error &&
-        (error as { code: string }).code === 'P2002'
-    )
-}
-
 export async function claimClerkWebhookEvent(
     eventId: string,
     eventType: string
 ): Promise<WebhookEventState> {
     const now = new Date()
 
-    try {
+    // Use upsert for idempotent event claiming. If the event doesn't exist, create it.
+    // If it does exist, handle based on current status.
+    const existingEvent = await prisma.clerkWebhookEvent.findUnique({
+        where: { id: eventId },
+        select: { status: true, processedAt: true },
+    })
+
+    // Event doesn't exist; create and claim it for processing
+    if (!existingEvent) {
         await prisma.clerkWebhookEvent.create({
             data: {
                 id: eventId,
@@ -155,75 +170,48 @@ export async function claimClerkWebhookEvent(
                 processedAt: now,
             },
         })
-
         return 'process'
-    } catch (error: unknown) {
-        if (!isPrismaUniqueConstraintError(error)) {
-            throw error
-        }
     }
 
-    const existingEvent = await prisma.clerkWebhookEvent.findUnique({
-        where: { id: eventId },
-        select: { status: true },
-    })
-
-    if (!existingEvent) {
-        throw new Error(`Clerk webhook event state missing for ${eventId}`)
+    // If the event was already fully processed, return that status
+    if (existingEvent.status === 'processed') {
+        return 'processed'
     }
 
-    if (existingEvent.status === 'failed') {
-        const retryClaim = await prisma.clerkWebhookEvent.updateMany({
-            where: {
-                id: eventId,
-                status: 'failed',
-            },
-            data: {
-                type: eventType,
-                status: 'processing',
-                processedAt: now,
-            },
-        })
-
-        if (retryClaim.count === 1) {
-            return 'process'
-        }
-
-        const refreshedEvent = await prisma.clerkWebhookEvent.findUnique({
-            where: { id: eventId },
-            select: { status: true },
-        })
-
-        if (!refreshedEvent) {
-            throw new Error(`Clerk webhook event state missing for ${eventId}`)
-        }
-
-        return refreshedEvent.status === 'processed' ? 'processed' : 'processing'
-    }
-
+    // If it's currently being processed, check if it's stale
     if (existingEvent.status === 'processing') {
         const staleBefore = new Date(now.getTime() - WEBHOOK_PROCESSING_TIMEOUT_MS)
 
-        const retryClaim = await prisma.clerkWebhookEvent.updateMany({
-            where: {
-                id: eventId,
-                status: 'processing',
-                processedAt: {
-                    lte: staleBefore,
+        // If it's stale, reclaim it for retry
+        if (existingEvent.processedAt && existingEvent.processedAt <= staleBefore) {
+            await prisma.clerkWebhookEvent.update({
+                where: { id: eventId },
+                data: {
+                    type: eventType,
+                    processedAt: now,
                 },
-            },
+            })
+            return 'process'
+        }
+
+        // Otherwise, another instance is still processing
+        return 'processing'
+    }
+
+    // If it failed before, allow retry
+    if (existingEvent.status === 'failed') {
+        await prisma.clerkWebhookEvent.update({
+            where: { id: eventId },
             data: {
                 type: eventType,
+                status: 'processing',
                 processedAt: now,
             },
         })
-
-        if (retryClaim.count === 1) {
-            return 'process'
-        }
+        return 'process'
     }
 
-    return existingEvent.status === 'processed' ? 'processed' : 'processing'
+    return 'processing'
 }
 
 async function finalizeClerkWebhookEvent(eventId: string, status: 'processed' | 'failed') {
@@ -276,43 +264,10 @@ async function handleUserEvent(eventType: string, data: unknown): Promise<void> 
     const globalRole = await resolveGlobalRoleForClerkUserId(clerkUserId)
 
     if (eventType === 'user.deleted') {
-        const deletedAt = new Date()
-        await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-            await tx.user.updateMany({
-                where: { clerkUserId },
-                data: {
-                    email: `deleted+${clerkUserId}@local.invalid`,
-                    firstName: null,
-                    lastName: null,
-                    imageUrl: null,
-                    deletedAt,
-                },
-            })
-
-            await Promise.all([
-                tx.clerkSession.updateMany({
-                    where: { clerkUserId, deletedAt: null },
-                    data: { deletedAt },
-                }),
-                tx.clerkEmail.updateMany({
-                    where: { clerkUserId, deletedAt: null },
-                    data: { deletedAt },
-                }),
-                tx.clerkSms.updateMany({
-                    where: { clerkUserId, deletedAt: null },
-                    data: { deletedAt },
-                }),
-                tx.clerkSubscription.updateMany({
-                    where: { clerkUserId, deletedAt: null },
-                    data: { deletedAt },
-                }),
-                tx.clerkPaymentAttempt.updateMany({
-                    where: { clerkUserId, deletedAt: null },
-                    data: { deletedAt },
-                }),
-            ])
+        await handleClerkUserDelete(prisma, {
+            clerkUserId,
+            email,
         })
-
         return
     }
 

@@ -1,6 +1,19 @@
+/**
+ * @introduction Integrations — TODO: short one-line summary of clerk.ts
+ *
+ * @description TODO: longer description for clerk.ts. Keep it short — one or two sentences.
+ * Domain: integrations
+ * Public: TODO (yes/no)
+ */
 import { verifyWebhook } from '@clerk/nextjs/webhooks'
 import { type NextRequest } from 'next/server'
 
+/**
+ * ClerkWebhookEvent — TODO: brief description of this type.
+ */
+/**
+ * ClerkWebhookEvent — TODO: brief description of this type.
+ */
 export interface ClerkWebhookEvent {
     data: unknown
     object: string

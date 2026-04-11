@@ -1,3 +1,10 @@
+/**
+ * @introduction Integrations — TODO: short one-line summary of observability.ts
+ *
+ * @description TODO: longer description for observability.ts. Keep it short — one or two sentences.
+ * Domain: integrations
+ * Public: TODO (yes/no)
+ */
 import 'server-only'
 
 interface ObservabilityContext {
@@ -12,6 +19,12 @@ function toMessage(error: unknown): string {
     return String(error)
 }
 
+/**
+ * observability — TODO: brief description.
+ */
+/**
+ * observability — TODO: brief description.
+ */
 export const observability = {
     async captureException(error: unknown, context?: ObservabilityContext): Promise<void> {
         console.error('[observability.exception]', {

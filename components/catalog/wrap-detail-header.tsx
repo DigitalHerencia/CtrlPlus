@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of wrap-detail-header.tsx
+ *
+ * @description TODO: longer description for wrap-detail-header.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Badge } from '@/components/ui/badge'
 import { CardHeader, CardTitle } from '@/components/ui/card'
 import { formatPrice } from '@/lib/utils/currency'
@@ -7,6 +14,10 @@ interface WrapDetailHeaderProps {
     wrap: CatalogDetailDTO
 }
 
+/**
+ * WrapDetailHeader — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function WrapDetailHeader({ wrap }: WrapDetailHeaderProps) {
     return (
         <CardHeader className="gap-4">

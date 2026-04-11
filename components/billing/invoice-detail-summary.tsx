@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of invoice-detail-summary.tsx
+ *
+ * @description TODO: longer description for invoice-detail-summary.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Card, CardContent } from '@/components/ui/card'
 import { type InvoiceDetailDTO } from '@/types/billing.types'
 
@@ -10,6 +17,10 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
     currency: 'USD',
 })
 
+/**
+ * InvoiceDetailSummary — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function InvoiceDetailSummary({ invoice }: InvoiceDetailSummaryProps) {
     return (
         <Card className="border-neutral-800 bg-neutral-900">

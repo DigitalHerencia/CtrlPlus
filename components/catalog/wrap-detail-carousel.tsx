@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of wrap-detail-carousel.tsx
+ *
+ * @description TODO: longer description for wrap-detail-carousel.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import Image from 'next/image'
 
 import type { CatalogAssetImageDTO } from '@/types/catalog.types'
@@ -7,6 +14,10 @@ interface WrapDetailCarouselProps {
     images: CatalogAssetImageDTO[]
 }
 
+/**
+ * WrapDetailCarousel — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function WrapDetailCarousel({ name, images }: WrapDetailCarouselProps) {
     if (images.length === 0) {
         return (

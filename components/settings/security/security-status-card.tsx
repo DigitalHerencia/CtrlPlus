@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of security-status-card.tsx
+ *
+ * @description TODO: longer description for security-status-card.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 interface SecurityStatusCardProps {
@@ -5,6 +12,10 @@ interface SecurityStatusCardProps {
     value: string
 }
 
+/**
+ * SecurityStatusCard — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function SecurityStatusCard({ title, value }: SecurityStatusCardProps) {
     return (
         <Card className="border-neutral-800 bg-neutral-950/70 text-neutral-100">

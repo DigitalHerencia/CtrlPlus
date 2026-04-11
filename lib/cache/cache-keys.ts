@@ -1,6 +1,17 @@
+/**
+ * @introduction Cache — TODO: short one-line summary of cache-keys.ts
+ *
+ * @description TODO: longer description for cache-keys.ts. Keep it short — one or two sentences.
+ * Domain: cache
+ * Public: TODO (yes/no)
+ */
 import crypto from 'crypto'
 import type { PreviewCacheKeyInput } from '@/types/visualizer.types'
 
+/**
+ * buildVisualizerCacheKey — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function buildVisualizerCacheKey(input: PreviewCacheKeyInput): string {
     const normalized = {
         wrapId: input.wrapId,

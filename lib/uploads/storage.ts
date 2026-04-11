@@ -1,3 +1,10 @@
+/**
+ * @introduction Uploads — TODO: short one-line summary of storage.ts
+ *
+ * @description TODO: longer description for storage.ts. Keep it short — one or two sentences.
+ * Domain: uploads
+ * Public: TODO (yes/no)
+ */
 import { createHash, randomUUID } from 'crypto'
 
 import {
@@ -16,11 +23,17 @@ const IMAGE_EXT_BY_TYPE: Record<string, string> = {
     'image/webp': 'webp',
 }
 
+/**
+ * PersistedWrapImage — TODO: brief description of this type.
+ */
 export interface PersistedWrapImage extends BlobStoredAsset {
     url: string
     contentHash: string
 }
 
+/**
+ * PersistedVisualizerAsset — TODO: brief description of this type.
+ */
 export interface PersistedVisualizerAsset extends BlobStoredAsset {
     contentHash: string
     legacyUrl: string | null
@@ -252,6 +265,10 @@ export async function deletePersistedWrapImage(params: {
     }
 }
 
+/**
+ * storePreviewImage — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function storePreviewImage(params: {
     previewId: string
     buffer: Buffer

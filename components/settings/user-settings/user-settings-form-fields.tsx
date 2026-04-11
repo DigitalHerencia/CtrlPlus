@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of user-settings-form-fields.tsx
+ *
+ * @description TODO: longer description for user-settings-form-fields.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
@@ -8,6 +15,10 @@ interface UserSettingsFormFieldsProps {
     onTimezoneChange: (value: string) => void
 }
 
+/**
+ * UserSettingsFormFields — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function UserSettingsFormFields({
     language,
     timezone,

@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of invoice-manager-table.tsx
+ *
+ * @description TODO: longer description for invoice-manager-table.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { InvoiceStatusBadge } from '@/components/billing/InvoiceStatusBadge'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -21,6 +28,10 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
     currency: 'USD',
 })
 
+/**
+ * InvoiceManagerTable — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function InvoiceManagerTable({ invoices }: InvoiceManagerTableProps) {
     return (
         <Card className="border-neutral-800 bg-neutral-900">

@@ -1,9 +1,20 @@
+/**
+ * @introduction Components — TODO: short one-line summary of docs-toc.tsx
+ *
+ * @description TODO: longer description for docs-toc.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import type { DocHeading } from '@/docs/types'
 
 type DocsTocProps = {
     headings: DocHeading[]
 }
 
+/**
+ * DocsToc — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function DocsToc({ headings }: DocsTocProps) {
     if (!headings.length) {
         return null

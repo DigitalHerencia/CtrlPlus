@@ -32,6 +32,12 @@ import {
 } from '@/lib/visualizer/huggingface/client'
 import { HuggingFaceGenerationError } from '@/lib/visualizer/huggingface/map-hf-error'
 
+/**
+ * Img2ImgInput — TODO: brief description of this type.
+ */
+/**
+ * Img2ImgInput — TODO: brief description of this type.
+ */
 export interface Img2ImgInput {
     /** Source image as a PNG/JPEG Buffer (the composed board image). */
     boardBuffer: Buffer

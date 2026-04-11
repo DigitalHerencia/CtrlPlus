@@ -1,3 +1,10 @@
+/**
+ * @introduction Utils — TODO: short one-line summary of search-params.ts
+ *
+ * @description TODO: longer description for search-params.ts. Keep it short — one or two sentences.
+ * Domain: utils
+ * Public: TODO (yes/no)
+ */
 import { APP_ROUTES } from '@/lib/constants/app'
 import { invoiceListParamsSchema } from '@/schemas/billing.schemas'
 import { searchWrapsSchema } from '@/schemas/catalog.schemas'
@@ -28,11 +35,19 @@ function first(value: string | string[] | undefined): string | undefined {
  * strings, or undefined into a single nullable string.  Suitable for any page
  * whose `searchParams` object is typed as `Record<string, string | string[] | undefined>`.
  */
+/**
+ * getSingleSearchParam — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getSingleSearchParam(param: string | string[] | undefined): string | null {
     if (!param) return null
     return Array.isArray(param) ? (param[0] ?? null) : param
 }
 
+/**
+ * createCatalogQueryString — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function createCatalogQueryString(filters: SearchWrapsInput): string {
     const params = new URLSearchParams()
 
@@ -55,6 +70,10 @@ export function createCatalogQueryString(filters: SearchWrapsInput): string {
     return params.toString()
 }
 
+/**
+ * createCatalogPageHref — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function createCatalogPageHref(filters: SearchWrapsInput, page: number): string {
     const query = createCatalogQueryString({
         ...filters,
@@ -64,6 +83,10 @@ export function createCatalogPageHref(filters: SearchWrapsInput, page: number): 
     return query ? `${APP_ROUTES.catalog}?${query}` : APP_ROUTES.catalog
 }
 
+/**
+ * parseCatalogSearchParams — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function parseCatalogSearchParams(
     searchParams: SearchParamRecord
 ): CatalogSearchParamsResult {
@@ -97,6 +120,10 @@ export function parseCatalogSearchParams(
     }
 }
 
+/**
+ * parseBillingSearchParams — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function parseBillingSearchParams(searchParams: SearchParamRecord): {
     filters: InvoiceListParams
     hasActiveFilters: boolean
@@ -126,6 +153,10 @@ export function parseBillingSearchParams(searchParams: SearchParamRecord): {
     }
 }
 
+/**
+ * parseSchedulingSearchParams — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function parseSchedulingSearchParams(searchParams: SearchParamRecord): {
     filters: BookingListParams
     hasActiveFilters: boolean
@@ -163,6 +194,10 @@ export function parseSchedulingSearchParams(searchParams: SearchParamRecord): {
     }
 }
 
+/**
+ * parseVisualizerSearchParams — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function parseVisualizerSearchParams(
     searchParams: SearchParamRecord
 ): VisualizerSearchParamsResult {
@@ -175,6 +210,10 @@ export function parseVisualizerSearchParams(
     }
 }
 
+/**
+ * createVisualizerQueryString — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function createVisualizerQueryString(wrapId: string | null | undefined): string {
     const normalizedWrapId = wrapId?.trim() ?? ''
     if (!normalizedWrapId) {
@@ -186,6 +225,10 @@ export function createVisualizerQueryString(wrapId: string | null | undefined): 
     return params.toString()
 }
 
+/**
+ * createVisualizerHref — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function createVisualizerHref(wrapId: string | null | undefined): string {
     const query = createVisualizerQueryString(wrapId)
     return query ? `${APP_ROUTES.visualizer}?${query}` : APP_ROUTES.visualizer

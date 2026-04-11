@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
@@ -45,6 +50,10 @@ function buildDateTime(date: Date, hhmm: string): Date {
     return nextDate
 }
 
+/**
+ * BookingFormClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function BookingFormClient({
     availabilityWindows,
     wraps,

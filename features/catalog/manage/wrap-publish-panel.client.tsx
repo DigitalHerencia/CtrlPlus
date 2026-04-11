@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -12,10 +17,17 @@ import { publishWrap, unpublishWrap } from '@/lib/actions/catalog.actions'
 import type { CatalogDetailDTO } from '@/types/catalog.types'
 import { CheckCircle2, Clock } from 'lucide-react'
 
+/**
+ * WrapPublishPanelProps — TODO: brief description of this type.
+ */
 export interface WrapPublishPanelProps {
     wrap: CatalogDetailDTO
 }
 
+/**
+ * WrapPublishPanel — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function WrapPublishPanel({ wrap }: WrapPublishPanelProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()

@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of invoices-dashboard-table.tsx
+ *
+ * @description TODO: longer description for invoices-dashboard-table.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import Link from 'next/link'
 
 import { InvoiceStatusBadge } from '@/components/billing/InvoiceStatusBadge'
@@ -22,7 +29,27 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
     currency: 'USD',
 })
 
+/**
+ * InvoicesDashboardTable — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function InvoicesDashboardTable({ invoices }: InvoicesDashboardTableProps) {
+    // Empty state
+    if (invoices.length === 0) {
+        return (
+            <Card className="border-neutral-700 bg-neutral-950/80">
+                <CardContent className="flex items-center justify-center py-12 text-center">
+                    <div className="space-y-2">
+                        <p className="text-sm font-medium text-neutral-300">No invoices found.</p>
+                        <p className="text-xs text-neutral-500">
+                            Adjust your filters or create a new invoice to get started.
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+        )
+    }
+
     return (
         <Card className="border-neutral-700 bg-neutral-950/80">
             <CardContent className="p-0">

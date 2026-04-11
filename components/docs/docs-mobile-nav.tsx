@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Components — TODO: brief module description.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 
 import Link from 'next/link'
 import { Menu } from 'lucide-react'
@@ -19,6 +24,10 @@ type DocsMobileNavProps = {
     currentSlug?: string
 }
 
+/**
+ * DocsMobileNav — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function DocsMobileNav({ currentSlug }: DocsMobileNavProps) {
     return (
         <Sheet>

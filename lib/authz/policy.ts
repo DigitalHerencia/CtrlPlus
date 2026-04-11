@@ -1,6 +1,17 @@
+/**
+ * @introduction Authz — TODO: short one-line summary of policy.ts
+ *
+ * @description TODO: longer description for policy.ts. Keep it short — one or two sentences.
+ * Domain: authz
+ * Public: TODO (yes/no)
+ */
 import { type AuthzContext, type Capability } from '@/types/auth.types'
 import { ROLE_CAPABILITIES } from '@/lib/authz/capabilities'
 
+/**
+ * hasCapability — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function hasCapability(context: AuthzContext, capability: Capability): boolean {
     if (!context.isAuthenticated) {
         return false
@@ -9,6 +20,10 @@ export function hasCapability(context: AuthzContext, capability: Capability): bo
     return ROLE_CAPABILITIES[context.role]?.has(capability) ?? false
 }
 
+/**
+ * requireCapability — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function requireCapability(context: AuthzContext, capability: Capability): void {
     if (!context.isAuthenticated || !context.userId) {
         throw new Error('Unauthorized: not authenticated')
@@ -19,6 +34,10 @@ export function requireCapability(context: AuthzContext, capability: Capability)
     }
 }
 
+/**
+ * requireOwnerOrAdmin — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function requireOwnerOrAdmin(context: AuthzContext): void {
     if (!context.isAuthenticated || !context.userId) {
         throw new Error('Unauthorized: not authenticated')
@@ -29,6 +48,10 @@ export function requireOwnerOrAdmin(context: AuthzContext): void {
     }
 }
 
+/**
+ * requirePlatformAdmin — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function requirePlatformAdmin(context: AuthzContext): void {
     if (!context.isAuthenticated || !context.userId) {
         throw new Error('Unauthorized: not authenticated')
@@ -39,6 +62,10 @@ export function requirePlatformAdmin(context: AuthzContext): void {
     }
 }
 
+/**
+ * canAccessCustomerOwnedResource — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function canAccessCustomerOwnedResource(context: AuthzContext, customerId: string): boolean {
     if (!context.userId) {
         return false
@@ -51,6 +78,10 @@ export function canAccessCustomerOwnedResource(context: AuthzContext, customerId
     return context.userId === customerId
 }
 
+/**
+ * requireCustomerOwnedResourceAccess — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function requireCustomerOwnedResourceAccess(
     context: AuthzContext,
     customerId: string

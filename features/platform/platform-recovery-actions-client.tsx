@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import { RefreshCcw, RotateCcw, ShieldAlert } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -24,6 +29,10 @@ interface PlatformRecoveryActionsClientProps {
     stripeReplayableCount: number
 }
 
+/**
+ * PlatformRecoveryActionsClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function PlatformRecoveryActionsClient({
     clerkFailedCount,
     staleThresholdMinutes,

@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Components — TODO: brief module description.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 
 import { useMemo, useState } from 'react'
 
@@ -30,6 +35,10 @@ const kindOptions: Array<{ value: WrapImageKindType; label: string }> = [
     { value: WrapImageKindConst.GALLERY, label: 'Gallery' },
 ]
 
+/**
+ * WrapImageManager — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function WrapImageManager({
     wrapId,
     images,

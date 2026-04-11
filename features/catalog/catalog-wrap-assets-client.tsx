@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -19,6 +24,10 @@ interface CatalogWrapAssetsClientProps {
     wrap: CatalogDetailDTO
 }
 
+/**
+ * CatalogWrapAssetsClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function CatalogWrapAssetsClient({ wrap }: CatalogWrapAssetsClientProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()

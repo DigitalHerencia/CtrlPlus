@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import { useSignIn } from '@clerk/nextjs'
 import { LoaderCircle } from 'lucide-react'
@@ -25,6 +30,10 @@ function getErrorMessage(error: unknown, fallback: string): string {
         : fallback
 }
 
+/**
+ * LoginForm — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) {
     const { fetchStatus, signIn } = useSignIn()
     const router = useRouter()
@@ -214,22 +223,22 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
                     <Link href="/" className="mb-8 inline-flex items-center">
                         <LogoMark className="mt-4 scale-150" />
                     </Link>
-                    <h1 className="mt-2 text-3xl font-semibold tracking-tight text-neutral-50 sm:text-4xl">
+                    <h1 className="mt-2 text-3xl font-semibold uppercase tracking-tight text-neutral-50 sm:text-4xl">
                         Welcome back
                     </h1>
-                    <p className="mt-2 max-w-sm text-sm text-neutral-400">
+                    <p className="mt-2 text-3xl font-semibold uppercase tracking-tight text-neutral-50 sm:text-4xl">
                         Sign in to manage your account
                     </p>
                 </div>
 
                 {notice ? (
-                    <div className="rounded-2xl border border-blue-900/60 bg-blue-950/40 px-4 py-3 text-sm text-blue-100">
+                    <div className="border border-blue-900/60 bg-blue-950/40 px-4 py-3 text-sm text-blue-100">
                         {notice}
                     </div>
                 ) : null}
 
                 {form.formState.errors.root?.message ? (
-                    <div className="rounded-2xl border border-red-950/60 bg-red-950/30 px-4 py-3 text-sm text-red-100">
+                    <div className="border border-red-950/60 bg-red-950/30 px-4 py-3 text-sm text-red-100">
                         {form.formState.errors.root.message}
                     </div>
                 ) : null}
@@ -278,7 +287,7 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
                             <Button
                                 type="submit"
                                 disabled={isBusy}
-                                className="h-12 bg-neutral-100 font-medium text-neutral-950 hover:bg-white"
+                                className="h-12 bg-blue-600 text-xs font-semibold text-neutral-100 transition-all duration-300 hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600 sm:text-sm"
                             >
                                 {form.formState.isSubmitting ? (
                                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
@@ -289,7 +298,7 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
                                 type="button"
                                 variant="outline"
                                 disabled={isBusy}
-                                className="h-12 border-neutral-800 bg-neutral-950 text-neutral-100 hover:border-blue-600 hover:bg-neutral-900"
+                                className="h-12 border border-neutral-700 bg-neutral-900 text-neutral-100 transition-all duration-300 hover:border hover:border-blue-600 hover:bg-neutral-950"
                                 onClick={() => {
                                     startResending(async () => {
                                         form.clearErrors('root')
@@ -309,7 +318,7 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
                             type="button"
                             variant="ghost"
                             disabled={isBusy}
-                            className="w-full text-neutral-300 hover:bg-neutral-900 hover:text-neutral-50"
+                            className="w-full border border-neutral-700 bg-neutral-900 text-neutral-100 transition-all duration-300 hover:border hover:border-blue-600 hover:bg-neutral-950"
                             onClick={() => {
                                 startResetting(async () => {
                                     await signIn.reset()

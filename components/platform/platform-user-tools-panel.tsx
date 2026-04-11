@@ -1,9 +1,20 @@
+/**
+ * @introduction Components — TODO: short one-line summary of platform-user-tools-panel.tsx
+ *
+ * @description TODO: longer description for platform-user-tools-panel.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { PlatformActionPanel } from '@/components/platform/platform-action-panel'
 
 interface PlatformUserToolsPanelProps {
     notes?: string
 }
 
+/**
+ * PlatformUserToolsPanel — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function PlatformUserToolsPanel({ notes }: PlatformUserToolsPanelProps) {
     return (
         <PlatformActionPanel

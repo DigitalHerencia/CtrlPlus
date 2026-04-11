@@ -1,3 +1,10 @@
+/**
+ * @introduction Utils — TODO: short one-line summary of catalog-assets.ts
+ *
+ * @description TODO: longer description for catalog-assets.ts. Keep it short — one or two sentences.
+ * Domain: utils
+ * Public: TODO (yes/no)
+ */
 import type { CatalogAssetImageDTO } from '@/types/catalog.types'
 
 type CatalogDeliveryVariant = 'thumbnail' | 'card' | 'detail'
@@ -65,6 +72,10 @@ function buildCloudinaryCatalogDeliveryUrl(
     return `${baseUrl}/${resourceType}/${deliveryType}/${TRANSFORMATION_BY_VARIANT[variant]}${versionSegment}/${publicIdPath}`
 }
 
+/**
+ * getCatalogAssetDeliveryUrl — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getCatalogAssetDeliveryUrl(
     image: CatalogAssetDeliverySource,
     variant: CatalogDeliveryVariant
@@ -85,6 +96,10 @@ export function getCatalogAssetDeliveryUrl(
     return transformedUrl ?? image.url
 }
 
+/**
+ * toCatalogAssetImage — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function toCatalogAssetImage(image: CatalogAssetDeliverySource): CatalogAssetImageDTO {
     return {
         id: image.id,

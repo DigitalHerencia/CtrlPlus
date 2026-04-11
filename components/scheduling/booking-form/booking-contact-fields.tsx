@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of booking-contact-fields.tsx
+ *
+ * @description TODO: longer description for booking-contact-fields.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Input } from '@/components/ui/input'
 
 interface BookingContactFieldsProps {
@@ -9,6 +16,10 @@ interface BookingContactFieldsProps {
     onCustomerPhoneChange: (value: string) => void
 }
 
+/**
+ * BookingContactFields — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function BookingContactFields({
     customerName,
     customerEmail,

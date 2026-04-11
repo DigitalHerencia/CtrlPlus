@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of admin-quick-links.tsx
+ *
+ * @description TODO: longer description for admin-quick-links.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import Link from 'next/link'
 import type { AdminQuickLinkDTO } from '@/types/admin.types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -6,6 +13,10 @@ interface AdminQuickLinksProps {
     links: AdminQuickLinkDTO[]
 }
 
+/**
+ * AdminQuickLinks — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function AdminQuickLinks({ links }: AdminQuickLinksProps) {
     return (
         <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">

@@ -1,3 +1,13 @@
+/**
+ * @introduction Db — TODO: short one-line summary of catalog.selects.ts
+ *
+ * @description TODO: longer description for catalog.selects.ts. Keep it short — one or two sentences.
+ * Domain: db
+ * Public: TODO (yes/no)
+ */
+/**
+ * wrapDTOFields — TODO: brief description.
+ */
 export const wrapDTOFields = {
     id: true,
     name: true,

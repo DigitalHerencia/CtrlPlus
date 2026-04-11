@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of settings-section-nav.tsx
+ *
+ * @description TODO: longer description for settings-section-nav.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
@@ -13,6 +20,10 @@ const navItems = [
     { key: 'docs', href: '/docs', label: 'Documentation' },
 ] as const
 
+/**
+ * SettingsSectionNav — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function SettingsSectionNav({ active }: SettingsSectionNavProps) {
     return (
         <nav className="flex flex-wrap gap-2" aria-label="Settings sections">

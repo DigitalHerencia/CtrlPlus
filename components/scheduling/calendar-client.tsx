@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Components — TODO: brief module description.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
@@ -32,6 +37,10 @@ function normalizeToMidnight(date: Date): Date {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate())
 }
 
+/**
+ * CalendarClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function CalendarClient({
     availableWeekdays,
     selectedDate,

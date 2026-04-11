@@ -1,3 +1,10 @@
+/**
+ * @introduction Integrations — TODO: short one-line summary of huggingface.ts
+ *
+ * @description TODO: longer description for huggingface.ts. Keep it short — one or two sentences.
+ * Domain: integrations
+ * Public: TODO (yes/no)
+ */
 import sharp from 'sharp'
 import { getCloudinaryCredentials } from '@/lib/integrations/cloudinary'
 import {
@@ -31,6 +38,12 @@ function extractHostFromUrl(url: string | undefined): string | null {
     }
 }
 
+/**
+ * visualizerConfig — TODO: brief description.
+ */
+/**
+ * visualizerConfig — TODO: brief description.
+ */
 export const visualizerConfig = {
     maxUploadSizeBytes: Number(process.env.VISUALIZER_MAX_UPLOAD_SIZE_BYTES ?? 10 * 1024 * 1024),
     supportedMimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
@@ -60,6 +73,14 @@ export const visualizerConfig = {
     ),
 }
 
+/**
+ * isAllowedRemotePhotoHost — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * isAllowedRemotePhotoHost — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function isAllowedRemotePhotoHost(hostname: string): boolean {
     const normalizedHostname = hostname.toLowerCase()
 

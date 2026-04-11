@@ -74,12 +74,24 @@ function clampSelection(
     const fallback = getFirstSelection(vehicleIndex, wraps)
     const make = requested.make && vehicleIndex[requested.make] ? requested.make : fallback.make
     const modelOptions = sortedUnique(Object.keys(vehicleIndex[make] ?? {}))
-    const model = requested.model && modelOptions.includes(requested.model) ? requested.model : modelOptions[0] ?? ''
+    const model =
+        requested.model && modelOptions.includes(requested.model)
+            ? requested.model
+            : (modelOptions[0] ?? '')
     const yearOptions = sortedUnique(Object.keys(vehicleIndex[make]?.[model] ?? {}))
-    const year = requested.year && yearOptions.includes(requested.year) ? requested.year : yearOptions[0] ?? ''
+    const year =
+        requested.year && yearOptions.includes(requested.year)
+            ? requested.year
+            : (yearOptions[0] ?? '')
     const trimOptions = sortedUnique(vehicleIndex[make]?.[model]?.[year] ?? [])
-    const trim = requested.trim && trimOptions.includes(requested.trim) ? requested.trim : trimOptions[0] ?? ''
-    const wrapId = requested.wrapId && wraps.some((wrap) => wrap.id === requested.wrapId) ? requested.wrapId : fallback.wrapId
+    const trim =
+        requested.trim && trimOptions.includes(requested.trim)
+            ? requested.trim
+            : (trimOptions[0] ?? '')
+    const wrapId =
+        requested.wrapId && wraps.some((wrap) => wrap.id === requested.wrapId)
+            ? requested.wrapId
+            : fallback.wrapId
 
     return { make, model, year, trim, wrapId }
 }
@@ -97,6 +109,17 @@ function assertCatalogUsable(
     }
 }
 
+/**
+ * Fetch catalog data and compute UI-friendly structures for the HF visualizer.
+ *
+ * - Validates session and capability
+ * - Loads wraps, any booking draft, and user website settings in parallel
+ * - Builds a vehicle index and a normalized list of wrap options
+ * - Returns a stable initial selection and available makes/vehicleIndex
+ *
+ * @param requestedWrapId optional wrap id to prefer when selecting initial wrap
+ * @returns VisualizerHfCatalogData used by the visualizer UI to render options
+ */
 export async function getVisualizerHfCatalogData(
     requestedWrapId: string | null = null
 ): Promise<VisualizerHfCatalogData> {
@@ -108,7 +131,9 @@ export async function getVisualizerHfCatalogData(
     requireCapability(session.authz, 'visualizer.use')
 
     const [wraps, draft, settings] = await Promise.all([
-        listVisualizerSelectableWraps({ includeHidden: session.isOwner || session.isPlatformAdmin }),
+        listVisualizerSelectableWraps({
+            includeHidden: session.isOwner || session.isPlatformAdmin,
+        }),
         prisma.bookingDraft.findUnique({
             where: { customerId: session.userId },
             select: {
@@ -135,8 +160,7 @@ export async function getVisualizerHfCatalogData(
 
     assertCatalogUsable(vehicleIndex, wrapOptions)
 
-    const selectedWrapId =
-        requestedWrapId ?? draft?.wrapId ?? wrapOptions[0]?.id ?? null
+    const selectedWrapId = requestedWrapId ?? draft?.wrapId ?? wrapOptions[0]?.id ?? null
 
     const initialSelection = clampSelection(
         {

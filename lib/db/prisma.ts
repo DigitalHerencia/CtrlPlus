@@ -21,6 +21,9 @@ const globalForPrisma = globalThis as unknown as {
 
 // moved assertNeonPooledRuntimeUrl into lib/utils/assertions to avoid duplication
 
+/**
+ * prisma — TODO: brief description.
+ */
 export const prisma =
     globalForPrisma.prisma ||
     (() => {

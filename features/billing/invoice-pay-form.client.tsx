@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import { useTransition } from 'react'
 import { useForm } from 'react-hook-form'
@@ -16,6 +21,10 @@ interface InvoicePayFormClientProps {
     invoiceId: string
 }
 
+/**
+ * InvoicePayFormClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function InvoicePayFormClient({ invoiceId }: InvoicePayFormClientProps) {
     const [isPending, startTransition] = useTransition()
     const form = useForm<ProcessPaymentInput>({

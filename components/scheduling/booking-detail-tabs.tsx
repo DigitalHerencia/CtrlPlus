@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of booking-detail-tabs.tsx
+ *
+ * @description TODO: longer description for booking-detail-tabs.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import type { ReactNode } from 'react'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -7,6 +14,10 @@ interface BookingDetailTabsProps {
     timeline: ReactNode
 }
 
+/**
+ * BookingDetailTabs — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function BookingDetailTabs({ summary, timeline }: BookingDetailTabsProps) {
     return (
         <Tabs defaultValue="summary" className="space-y-4">

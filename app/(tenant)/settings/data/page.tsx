@@ -1,7 +1,11 @@
-import { DataExportPageFeature } from '@/features/settings/data-export-page-feature'
+import { UnifiedSettingsPageFeature } from '@/features/settings/unified-settings-page-feature'
 import { getSession } from '@/lib/auth/session'
 import { redirect } from 'next/navigation'
 
+/**
+ * Data export settings now redirected to unified settings page.
+ * Maintained for backward compatibility.
+ */
 export default async function DataSettingsPage() {
     const session = await getSession()
 
@@ -9,5 +13,6 @@ export default async function DataSettingsPage() {
         redirect('/sign-in')
     }
 
-    return <DataExportPageFeature tenantId="default-tenant" />
+    // Render unified settings page; tab selection is handled client-side
+    return <UnifiedSettingsPageFeature />
 }

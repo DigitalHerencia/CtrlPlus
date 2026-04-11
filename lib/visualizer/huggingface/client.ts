@@ -1,3 +1,10 @@
+/**
+ * @introduction Visualizer — TODO: short one-line summary of client.ts
+ *
+ * @description TODO: longer description for client.ts. Keep it short — one or two sentences.
+ * Domain: visualizer
+ * Public: TODO (yes/no)
+ */
 import { InferenceClient } from '@huggingface/inference'
 
 import { HuggingFaceGenerationError, mapHfError } from './map-hf-error'
@@ -7,8 +14,20 @@ const DEFAULT_PUBLIC_SPACE_API_NAME = '/infer'
 const DEFAULT_TIMEOUT_MS = 12000
 const DEFAULT_RETRIES = 2
 
+/**
+ * HfPreviewStrategy — TODO: brief description of this type.
+ */
+/**
+ * HfPreviewStrategy — TODO: brief description of this type.
+ */
 export type HfPreviewStrategy = 'space_inpaint' | 'image_to_image'
 
+/**
+ * VisualizerHfConfig — TODO: brief description of this type.
+ */
+/**
+ * VisualizerHfConfig — TODO: brief description of this type.
+ */
 export interface VisualizerHfConfig {
     apiKey: string | null
     modelName: string
@@ -73,10 +92,26 @@ function parseImg2ImgStrength(value: string | undefined): number {
     return parsed
 }
 
+/**
+ * getOptionalHfApiKey — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getOptionalHfApiKey — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getOptionalHfApiKey(): string | null {
     return trimEnvValue(process.env.HF_API_KEY) ?? trimEnvValue(process.env.HUGGINGFACE_API_TOKEN)
 }
 
+/**
+ * getVisualizerHfConfig — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getVisualizerHfConfig — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getVisualizerHfConfig(): VisualizerHfConfig {
     const spaceId = trimEnvValue(process.env.HF_SPACE_ID) ?? DEFAULT_PUBLIC_SPACE_ID
 
@@ -107,38 +142,110 @@ function getHfApiKey(): string {
     return apiKey
 }
 
+/**
+ * getHfModelName — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getHfModelName — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getHfModelName(): string {
     return getVisualizerHfConfig().modelName
 }
 
+/**
+ * getHfPreviewStrategy — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getHfPreviewStrategy — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getHfPreviewStrategy(): HfPreviewStrategy {
     return getVisualizerHfConfig().previewStrategy
 }
 
+/**
+ * getHfInferenceProvider — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getHfInferenceProvider — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getHfInferenceProvider(): string {
     return getVisualizerHfConfig().inferenceProvider
 }
 
+/**
+ * getHfSpaceId — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getHfSpaceId — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getHfSpaceId(): string {
     return getVisualizerHfConfig().spaceId
 }
 
+/**
+ * getHfSpaceApiName — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getHfSpaceApiName — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getHfSpaceApiName(): string {
     return getVisualizerHfConfig().spaceApiName
 }
 
+/**
+ * getHfTimeoutMs — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getHfTimeoutMs — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getHfTimeoutMs(): number {
     return getVisualizerHfConfig().timeoutMs
 }
 
+/**
+ * getHfImg2ImgStrength — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getHfImg2ImgStrength — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getHfImg2ImgStrength(): number {
     return getVisualizerHfConfig().img2imgStrength
 }
 
+/**
+ * getHfRetryCount — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * getHfRetryCount — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function getHfRetryCount(): number {
     return getVisualizerHfConfig().retries
 }
 
+/**
+ * createHfClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * createHfClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function createHfClient(): InferenceClient {
     return new InferenceClient(getHfApiKey())
 }

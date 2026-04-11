@@ -1,21 +1,53 @@
+/**
+ * @introduction Visualizer — TODO: short one-line summary of build-wrap-preview-prompt.ts
+ *
+ * @description TODO: longer description for build-wrap-preview-prompt.ts. Keep it short — one or two sentences.
+ * Domain: visualizer
+ * Public: TODO (yes/no)
+ */
 import crypto from 'crypto'
 
+/**
+ * Input used to build a textual prompt for wrap preview generation.
+ */
+/**
+ * BuildWrapPreviewPromptInput — TODO: brief description of this type.
+ */
+/**
+ * BuildWrapPreviewPromptInput — TODO: brief description of this type.
+ */
 export interface BuildWrapPreviewPromptInput {
     wrapName: string
     wrapDescription: string | null
     referenceImageCount: number
+    /** Optional template string containing placeholders (e.g. {{wrap_name}}) */
     aiPromptTemplate: string | null
+    /** Optional negative prompt to bias generation away from undesired outputs */
     aiNegativePrompt?: string | null
 }
 
+/**
+ * Produced prompt payload used by the generation pipeline and for cache/versioning.
+ */
+/**
+ * WrapPreviewPromptResult — TODO: brief description of this type.
+ */
+/**
+ * WrapPreviewPromptResult — TODO: brief description of this type.
+ */
 export interface WrapPreviewPromptResult {
+    /** Positive prompt text */
     prompt: string
+    /** Negative prompt text */
     negativePrompt: string
+    /** Deterministic version/hash of the prompt pair for cache keys */
     promptVersion: string
 }
 
+/** Maximum budget (words) to keep prompts concise when clamping */
 const DEFAULT_CLIP_WORD_BUDGET = 55
 
+/** Read and normalize a process env variable that can override the clip word budget. */
 function parseClipWordBudget(): number {
     const raw = process.env.HF_CLIP_PROMPT_WORD_BUDGET
     const parsed = Number(raw)
@@ -32,6 +64,7 @@ function parseClipWordBudget(): number {
     return normalized
 }
 
+/** Ensure a prompt is at most `maxWords` long, trimming and normalizing whitespace. */
 function clampPromptWords(value: string, maxWords = parseClipWordBudget()): string {
     const words = value.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean)
 
@@ -42,6 +75,7 @@ function clampPromptWords(value: string, maxWords = parseClipWordBudget()): stri
     return `${words.slice(0, maxWords).join(' ')}.`
 }
 
+/** Apply a simple template by replacing known placeholders with input values. */
 function applyTemplate(template: string, input: BuildWrapPreviewPromptInput): string {
     return template
         .replaceAll('{{wrap_name}}', input.wrapName)
@@ -49,6 +83,10 @@ function applyTemplate(template: string, input: BuildWrapPreviewPromptInput): st
         .replaceAll('{{reference_image_count}}', String(input.referenceImageCount))
 }
 
+/**
+ * Heuristic detection for broken template artifacts that indicate the template
+ * is not safe to use as-is (e.g. leftover array/quote artifacts inserted by tooling).
+ */
 function hasBrokenTemplateArtifacts(template: string): boolean {
     const normalized = template.replaceAll('\r\n', '\n')
 
@@ -60,6 +98,7 @@ function hasBrokenTemplateArtifacts(template: string): boolean {
     )
 }
 
+/** Build a sensible default prompt when no template is supplied or when the template is invalid. */
 function buildDefaultPrompt(input: BuildWrapPreviewPromptInput): string {
     return [
         'Use image 1 as the source truck and the other images as wrap references.',
@@ -73,9 +112,22 @@ function buildDefaultPrompt(input: BuildWrapPreviewPromptInput): string {
         .join(' ')
 }
 
+/** Default negative prompt describing things the model must avoid. */
 const DEFAULT_NEGATIVE_PROMPT =
     'Do not alter vehicle identity, body shape, wheels, windows, reflections, lighting, or background. No extra people, vehicles, warped geometry, duplicate panels, blur, or unreadable text artifacts.'
 
+/**
+ * Build a prompt / negativePrompt pair and a deterministic promptVersion hash.
+ * This is suitable for sending to a generation provider or for cache-keying.
+ */
+/**
+ * buildWrapPreviewPrompt — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * buildWrapPreviewPrompt — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function buildWrapPreviewPrompt(
     input: BuildWrapPreviewPromptInput
 ): WrapPreviewPromptResult {

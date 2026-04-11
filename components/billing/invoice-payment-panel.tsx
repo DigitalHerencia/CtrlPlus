@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of invoice-payment-panel.tsx
+ *
+ * @description TODO: longer description for invoice-payment-panel.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import Link from 'next/link'
 
 import { isInvoicePayable } from '@/lib/constants/statuses'
@@ -10,6 +17,10 @@ interface InvoicePaymentPanelProps {
     canManageInvoice: boolean
 }
 
+/**
+ * InvoicePaymentPanel — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function InvoicePaymentPanel({ invoice, canManageInvoice }: InvoicePaymentPanelProps) {
     const canPayInvoice = isInvoicePayable(invoice.status)
     const canAdjustInvoice =

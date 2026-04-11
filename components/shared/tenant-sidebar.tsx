@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Components — TODO: brief module description.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 
 import { UserMenu } from '@/components/auth/user-menu'
 import { LogoIcon } from '@/components/shared/logo-icon'
@@ -29,6 +34,10 @@ interface TenantSidebarProps {
     canAccessAdminConsole: boolean
     children: ReactNode
 }
+/**
+ * TenantSidebar — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function TenantSidebar({
     canAccessOwnerDashboard,
     canAccessAdminConsole,

@@ -1,19 +1,35 @@
+/**
+ * @introduction Db — TODO: short one-line summary of scheduling.transactions.ts
+ *
+ * @description TODO: longer description for scheduling.transactions.ts. Keep it short — one or two sentences.
+ * Domain: db
+ * Public: TODO (yes/no)
+ */
 import type { Prisma, PrismaClient } from '@prisma/client'
 
 import { toHHmm } from '@/lib/utils/dates'
 
 type SchedulingWriter = PrismaClient | Prisma.TransactionClient
 
+/**
+ * SlotRange — TODO: brief description of this type.
+ */
 export interface SlotRange {
     startTime: Date
     endTime: Date
 }
 
+/**
+ * AssertSlotCapacityInput — TODO: brief description of this type.
+ */
 export interface AssertSlotCapacityInput extends SlotRange {
     excludeBookingId?: string
     now?: Date
 }
 
+/**
+ * ConfirmAdminAppointmentParams — TODO: brief description of this type.
+ */
 export interface ConfirmAdminAppointmentParams {
     bookingId: string
     status: 'confirmed' | 'cancelled' | 'rescheduled'

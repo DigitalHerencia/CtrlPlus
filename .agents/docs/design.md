@@ -292,10 +292,124 @@ Pattern: Base styles for mobile, `md:` for tablets, `lg:` for desktop.
 - Graceful degradation for older browsers
 - No IE11 support
 
+## Dashboard Pages
+
+Dashboard pages are the primary user-facing interface for tenant operations. All dashboard pages follow standardized component and layout patterns defined in `.agents/docs/page-patterns.md`.
+
+### Workspace Page Components
+
+Every dashboard uses four core components from `components/shared/tenant-elements.tsx`:
+
+#### 1. WorkspacePageIntro
+
+Domain-specific page header introducing the section.
+
+**Styling**:
+
+- Border: `border-neutral-700`
+- Background: `bg-neutral-950/80`
+- Padding: `px-6 py-7`
+- Label: `text-xs uppercase tracking-[0.24em] text-blue-600`
+- Title: `text-3xl sm:text-4xl font-black tracking-tight text-neutral-100`
+- Description: `text-sm sm:text-base text-neutral-100`
+
+#### 2. WorkspacePageContextCard
+
+Actions panel for domain-specific workflows.
+
+**Styling**:
+
+- Border: `border-neutral-700`
+- Background: `bg-neutral-950/80`
+- Padding: `px-6 py-6`
+- Layout: Two-column on desktop (labels left, actions right), stacked on mobile
+- Button gap: `gap-3`
+
+#### 3. WorkspaceMetricCard
+
+KPI statistic with label, value, and optional icon/badge.
+
+**Styling**:
+
+- Border: `border-neutral-700`
+- Background: `bg-neutral-950/80`
+- Label: `text-xs uppercase tracking-[0.18em] text-neutral-100`
+- Value: `text-3xl font-black tracking-tight text-neutral-100`
+- Icon: `border border-blue-600 text-blue-600 bg-neutral-900` (12x12px container)
+- Badge: `border-neutral-700 text-neutral-100` (outline variant)
+
+**Grid Pattern**:
+
+```
+Mobile (1 col): grid-cols-1
+Tablet (2 col): md:grid-cols-2
+Desktop (4 col): lg:grid-cols-4
+Gap: gap-4 sm:gap-6 lg:gap-8
+```
+
+#### 4. WorkspaceEmptyState
+
+No-data state for empty results.
+
+**Styling**:
+
+- Border: `border border-dashed border-neutral-700` (dashed = empty)
+- Background: `bg-neutral-950/80`
+- Padding: `py-14` (centered vertical)
+- Label: `text-xs uppercase tracking-[0.24em] text-blue-600`
+- Title: `text-xl font-bold text-neutral-100`
+- Description: `text-sm text-neutral-100 max-w-md`
+
+### Dashboard Page Spacing
+
+```tsx
+<div className="space-y-6">  {/* 24px between major sections */}
+    <WorkspacePageIntro ... />
+    <WorkspacePageContextCard ... />
+
+    <Suspense fallback={<StatsSkeleton />}>
+        <StatsSection ... />
+    </Suspense>
+
+    <FiltersSection ... />
+
+    <Suspense fallback={<TableSkeleton />}>
+        <TableSection ... />
+    </Suspense>
+</div>
+```
+
+**Spacing Rules**:
+
+- Between page sections: `space-y-6` (24px)
+- Within grouped content: `space-y-4` (16px)
+- Grid/flex gaps: `gap-4 sm:gap-6 lg:gap-8`
+
+### Integration with Design System
+
+Dashboard pages inherit all design system rules:
+
+- **Color System**: Use only colors from the palette (blue-600, neutral-\* only)
+- **Typography Scale**: Page title = text-3xl sm:text-4xl, metrics = text-3xl
+- **Responsive**: Mobile-first pattern (1 col → 2 col → 4 col)
+- **Buttons**: Primary (solid blue) + Secondary (outline neutral) only
+- **Animations**: Use transition-all on card hovers, fade-in for lazy-loaded sections
+- **Accessibility**: WCAG AA contrast, semantic HTML, focus visible
+
+### Reference Implementations
+
+- **Scheduling**: `features/scheduling/scheduling-dashboard-page-feature.tsx`
+- **Billing**: `features/billing/invoices-dashboard-page-feature.tsx`
+- **Settings**: `features/settings/unified-settings-page-feature.tsx`
+- **Visualizer**: `features/visualizer/visualizer-hf-page-feature.tsx`
+
+Study these pages for exact patterns and implementation details. See `.agents/docs/page-patterns.md` for comprehensive architecture documentation.
+
 ## Future Considerations
 
 - Dark/light mode toggle (if needed)
 - Internationalization (i18n)
 - RTL language support
 - Advanced animations (Framer Motion) if complex interactions needed
+- Component storybook for documentation
 - Component storybook for documentation

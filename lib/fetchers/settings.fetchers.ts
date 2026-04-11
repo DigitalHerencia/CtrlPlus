@@ -1,3 +1,10 @@
+/**
+ * @introduction Fetchers — TODO: short one-line summary of settings.fetchers.ts
+ *
+ * @description TODO: longer description for settings.fetchers.ts. Keep it short — one or two sentences.
+ * Domain: fetchers
+ * Public: TODO (yes/no)
+ */
 import 'server-only'
 import { requireAuthzCapability } from '@/lib/authz/guards'
 import { requireOwnerOrAdmin } from '@/lib/authz/policy'
@@ -15,6 +22,18 @@ import { DEFAULT_STORE_TIMEZONE } from '@/lib/constants/app'
 
 const SETTINGS_TENANT_ID = 'default-tenant'
 
+/**
+ * resolveSettingsTenantId — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * resolveSettingsTenantId — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * resolveSettingsTenantId — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function resolveSettingsTenantId(_tenantId?: string | null): string {
     void _tenantId
     return SETTINGS_TENANT_ID
@@ -29,6 +48,18 @@ function createDefaultWebsiteSettingsInput(): WebsiteSettingsInput {
     }
 }
 
+/**
+ * createWebsiteSettingsDTO — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * createWebsiteSettingsDTO — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+/**
+ * createWebsiteSettingsDTO — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function createWebsiteSettingsDTO(
     input: WebsiteSettingsInput,
     updatedAt: Date | string | null

@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import { useTransition } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -17,6 +22,10 @@ interface InvoiceAdjustFormClientProps {
     invoiceId: string
 }
 
+/**
+ * InvoiceAdjustFormClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function InvoiceAdjustFormClient({ invoiceId }: InvoiceAdjustFormClientProps) {
     const [isPending, startTransition] = useTransition()
     const form = useForm<ApplyCreditInput>({

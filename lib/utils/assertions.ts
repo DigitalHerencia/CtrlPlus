@@ -1,3 +1,14 @@
+/**
+ * @introduction Utils — TODO: short one-line summary of assertions.ts
+ *
+ * @description TODO: longer description for assertions.ts. Keep it short — one or two sentences.
+ * Domain: utils
+ * Public: TODO (yes/no)
+ */
+/**
+ * assertNeonPooledRuntimeUrl — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function assertNeonPooledRuntimeUrl(connectionString: string): void {
     let hostname: string
 
@@ -17,6 +28,10 @@ export function assertNeonPooledRuntimeUrl(connectionString: string): void {
     }
 }
 
+/**
+ * assertApprovedRemoteHost — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function assertApprovedRemoteHost(url: URL, isAllowedHost: (hostname: string) => boolean): void {
     const host = url.hostname.toLowerCase()
     if (!isAllowedHost(host)) {

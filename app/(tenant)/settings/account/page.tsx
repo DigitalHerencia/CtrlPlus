@@ -1,7 +1,11 @@
-import { AccountSettingsPageFeature } from '@/features/settings/account-settings-page-feature'
+import { UnifiedSettingsPageFeature } from '@/features/settings/unified-settings-page-feature'
 import { getSession } from '@/lib/auth/session'
 import { redirect } from 'next/navigation'
 
+/**
+ * Account settings now redirected to unified settings page.
+ * Maintained for backward compatibility.
+ */
 export default async function AccountSettingsPage() {
     const session = await getSession()
 
@@ -9,5 +13,6 @@ export default async function AccountSettingsPage() {
         redirect('/sign-in')
     }
 
-    return <AccountSettingsPageFeature tenantId="default-tenant" />
+    // Render unified settings page; tab selection is handled client-side
+    return <UnifiedSettingsPageFeature />
 }

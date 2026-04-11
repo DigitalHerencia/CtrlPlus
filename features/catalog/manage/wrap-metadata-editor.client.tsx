@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import { useTransition } from 'react'
 import { useState } from 'react'
@@ -18,6 +23,9 @@ import { updateWrap } from '@/lib/actions/catalog.actions'
 import { updateWrapSchema } from '@/schemas/catalog.schemas'
 import type { CatalogDetailDTO, UpdateWrapInput } from '@/types/catalog.types'
 
+/**
+ * WrapMetadataEditorProps — TODO: brief description of this type.
+ */
 export interface WrapMetadataEditorProps {
     wrap: CatalogDetailDTO
 }
@@ -39,6 +47,10 @@ function parsePriceInput(value: unknown): number | undefined {
     return Math.round(parsed * 100)
 }
 
+/**
+ * WrapMetadataEditor — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function WrapMetadataEditor({ wrap }: WrapMetadataEditorProps) {
     const [isPending, startTransition] = useTransition()
     const [serverMessage, setServerMessage] = useState<string | null>(null)

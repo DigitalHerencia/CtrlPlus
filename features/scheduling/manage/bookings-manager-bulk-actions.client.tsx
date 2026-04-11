@@ -1,9 +1,18 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 
+/**
+ * BookingsManagerBulkActionsClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function BookingsManagerBulkActionsClient() {
     const [isRunning, setIsRunning] = useState(false)
 

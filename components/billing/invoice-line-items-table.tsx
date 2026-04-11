@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of invoice-line-items-table.tsx
+ *
+ * @description TODO: longer description for invoice-line-items-table.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
     Table,
@@ -18,6 +25,10 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
     currency: 'USD',
 })
 
+/**
+ * InvoiceLineItemsTable — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function InvoiceLineItemsTable({ lineItems }: InvoiceLineItemsTableProps) {
     return (
         <Card className="border-neutral-800 bg-neutral-900">

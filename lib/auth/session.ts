@@ -1,3 +1,10 @@
+/**
+ * @introduction Auth — TODO: short one-line summary of session.ts
+ *
+ * @description TODO: longer description for session.ts. Keep it short — one or two sentences.
+ * Domain: auth
+ * Public: TODO (yes/no)
+ */
 import 'server-only'
 import { resolveGlobalRoleForClerkUserId } from '@/lib/auth/identity'
 import { type AuthzContext } from '@/types/auth.types'
@@ -7,6 +14,9 @@ import { cache } from 'react'
 
 /**
  * Resolves the current authenticated user and authorization role from Clerk.
+ */
+/**
+ * getSession — TODO: brief description.
  */
 export const getSession = cache(async (): Promise<SessionContext> => {
     const { userId: clerkUserId } = await auth()

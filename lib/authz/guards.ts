@@ -1,3 +1,10 @@
+/**
+ * @introduction Authz — TODO: short one-line summary of guards.ts
+ *
+ * @description TODO: longer description for guards.ts. Keep it short — one or two sentences.
+ * Domain: authz
+ * Public: TODO (yes/no)
+ */
 import { getSession } from '@/lib/auth/session'
 import {
     canAccessCustomerOwnedResource,
@@ -10,6 +17,9 @@ import {
 import { type Capability } from '@/types/auth.types'
 import { type SessionContext } from '@/types/auth.types'
 
+/**
+ * BillingAccessContext — TODO: brief description of this type.
+ */
 export interface BillingAccessContext {
     session: SessionContext & { userId: string }
     canReadAllInvoices: boolean
@@ -65,6 +75,10 @@ export async function getBillingAccessContext(): Promise<BillingAccessContext> {
     }
 }
 
+/**
+ * requireInvoiceWriteAccess — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function requireInvoiceWriteAccess(access: BillingAccessContext, customerId: string): void {
     const canWriteOwnInvoices =
         access.canWriteAllInvoices || hasCapability(access.session.authz, 'billing.write.own')

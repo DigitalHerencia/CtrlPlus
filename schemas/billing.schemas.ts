@@ -7,6 +7,12 @@ export const invoiceListParamsSchema = paginationParamsSchema.extend({
     query: z.string().trim().max(120).optional(),
 })
 
+export const invoiceFilterFormSchema = z.object({
+    query: z.string().trim().max(200, 'Search must be 200 characters or fewer.'),
+    invoiceId: z.string().trim().max(64).default(''),
+    sortBy: z.enum(['createdAt', 'name', 'price']),
+})
+
 export const createInvoiceSchema = z.object({
     bookingId: z.string().min(1),
     tenantId: z.string().min(1).optional(),

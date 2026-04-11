@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of platform-webhook-diagnostics.tsx
+ *
+ * @description TODO: longer description for platform-webhook-diagnostics.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -7,6 +14,10 @@ interface PlatformWebhookDiagnosticsProps {
     overview: WebhookOperationsOverviewDTO
 }
 
+/**
+ * PlatformWebhookDiagnostics — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function PlatformWebhookDiagnostics({ overview }: PlatformWebhookDiagnosticsProps) {
     return (
         <div className="grid gap-4 lg:grid-cols-2">

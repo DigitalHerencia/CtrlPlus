@@ -1,0 +1,87 @@
+'use client'
+/**
+ * Components — TODO: brief module description.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
+
+import { Input } from '@/components/ui/input'
+import { FormField } from './form-field'
+import { ProfileFormGroup } from './profile-form-group'
+
+interface ProfileFormVehicleProps {
+    vehicleMake: string
+    vehicleModel: string
+    vehicleYear: string
+    vehicleTrim: string
+    onMakeChange: (value: string) => void
+    onModelChange: (value: string) => void
+    onYearChange: (value: string) => void
+    onTrimChange: (value: string) => void
+}
+
+/**
+ * ProfileFormVehicle — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+export function ProfileFormVehicle({
+    vehicleMake,
+    vehicleModel,
+    vehicleYear,
+    vehicleTrim,
+    onMakeChange,
+    onModelChange,
+    onYearChange,
+    onTrimChange,
+}: ProfileFormVehicleProps) {
+    return (
+        <ProfileFormGroup
+            title="Vehicle Preferences"
+            description="Set your default wrap vehicle to streamline project setup"
+        >
+            <div className="grid grid-cols-2 gap-4">
+                <FormField label="Vehicle Make">
+                    <Input
+                        id="vehicle-make"
+                        value={vehicleMake}
+                        onChange={(e) => onMakeChange(e.target.value)}
+                        placeholder="Ford"
+                        className="bg-neutral-800 text-neutral-100 placeholder:text-neutral-500"
+                    />
+                </FormField>
+
+                <FormField label="Vehicle Model">
+                    <Input
+                        id="vehicle-model"
+                        value={vehicleModel}
+                        onChange={(e) => onModelChange(e.target.value)}
+                        placeholder="Mustang"
+                        className="bg-neutral-800 text-neutral-100 placeholder:text-neutral-500"
+                    />
+                </FormField>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <FormField label="Vehicle Year">
+                    <Input
+                        id="vehicle-year"
+                        value={vehicleYear}
+                        onChange={(e) => onYearChange(e.target.value)}
+                        placeholder="2022"
+                        className="bg-neutral-800 text-neutral-100 placeholder:text-neutral-500"
+                    />
+                </FormField>
+
+                <FormField label="Vehicle Trim">
+                    <Input
+                        id="vehicle-trim"
+                        value={vehicleTrim}
+                        onChange={(e) => onTrimChange(e.target.value)}
+                        placeholder="EcoBoost"
+                        className="bg-neutral-800 text-neutral-100 placeholder:text-neutral-500"
+                    />
+                </FormField>
+            </div>
+        </ProfileFormGroup>
+    )
+}

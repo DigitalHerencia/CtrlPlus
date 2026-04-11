@@ -1,3 +1,13 @@
+/**
+ * @introduction Db — TODO: short one-line summary of visualizer.selects.ts
+ *
+ * @description TODO: longer description for visualizer.selects.ts. Keep it short — one or two sentences.
+ * Domain: db
+ * Public: TODO (yes/no)
+ */
+/**
+ * visualizerPreviewDTOFields — TODO: brief description.
+ */
 export const visualizerPreviewDTOFields = {
     id: true,
     wrapId: true,
@@ -38,6 +48,9 @@ export const visualizerPreviewDTOFields = {
     resultFormat: true,
 } as const
 
+/**
+ * visualizerUploadSnapshotFields — TODO: brief description.
+ */
 export const visualizerUploadSnapshotFields = {
     id: true,
     mimeType: true,
@@ -53,6 +66,9 @@ export const visualizerUploadSnapshotFields = {
     format: true,
 } as const
 
+/**
+ * visualizerPreviewImageAssetFields — TODO: brief description.
+ */
 export const visualizerPreviewImageAssetFields = {
     resultLegacyUrl: true,
     processedImageUrl: true,
@@ -63,6 +79,9 @@ export const visualizerPreviewImageAssetFields = {
     resultFormat: true,
 } as const
 
+/**
+ * visualizerUploadImageAssetFields — TODO: brief description.
+ */
 export const visualizerUploadImageAssetFields = {
     legacyUrl: true,
     cloudinaryPublicId: true,

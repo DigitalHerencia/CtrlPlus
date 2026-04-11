@@ -1,4 +1,14 @@
 'use server'
+/**
+ * Actions — TODO: brief module description.
+ * Domain: actions
+ * Public: TODO (yes/no)
+ */
+/**
+ * Actions — TODO: brief module description.
+ * Domain: actions
+ * Public: TODO (yes/no)
+ */
 
 import { revalidatePath } from 'next/cache'
 
@@ -593,6 +603,12 @@ const STRIPE_WEBHOOK_ACTOR = 'system:stripe-webhook'
 
 type WebhookEventState = 'process' | 'processed' | 'processing'
 
+/**
+ * ProcessStripeWebhookEventResult — TODO: brief description of this type.
+ */
+/**
+ * ProcessStripeWebhookEventResult — TODO: brief description of this type.
+ */
 export type ProcessStripeWebhookEventResult =
     | {
           kind: 'ignored'

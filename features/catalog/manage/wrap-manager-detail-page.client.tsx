@@ -1,4 +1,9 @@
 'use client'
+/**
+ * Features — TODO: brief module description.
+ * Domain: features
+ * Public: TODO (yes/no)
+ */
 
 import { useState } from 'react'
 
@@ -9,10 +14,17 @@ import type { CatalogDetailDTO } from '@/types/catalog.types'
 import { WrapMetadataEditor } from './wrap-metadata-editor.client'
 import { WrapPublishPanel } from './wrap-publish-panel.client'
 
+/**
+ * WrapManagerDetailPageClientProps — TODO: brief description of this type.
+ */
 export interface WrapManagerDetailPageClientProps {
     wrap: CatalogDetailDTO
 }
 
+/**
+ * WrapManagerDetailPageClient — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function WrapManagerDetailPageClient({ wrap }: WrapManagerDetailPageClientProps) {
     const [activeTab, setActiveTab] = useState('metadata')
 

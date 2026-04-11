@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of wrap-asset-readiness-panel.tsx
+ *
+ * @description TODO: longer description for wrap-asset-readiness-panel.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { AlertCircle, CheckCircle2 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -7,6 +14,10 @@ interface WrapAssetReadinessPanelProps {
     readiness: CatalogAssetReadinessDTO
 }
 
+/**
+ * WrapAssetReadinessPanel — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function WrapAssetReadinessPanel({ readiness }: WrapAssetReadinessPanelProps) {
     return (
         <div className="space-y-3">

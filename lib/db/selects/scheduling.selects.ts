@@ -1,3 +1,13 @@
+/**
+ * @introduction Db — TODO: short one-line summary of scheduling.selects.ts
+ *
+ * @description TODO: longer description for scheduling.selects.ts. Keep it short — one or two sentences.
+ * Domain: db
+ * Public: TODO (yes/no)
+ */
+/**
+ * availabilitySelectFields — TODO: brief description.
+ */
 export const availabilitySelectFields = {
     id: true,
     dayOfWeek: true,
@@ -8,6 +18,9 @@ export const availabilitySelectFields = {
     updatedAt: true,
 } as const
 
+/**
+ * bookingSelectFields — TODO: brief description.
+ */
 export const bookingSelectFields = {
     id: true,
     customerId: true,
@@ -49,6 +62,9 @@ export const bookingSelectFields = {
     updatedAt: true,
 } as const
 
+/**
+ * bookingDraftSelectFields — TODO: brief description.
+ */
 export const bookingDraftSelectFields = {
     id: true,
     customerId: true,

@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of invoice-lifecycle-panel.tsx
+ *
+ * @description TODO: longer description for invoice-lifecycle-panel.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { type ReactNode } from 'react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -6,6 +13,10 @@ interface InvoiceLifecyclePanelProps {
     children: ReactNode
 }
 
+/**
+ * InvoiceLifecyclePanel — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function InvoiceLifecyclePanel({ children }: InvoiceLifecyclePanelProps) {
     return (
         <Card className="border-neutral-800 bg-neutral-900">

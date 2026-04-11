@@ -1,3 +1,10 @@
+/**
+ * @introduction Components — TODO: short one-line summary of booking-notes-fields.tsx
+ *
+ * @description TODO: longer description for booking-notes-fields.tsx. Keep it short — one or two sentences.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 import { Textarea } from '@/components/ui/textarea'
 
 interface BookingNotesFieldsProps {
@@ -5,6 +12,10 @@ interface BookingNotesFieldsProps {
     onNotesChange: (value: string) => void
 }
 
+/**
+ * BookingNotesFields — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function BookingNotesFields({ notes, onNotesChange }: BookingNotesFieldsProps) {
     return (
         <section className="space-y-3 md:col-span-2">

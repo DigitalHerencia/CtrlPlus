@@ -1,7 +1,16 @@
 'use client'
+/**
+ * Components — TODO: brief module description.
+ * Domain: components
+ * Public: TODO (yes/no)
+ */
 
 import { UserButton } from '@clerk/nextjs'
 
+/**
+ * UserMenu — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
 export function UserMenu() {
     return (
         <UserButton
