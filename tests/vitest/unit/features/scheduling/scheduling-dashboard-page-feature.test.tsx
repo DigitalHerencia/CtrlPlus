@@ -48,9 +48,8 @@ describe('SchedulingDashboardPageFeature', () => {
             address: '123 Main St, Denver, CO 80202',
         })
 
-        const { SchedulingDashboardPageFeature } = await import(
-            '@/features/scheduling/scheduling-dashboard-page-feature'
-        )
+        const { SchedulingDashboardPageFeature } =
+            await import('@/features/scheduling/scheduling-dashboard-page-feature')
 
         render(
             await SchedulingDashboardPageFeature({
@@ -65,6 +64,13 @@ describe('SchedulingDashboardPageFeature', () => {
             '/scheduling/book'
         )
         expect(screen.queryByRole('link', { name: /Manage Appointments/i })).not.toBeInTheDocument()
+        expect(screen.queryByText(/Upcoming Appointments/i)).not.toBeInTheDocument()
+        expect(screen.queryByText(/Awaiting Review/i)).not.toBeInTheDocument()
+        expect(screen.queryByText(/Confirmed/i)).not.toBeInTheDocument()
+        expect(screen.queryByText(/Install Location/i)).not.toBeInTheDocument()
+        expect(
+            screen.queryByText(/Owner\/admin teams coordinate confirmations and reschedules/i)
+        ).not.toBeInTheDocument()
         expect(screen.queryByRole('link', { name: /Admin Console/i })).not.toBeInTheDocument()
     })
 
@@ -83,9 +89,8 @@ describe('SchedulingDashboardPageFeature', () => {
             address: null,
         })
 
-        const { SchedulingDashboardPageFeature } = await import(
-            '@/features/scheduling/scheduling-dashboard-page-feature'
-        )
+        const { SchedulingDashboardPageFeature } =
+            await import('@/features/scheduling/scheduling-dashboard-page-feature')
 
         render(
             await SchedulingDashboardPageFeature({
@@ -98,6 +103,13 @@ describe('SchedulingDashboardPageFeature', () => {
             'href',
             '/scheduling/manage'
         )
+        expect(screen.getByText(/Upcoming Appointments/i)).toBeVisible()
+        expect(screen.getByText(/Awaiting Review/i)).toBeVisible()
+        expect(screen.getByText(/Confirmed/i)).toBeVisible()
+        expect(screen.getByText(/Install Location/i)).toBeVisible()
+        expect(
+            screen.getByText(/Owner\/admin teams coordinate confirmations and reschedules/i)
+        ).toBeVisible()
         expect(screen.queryByRole('link', { name: /Owner Dashboard/i })).not.toBeInTheDocument()
         expect(screen.queryByRole('link', { name: /Admin Console/i })).not.toBeInTheDocument()
     })

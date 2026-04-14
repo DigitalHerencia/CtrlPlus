@@ -132,9 +132,9 @@ export function InvoiceSearchFilterClient() {
     }, [watchedValues])
 
     const inputClassName =
-        'h-11 border border-neutral-700 bg-neutral-950/80 px-3 text-sm text-neutral-100 placeholder:text-neutral-500'
+        'h-11 border border-neutral-700 bg-neutral-900 px-3 text-sm text-neutral-100 placeholder:text-neutral-500'
     const selectClassName =
-        'h-11 border border-neutral-700 bg-neutral-950/80 px-3 text-sm text-neutral-100'
+        'h-11 border border-neutral-700 bg-neutral-900 px-3 text-sm text-neutral-100'
 
     return (
         <form onSubmit={(event) => event.preventDefault()} className="space-y-4">

@@ -15,6 +15,7 @@ import {
     InvoicesDashboardStatsSection,
     InvoicesDashboardTableSection,
 } from './invoices-dashboard-parts'
+import { getSession } from '@/lib/auth/session'
 
 interface InvoicesDashboardPageFeatureProps {
     searchParams?: Promise<SearchParamRecord>
@@ -25,6 +26,8 @@ export async function InvoicesDashboardPageFeature({
 }: InvoicesDashboardPageFeatureProps) {
     const resolvedParams = (searchParams ? await searchParams : {}) satisfies SearchParamRecord
     const { filters } = parseBillingSearchParams(resolvedParams)
+    const session = await getSession()
+    const canManageInvoices = session?.role === 'owner' || session?.role === 'admin'
 
     return (
         <div className="space-y-6">
@@ -36,11 +39,13 @@ export async function InvoicesDashboardPageFeature({
             />
 
             {/* Actions Section */}
-            <WorkspacePageContextCard>
-                <Button asChild>
-                    <Link href="/billing/manage">Manage Invoices</Link>
-                </Button>
-            </WorkspacePageContextCard>
+            {canManageInvoices && (
+                <WorkspacePageContextCard>
+                    <Button asChild>
+                        <Link href="/billing/manage">Manage Invoices</Link>
+                    </Button>
+                </WorkspacePageContextCard>
+            )}
 
             {/* KPI Cards Section */}
             <Suspense fallback={<BillingKpiCardsSkeleton />}>
@@ -52,7 +57,7 @@ export async function InvoicesDashboardPageFeature({
 
             {/* Results Section */}
             <Suspense fallback={<BillingInvoiceTableSkeleton />}>
-                <InvoicesDashboardTableSection filters={filters} />
+                {canManageInvoices ? <InvoicesDashboardTableSection filters={filters} /> : null}
             </Suspense>
         </div>
     )

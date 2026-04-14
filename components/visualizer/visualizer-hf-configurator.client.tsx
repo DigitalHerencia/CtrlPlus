@@ -250,7 +250,7 @@ export function VisualizerHfConfiguratorClient({
                             className="w-full rounded-lg border border-neutral-700 object-cover"
                         />
                     ) : (
-                        <div className="flex min-h-72 items-center justify-center rounded-lg border border-dashed border-neutral-700 bg-neutral-900 text-sm text-neutral-400">
+                        <div className="flex min-h-72 items-center justify-center rounded-lg border border-dashed border-neutral-700 bg-neutral-900 p-4 text-sm text-neutral-400">
                             Generate a concept preview to compare directions before you book.
                         </div>
                     )}

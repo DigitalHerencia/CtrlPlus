@@ -20,7 +20,7 @@ interface WrapDetailHeaderProps {
  */
 export function WrapDetailHeader({ wrap }: WrapDetailHeaderProps) {
     return (
-        <CardHeader className="gap-4">
+        <CardHeader className="space-y-4">
             <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="space-y-3">
                     <div className="flex flex-wrap gap-2">
@@ -38,7 +38,7 @@ export function WrapDetailHeader({ wrap }: WrapDetailHeaderProps) {
                         {wrap.name}
                     </CardTitle>
                 </div>
-                <div className="space-y-2 text-right">
+                <div className="w-full space-y-2 text-left sm:w-auto sm:text-right">
                     <p className="text-xs uppercase tracking-[0.24em] text-neutral-500">
                         Package Price
                     </p>
@@ -47,7 +47,7 @@ export function WrapDetailHeader({ wrap }: WrapDetailHeaderProps) {
                     </p>
                 </div>
             </div>
-            <p className="max-w-3xl text-sm leading-relaxed text-neutral-300">
+            <p className="max-w-3xl whitespace-pre-line text-sm leading-relaxed text-neutral-300">
                 {wrap.description ??
                     'This wrap package is ready for vehicle previewing, scheduling, and catalog operations.'}
             </p>

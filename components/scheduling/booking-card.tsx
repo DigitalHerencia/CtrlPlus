@@ -68,7 +68,8 @@ export function BookingCard({ booking, locationLabel, actions }: BookingCardProp
         : booking.wrapId
           ? `Wrap ${booking.wrapId.slice(0, 8)}…`
           : 'Consultation or service appointment'
-    const serviceLabel = booking.wrapName || booking.wrapId ? 'Wrap-related appointment' : 'Consultation or service'
+    const serviceLabel =
+        booking.wrapName || booking.wrapId ? 'Wrap-related appointment' : 'Consultation or service'
 
     return (
         <Card className="border-neutral-700 bg-neutral-900 text-neutral-100 shadow-sm transition-all hover:border-blue-600/40">
@@ -84,15 +85,15 @@ export function BookingCard({ booking, locationLabel, actions }: BookingCardProp
 
                         <div className="grid gap-2 text-sm text-neutral-300 sm:grid-cols-2">
                             <p className="flex items-center gap-2">
-                                <CalendarDays className="size-4 text-blue-300" />
+                                <CalendarDays className="size-4 text-blue-600" />
                                 {formatDate(booking.startTime)}
                             </p>
                             <p className="flex items-center gap-2">
-                                <Clock3 className="size-4 text-blue-300" />
+                                <Clock3 className="size-4 text-blue-600" />
                                 {formatTime(booking.startTime)} – {formatTime(booking.endTime)}
                             </p>
                             <p className="flex items-start gap-2 sm:col-span-2">
-                                <MapPin className="mt-0.5 size-4 text-blue-300" />
+                                <MapPin className="mt-0.5 size-4 text-blue-600" />
                                 <span>{locationLabel ?? 'Location shared after confirmation'}</span>
                             </p>
                         </div>

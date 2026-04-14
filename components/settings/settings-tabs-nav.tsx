@@ -13,32 +13,25 @@ interface SettingsTabsNavProps {
     onTabChange: (tab: 'profile' | 'account' | 'data' | 'docs') => void
 }
 
-const tabs = [
-    { id: 'profile', label: 'Profile' },
-    { id: 'account', label: 'Account' },
-    { id: 'data', label: 'Data Export' },
-    { id: 'docs', label: 'Documentation' },
-] as const
-
 /**
  * SettingsTabsNav — TODO: brief description of this function.
  * @returns TODO: describe return value
  */
 export function SettingsTabsNav({ activeTab, onTabChange }: SettingsTabsNavProps) {
     return (
-        <WorkspacePageContextCard>
+        <WorkspacePageContextCard
+            title="Documentation"
+            description="Access product guides and reference docs while we temporarily hide additional settings tabs."
+        >
             <div className="flex flex-wrap gap-2">
-                {tabs.map((tab) => (
-                    <Button
-                        key={tab.id}
-                        onClick={() => onTabChange(tab.id as typeof activeTab)}
-                        variant={activeTab === tab.id ? 'default' : 'outline'}
-                        size="sm"
-                        className={`text-xs font-medium ${activeTab !== tab.id ? 'bg-neutral-900' : ''}`}
-                    >
-                        {tab.label}
-                    </Button>
-                ))}
+                <Button
+                    onClick={() => onTabChange('docs')}
+                    variant={activeTab === 'docs' ? 'default' : 'outline'}
+                    size="sm"
+                    className={`text-xs font-medium ${activeTab !== 'docs' ? 'bg-neutral-900' : ''}`}
+                >
+                    Documentation
+                </Button>
             </div>
         </WorkspacePageContextCard>
     )

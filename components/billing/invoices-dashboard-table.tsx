@@ -9,7 +9,7 @@ import Link from 'next/link'
 
 import { InvoiceStatusBadge } from '@/components/billing/InvoiceStatusBadge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
     Table,
     TableBody,
@@ -52,6 +52,11 @@ export function InvoicesDashboardTable({ invoices }: InvoicesDashboardTableProps
 
     return (
         <Card className="border-neutral-700 bg-neutral-950/80">
+            <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold uppercase tracking-[0.18em] text-neutral-300">
+                    Invoices
+                </CardTitle>
+            </CardHeader>
             <CardContent className="p-0">
                 <Table>
                     <TableHeader>
@@ -65,7 +70,10 @@ export function InvoicesDashboardTable({ invoices }: InvoicesDashboardTableProps
                     </TableHeader>
                     <TableBody>
                         {invoices.map((invoice) => (
-                            <TableRow key={invoice.id} className="border-neutral-700">
+                            <TableRow
+                                key={invoice.id}
+                                className="border-neutral-700 bg-neutral-900"
+                            >
                                 <TableCell className="font-mono text-xs">{invoice.id}</TableCell>
                                 <TableCell>
                                     <InvoiceStatusBadge status={invoice.status} />

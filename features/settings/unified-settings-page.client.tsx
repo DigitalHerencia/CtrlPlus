@@ -8,9 +8,6 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { SettingsTabsNav } from '@/components/settings/settings-tabs-nav'
-import { SecuritySettingsPanel } from '@/components/settings/security/security-settings-panel'
-import { SecurityStatusCard } from '@/components/settings/security/security-status-card'
-import { CredentialManagementPanel } from '@/components/settings/security/credential-management-panel'
 import { ProfileTabContentClient } from './profile-tab-content.client'
 import { AccountTabContent } from './account-tab-content'
 import { DataExportTabContent } from './data-export-tab-content'
@@ -95,31 +92,10 @@ export function UnifiedSettingsPageClient({
             {/* Tab Content */}
             <div>
                 {activeTab === 'profile' && (
-                    <div className="space-y-6">
-                        <ProfileTabContentClient
-                            initialSettings={userSettings}
-                            onSave={onSaveProfile}
-                        />
-
-                        {/* Security Section */}
-                        <SecuritySettingsPanel>
-                            <div className="grid gap-3 sm:grid-cols-2">
-                                <SecurityStatusCard title="MFA" value="Managed by Clerk" />
-                                <SecurityStatusCard
-                                    title="Session security"
-                                    value="Server-authoritative"
-                                />
-                            </div>
-                            <div className="mt-4">
-                                <CredentialManagementPanel>
-                                    <p className="text-sm text-neutral-400">
-                                        Credential and identity operations remain managed by the
-                                        auth provider.
-                                    </p>
-                                </CredentialManagementPanel>
-                            </div>
-                        </SecuritySettingsPanel>
-                    </div>
+                    <ProfileTabContentClient
+                        initialSettings={userSettings}
+                        onSave={onSaveProfile}
+                    />
                 )}
 
                 {activeTab === 'account' && <AccountTabContent />}

@@ -37,6 +37,13 @@ interface SchedulingBookingFormClientProps {
 
 type BookingFormValues = z.infer<typeof bookingFormSchema>
 
+function buildDateTime(date: Date, hhmm: string): Date {
+    const [hourPart, minutePart = '0'] = hhmm.split(':')
+    const nextDate = new Date(date)
+    nextDate.setHours(Number(hourPart), Number(minutePart), 0, 0)
+    return nextDate
+}
+
 export function SchedulingBookingFormClient({
     availabilityWindows,
     initialSettings,

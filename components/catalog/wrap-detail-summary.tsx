@@ -26,23 +26,30 @@ export function WrapDetailSummary({ wrap, canManageCatalog }: WrapDetailSummaryP
 
     return (
         <>
-            <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
-                <CardHeader>
-                    <CardTitle className="text-lg">
-                        {canManageCatalog ? 'Availability & Readiness' : 'Package Overview'}
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {canManageCatalog ? (
+            {canManageCatalog ? (
+                <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
+                    <CardHeader>
+                        <CardTitle className="text-lg">Availability &amp; Readiness</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
                         <div className="flex flex-wrap gap-2">
                             <Badge
                                 variant={wrap.readiness.canPublish ? 'secondary' : 'outline'}
-                                className={wrap.readiness.canPublish ? 'bg-emerald-500/15 text-emerald-200' : 'border-red-500/40 text-red-200'}
+                                className={
+                                    wrap.readiness.canPublish
+                                        ? 'bg-emerald-500/15 text-emerald-200'
+                                        : 'border-red-500/40 text-red-200'
+                                }
                             >
-                                {wrap.readiness.canPublish ? 'Publish-ready' : 'Needs asset attention'}
+                                {wrap.readiness.canPublish
+                                    ? 'Publish-ready'
+                                    : 'Needs asset attention'}
                             </Badge>
                             {wrap.isHidden ? (
-                                <Badge variant="outline" className="border-amber-500/40 text-amber-200">
+                                <Badge
+                                    variant="outline"
+                                    className="border-amber-500/40 text-amber-200"
+                                >
                                     Hidden from customers
                                 </Badge>
                             ) : (
@@ -51,20 +58,31 @@ export function WrapDetailSummary({ wrap, canManageCatalog }: WrapDetailSummaryP
                                 </Badge>
                             )}
                         </div>
-                    ) : null}
 
-                    <dl className="grid gap-3 text-sm text-neutral-300">
-                        <div className="flex items-center justify-between gap-3"><dt>Install time</dt><dd>{installationTime ?? 'Configured later'}</dd></div>
-                        <div className="flex items-center justify-between gap-3"><dt>Gallery assets</dt><dd>{wrap.galleryImages.length}</dd></div>
-                        {canManageCatalog ? (
-                            <div className="flex items-center justify-between gap-3"><dt>Visualizer references</dt><dd>{wrap.heroImage ? `${wrap.galleryImages.length + 1} ready` : 'Missing hero'}</dd></div>
-                        ) : null}
-                    </dl>
-                </CardContent>
-            </Card>
+                        <dl className="grid gap-3 text-sm text-neutral-300">
+                            <div className="flex items-center justify-between gap-3">
+                                <dt>Install time</dt>
+                                <dd>{installationTime ?? 'Configured later'}</dd>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <dt>Gallery assets</dt>
+                                <dd>{wrap.galleryImages.length}</dd>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <dt>Visualizer references</dt>
+                                <dd>
+                                    {wrap.heroImage
+                                        ? `${wrap.galleryImages.length + 1} ready`
+                                        : 'Missing hero'}
+                                </dd>
+                            </div>
+                        </dl>
+                    </CardContent>
+                </Card>
+            ) : null}
             <div className="flex flex-wrap gap-3">
                 <Button asChild size="lg">
-                    <Link href={`/scheduling/book?wrapId=${wrap.id}`}>Book Consultation or Install</Link>
+                    <Link href="/catalog">Back to Catalog</Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
                     <Link href={`/visualizer?wrapId=${wrap.id}`}>Explore in Visualizer</Link>

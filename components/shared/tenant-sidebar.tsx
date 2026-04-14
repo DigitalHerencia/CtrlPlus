@@ -95,6 +95,10 @@ export function TenantSidebar({
                 } as CSSProperties
             }
         >
+            <div className="fixed right-4 top-4 z-40 md:hidden">
+                <UserMenu />
+            </div>
+
             <Sidebar
                 collapsible="icon"
                 className="supports-backdrop-filter:bg-neutral-950/80 border-r border-neutral-700 bg-neutral-950/90 text-neutral-100 backdrop-blur"
@@ -152,14 +156,43 @@ export function TenantSidebar({
                 className={cn(
                     'overflow-x-hidden bg-neutral-900 text-neutral-100 transition-[width,margin,max-width] duration-100 ease-out motion-reduce:transition-none',
                     open
-                        ? 'ml-48 max-w-[calc(100vw-var(--sidebar-width-icon))] pr-2'
-                        : 'ml-16 max-w-[calc(100vw-var(--sidebar-width-icon))]'
+                        ? 'md:ml-48 md:max-w-[calc(100vw-var(--sidebar-width-icon))] md:pr-2'
+                        : 'md:ml-16 md:max-w-[calc(100vw-var(--sidebar-width-icon))]'
                 )}
             >
-                <main className="mx-auto min-h-screen w-full px-6 py-6 transition-[max-width,padding] duration-100 ease-out motion-reduce:transition-none">
+                <main className="mx-auto min-h-screen w-full px-4 pb-24 pt-6 transition-[max-width,padding] duration-100 ease-out motion-reduce:transition-none sm:px-6 md:pb-6">
                     {children}
                 </main>
             </SidebarInset>
+
+            <nav
+                aria-label="Mobile navigation"
+                className="supports-backdrop-filter:bg-neutral-950/80 fixed inset-x-0 bottom-0 z-40 border-t border-neutral-700 bg-neutral-950/90 px-2 py-2 text-neutral-100 backdrop-blur md:hidden"
+            >
+                <ul className="mx-auto flex max-w-full items-stretch justify-start gap-1 overflow-x-auto">
+                    {visibleNavItems.map((item) => {
+                        const active = isTenantNavActive(pathname, item.href)
+
+                        return (
+                            <li key={`mobile-${item.href}`} className="min-w-21 flex-1">
+                                <Link
+                                    href={item.href}
+                                    className={cn(
+                                        'flex h-full min-h-14 flex-col items-center justify-center gap-1 border border-transparent px-2 py-1 text-center text-[11px] leading-tight text-neutral-300 transition-colors',
+                                        'hover:border-neutral-700 hover:bg-neutral-900 hover:text-neutral-100',
+                                        active
+                                            ? 'border-blue-600 bg-blue-600/15 text-neutral-100'
+                                            : null
+                                    )}
+                                >
+                                    <item.icon className="size-4 shrink-0" />
+                                    <span className="line-clamp-2">{item.title}</span>
+                                </Link>
+                            </li>
+                        )
+                    })}
+                </ul>
+            </nav>
         </SidebarProvider>
     )
 }

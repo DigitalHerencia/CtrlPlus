@@ -45,14 +45,19 @@ export function CatalogBrowsePageFeature({
                 title="Vehicle Wrap Gallery"
                 description="Explore premium wrap styles built for attention, compare finish options quickly, and move from inspiration to booking with confidence."
             />
-            <WorkspacePageContextCard
-                title="Catalog Snapshot"
-                description="Live result and publishing visibility"
-            >
-                <Suspense fallback={<CatalogResultsSummarySkeleton />}>
-                    <CatalogResultsSummary filters={filters} canManageCatalog={canManageCatalog} />
-                </Suspense>
-            </WorkspacePageContextCard>
+            {canManageCatalog ? (
+                <WorkspacePageContextCard
+                    title="Catalog Snapshot"
+                    description="Live result and publishing visibility"
+                >
+                    <Suspense fallback={<CatalogResultsSummarySkeleton />}>
+                        <CatalogResultsSummary
+                            filters={filters}
+                            canManageCatalog={canManageCatalog}
+                        />
+                    </Suspense>
+                </WorkspacePageContextCard>
+            ) : null}
             <Suspense fallback={<CatalogFiltersSkeleton />}>
                 <CatalogFiltersSection />
             </Suspense>

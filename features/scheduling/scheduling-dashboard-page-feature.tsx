@@ -81,26 +81,28 @@ export async function SchedulingDashboardPageFeature({
                 ) : null}
             </WorkspacePageContextCard>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:gap-8 xl:grid-cols-3">
-                <WorkspaceMetricCard
-                    label="Upcoming Appointments"
-                    value={upcomingCount}
-                    description="Anything still on your calendar after today."
-                    icon={CalendarClock}
-                />
-                <WorkspaceMetricCard
-                    label="Awaiting Review"
-                    value={requestedCount}
-                    description="Requests still waiting on owner/admin coordination."
-                    icon={FolderClock}
-                />
-                <WorkspaceMetricCard
-                    label="Confirmed"
-                    value={confirmedCount}
-                    description="Install times already approved and ready to go."
-                    icon={CircleCheckBig}
-                />
-            </div>
+            {canManageAppointments ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:gap-8 xl:grid-cols-3">
+                    <WorkspaceMetricCard
+                        label="Upcoming Appointments"
+                        value={upcomingCount}
+                        description="Anything still on your calendar after today."
+                        icon={CalendarClock}
+                    />
+                    <WorkspaceMetricCard
+                        label="Awaiting Review"
+                        value={requestedCount}
+                        description="Requests still waiting on owner/admin coordination."
+                        icon={FolderClock}
+                    />
+                    <WorkspaceMetricCard
+                        label="Confirmed"
+                        value={confirmedCount}
+                        description="Install times already approved and ready to go."
+                        icon={CircleCheckBig}
+                    />
+                </div>
+            ) : null}
 
             <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
                 <CardHeader className="space-y-1 pb-4">
@@ -116,7 +118,7 @@ export async function SchedulingDashboardPageFeature({
                                     <Link href="/scheduling/book">Book Appointment</Link>
                                 </Button>
                             }
-                            className="min-h-[280px] border-0 bg-transparent shadow-none"
+                            className="min-h-70 border-0 bg-transparent shadow-none"
                         />
                     ) : (
                         <div className="space-y-4">
@@ -144,23 +146,25 @@ export async function SchedulingDashboardPageFeature({
                 </CardContent>
             </Card>
 
-            <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
-                <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="space-y-1">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">
-                            Install Location
-                        </p>
-                        <p className="text-sm text-neutral-100">{locationLabel}</p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <ClipboardList className="h-5 w-5 text-blue-600" />
-                        <p className="text-sm text-neutral-100">
-                            Owner/admin teams coordinate confirmations and reschedules from the
-                            manager appointment board.
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
+            {canManageAppointments ? (
+                <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
+                    <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="space-y-1">
+                            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-600">
+                                Install Location
+                            </p>
+                            <p className="text-sm text-neutral-100">{locationLabel}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <ClipboardList className="h-5 w-5 text-blue-600" />
+                            <p className="text-sm text-neutral-100">
+                                Owner/admin teams coordinate confirmations and reschedules from the
+                                manager appointment board.
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
+            ) : null}
         </div>
     )
 }

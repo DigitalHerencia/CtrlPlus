@@ -7,6 +7,14 @@
  */
 import Image from 'next/image'
 
+import {
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    CarouselNext,
+    CarouselPrevious,
+} from '@/components/ui/carousel'
+
 import type { CatalogAssetImageDTO } from '@/types/catalog.types'
 
 interface WrapDetailCarouselProps {
@@ -21,29 +29,45 @@ interface WrapDetailCarouselProps {
 export function WrapDetailCarousel({ name, images }: WrapDetailCarouselProps) {
     if (images.length === 0) {
         return (
-            <p className="text-sm text-neutral-400">
-                No gallery-ready catalog imagery is available for this wrap yet.
-            </p>
+            <div className="h-104 flex items-center justify-center border-b border-neutral-800 bg-neutral-900 text-sm text-neutral-400">
+                No catalog imagery is available for this wrap yet.
+            </div>
         )
     }
 
     return (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {images.map((image) => (
-                <div
-                    key={image.id}
-                    className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900"
-                >
-                    <Image
-                        src={image.detailUrl}
-                        alt={`${name} gallery asset`}
-                        width={800}
-                        height={560}
-                        sizes="(min-width: 1280px) 26vw, (min-width: 768px) 50vw, 100vw"
-                        className="h-56 w-full object-cover"
-                    />
-                </div>
-            ))}
+        <div className="border-b border-neutral-800 bg-neutral-900">
+            <Carousel
+                opts={{ loop: images.length > 1 }}
+                className="w-full"
+                aria-label={`${name} image carousel`}
+            >
+                <CarouselContent className="ml-0">
+                    {images.map((image, index) => (
+                        <CarouselItem key={image.id} className="pl-0">
+                            <Image
+                                src={image.detailUrl}
+                                alt={
+                                    index === 0
+                                        ? `${name} hero image`
+                                        : `${name} gallery image ${index}`
+                                }
+                                width={1600}
+                                height={1200}
+                                sizes="(min-width: 1280px) 58vw, 100vw"
+                                className="h-104 w-full object-contain"
+                            />
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+
+                {images.length > 1 ? (
+                    <>
+                        <CarouselPrevious className="left-4 top-1/2 h-9 w-9 -translate-y-1/2 rounded-none border-neutral-700 bg-neutral-950/80 text-neutral-100 transition-all duration-300 hover:border-blue-600 hover:bg-neutral-900 hover:text-blue-600" />
+                        <CarouselNext className="right-4 top-1/2 h-9 w-9 -translate-y-1/2 rounded-none border-neutral-700 bg-neutral-950/80 text-neutral-100 transition-all duration-300 hover:border-blue-600 hover:bg-neutral-900 hover:text-blue-600" />
+                    </>
+                ) : null}
+            </Carousel>
         </div>
     )
 }

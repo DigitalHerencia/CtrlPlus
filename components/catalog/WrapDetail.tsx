@@ -6,10 +6,9 @@
  * Public: TODO (yes/no)
  */
 import Link from 'next/link'
-import Image from 'next/image'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import type { CatalogDetailDTO } from '@/types/catalog.types'
 import { WrapDetailCarousel } from './wrap-detail-carousel'
 import { WrapDetailHeader } from './wrap-detail-header'
@@ -29,9 +28,6 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
     return (
         <div className="space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-                <Button asChild variant="ghost" size="sm" className="-ml-2">
-                    <Link href="/catalog">Back to Catalog</Link>
-                </Button>
                 {canManageCatalog ? (
                     <Button asChild variant="outline" size="sm">
                         <Link href="/catalog/manage">Open Manager</Link>
@@ -41,22 +37,7 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
 
             <section className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)]">
                 <Card className="overflow-hidden border-neutral-700 bg-neutral-950/80 text-neutral-100">
-                    <div className="border-b border-neutral-800 bg-neutral-900">
-                        {wrap.displayImage ? (
-                            <Image
-                                src={wrap.displayImage.detailUrl}
-                                alt={wrap.name}
-                                width={1600}
-                                height={1200}
-                                sizes="(min-width: 1280px) 58vw, 100vw"
-                                className="h-104 w-full object-cover"
-                            />
-                        ) : (
-                            <div className="h-104 flex items-center justify-center text-sm text-neutral-500">
-                                No display asset available
-                            </div>
-                        )}
-                    </div>
+                    <WrapDetailCarousel name={wrap.name} images={wrap.displayImages} />
                     <WrapDetailHeader wrap={wrap} />
                 </Card>
 
@@ -65,12 +46,6 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
                     <WrapDetailSpecs wrap={wrap} canManageCatalog={canManageCatalog} />
                 </div>
             </section>
-
-            <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
-                <CardContent>
-                    <WrapDetailCarousel name={wrap.name} images={wrap.galleryImages} />
-                </CardContent>
-            </Card>
         </div>
     )
 }
