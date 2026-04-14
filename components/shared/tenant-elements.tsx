@@ -39,7 +39,7 @@ export function WorkspacePageIntro({
                     <h1 className="text-3xl font-black tracking-tight text-neutral-100 sm:text-4xl">
                         {title}
                     </h1>
-                    <p className="max-w-3xl text-sm text-neutral-100 sm:text-base">{description}</p>
+                    <p className="max-w-3xl text-sm text-neutral-400 sm:text-base">{description}</p>
                 </div>
             </div>
         </section>
@@ -74,7 +74,7 @@ export function WorkspacePageContextCard({
                             </p>
                         ) : null}
                         {description ? (
-                            <p className="text-sm text-neutral-100">{description}</p>
+                            <p className="text-sm text-neutral-400">{description}</p>
                         ) : null}
                     </div>
                 ) : null}
@@ -128,7 +128,7 @@ export function WorkspaceMetricCard({
             </CardHeader>
             {(description || badge) && (
                 <CardContent className="flex items-center justify-between gap-3 pt-0">
-                    <p className="text-sm text-neutral-100">{description}</p>
+                    <p className="text-sm text-neutral-400">{description}</p>
                     {badge ? (
                         <Badge variant="outline" className="border-neutral-700 text-neutral-100">
                             {badge}
@@ -170,7 +170,7 @@ export function WorkspaceEmptyState({
                         No Results
                     </p>
                     <h2 className="text-xl font-bold text-neutral-100">{title}</h2>
-                    <p className="max-w-md text-sm text-neutral-100">{description}</p>
+                    <p className="max-w-md text-sm text-neutral-400">{description}</p>
                 </div>
                 {action}
             </CardContent>

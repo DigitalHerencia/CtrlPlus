@@ -114,7 +114,7 @@ export async function SchedulingBookingsPageFeature({
                 </Button>
             </WorkspacePageContextCard>
 
-            <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
+            <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
                 <CardHeader className="space-y-1 pb-4">
                     <CardTitle className="text-base text-neutral-100">
                         {isUpcoming ? 'Upcoming Appointments' : 'Past Appointments'}

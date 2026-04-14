@@ -1,5 +1,5 @@
-import { SettingsPageHeader } from '@/components/settings/settings-page-header'
 import { SettingsEmptyState } from '@/components/settings/settings-empty-state'
+import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { getExportOptionsView } from '@/lib/fetchers/settings.fetchers'
 import { exportData } from '@/lib/actions/settings.actions'
 
@@ -20,7 +20,8 @@ export async function DataExportPageFeature({
     } catch {
         return (
             <div className="space-y-6">
-                <SettingsPageHeader
+                <WorkspacePageIntro
+                    label="Settings"
                     title="Data Export"
                     description="Access governed export controls to share operational data safely with customers, partners, or finance workflows."
                 />
@@ -35,7 +36,8 @@ export async function DataExportPageFeature({
 
     return (
         <div className="space-y-6">
-            <SettingsPageHeader
+            <WorkspacePageIntro
+                label="Settings"
                 title="Data Export"
                 description="Access governed export controls to share operational data safely with customers, partners, or finance workflows."
             />

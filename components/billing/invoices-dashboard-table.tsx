@@ -55,7 +55,7 @@ export function InvoicesDashboardTable({ invoices }: InvoicesDashboardTableProps
             <CardContent className="p-0">
                 <Table>
                     <TableHeader>
-                        <TableRow className="border-neutral-800">
+                        <TableRow className="border-neutral-700">
                             <TableHead>Invoice</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Amount</TableHead>
@@ -65,7 +65,7 @@ export function InvoicesDashboardTable({ invoices }: InvoicesDashboardTableProps
                     </TableHeader>
                     <TableBody>
                         {invoices.map((invoice) => (
-                            <TableRow key={invoice.id} className="border-neutral-800">
+                            <TableRow key={invoice.id} className="border-neutral-700">
                                 <TableCell className="font-mono text-xs">{invoice.id}</TableCell>
                                 <TableCell>
                                     <InvoiceStatusBadge status={invoice.status} />

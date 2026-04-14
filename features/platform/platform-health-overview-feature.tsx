@@ -1,8 +1,7 @@
 import { PlatformHealthOverview } from '@/components/platform/platform-health-overview'
 import { PlatformHealthPanel } from '@/components/platform/platform-health-panel'
 import { PlatformKpiGrid } from '@/components/platform/platform-kpi-grid'
-import { PlatformPageHeader } from '@/components/platform/platform-page-header'
-import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
+import { WorkspacePageContextCard, WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { Badge } from '@/components/ui/badge'
 import {
     getDependencyHealth,
@@ -19,7 +18,8 @@ export async function PlatformHealthOverviewFeature() {
 
     return (
         <div className="space-y-6">
-            <PlatformPageHeader
+            <WorkspacePageIntro
+                label="Platform"
                 title="Platform health"
                 description="Monitor real-time service readiness to keep customer experiences fast, reliable, and interruption-free."
             />

@@ -33,14 +33,14 @@ export function BookingSlotPicker({
 }: BookingSlotPickerProps) {
     if (slots.length === 0) {
         return (
-            <div className="border border-dashed border-neutral-700 bg-neutral-950/80 px-4 py-6 text-sm text-neutral-300">
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 px-4 py-6 text-sm text-neutral-400">
                 No appointment times are available for the selected date.
             </div>
         )
     }
 
     return (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-2">
             {slots.map((slot) => (
                 <TimeSlot
                     key={slot.id}

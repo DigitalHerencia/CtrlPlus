@@ -1,5 +1,5 @@
-import { AdminPageHeader } from '@/components/admin/admin-page-header'
 import { AdminQuickLinks } from '@/components/admin/admin-quick-links'
+import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { getAdminQuickLinks } from '@/lib/fetchers/admin.fetchers'
 
 import { AdminActivityPanelFeature } from './admin-activity-panel-feature'
@@ -13,7 +13,7 @@ export async function AdminDashboardPageFeature() {
 
     return (
         <div className="space-y-6">
-            <AdminPageHeader
+            <WorkspacePageIntro
                 label="Admin"
                 title="Command and control"
                 description="Keep bookings, revenue, moderation, and preview operations aligned so customers experience reliable delivery at every step."

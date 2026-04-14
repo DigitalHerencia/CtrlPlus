@@ -18,7 +18,7 @@ interface SettingsEmptyStateProps {
  */
 export function SettingsEmptyState({ title, description }: SettingsEmptyStateProps) {
     return (
-        <Card className="border-neutral-800 bg-neutral-950/70 text-neutral-100">
+        <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
             <CardHeader>
                 <CardTitle>{title}</CardTitle>
             </CardHeader>

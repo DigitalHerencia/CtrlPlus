@@ -50,7 +50,7 @@ export async function InvoiceDetailPageFeature({ invoiceId }: InvoiceDetailPageF
             <InvoiceDetailTabsClient
                 summary={<InvoiceDetailSummary invoice={invoice} />}
                 paymentHistory={
-                    <Card className="border-neutral-800 bg-neutral-900">
+                    <Card className="border-neutral-700 bg-neutral-950/80">
                         <CardHeader>
                             <CardTitle className="text-neutral-100">Payment History</CardTitle>
                         </CardHeader>
@@ -61,7 +61,7 @@ export async function InvoiceDetailPageFeature({ invoiceId }: InvoiceDetailPageF
                                 invoice.paymentHistory.map((event) => (
                                     <div
                                         key={event.id}
-                                        className="flex items-center justify-between rounded-md border border-neutral-800 p-3"
+                                        className="flex items-center justify-between rounded-md border border-neutral-700 p-3"
                                     >
                                         <span className="text-sm text-neutral-300">
                                             {event.type}

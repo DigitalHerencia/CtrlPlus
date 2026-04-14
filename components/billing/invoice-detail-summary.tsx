@@ -23,7 +23,7 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
  */
 export function InvoiceDetailSummary({ invoice }: InvoiceDetailSummaryProps) {
     return (
-        <Card className="border-neutral-800 bg-neutral-900">
+        <Card className="border-neutral-700 bg-neutral-950/80">
             <CardContent className="space-y-3 p-4 text-sm">
                 <div className="flex justify-between">
                     <span className="text-neutral-400">Subtotal</span>
@@ -37,7 +37,7 @@ export function InvoiceDetailSummary({ invoice }: InvoiceDetailSummaryProps) {
                     <span className="text-neutral-400">Tax</span>
                     <span>{currencyFormatter.format((invoice.taxAmount ?? 0) / 100)}</span>
                 </div>
-                <div className="flex justify-between border-t border-neutral-800 pt-3 font-semibold text-neutral-100">
+                <div className="flex justify-between border-t border-neutral-700 pt-3 font-semibold text-neutral-100">
                     <span>Total</span>
                     <span>{currencyFormatter.format(invoice.totalAmount / 100)}</span>
                 </div>

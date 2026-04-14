@@ -40,7 +40,7 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
             </div>
 
             <section className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)]">
-                <Card className="overflow-hidden border-neutral-800 bg-neutral-950/80 text-neutral-100">
+                <Card className="overflow-hidden border-neutral-700 bg-neutral-950/80 text-neutral-100">
                     <div className="border-b border-neutral-800 bg-neutral-900">
                         {wrap.displayImage ? (
                             <Image
@@ -49,10 +49,10 @@ export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
                                 width={1600}
                                 height={1200}
                                 sizes="(min-width: 1280px) 58vw, 100vw"
-                                className="h-[26rem] w-full object-cover"
+                                className="h-104 w-full object-cover"
                             />
                         ) : (
-                            <div className="flex h-[26rem] items-center justify-center text-sm text-neutral-500">
+                            <div className="h-104 flex items-center justify-center text-sm text-neutral-500">
                                 No display asset available
                             </div>
                         )}

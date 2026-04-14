@@ -19,11 +19,13 @@ interface BookingDateFieldsProps {
  */
 export function BookingDateFields({ calendar, slotPicker, error }: BookingDateFieldsProps) {
     return (
-        <section className="space-y-3">
-            <h3 className="text-sm font-semibold text-neutral-100">Date & Time</h3>
-            {calendar}
-            {slotPicker}
-            {error ? <p className="text-xs text-red-400">{error}</p> : null}
+        <section className="space-y-4">
+            <h2 className="text-2xl font-semibold tracking-tight text-neutral-100">Date & Time</h2>
+            <div className="space-y-4">
+                {calendar}
+                {slotPicker}
+            </div>
+            {error ? <p className="text-sm text-red-400">{error}</p> : null}
         </section>
     )
 }

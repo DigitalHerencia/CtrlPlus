@@ -162,7 +162,7 @@ export function ProfileTabContentClient({ initialSettings, onSave }: ProfileTabC
     }
 
     return (
-        <form onSubmit={onSubmit} className="max-w-3xl space-y-6">
+        <form onSubmit={onSubmit} className="space-y-6">
             {serverMessage && (
                 <div
                     className={`rounded-md px-4 py-3 text-sm ${

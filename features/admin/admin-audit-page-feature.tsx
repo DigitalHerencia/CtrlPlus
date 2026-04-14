@@ -1,5 +1,5 @@
 import { AdminAuditLogTable } from '@/components/admin/admin-audit-log-table'
-import { AdminPageHeader } from '@/components/admin/admin-page-header'
+import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { getAuditLog } from '@/lib/fetchers/admin.fetchers'
 
 import { AdminAuditFiltersClient } from './admin-audit-filters.client'
@@ -24,7 +24,7 @@ export async function AdminAuditPageFeature({
 
     return (
         <div className="space-y-6">
-            <AdminPageHeader
+            <WorkspacePageIntro
                 label="Admin"
                 title="Audit history"
                 description="Review traceable action history to protect trust, accountability, and operational quality across the customer journey."

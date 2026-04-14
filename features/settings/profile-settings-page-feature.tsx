@@ -1,7 +1,7 @@
-import { SettingsPageHeader } from '@/components/settings/settings-page-header'
 import { CredentialManagementPanel } from '@/components/settings/security/credential-management-panel'
 import { SecuritySettingsPanel } from '@/components/settings/security/security-settings-panel'
 import { SecurityStatusCard } from '@/components/settings/security/security-status-card'
+import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { getUserSettingsView } from '@/lib/fetchers/settings.fetchers'
 import { updateUserPreferences } from '@/lib/actions/settings.actions'
 
@@ -13,7 +13,8 @@ export async function ProfileSettingsPageFeature() {
 
     return (
         <div className="space-y-6">
-            <SettingsPageHeader
+            <WorkspacePageIntro
+                label="Settings"
                 title="Profile Settings"
                 description="Personalize how you run customer conversations, notifications, and day-to-day wrap operations."
             />

@@ -30,12 +30,12 @@ const STATUS_CONFIG: Record<
     paid: {
         label: 'Paid',
         variant: 'outline',
-        className: 'border-blue-600 bg-neutral-900 text-neutral-100',
+        className: 'border-blue-600 bg-neutral-950/80 text-neutral-100',
     },
     refunded: {
         label: 'Refunded',
         variant: 'outline',
-        className: 'border-neutral-700 bg-neutral-800/60 text-neutral-200',
+        className: 'border-neutral-700 bg-neutral-950/60 text-neutral-200',
     },
     void: {
         label: 'Void',

@@ -6,7 +6,7 @@
  */
 
 import { usePathname, useRouter } from 'next/navigation'
-import { SettingsPageHeader } from '@/components/settings/settings-page-header'
+import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { SettingsTabsNav } from '@/components/settings/settings-tabs-nav'
 import { SecuritySettingsPanel } from '@/components/settings/security/security-settings-panel'
 import { SecurityStatusCard } from '@/components/settings/security/security-status-card'
@@ -83,7 +83,8 @@ export function UnifiedSettingsPageClient({
     return (
         <div className="space-y-6">
             {/* Header */}
-            <SettingsPageHeader
+            <WorkspacePageIntro
+                label="Settings"
                 title="Profile Settings"
                 description="Personalize how you run customer conversations, notifications, and day-to-day wrap operations."
             />

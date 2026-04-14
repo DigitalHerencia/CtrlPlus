@@ -7,8 +7,6 @@
  */
 import type { ReactNode } from 'react'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-
 interface BookingFormShellProps {
     title?: string
     description?: string
@@ -25,12 +23,12 @@ export function BookingFormShell({
     children,
 }: BookingFormShellProps) {
     return (
-        <Card className="border-neutral-800 bg-neutral-950/80 text-neutral-100">
-            <CardHeader>
-                <CardTitle>{title}</CardTitle>
+        <div className="mx-auto max-w-3xl space-y-8">
+            <div className="space-y-2">
+                <h1 className="text-2xl font-semibold tracking-tight text-neutral-100">{title}</h1>
                 <p className="text-sm text-neutral-400">{description}</p>
-            </CardHeader>
-            <CardContent className="space-y-4">{children}</CardContent>
-        </Card>
+            </div>
+            <div className="space-y-4">{children}</div>
+        </div>
     )
 }

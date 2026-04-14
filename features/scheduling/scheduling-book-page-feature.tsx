@@ -64,15 +64,11 @@ export async function SchedulingBookPageFeature() {
                 </Button>
             </WorkspacePageContextCard>
 
-            <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
-                <CardContent className="p-4 sm:p-6">
-                    <SchedulingBookingFormClient
-                        availabilityWindows={effectiveAvailabilityWindows}
-                        initialSettings={settings}
-                        minDate={new Date()}
-                    />
-                </CardContent>
-            </Card>
+            <SchedulingBookingFormClient
+                availabilityWindows={effectiveAvailabilityWindows}
+                initialSettings={settings}
+                minDate={new Date()}
+            />
 
             {availabilityWindows.length === 0 ? (
                 <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">

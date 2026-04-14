@@ -1,6 +1,6 @@
 import { AdminModerationActionsPanel } from '@/components/admin/admin-moderation-actions-panel'
 import { AdminModerationQueue } from '@/components/admin/admin-moderation-queue'
-import { AdminPageHeader } from '@/components/admin/admin-page-header'
+import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { getFlaggedItems } from '@/lib/fetchers/admin.fetchers'
 
 import { AdminModerationActionsClient } from './admin-moderation-actions.client'
@@ -12,7 +12,7 @@ export async function AdminModerationPageFeature() {
 
     return (
         <div className="space-y-6">
-            <AdminPageHeader
+            <WorkspacePageIntro
                 label="Admin"
                 title="Moderation queue"
                 description="Resolve flagged items quickly to keep your storefront and visualizer experience safe, professional, and customer-ready."

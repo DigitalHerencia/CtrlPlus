@@ -1,5 +1,5 @@
-import { SettingsPageHeader } from '@/components/settings/settings-page-header'
 import { SettingsEmptyState } from '@/components/settings/settings-empty-state'
+import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { getTenantSettingsView } from '@/lib/fetchers/settings.fetchers'
 import { updateTenantSettings } from '@/lib/actions/settings.actions'
 
@@ -20,7 +20,8 @@ export async function AccountSettingsPageFeature({
     } catch {
         return (
             <div className="space-y-6">
-                <SettingsPageHeader
+                <WorkspacePageIntro
+                    label="Settings"
                     title="Account Settings"
                     description="Shape your brand presence and business defaults so every wrap customer touchpoint feels premium and consistent."
                 />
@@ -46,7 +47,8 @@ export async function AccountSettingsPageFeature({
 
     return (
         <div className="space-y-6">
-            <SettingsPageHeader
+            <WorkspacePageIntro
+                label="Settings"
                 title="Account Settings"
                 description="Shape your brand presence and business defaults so every wrap customer touchpoint feels premium and consistent."
             />

@@ -7,20 +7,19 @@
  */
 import { Suspense } from 'react'
 
-import { CatalogPageHeader } from '@/components/catalog/catalog-page-header'
 import {
     CatalogFiltersSkeleton,
     CatalogGridSkeleton,
     CatalogPaginationSkeleton,
     CatalogResultsSummarySkeleton,
 } from '@/components/catalog/catalog-skeletons'
+import { WorkspacePageContextCard, WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import type { CatalogBrowsePageFeatureProps } from '@/types/catalog.types'
 import {
     CatalogFiltersSection,
     CatalogResultsSection,
     CatalogResultsSummary,
 } from './catalog-browse-parts'
-import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
 
 function CatalogResultsRegionSkeleton() {
     return (
@@ -41,7 +40,7 @@ export function CatalogBrowsePageFeature({
 }: CatalogBrowsePageFeatureProps) {
     return (
         <div className="space-y-6">
-            <CatalogPageHeader
+            <WorkspacePageIntro
                 label="Catalog"
                 title="Vehicle Wrap Gallery"
                 description="Explore premium wrap styles built for attention, compare finish options quickly, and move from inspiration to booking with confidence."

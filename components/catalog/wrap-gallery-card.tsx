@@ -12,7 +12,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatPrice } from '@/lib/utils/currency'
-import { formatInstallationTime } from '@/lib/utils/dates'
 import type { CatalogBrowseCardDTO } from '@/types/catalog.types'
 
 interface WrapGalleryCardProps {
@@ -24,7 +23,6 @@ interface WrapGalleryCardProps {
  * @returns TODO: describe return value
  */
 export function WrapGalleryCard({ wrap }: WrapGalleryCardProps) {
-    const installationTime = formatInstallationTime(wrap.installationMinutes)
     const detailHref = `/catalog/${wrap.id}`
 
     return (
@@ -69,18 +67,11 @@ export function WrapGalleryCard({ wrap }: WrapGalleryCardProps) {
                 </div>
             </CardHeader>
 
-            <CardContent className="flex-1 space-y-4 pb-4">
+            <CardContent className="flex-1 pb-4">
                 <p className="line-clamp-3 text-sm leading-relaxed text-neutral-400">
                     {wrap.description ??
                         'Premium wrap package prepared for browsing, booking, and visualization.'}
                 </p>
-                <div className="flex flex-wrap items-center gap-2">
-                    {installationTime ? (
-                        <Badge variant="secondary" className="bg-neutral-900 text-neutral-200">
-                            {installationTime} install
-                        </Badge>
-                    ) : null}
-                </div>
             </CardContent>
 
             <CardFooter className="mt-auto flex items-center justify-between gap-3 border-t border-neutral-800 pt-4">
@@ -96,12 +87,6 @@ export function WrapGalleryCard({ wrap }: WrapGalleryCardProps) {
                         size="sm"
                         className="transition-transform group-hover:translate-x-0.5"
                     >
-                        <Link href={wrap.schedulingHref}>Book Consultation or Install</Link>
-                    </Button>
-                    <Button asChild size="sm" variant="outline">
-                        <Link href={wrap.visualizerHref}>Open Visualizer</Link>
-                    </Button>
-                    <Button asChild size="sm" variant="outline">
                         <Link href={detailHref}>View Details</Link>
                     </Button>
                 </div>

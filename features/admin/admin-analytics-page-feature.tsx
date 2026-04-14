@@ -1,5 +1,5 @@
 import { AdminChartPanel } from '@/components/admin/admin-chart-panel'
-import { AdminPageHeader } from '@/components/admin/admin-page-header'
+import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { getAnalyticsSeries } from '@/lib/fetchers/admin.fetchers'
 
 import { AdminKpiGridFeature } from './admin-kpi-grid-feature'
@@ -20,7 +20,7 @@ export async function AdminAnalyticsPageFeature({
 
     return (
         <div className="space-y-6">
-            <AdminPageHeader
+            <WorkspacePageIntro
                 label="Admin"
                 title="Analytics"
                 description="Track booking and preview momentum to identify what is driving customer confidence and conversion."

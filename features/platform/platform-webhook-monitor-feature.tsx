@@ -1,7 +1,7 @@
 import { PlatformFailureTable } from '@/components/platform/platform-failure-table'
-import { PlatformPageHeader } from '@/components/platform/platform-page-header'
 import { PlatformWebhookDiagnostics } from '@/components/platform/platform-webhook-diagnostics'
 import { PlatformWebhookPanel } from '@/components/platform/platform-webhook-panel'
+import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getWebhookMonitorState } from '@/lib/fetchers/platform.fetchers'
 
@@ -16,7 +16,8 @@ export async function PlatformWebhookMonitorFeature() {
 
     return (
         <div className="space-y-6">
-            <PlatformPageHeader
+            <WorkspacePageIntro
+                label="Platform"
                 title="Webhook monitor"
                 description="Protect checkout, auth, and preview automations by quickly diagnosing webhook failures and restoring flow reliability."
             />

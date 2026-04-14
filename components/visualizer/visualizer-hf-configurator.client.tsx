@@ -9,16 +9,22 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useMemo, useState, useTransition } from 'react'
 
-import { generateVisualizerHfPreviewAction } from '@/lib/actions/visualizer.actions'
 import { createSchedulingBookHref } from '@/lib/utils/search-params'
 import type { VisualizerHfCatalogData } from '@/types/visualizer.types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
+import type {
+    GenerateVisualizerHfPreviewInput,
+    GenerateVisualizerHfPreviewResult,
+} from '@/types/visualizer.types'
 
 interface VisualizerHfConfiguratorClientProps {
     catalog: VisualizerHfCatalogData
     canViewPrompt: boolean
+    onGeneratePreview: (
+        input: GenerateVisualizerHfPreviewInput
+    ) => Promise<GenerateVisualizerHfPreviewResult>
 }
 
 /**
@@ -28,6 +34,7 @@ interface VisualizerHfConfiguratorClientProps {
 export function VisualizerHfConfiguratorClient({
     catalog,
     canViewPrompt,
+    onGeneratePreview,
 }: VisualizerHfConfiguratorClientProps) {
     const [isPending, startTransition] = useTransition()
     const [make, setMake] = useState(catalog.initialSelection.make)
@@ -89,7 +96,7 @@ export function VisualizerHfConfiguratorClient({
     function onGenerateClick() {
         setError(null)
         startTransition(() => {
-            void generateVisualizerHfPreviewAction({ make, model, year, trim, wrapId })
+            void onGeneratePreview({ make, model, year, trim, wrapId })
                 .then((result) => {
                     setImageUrl(result.imageUrl)
                     setPromptUsed(result.promptUsed)
@@ -109,27 +116,37 @@ export function VisualizerHfConfiguratorClient({
             {/* Wrap Description Section */}
             <WorkspacePageContextCard
                 title="Wrap Selection"
-                description="Optional concept exploration for a selected wrap and vehicle"
+                className="[&>div]:flex-col [&>div]:items-stretch [&>div]:justify-start"
             >
-                <div className="w-full space-y-3 lg:w-auto">
-                    <p className="text-lg font-semibold text-neutral-100">
-                        {selectedWrap?.name ?? 'Select a wrap'}
-                    </p>
+                <div className="w-full space-y-4">
+                    <select
+                        aria-label="Select wrap"
+                        className="h-10 w-full border border-neutral-700 bg-neutral-900 px-3 text-sm text-neutral-100 transition-colors hover:border-neutral-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        value={wrapId}
+                        onChange={(event) => setWrapId(event.target.value)}
+                    >
+                        {catalog.wraps.map((option) => (
+                            <option key={option.id} value={option.id}>
+                                {option.name}
+                            </option>
+                        ))}
+                    </select>
+
                     <p className="text-sm leading-relaxed text-neutral-300">
                         {selectedWrap?.description ??
-                            'Select a wrap from the configurator below to view details.'}
+                            'Choose a wrap to preview it against your selected vehicle.'}
                     </p>
                 </div>
             </WorkspacePageContextCard>
 
-            {/* Wrap Configurator Section */}
+            {/* Vehicle Configurator Section */}
             <Card className="border-neutral-700 bg-neutral-950/80">
                 <CardHeader>
-                    <CardTitle className="text-lg font-semibold">Wrap Configurator</CardTitle>
+                    <CardTitle className="text-lg font-semibold">Vehicle Configurator</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     {/* Vehicle Selection Grid */}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <label className="flex flex-col space-y-2">
                             <span className="text-sm font-medium text-neutral-300">Make</span>
                             <select
@@ -189,21 +206,6 @@ export function VisualizerHfConfiguratorClient({
                                 ))}
                             </select>
                         </label>
-
-                        <label className="flex flex-col space-y-2 sm:col-span-2 lg:col-span-1">
-                            <span className="text-sm font-medium text-neutral-300">Wrap</span>
-                            <select
-                                className="h-10 rounded-md border border-neutral-700 bg-neutral-900 px-3 text-sm text-neutral-100 transition-colors hover:border-neutral-600 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                value={wrapId}
-                                onChange={(event) => setWrapId(event.target.value)}
-                            >
-                                {catalog.wraps.map((option) => (
-                                    <option key={option.id} value={option.id}>
-                                        {option.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </label>
                     </div>
 
                     {/* Buttons */}
@@ -216,7 +218,12 @@ export function VisualizerHfConfiguratorClient({
                         >
                             {isPending ? 'Generating…' : 'Generate Preview'}
                         </Button>
-                        <Button asChild type="button" variant="outline" className="flex-1">
+                        <Button
+                            asChild
+                            type="button"
+                            variant="outline"
+                            className="flex-1 bg-neutral-900"
+                        >
                             <Link href={createSchedulingBookHref(wrapId)}>
                                 Book Consultation or Install
                             </Link>
@@ -243,7 +250,7 @@ export function VisualizerHfConfiguratorClient({
                             className="w-full rounded-lg border border-neutral-700 object-cover"
                         />
                     ) : (
-                        <div className="flex min-h-72 items-center justify-center rounded-lg border border-dashed border-neutral-700 text-sm text-neutral-400">
+                        <div className="flex min-h-72 items-center justify-center rounded-lg border border-dashed border-neutral-700 bg-neutral-900 text-sm text-neutral-400">
                             Generate a concept preview to compare directions before you book.
                         </div>
                     )}

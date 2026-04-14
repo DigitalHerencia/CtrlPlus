@@ -34,11 +34,11 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
  */
 export function InvoiceManagerTable({ invoices }: InvoiceManagerTableProps) {
     return (
-        <Card className="border-neutral-800 bg-neutral-900">
+        <Card className="border-neutral-700 bg-neutral-950/80">
             <CardContent className="p-0">
                 <Table>
                     <TableHeader>
-                        <TableRow className="border-neutral-800">
+                        <TableRow className="border-neutral-700">
                             <TableHead>Invoice</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead className="text-right">Amount</TableHead>
@@ -48,7 +48,7 @@ export function InvoiceManagerTable({ invoices }: InvoiceManagerTableProps) {
                     </TableHeader>
                     <TableBody>
                         {invoices.map((invoice) => (
-                            <TableRow key={invoice.id} className="border-neutral-800">
+                            <TableRow key={invoice.id} className="border-neutral-700">
                                 <TableCell className="font-mono text-xs">{invoice.id}</TableCell>
                                 <TableCell>
                                     <InvoiceStatusBadge status={invoice.status} />

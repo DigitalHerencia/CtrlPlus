@@ -42,7 +42,7 @@ export function BillingKpiCardsSkeleton() {
     return (
         <div className="grid gap-4 md:grid-cols-2">
             {Array.from({ length: 2 }).map((_, i) => (
-                <Card key={i} className="border-neutral-800 bg-neutral-950/90">
+                <Card key={i} className="border-neutral-700 bg-neutral-950/90">
                     <CardHeader>
                         <CardTitle>
                             <Skeleton className="h-6 w-24 rounded" />
@@ -63,7 +63,7 @@ export function BillingKpiCardsSkeleton() {
  */
 export function BillingInvoiceDetailSkeleton() {
     return (
-        <Card className="border-neutral-800 bg-neutral-950/90">
+        <Card className="border-neutral-700 bg-neutral-950/90">
             <CardHeader>
                 <div className="flex items-start justify-between">
                     <div className="space-y-2">

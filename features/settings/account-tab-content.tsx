@@ -5,7 +5,6 @@
  * Public: TODO (yes/no)
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
@@ -15,19 +14,20 @@ import { Button } from '@/components/ui/button'
  */
 export function AccountTabContent() {
     return (
-        <div className="max-w-3xl space-y-6">
-            <Card className="border-neutral-800 bg-neutral-900/50">
-                <CardHeader>
-                    <CardTitle className="text-base">Account Management</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+        <div className="space-y-6">
+            <section className="border border-neutral-700 bg-neutral-950/80 px-6 py-6">
+                <div className="space-y-4">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-neutral-100">
+                        Account Management
+                    </p>
+
                     <p className="text-sm text-neutral-400">
                         Your account is managed by Clerk, our authentication provider. To update
                         your account details, email address, or password, visit your account
                         dashboard.
                     </p>
 
-                    <div className="rounded-lg border border-neutral-800 bg-neutral-950/50 p-4">
+                    <div className="border border-neutral-700 bg-neutral-900 p-4">
                         <h4 className="mb-2 text-sm font-medium text-neutral-100">
                             Saved Payment Method
                         </h4>
@@ -45,8 +45,8 @@ export function AccountTabContent() {
                             </Link>
                         </Button>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </section>
         </div>
     )
 }

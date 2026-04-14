@@ -5,7 +5,6 @@
  * Public: TODO (yes/no)
  */
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { DownloadCloud } from 'lucide-react'
 
@@ -15,21 +14,21 @@ import { DownloadCloud } from 'lucide-react'
  */
 export function DataExportTabContent() {
     return (
-        <div className="max-w-3xl space-y-6">
-            <Card className="border-neutral-800 bg-neutral-900/50">
-                <CardHeader>
-                    <CardTitle className="text-base">Export Your Data</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
+        <div className="space-y-6">
+            <section className="border border-neutral-700 bg-neutral-950/80 px-6 py-6">
+                <div className="space-y-4">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-neutral-100">
+                        Export Your Data
+                    </p>
                     <p className="text-sm text-neutral-400">
                         You can export your personal data and account records in JSON or CSV format.
                         This includes your profile, billing history, and all wrap projects.
                     </p>
 
-                    <div className="space-y-3 rounded-lg border border-neutral-800 bg-neutral-950/50 p-4">
-                        <h4 className="text-sm font-medium text-neutral-100">
+                    <div className="space-y-3 border border-neutral-700 bg-neutral-900 p-4">
+                        <p className="text-sm font-medium text-neutral-100">
                             Available Export Formats
-                        </h4>
+                        </p>
                         <ul className="space-y-2 text-sm text-neutral-400">
                             <li className="flex items-start gap-2">
                                 <span className="mt-1 text-blue-600">•</span>
@@ -67,20 +66,20 @@ export function DataExportTabContent() {
                             Export as CSV
                         </Button>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </section>
 
-            <Card className="border-neutral-800 bg-neutral-900/50">
-                <CardHeader>
-                    <CardTitle className="text-base">Export History</CardTitle>
-                </CardHeader>
-                <CardContent>
+            <section className="border border-neutral-700 bg-neutral-950/80 px-6 py-6">
+                <div className="space-y-4">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-neutral-100">
+                        Export History
+                    </p>
                     <p className="text-sm text-neutral-400">
                         You haven&apos;t requested any exports yet. When you do, they&apos;ll appear
                         here.
                     </p>
-                </CardContent>
-            </Card>
+                </div>
+            </section>
         </div>
     )
 }

@@ -1,5 +1,6 @@
 import { getVisualizerHfCatalogData } from '@/lib/fetchers/visualizer.fetchers'
 import { VisualizerHfConfiguratorClient } from '@/components/visualizer/visualizer-hf-configurator.client'
+import { generateVisualizerHfPreviewAction } from '@/lib/actions/visualizer.actions'
 
 interface VisualizerHfPageFeatureProps {
     requestedWrapId: string | null
@@ -12,5 +13,11 @@ export async function VisualizerHfPageFeature({
 }: VisualizerHfPageFeatureProps) {
     const catalog = await getVisualizerHfCatalogData(requestedWrapId)
 
-    return <VisualizerHfConfiguratorClient catalog={catalog} canViewPrompt={canViewPrompt} />
+    return (
+        <VisualizerHfConfiguratorClient
+            catalog={catalog}
+            canViewPrompt={canViewPrompt}
+            onGeneratePreview={generateVisualizerHfPreviewAction}
+        />
+    )
 }

@@ -52,7 +52,8 @@ export function InvoiceEditorFormClient({
     const bookingId = useWatch({ control: form.control, name: 'bookingId' })
     const description = useWatch({ control: form.control, name: 'description' }) ?? ''
     const unitPrice = useWatch({ control: form.control, name: 'unitPrice' }) as number | undefined
-    const quantity = (useWatch({ control: form.control, name: 'quantity' }) as number | undefined) ?? 1
+    const quantity =
+        (useWatch({ control: form.control, name: 'quantity' }) as number | undefined) ?? 1
 
     function onSubmit(values: CreateInvoiceInput) {
         form.clearErrors()

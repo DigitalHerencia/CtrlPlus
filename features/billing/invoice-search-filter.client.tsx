@@ -132,9 +132,9 @@ export function InvoiceSearchFilterClient() {
     }, [watchedValues])
 
     const inputClassName =
-        'h-11 border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100 placeholder:text-neutral-500'
+        'h-11 border border-neutral-700 bg-neutral-950/80 px-3 text-sm text-neutral-100 placeholder:text-neutral-500'
     const selectClassName =
-        'h-11 border border-neutral-800 bg-neutral-900 px-3 text-sm text-neutral-100'
+        'h-11 border border-neutral-700 bg-neutral-950/80 px-3 text-sm text-neutral-100'
 
     return (
         <form onSubmit={(event) => event.preventDefault()} className="space-y-4">
@@ -184,7 +184,7 @@ export function InvoiceSearchFilterClient() {
                 </Field>
             </FieldGroup>
 
-            <div className="flex flex-col gap-3 border-t border-neutral-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 border-t border-neutral-700 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-xs uppercase tracking-[0.18em] text-neutral-500">
                     {isPending
                         ? 'Refreshing invoice results'

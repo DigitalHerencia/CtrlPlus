@@ -18,12 +18,15 @@ interface BookingNotesFieldsProps {
  */
 export function BookingNotesFields({ notes, onNotesChange }: BookingNotesFieldsProps) {
     return (
-        <section className="space-y-3 md:col-span-2">
-            <h3 className="text-sm font-semibold text-neutral-100">Notes</h3>
+        <section className="space-y-4">
+            <h2 className="text-2xl font-semibold tracking-tight text-neutral-100">
+                Additional Notes
+            </h2>
             <Textarea
                 value={notes}
                 onChange={(event) => onNotesChange(event.target.value)}
                 placeholder="Optional booking notes"
+                className="border-neutral-800 bg-neutral-900 px-3 py-2 text-neutral-100 placeholder:text-neutral-500"
             />
         </section>
     )

@@ -34,7 +34,7 @@ export function SettingsTabsNav({ activeTab, onTabChange }: SettingsTabsNavProps
                         onClick={() => onTabChange(tab.id as typeof activeTab)}
                         variant={activeTab === tab.id ? 'default' : 'outline'}
                         size="sm"
-                        className="text-xs font-medium"
+                        className={`text-xs font-medium ${activeTab !== tab.id ? 'bg-neutral-900' : ''}`}
                     >
                         {tab.label}
                     </Button>

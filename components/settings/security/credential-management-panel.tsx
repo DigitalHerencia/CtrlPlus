@@ -19,7 +19,7 @@ interface CredentialManagementPanelProps {
  */
 export function CredentialManagementPanel({ children }: CredentialManagementPanelProps) {
     return (
-        <Card className="border-neutral-800 bg-neutral-950/70 text-neutral-100">
+        <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
             <CardHeader>
                 <CardTitle>Credential Management</CardTitle>
             </CardHeader>

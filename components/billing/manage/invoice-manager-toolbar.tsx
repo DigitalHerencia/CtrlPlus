@@ -19,7 +19,7 @@ interface InvoiceManagerToolbarProps {
  */
 export function InvoiceManagerToolbar({ children }: InvoiceManagerToolbarProps) {
     return (
-        <Card className="border-neutral-800 bg-neutral-900">
+        <Card className="border-neutral-700 bg-neutral-950/80">
             <CardContent className="flex flex-wrap items-center gap-2 p-4">{children}</CardContent>
         </Card>
     )

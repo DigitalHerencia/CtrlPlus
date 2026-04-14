@@ -54,8 +54,7 @@ export async function SchedulingDashboardPageFeature({
         (item) => item.status === 'confirmed'
     ).length
     const recentAppointments = upcomingBookings.items.slice(0, 3).map(toBookingCardItem)
-    const locationLabel =
-        buildLocationLabel(tenantLocation) || 'Location shared after confirmation'
+    const locationLabel = buildLocationLabel(tenantLocation) || 'Location shared after confirmation'
 
     return (
         <div className="space-y-6">
@@ -72,17 +71,17 @@ export async function SchedulingDashboardPageFeature({
                 <Button asChild>
                     <Link href="/scheduling/book">Book Appointment</Link>
                 </Button>
-                <Button asChild variant="outline">
+                <Button asChild variant="outline" className="bg-neutral-900">
                     <Link href="/scheduling/bookings">My Appointments</Link>
                 </Button>
                 {canManageAppointments ? (
-                    <Button asChild variant="outline">
+                    <Button asChild variant="outline" className="bg-neutral-900">
                         <Link href="/scheduling/manage">Manage Appointments</Link>
                     </Button>
                 ) : null}
             </WorkspacePageContextCard>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:gap-8 xl:grid-cols-3">
                 <WorkspaceMetricCard
                     label="Upcoming Appointments"
                     value={upcomingCount}
@@ -105,9 +104,7 @@ export async function SchedulingDashboardPageFeature({
 
             <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
                 <CardHeader className="space-y-1 pb-4">
-                    <CardTitle className="text-base text-neutral-100">
-                        Next Appointments
-                    </CardTitle>
+                    <CardTitle className="text-base text-neutral-100">Next Appointments</CardTitle>
                 </CardHeader>
                 <CardContent>
                     {recentAppointments.length === 0 ? (

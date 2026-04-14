@@ -19,7 +19,7 @@ interface InvoiceCommandPanelProps {
  */
 export function InvoiceCommandPanel({ children }: InvoiceCommandPanelProps) {
     return (
-        <Card className="border-neutral-800 bg-neutral-900">
+        <Card className="border-neutral-700 bg-neutral-950/80">
             <CardHeader>
                 <CardTitle className="text-neutral-100">Commands</CardTitle>
             </CardHeader>

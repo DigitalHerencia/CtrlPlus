@@ -16,5 +16,5 @@ interface BookingFormFieldsProps {
  * @returns TODO: describe return value
  */
 export function BookingFormFields({ children }: BookingFormFieldsProps) {
-    return <div className="grid gap-4 md:grid-cols-2">{children}</div>
+    return <div className="space-y-8">{children}</div>
 }

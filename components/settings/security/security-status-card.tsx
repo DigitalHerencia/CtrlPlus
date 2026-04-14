@@ -18,7 +18,7 @@ interface SecurityStatusCardProps {
  */
 export function SecurityStatusCard({ title, value }: SecurityStatusCardProps) {
     return (
-        <Card className="border-neutral-800 bg-neutral-950/70 text-neutral-100">
+        <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
             <CardHeader>
                 <CardTitle className="text-sm text-neutral-400">{title}</CardTitle>
             </CardHeader>
