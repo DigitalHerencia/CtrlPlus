@@ -104,8 +104,8 @@ export function CalendarClient({
     for (let d = 1; d <= daysInMonth; d++) cells.push(d)
 
     return (
-        <div className="w-full max-w-sm border border-neutral-700 bg-neutral-900 p-3">
-            <div className="mb-4 flex items-center justify-between">
+        <div className="w-full border border-neutral-700 bg-neutral-900 p-3 sm:p-4">
+            <div className="mb-3 flex items-center justify-between">
                 <Button
                     variant="outline"
                     size="icon"
@@ -122,7 +122,7 @@ export function CalendarClient({
                 </Button>
             </div>
 
-            <div className="mb-1 grid grid-cols-7 gap-1">
+            <div className="mb-2 grid grid-cols-7 gap-1">
                 {DAYS_OF_WEEK.map((d) => (
                     <div key={d} className="py-1 text-center text-xs font-medium text-neutral-100">
                         {d}
@@ -145,13 +145,15 @@ export function CalendarClient({
                             disabled={!available}
                             onClick={() => onDateSelect?.(new Date(viewYear, viewMonth, day))}
                             className={cn(
-                                'h-9 w-full text-sm transition-colors',
+                                'h-10 w-full border border-transparent text-sm transition-all',
                                 available && !selected
-                                    ? 'cursor-pointer text-neutral-100 hover:bg-blue-600/15'
+                                    ? 'cursor-pointer text-neutral-100 hover:border-blue-600/30 hover:bg-blue-600/10'
                                     : '',
-                                selected ? 'bg-blue-600 text-neutral-100 hover:bg-blue-600' : '',
+                                selected
+                                    ? 'border-blue-600 bg-blue-600 text-neutral-100 shadow-[0_18px_32px_-24px_rgba(37,99,235,0.95)] hover:bg-blue-600'
+                                    : '',
                                 todayCell && !selected
-                                    ? 'border border-blue-600 font-medium text-neutral-100'
+                                    ? 'border-blue-600/70 font-medium text-neutral-100'
                                     : '',
                                 !available && 'cursor-not-allowed text-neutral-100 opacity-50'
                             )}
@@ -163,9 +165,9 @@ export function CalendarClient({
             </div>
 
             {availableWeekdays.length === 0 && (
-                <p className="mt-4 text-center text-sm text-neutral-100">
-                    No availability configured.
-                </p>
+                <div className="mt-4 border border-dashed border-neutral-700 bg-neutral-950/80 px-4 py-5 text-center text-sm text-neutral-300">
+                    No appointment times are available yet.
+                </div>
             )}
         </div>
     )

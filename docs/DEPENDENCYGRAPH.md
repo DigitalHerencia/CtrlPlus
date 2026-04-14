@@ -96,9 +96,9 @@ recognizes:
 
 ```json
 {
-  "entry": "app/page.tsx",
-  "resolveExtensions": [".ts", ".tsx", ".js", ".jsx"],
-  "resolveAlias": [ { "alias": "@", "path": "./" } ]
+    "entry": "app/page.tsx",
+    "resolveExtensions": [".ts", ".tsx", ".js", ".jsx"],
+    "resolveAlias": [{ "alias": "@", "path": "./" }]
 }
 ```
 

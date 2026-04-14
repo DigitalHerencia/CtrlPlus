@@ -297,6 +297,44 @@
         "Scheduling checkout hydrates wrap, vehicle, preview, contact, billing, and notification defaults from the draft and settings, then creates a booking request without auto-issuing an invoice.",
         "Owner confirmation, completion, invoice issuance, Stripe checkout, and saved payment summaries follow the revised request-confirm-complete-invoice-pay flow."
       ]
+    },
+    {
+      "id": "SCHED-UI-20260410",
+      "title": "Polish user-facing scheduling booking and appointments views",
+      "priority": "medium",
+      "status": "done",
+      "owner": "scheduling",
+      "dependencies": [
+        "MVP-CHECKOUT-001"
+      ],
+      "source_docs": [
+        "AGENTS.md"
+      ],
+      "contract_refs": [
+        "GOV-UI-COMPONENT-GOVERNANCE",
+        "GOV-DOMAIN-BOUNDARIES/DOM-007"
+      ],
+      "impacted_paths": [
+        "features/scheduling/scheduling-book-page-feature.tsx",
+        "features/scheduling/scheduling-booking-form-client.tsx",
+        "features/scheduling/scheduling-bookings-page-feature.tsx",
+        "components/scheduling/booking-card.tsx",
+        "components/scheduling/booking-status-badge.tsx",
+        "components/scheduling/calendar-client.tsx",
+        "components/scheduling/time-slot.tsx",
+        "components/scheduling/booking-form/booking-slot-picker.tsx",
+        "lib/fetchers/settings.fetchers.ts",
+        "types/settings.types.ts",
+        "tests/vitest/unit/features/scheduling/**",
+        "tests/vitest/unit/lib/settings/fetchers/get-tenant-location-view.test.ts",
+        ".agents/json/**"
+      ],
+      "acceptance": [
+        "The scheduling book page reads as a customer booking flow rather than an operator dashboard.",
+        "The booking form uses a balanced desktop two-column layout with tighter calendar, slot, and field spacing.",
+        "The My Appointments list renders user-scoped actions and a tenant-backed location label without manager KPI framing.",
+        "Customer cancellation reuses the existing scheduling cancel action without changing booking persistence contracts."
+      ]
     }
   ]
 }

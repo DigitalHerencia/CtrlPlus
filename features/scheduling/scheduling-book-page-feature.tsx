@@ -40,53 +40,51 @@ export async function SchedulingBookPageFeature({
     return (
         <div className="space-y-6">
             <WorkspacePageIntro
-                label="Booking"
-                title="Request Installation"
-                description="Carry the selected wrap, preview, and customer details through a single checkout step instead of restarting the journey."
+                label="Scheduling"
+                title="Book Appointment"
+                description="Choose an installation time, confirm your details, and submit your wrap appointment in one place."
             />
             <WorkspacePageContextCard
-                title="Booking Navigation"
-                description="Return to your vehicle preview or browse wraps again before submitting the request."
+                title="Booking"
+                description="Keep moving through your customer flow without leaving scheduling."
             >
-                <div className="flex flex-wrap gap-2">
-                    <Button asChild variant="outline">
-                        <Link href="/visualizer">Back to Visualizer</Link>
-                    </Button>
-                    <Button asChild variant="outline">
-                        <Link href="/catalog">Browse Catalog</Link>
-                    </Button>
-                </div>
+                <Button asChild variant="outline">
+                    <Link href="/scheduling/bookings">My Appointments</Link>
+                </Button>
+                <Button asChild variant="outline">
+                    <Link href="/visualizer">Back to Visualizer</Link>
+                </Button>
             </WorkspacePageContextCard>
 
             {!draft ? (
                 <WorkspaceEmptyState
-                    title="Choose a wrap first"
-                    description="Start from the catalog or visualizer so we can carry your selected wrap into scheduling."
+                    title="Choose a wrap before booking"
+                    description="Start in the catalog or visualizer so your selected wrap carries into your appointment request."
                     action={
                         <Button asChild>
-                            <Link href="/catalog">Open Catalog</Link>
+                            <Link href="/catalog">Browse Wraps</Link>
                         </Button>
                     }
-                    className="border border-neutral-700 bg-neutral-950/80"
+                    className="min-h-[320px] border border-neutral-700 bg-neutral-950/80"
                 />
             ) : null}
 
-            {availabilityWindows.length === 0 ? (
+            {draft && availabilityWindows.length === 0 ? (
                 <WorkspaceEmptyState
-                    title="No availability windows configured"
-                    description="Configure scheduling windows before starting the booking flow."
+                    title="No appointment times are available right now"
+                    description="Check back soon for the next open installation window."
                     action={
                         <Button asChild variant="outline">
-                            <Link href="/scheduling">Review Calendar</Link>
+                            <Link href="/scheduling/bookings">My Appointments</Link>
                         </Button>
                     }
-                    className="border border-neutral-700 bg-neutral-950/80"
+                    className="min-h-[320px] border border-neutral-700 bg-neutral-950/80"
                 />
             ) : null}
 
             {draft && availabilityWindows.length > 0 ? (
                 <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
-                    <CardContent className="p-6">
+                    <CardContent className="p-4 sm:p-6">
                         <SchedulingBookingFormClient
                             availabilityWindows={availabilityWindows}
                             draft={draft}
@@ -99,8 +97,8 @@ export async function SchedulingBookPageFeature({
 
             {!draft || availabilityWindows.length === 0 ? (
                 <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">
-                    <CardContent className="py-10 text-center text-sm text-neutral-400">
-                        The booking checkout becomes available once the missing setup is resolved.
+                    <CardContent className="py-6 text-center text-sm text-neutral-400">
+                        Appointment booking becomes available as soon as your wrap selection and the next open time are ready.
                     </CardContent>
                 </Card>
             ) : null}

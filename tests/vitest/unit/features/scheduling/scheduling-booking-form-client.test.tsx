@@ -124,7 +124,7 @@ describe('SchedulingBookingFormClient', () => {
 
         fireEvent.click(screen.getByRole('button', { name: /Select March 1/i }))
         fireEvent.click(screen.getByRole('button', { name: /^09:00$/i }))
-        fireEvent.click(screen.getByRole('button', { name: /Submit Booking Request/i }))
+        fireEvent.click(screen.getByRole('button', { name: /Create Booking/i }))
 
         await waitFor(() =>
             expect(mocks.createBooking).toHaveBeenCalledWith({
@@ -175,7 +175,7 @@ describe('SchedulingBookingFormClient', () => {
 
         fireEvent.click(screen.getByRole('button', { name: /Select March 1/i }))
         fireEvent.click(screen.getByRole('button', { name: /^09:00$/i }))
-        fireEvent.click(screen.getByRole('button', { name: /Submit Booking Request/i }))
+        fireEvent.click(screen.getByRole('button', { name: /Create Booking/i }))
 
         await expect(
             screen.findByText(/The requested time slot is fully booked/i)

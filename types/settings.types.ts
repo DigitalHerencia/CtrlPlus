@@ -79,6 +79,15 @@ export interface TenantSettingsViewDTO {
 }
 
 /**
+ * TenantLocationViewDTO — TODO: brief description of this type.
+ */
+export interface TenantLocationViewDTO {
+    tenantId: string
+    businessName: string | null
+    address: string | null
+}
+
+/**
  * UpdateUserPreferencesInputDTO — TODO: brief description of this type.
  */
 /**

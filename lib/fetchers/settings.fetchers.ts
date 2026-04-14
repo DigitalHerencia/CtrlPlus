@@ -6,6 +6,7 @@
  * Public: TODO (yes/no)
  */
 import 'server-only'
+import { getSession } from '@/lib/auth/session'
 import { requireAuthzCapability } from '@/lib/authz/guards'
 import { requireOwnerOrAdmin } from '@/lib/authz/policy'
 import { prisma } from '@/lib/db/prisma'
@@ -13,6 +14,7 @@ import {
     type ExportHistoryRowDTO,
     type ExportOptionsViewDTO,
     type NotificationPreferencesDTO,
+    type TenantLocationViewDTO,
     type TenantSettingsViewDTO,
     type UserSettingsViewDTO,
     type WebsiteSettingsDTO,
@@ -297,6 +299,38 @@ export async function getTenantSettingsView(
         tenantId: resolvedTenantId,
         ...parsed,
         updatedAt: latestSnapshot?.timestamp.toISOString() ?? null,
+    }
+}
+
+export async function getTenantLocationView(
+    tenantId: string = 'default-tenant'
+): Promise<TenantLocationViewDTO> {
+    const session = await getSession()
+
+    if (!session.isAuthenticated || !session.userId) {
+        throw new Error('Unauthorized: not authenticated')
+    }
+
+    const resolvedTenantId = resolveSettingsTenantId(tenantId)
+    const latestSnapshot = await prisma.auditLog.findFirst({
+        where: {
+            action: 'TENANT_SETTINGS_UPDATED',
+            resourceType: 'TenantSettings',
+            resourceId: resolvedTenantId,
+            deletedAt: null,
+        },
+        orderBy: { timestamp: 'desc' },
+        select: {
+            details: true,
+        },
+    })
+
+    const parsed = parseTenantSettingsPayload(latestSnapshot?.details ?? null)
+
+    return {
+        tenantId: resolvedTenantId,
+        businessName: parsed.businessName,
+        address: parsed.address,
     }
 }
 

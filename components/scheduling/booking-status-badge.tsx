@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils/cn'
  */
 export type BookingDisplayStatus =
     | 'pending'
+    | 'requested'
+    | 'reschedule_requested'
     | 'reserved'
     | 'confirmed'
     | 'completed'
@@ -26,6 +28,14 @@ const STATUS_CONFIG: Record<
     pending: {
         label: 'Pending',
         className: 'border-neutral-700 bg-neutral-900 text-neutral-100',
+    },
+    requested: {
+        label: 'Pending',
+        className: 'border-neutral-700 bg-neutral-900 text-neutral-100',
+    },
+    reschedule_requested: {
+        label: 'Reschedule Requested',
+        className: 'border-blue-600/50 bg-blue-600/10 text-neutral-100',
     },
     reserved: {
         label: 'Reserved',

@@ -1,8 +1,33 @@
 {
   "artifact_type": "execution-ledger",
   "version": "1.0.0",
-  "updated_at": "2026-04-09",
+  "updated_at": "2026-04-10",
   "entries": [
+    {
+      "id": "LEDGER-016",
+      "timestamp": "2026-04-10T22:30:00-06:00",
+      "type": "ui-polish",
+      "summary": "Tightened the user-facing scheduling book and appointments views, rebalanced the booking form layout, cleaned up calendar and slot spacing, added a user-safe tenant location read plus inline customer cancellation on My Appointments, and expanded scheduling coverage with focused unit tests while leaving the manager scheduling surface unchanged.",
+      "files": [
+        "features/scheduling/scheduling-book-page-feature.tsx",
+        "features/scheduling/scheduling-booking-form-client.tsx",
+        "features/scheduling/scheduling-bookings-page-feature.tsx",
+        "components/scheduling/booking-card.tsx",
+        "components/scheduling/booking-status-badge.tsx",
+        "components/scheduling/calendar-client.tsx",
+        "components/scheduling/time-slot.tsx",
+        "components/scheduling/booking-form/booking-slot-picker.tsx",
+        "lib/fetchers/settings.fetchers.ts",
+        "types/settings.types.ts",
+        "tests/vitest/unit/features/scheduling/scheduling-book-page-feature.test.tsx",
+        "tests/vitest/unit/features/scheduling/scheduling-booking-form-client.test.tsx",
+        "tests/vitest/unit/features/scheduling/scheduling-bookings-page-feature.test.tsx",
+        "tests/vitest/unit/lib/settings/fetchers/get-tenant-location-view.test.ts",
+        ".agents/json/tasks.backlog.json",
+        ".agents/json/execution-ledger.json",
+        ".agents/json/validation.report.json"
+      ]
+    },
     {
       "id": "LEDGER-015",
       "timestamp": "2026-04-09T22:25:00Z",

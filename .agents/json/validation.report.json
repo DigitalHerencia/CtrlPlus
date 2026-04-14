@@ -1,8 +1,62 @@
 {
   "artifact_type": "validation-report",
   "version": "1.0.0",
-  "updated_at": "2026-04-09",
+  "updated_at": "2026-04-10",
   "checks": [
+    {
+      "id": "VAL-043",
+      "name": "scheduling-ui-focused-vitest",
+      "status": "pass",
+      "details": "`pnpm exec vitest run tests/vitest/unit/features/scheduling/scheduling-booking-form-client.test.tsx tests/vitest/unit/features/scheduling/scheduling-book-page-feature.test.tsx tests/vitest/unit/features/scheduling/scheduling-bookings-page-feature.test.tsx tests/vitest/unit/lib/settings/fetchers/get-tenant-location-view.test.ts` passed."
+    },
+    {
+      "id": "VAL-044",
+      "name": "scheduling-ui-typecheck",
+      "status": "pass",
+      "details": "`pnpm typecheck` passed after the scheduling UI polish changes."
+    },
+    {
+      "id": "VAL-045",
+      "name": "scheduling-ui-prisma-validate",
+      "status": "pass",
+      "details": "`pnpm prisma:validate` passed after the scheduling UI polish changes."
+    },
+    {
+      "id": "VAL-046",
+      "name": "scheduling-ui-targeted-eslint",
+      "status": "pass",
+      "details": "Targeted ESLint over the modified scheduling, settings, and test files passed with `--max-warnings=0`."
+    },
+    {
+      "id": "VAL-047",
+      "name": "repository-lint",
+      "status": "fail",
+      "details": "`pnpm lint` is currently blocked by pre-existing warnings in `scripts/tsdoc-suggester.js` and `scripts/tsdoc-upgrade-to-intro.js`, outside the scheduling change set."
+    },
+    {
+      "id": "VAL-048",
+      "name": "repository-unit-tests",
+      "status": "pass",
+      "details": "`pnpm test` passed with 44 test files and 150 tests after a second clean run."
+    },
+    {
+      "id": "VAL-049",
+      "name": "repository-build",
+      "status": "pass",
+      "details": "`pnpm build` passed after the scheduling UI polish changes."
+    },
+    {
+      "id": "VAL-050",
+      "name": "repository-e2e-chromium",
+      "status": "fail",
+      "details": "`PLAYWRIGHT_SKIP_WEBSERVER=true pnpm test:e2e --project=chromium --reporter=line` finished with 25 passing, 2 skipped, and 2 unrelated timeout failures in `tests/playwright/e2e/auth.spec.ts` (homepage and sign-in page smoke tests). The protected `/scheduling`, `/scheduling/book`, and `/scheduling/bookings` redirect checks passed."
+    },
+    {
+      "id": "VAL-051",
+      "name": "scheduling-dev-server-smoke",
+      "status": "pass",
+      "details": "A local Next.js dev server on port 3000 reported no Next.js config or runtime session errors via `nextjs_call get_errors`, and browser navigation confirmed the protected scheduling routes redirect unauthenticated users to sign-in without console errors."
+    },
     {
       "id": "VAL-025",
       "name": "billing-catalog-targeted-vitest",

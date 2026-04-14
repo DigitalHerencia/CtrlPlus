@@ -49,7 +49,7 @@ export function TimeSlot({
             disabled={effectivelyDisabled}
             onClick={onClick}
             className={cn(
-                'w-full border px-4 py-3 text-left transition-colors',
+                'flex min-h-16 w-full items-center border px-4 py-3 text-left transition-all',
                 isSelected
                     ? 'border-blue-600 bg-blue-600/10 text-blue-100'
                     : 'border-neutral-700 bg-neutral-900 text-neutral-100',
@@ -59,13 +59,13 @@ export function TimeSlot({
                 effectivelyDisabled && 'cursor-not-allowed opacity-50'
             )}
         >
-            <div className="flex items-center justify-between">
+            <div className="flex w-full items-center justify-between gap-4">
                 <span className="text-sm font-medium">
                     {formatTime(startTime)} – {formatTime(endTime)}
                 </span>
                 <span
                     className={cn(
-                        'text-xs',
+                        'shrink-0 text-xs',
                         isFull
                             ? 'text-neutral-100'
                             : available <= 2

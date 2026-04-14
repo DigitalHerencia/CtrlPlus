@@ -6,7 +6,8 @@
  * Public: TODO (yes/no)
  */
 import { Card, CardContent } from '@/components/ui/card'
-import { CalendarDays, Clock3, DollarSign, TimerReset } from 'lucide-react'
+import { CalendarDays, Clock3, MapPin, TimerReset } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 import { BookingStatusBadge, type BookingDisplayStatus } from './booking-status-badge'
 
@@ -27,6 +28,8 @@ export interface BookingCardItem {
 
 interface BookingCardProps {
     booking: BookingCardItem
+    locationLabel?: string
+    actions?: ReactNode
 }
 
 function formatDate(date: Date): string {
@@ -46,13 +49,6 @@ function formatTime(date: Date): string {
     }).format(date)
 }
 
-function formatPrice(cents: number): string {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-    }).format(cents / 100)
-}
-
 function formatExpiry(date: Date): string {
     return new Intl.DateTimeFormat('en-US', {
         weekday: 'short',
@@ -65,29 +61,35 @@ function formatExpiry(date: Date): string {
  * BookingCard — TODO: brief description of this function.
  * @returns TODO: describe return value
  */
-export function BookingCard({ booking }: BookingCardProps) {
+export function BookingCard({ booking, locationLabel, actions }: BookingCardProps) {
     const displayStatus = booking.displayStatus ?? booking.status
 
     return (
-        <Card className="border-neutral-700 bg-neutral-900 text-neutral-100 shadow-sm transition-all hover:-translate-y-0.5">
-            <CardContent className="p-4">
-                <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1 space-y-1">
-                        <div className="mb-2 flex items-center gap-2">
-                            <span className="truncate text-sm font-semibold text-neutral-100">
+        <Card className="border-neutral-700 bg-neutral-900 text-neutral-100 shadow-sm transition-all hover:border-blue-600/40">
+            <CardContent className="space-y-4 p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 space-y-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="truncate text-base font-semibold text-neutral-100">
                                 {booking.wrapName ?? `Wrap ${booking.wrapId.slice(0, 8)}…`}
                             </span>
                             <BookingStatusBadge status={displayStatus} />
                         </div>
 
-                        <p className="flex items-center gap-2 text-sm text-neutral-300">
-                            <CalendarDays className="size-4 text-blue-300" />
-                            {formatDate(booking.startTime)}
-                        </p>
-                        <p className="flex items-center gap-2 text-xs text-neutral-400">
-                            <Clock3 className="size-3.5 text-neutral-500" />
-                            {formatTime(booking.startTime)} – {formatTime(booking.endTime)}
-                        </p>
+                        <div className="grid gap-2 text-sm text-neutral-300 sm:grid-cols-2">
+                            <p className="flex items-center gap-2">
+                                <CalendarDays className="size-4 text-blue-300" />
+                                {formatDate(booking.startTime)}
+                            </p>
+                            <p className="flex items-center gap-2">
+                                <Clock3 className="size-4 text-blue-300" />
+                                {formatTime(booking.startTime)} – {formatTime(booking.endTime)}
+                            </p>
+                            <p className="flex items-start gap-2 sm:col-span-2">
+                                <MapPin className="mt-0.5 size-4 text-blue-300" />
+                                <span>{locationLabel ?? 'Location shared after confirmation'}</span>
+                            </p>
+                        </div>
 
                         {displayStatus === 'reserved' && booking.reservationExpiresAt ? (
                             <p className="flex items-center gap-2 text-xs text-amber-100/80">
@@ -104,13 +106,19 @@ export function BookingCard({ booking }: BookingCardProps) {
                         ) : null}
                     </div>
 
-                    <div className="shrink-0 border border-neutral-700 bg-neutral-900 px-3 py-2 text-right">
-                        <p className="flex items-center gap-1 text-sm font-semibold text-neutral-100">
-                            <DollarSign className="size-3.5 text-blue-600" />
-                            {formatPrice(booking.totalPrice)}
+                    <div className="shrink-0 text-left sm:text-right">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
+                            Service
                         </p>
+                        <p className="mt-1 text-sm text-neutral-100">Wrap installation</p>
                     </div>
                 </div>
+
+                {actions ? (
+                    <div className="flex flex-wrap items-center justify-end gap-2 border-t border-neutral-700 pt-4">
+                        {actions}
+                    </div>
+                ) : null}
             </CardContent>
         </Card>
     )
