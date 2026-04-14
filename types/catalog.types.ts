@@ -141,7 +141,8 @@ export interface WrapCatalogCardDTO {
     categories: WrapCategoryDTO[]
     heroImage: CatalogAssetImageDTO | null
     displayImage: CatalogAssetImageDTO | null
-    previewHref: string
+    schedulingHref: string
+    visualizerHref: string
     readiness: CatalogAssetReadinessDTO
 }
 

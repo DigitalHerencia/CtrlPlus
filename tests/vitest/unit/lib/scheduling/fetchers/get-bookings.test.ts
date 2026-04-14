@@ -94,7 +94,7 @@ describe('scheduling booking fetchers', () => {
                 id: 'booking-1',
                 wrapName: 'Midnight Matte',
                 reservationExpiresAt: new Date('2030-03-23T15:30:00.000Z').toISOString(),
-                displayStatus: 'requested',
+                displayStatus: 'reserved',
             }),
             expect.objectContaining({
                 id: 'booking-2',
@@ -143,7 +143,28 @@ describe('scheduling booking fetchers', () => {
         await expect(getBookingById('booking-1')).resolves.toEqual(
             expect.objectContaining({
                 id: 'booking-1',
-                displayStatus: 'requested',
+                displayStatus: 'reserved',
+            })
+        )
+    })
+
+    it('honors an explicit customer scope even when the session can read all bookings', async () => {
+        mocks.getSession.mockResolvedValue({
+            isAuthenticated: true,
+            userId: 'owner-1',
+            authz: { role: 'owner' },
+        })
+        mocks.hasCapability.mockReturnValue(true)
+        mocks.prisma.booking.findMany.mockResolvedValue([])
+        mocks.prisma.booking.count.mockResolvedValue(0)
+
+        await getBookings({ page: 1, pageSize: 10 }, { customerId: 'customer-42' })
+
+        expect(mocks.prisma.booking.findMany).toHaveBeenCalledWith(
+            expect.objectContaining({
+                where: expect.objectContaining({
+                    customerId: 'customer-42',
+                }),
             })
         )
     })

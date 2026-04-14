@@ -53,17 +53,24 @@ export const bookingFormSchema = z
         windowId: z.string().min(1, 'Select a time slot.'),
         customerName: z.string().trim().min(1, 'Full name is required.'),
         customerEmail: z.email().trim().max(320),
-        customerPhone: z.string().trim().min(7, 'Phone is required.'),
-        preferredContact: z.enum(['email', 'sms']),
-        billingAddressLine1: z.string().trim().min(1, 'Billing address is required.'),
+        customerPhone: z.string().trim().max(40).optional().default(''),
+        preferredContact: z.enum(['email', 'sms']).default('email'),
+        billingAddressLine1: z.string().trim().max(200).optional().default(''),
         billingAddressLine2: z.string().trim().max(200).optional().default(''),
-        billingCity: z.string().trim().min(1, 'City is required.'),
-        billingState: z.string().trim().min(1, 'State is required.'),
-        billingPostalCode: z.string().trim().min(1, 'Postal code is required.'),
-        billingCountry: z.string().trim().min(1, 'Country is required.'),
-        vehicleMake: z.string().trim().min(1, 'Vehicle make is required.'),
-        vehicleModel: z.string().trim().min(1, 'Vehicle model is required.'),
-        vehicleYear: z.string().trim().regex(/^\d{4}$/, 'Year must be a 4-digit value.'),
+        billingCity: z.string().trim().max(120).optional().default(''),
+        billingState: z.string().trim().max(120).optional().default(''),
+        billingPostalCode: z.string().trim().max(40).optional().default(''),
+        billingCountry: z.string().trim().max(120).optional().default(''),
+        vehicleMake: z.string().trim().max(120).optional().default(''),
+        vehicleModel: z.string().trim().max(120).optional().default(''),
+        vehicleYear: z
+            .string()
+            .trim()
+            .refine((value) => value.length === 0 || /^\d{4}$/.test(value), {
+                message: 'Year must be a 4-digit value.',
+            })
+            .optional()
+            .default(''),
         vehicleTrim: z.string().trim().optional().default(''),
         previewImageUrl: z.url().trim().optional().or(z.literal('')),
         previewPromptUsed: z.string().trim().max(4000).optional().default(''),
@@ -74,22 +81,37 @@ export const bookingFormSchema = z
         path: ['windowId'],
     })
 
-export const createBookingSchema = reserveSlotSchema.extend({
-    customerName: z.string().trim().min(1, 'Full name is required.'),
-    customerEmail: z.email().trim().max(320),
-    customerPhone: z.string().trim().min(7, 'Phone is required.').nullable().optional(),
-    preferredContact: z.enum(['email', 'sms']),
-    billingAddressLine1: z.string().trim().min(1, 'Billing address is required.'),
-    billingAddressLine2: z.string().trim().max(200).nullable().optional(),
-    billingCity: z.string().trim().min(1, 'City is required.'),
-    billingState: z.string().trim().min(1, 'State is required.'),
-    billingPostalCode: z.string().trim().min(1, 'Postal code is required.'),
-    billingCountry: z.string().trim().min(1, 'Country is required.'),
-    vehicleMake: z.string().trim().min(1, 'Vehicle make is required.'),
-    vehicleModel: z.string().trim().min(1, 'Vehicle model is required.'),
-    vehicleYear: z.string().trim().regex(/^\d{4}$/, 'Year must be a 4-digit value.'),
-    vehicleTrim: z.string().trim().nullable().optional(),
-    previewImageUrl: z.url().trim().nullable().optional(),
-    previewPromptUsed: z.string().trim().max(4000).nullable().optional(),
-    notes: z.string().trim().max(1000).nullable().optional(),
-})
+export const createBookingSchema = z
+    .object({
+        wrapId: z.string().trim().min(1, 'Wrap is required').nullable().optional(),
+        startTime: z.coerce.date(),
+        endTime: z.coerce.date(),
+        customerName: z.string().trim().min(1, 'Full name is required.'),
+        customerEmail: z.email().trim().max(320),
+        customerPhone: z.string().trim().max(40).nullable().optional(),
+        preferredContact: z.enum(['email', 'sms']).default('email'),
+        billingAddressLine1: z.string().trim().max(200).nullable().optional(),
+        billingAddressLine2: z.string().trim().max(200).nullable().optional(),
+        billingCity: z.string().trim().max(120).nullable().optional(),
+        billingState: z.string().trim().max(120).nullable().optional(),
+        billingPostalCode: z.string().trim().max(40).nullable().optional(),
+        billingCountry: z.string().trim().max(120).nullable().optional(),
+        vehicleMake: z.string().trim().max(120).nullable().optional(),
+        vehicleModel: z.string().trim().max(120).nullable().optional(),
+        vehicleYear: z
+            .string()
+            .trim()
+            .refine((value) => value.length === 0 || /^\d{4}$/.test(value), {
+                message: 'Year must be a 4-digit value.',
+            })
+            .nullable()
+            .optional(),
+        vehicleTrim: z.string().trim().nullable().optional(),
+        previewImageUrl: z.url().trim().nullable().optional(),
+        previewPromptUsed: z.string().trim().max(4000).nullable().optional(),
+        notes: z.string().trim().max(1000).nullable().optional(),
+    })
+    .refine((data) => data.endTime > data.startTime, {
+        message: 'End time must be after start time',
+        path: ['endTime'],
+    })

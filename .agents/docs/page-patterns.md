@@ -103,7 +103,7 @@ Every dashboard page follows a **six-layer composition**:
     description="Jump between operator and booking workflows"
 >
     <Button asChild>
-        <Link href="/scheduling/manage/new">Create Booking</Link>
+        <Link href="/scheduling/manage">Manage Bookings</Link>
     </Button>
     <Button asChild variant="outline">
         <Link href="/scheduling/manage">Manage Bookings</Link>
@@ -300,7 +300,7 @@ export function EmptyBookingState() {
             description="Create your first wrap installation booking to get started."
             action={
                 <Button asChild>
-                    <Link href="/scheduling/manage/new">Create First Booking</Link>
+                    <Link href="/scheduling/manage">Manage Bookings</Link>
                 </Button>
             }
         />
@@ -348,7 +348,7 @@ export async function SchedulingDashboardPageFeature({
                 description="Start a new workflow"
             >
                 <Button asChild>
-                    <Link href="/scheduling/manage/new">New Booking</Link>
+                    <Link href="/scheduling/manage">Manage Bookings</Link>
                 </Button>
             </WorkspacePageContextCard>
 
@@ -405,7 +405,7 @@ export async function SchedulingDashboardTableSection({ filters }: Props) {
             <WorkspaceEmptyState
                 title="No Bookings"
                 description="Create your first booking to get started."
-                action={<Button asChild><Link href="/scheduling/manage/new">New Booking</Link></Button>}
+                action={<Button asChild><Link href="/scheduling/manage">Manage Bookings</Link></Button>}
             />
         )
     }

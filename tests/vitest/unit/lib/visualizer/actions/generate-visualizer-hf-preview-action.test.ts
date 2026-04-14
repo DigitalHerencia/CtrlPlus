@@ -5,7 +5,6 @@ const mocks = vi.hoisted(() => ({
     requireCapability: vi.fn(),
     getVisualizerHfCatalogData: vi.fn(),
     getVisualizerSelectableWrapById: vi.fn(),
-    updateBookingDraftFromVisualizer: vi.fn(),
     generateVehicleWrapPreviewViaHfSpace: vi.fn(),
 }))
 
@@ -23,10 +22,6 @@ vi.mock('@/lib/fetchers/visualizer.fetchers', () => ({
 
 vi.mock('@/lib/fetchers/catalog.fetchers', () => ({
     getVisualizerSelectableWrapById: mocks.getVisualizerSelectableWrapById,
-}))
-
-vi.mock('@/lib/actions/scheduling.actions', () => ({
-    updateBookingDraftFromVisualizer: mocks.updateBookingDraftFromVisualizer,
 }))
 
 vi.mock('@/lib/visualizer/huggingface/space-client', () => ({
@@ -126,16 +121,6 @@ describe('generateVisualizerHfPreviewAction', () => {
             trim: 'XLT',
             wrapName: 'Arctic Gloss Satin Wrap',
         })
-        expect(mocks.updateBookingDraftFromVisualizer).toHaveBeenCalledWith({
-            wrapId: 'wrap-1',
-            vehicleMake: 'Ford',
-            vehicleModel: 'F150',
-            vehicleYear: '2024',
-            vehicleTrim: 'XLT',
-            previewImageUrl: 'https://image.test/preview.png',
-            previewPromptUsed: 'prompt used',
-            previewStatus: 'complete',
-        })
         expect(result).toEqual({
             wrapId: 'wrap-1',
             wrapName: 'Arctic Gloss Satin Wrap',
@@ -156,7 +141,7 @@ describe('generateVisualizerHfPreviewAction', () => {
         ).rejects.toThrow('Invalid trim selection for year.')
     })
 
-    it('maps HF Space catalog mismatch to actionable error and marks the draft failed', async () => {
+    it('maps HF Space catalog mismatch to actionable error', async () => {
         mocks.generateVehicleWrapPreviewViaHfSpace.mockRejectedValueOnce(
             new Error(
                 "space_catalog_mismatch:Value: Accord is not in the list of choices: ['Hummer']"
@@ -175,17 +160,9 @@ describe('generateVisualizerHfPreviewAction', () => {
             'Visualizer preview service catalog is out of sync. Please redeploy the HF Space and retry.'
         )
 
-        expect(mocks.updateBookingDraftFromVisualizer).toHaveBeenCalledWith({
-            wrapId: 'wrap-1',
-            vehicleMake: 'Ford',
-            vehicleModel: 'F150',
-            vehicleYear: '2024',
-            vehicleTrim: 'XLT',
-            previewStatus: 'failed',
-        })
     })
 
-    it('maps queue timeout failures to retry guidance and marks the draft failed', async () => {
+    it('maps queue timeout failures to retry guidance', async () => {
         mocks.generateVehicleWrapPreviewViaHfSpace.mockRejectedValueOnce(
             new Error('space_queue_timeout:Hugging Face request timed out.')
         )
@@ -200,14 +177,6 @@ describe('generateVisualizerHfPreviewAction', () => {
             })
         ).rejects.toThrow('Preview generation timed out. Please retry in a moment.')
 
-        expect(mocks.updateBookingDraftFromVisualizer).toHaveBeenCalledWith({
-            wrapId: 'wrap-1',
-            vehicleMake: 'Ford',
-            vehicleModel: 'F150',
-            vehicleYear: '2024',
-            vehicleTrim: 'XLT',
-            previewStatus: 'failed',
-        })
     })
 
     it('maps provider availability failures to temporary outage guidance', async () => {

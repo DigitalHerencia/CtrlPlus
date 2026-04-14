@@ -28,12 +28,12 @@ import type { Timestamp } from './common.types'
 export interface BookingDTO {
     id: string
     customerId?: string
-    wrapId: string
+    wrapId: string | null
     wrapName?: string
     startTime: Timestamp
     endTime: Timestamp
     status: BookingStatus
-    totalPrice: number
+    totalPrice: number | null
     reservationExpiresAt: Timestamp | null
     displayStatus: SchedulingBookingDisplayStatus
     customerName?: string | null
@@ -53,32 +53,6 @@ export interface BookingDTO {
     previewImageUrl?: string | null
     previewPromptUsed?: string | null
     notes?: string | null
-    createdAt: Timestamp
-    updatedAt: Timestamp
-}
-
-/**
- * BookingDraftDTO — TODO: brief description of this type.
- */
-/**
- * BookingDraftDTO — TODO: brief description of this type.
- */
-/**
- * BookingDraftDTO — TODO: brief description of this type.
- */
-export interface BookingDraftDTO {
-    id: string
-    customerId: string
-    wrapId: string
-    wrapNameSnapshot: string
-    wrapPriceSnapshot: number
-    vehicleMake: string | null
-    vehicleModel: string | null
-    vehicleYear: string | null
-    vehicleTrim: string | null
-    previewImageUrl: string | null
-    previewPromptUsed: string | null
-    previewStatus: string | null
     createdAt: Timestamp
     updatedAt: Timestamp
 }
@@ -311,7 +285,10 @@ export interface ReserveSlotInput {
 /**
  * CreateBookingInput — TODO: brief description of this type.
  */
-export interface CreateBookingInput extends ReserveSlotInput {
+export interface CreateBookingInput {
+    wrapId?: string | null
+    startTime: Timestamp
+    endTime: Timestamp
     customerName: string
     customerEmail: string
     customerPhone?: string | null
@@ -391,12 +368,12 @@ export interface CancelBookingInput {
 export interface BookingActionDTO {
     id: string
     customerId: string
-    wrapId: string
+    wrapId: string | null
     wrapName?: string
     startTime: Timestamp
     endTime: Timestamp
     status: BookingStatusValue
-    totalPrice: number
+    totalPrice: number | null
     reservationExpiresAt: Timestamp | null
     displayStatus: SchedulingBookingDisplayStatus
     createdAt: Timestamp

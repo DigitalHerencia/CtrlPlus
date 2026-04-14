@@ -9,9 +9,6 @@ const mocks = vi.hoisted(() => ({
         invoice: {
             findUnique: vi.fn(),
         },
-        auditLog: {
-            create: vi.fn(),
-        },
         $transaction: vi.fn(),
     },
     getTenantNotificationEmail: vi.fn(),
@@ -39,9 +36,9 @@ vi.mock('@/lib/actions/settings.actions', () => ({
     syncStripePaymentSettingsSummary: vi.fn(),
 }))
 
-import { ensureInvoiceForBooking } from '@/lib/actions/billing.actions'
+import { createInvoice, ensureInvoiceForBooking } from '@/lib/actions/billing.actions'
 
-describe('ensureInvoiceForBooking', () => {
+describe('billing invoice creation', () => {
     beforeEach(() => {
         vi.clearAllMocks()
         mocks.requireOwnerOrPlatformAdmin.mockResolvedValue({
@@ -55,104 +52,125 @@ describe('ensureInvoiceForBooking', () => {
         mocks.sendNotificationEmail.mockResolvedValue({ delivered: true })
     })
 
-    it('returns existing invoice without creating a new record', async () => {
+    it('requires the invoice composer instead of auto-deriving pricing from a booking', async () => {
         mocks.prisma.booking.findFirst.mockResolvedValue({
             id: 'booking-1',
-            customerId: 'customer-1',
             customerEmail: 'customer@example.com',
-            customerName: 'Taylor Driver',
             status: 'completed',
-            wrapId: 'wrap-1',
-            totalPrice: 1200,
-            wrapNameSnapshot: 'Stealth',
-            wrap: { name: 'Stealth' },
-            invoice: { id: 'inv-existing' },
-        })
-
-        await expect(ensureInvoiceForBooking({ bookingId: 'booking-1' })).resolves.toEqual({
-            invoiceId: 'inv-existing',
-            created: false,
-        })
-        expect(mocks.prisma.$transaction).not.toHaveBeenCalled()
-    })
-
-    it('creates a new invoice when one does not exist', async () => {
-        mocks.prisma.booking.findFirst.mockResolvedValue({
-            id: 'booking-2',
-            customerId: 'customer-1',
-            customerEmail: 'customer@example.com',
-            customerName: 'Taylor Driver',
-            status: 'completed',
-            wrapId: 'wrap-1',
-            totalPrice: 1599.4,
-            wrapNameSnapshot: 'Stealth',
-            wrap: { name: 'Stealth' },
             invoice: null,
         })
 
+        await expect(ensureInvoiceForBooking({ bookingId: 'booking-1' })).rejects.toThrow(
+            'Use the invoice composer to issue billing for booking booking-1. Pricing is no longer derived automatically from the booking.'
+        )
+    })
+
+    it('creates a manager-authored invoice for a completed wrap-backed booking', async () => {
+        mocks.prisma.booking.findFirst.mockResolvedValue({
+            id: 'booking-2',
+            customerEmail: 'customer@example.com',
+            status: 'completed',
+            invoice: null,
+        })
+
+        const tx = {
+            invoice: {
+                create: vi.fn().mockResolvedValue({ id: 'inv-created' }),
+            },
+            auditLog: {
+                create: vi.fn().mockResolvedValue({}),
+            },
+        }
+
         mocks.prisma.$transaction.mockImplementation(
-            async (callback: (tx: unknown) => Promise<unknown>) => {
-                const tx = {
-                    invoice: {
-                        create: vi.fn().mockResolvedValue({ id: 'inv-created' }),
-                    },
-                    auditLog: {
-                        create: vi.fn().mockResolvedValue({}),
-                    },
-                }
-                return callback(tx)
-            }
+            async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx)
         )
 
-        await expect(ensureInvoiceForBooking({ bookingId: 'booking-2' })).resolves.toEqual({
+        await expect(
+            createInvoice({
+                bookingId: 'booking-2',
+                description: 'Midnight Matte install services',
+                unitPrice: 125000,
+                quantity: 1,
+            })
+        ).resolves.toEqual({
             invoiceId: 'inv-created',
             created: true,
         })
+
+        expect(tx.invoice.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    bookingId: 'booking-2',
+                    subtotalAmount: 125000,
+                    totalAmount: 125000,
+                    lineItems: {
+                        create: [
+                            {
+                                description: 'Midnight Matte install services',
+                                quantity: 1,
+                                unitPrice: 125000,
+                                totalPrice: 125000,
+                            },
+                        ],
+                    },
+                }),
+            })
+        )
         expect(mocks.sendNotificationEmail).toHaveBeenCalledTimes(2)
     })
 
-    it('returns winner invoice when create hits unique race', async () => {
+    it('creates a manager-authored invoice for a completed standalone booking without wrap context', async () => {
         mocks.prisma.booking.findFirst.mockResolvedValue({
-            id: 'booking-race',
-            customerId: 'customer-1',
+            id: 'booking-3',
             customerEmail: 'customer@example.com',
-            customerName: 'Taylor Driver',
             status: 'completed',
-            wrapId: 'wrap-1',
-            totalPrice: 500,
-            wrapNameSnapshot: 'Stealth',
-            wrap: { name: 'Stealth' },
             invoice: null,
         })
 
-        mocks.prisma.$transaction.mockRejectedValue({ code: 'P2002' })
-        mocks.prisma.invoice.findUnique.mockResolvedValue({ id: 'inv-winner' })
+        const tx = {
+            invoice: {
+                create: vi.fn().mockResolvedValue({ id: 'inv-service' }),
+            },
+            auditLog: {
+                create: vi.fn().mockResolvedValue({}),
+            },
+        }
 
-        await expect(ensureInvoiceForBooking({ bookingId: 'booking-race' })).resolves.toEqual({
-            invoiceId: 'inv-winner',
-            created: false,
-        })
-    })
-
-    it('throws when race is detected but winner invoice cannot be loaded', async () => {
-        mocks.prisma.booking.findFirst.mockResolvedValue({
-            id: 'booking-race-missing',
-            customerId: 'customer-1',
-            customerEmail: 'customer@example.com',
-            customerName: 'Taylor Driver',
-            status: 'completed',
-            wrapId: 'wrap-1',
-            totalPrice: 500,
-            wrapNameSnapshot: 'Stealth',
-            wrap: { name: 'Stealth' },
-            invoice: null,
-        })
-
-        mocks.prisma.$transaction.mockRejectedValue({ code: 'P2002' })
-        mocks.prisma.invoice.findUnique.mockResolvedValue(null)
+        mocks.prisma.$transaction.mockImplementation(
+            async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx)
+        )
 
         await expect(
-            ensureInvoiceForBooking({ bookingId: 'booking-race-missing' })
-        ).rejects.toThrow('Invoice creation race detected but invoice could not be found')
+            createInvoice({
+                bookingId: 'booking-3',
+                description: 'Consultation follow-up and install planning',
+                unitPrice: 25000,
+                quantity: 2,
+            })
+        ).resolves.toEqual({
+            invoiceId: 'inv-service',
+            created: true,
+        })
+
+        expect(tx.invoice.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    bookingId: 'booking-3',
+                    subtotalAmount: 50000,
+                    totalAmount: 50000,
+                    lineItems: {
+                        create: [
+                            {
+                                description: 'Consultation follow-up and install planning',
+                                quantity: 2,
+                                unitPrice: 25000,
+                                totalPrice: 50000,
+                            },
+                        ],
+                    },
+                }),
+            })
+        )
     })
 })

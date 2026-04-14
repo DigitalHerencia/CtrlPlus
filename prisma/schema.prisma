@@ -180,7 +180,6 @@ model Wrap {
   images           WrapImage[]
   categoryMappings WrapCategoryMapping[]
   bookings         Booking[]
-  bookingDrafts    BookingDraft[]
   previews         VisualizerPreview[]
 
   @@index([deletedAt, createdAt])
@@ -266,11 +265,11 @@ model AvailabilityRule {
 model Booking {
   id         String    @id @default(cuid())
   customerId String // Clerk user ID of customer
-  wrapId     String
+  wrapId     String?
   startTime  DateTime
   endTime    DateTime
   status     String    @default("requested") // "requested" | "confirmed" | "reschedule_requested" | "completed" | "cancelled"
-  totalPrice Int // in cents
+  totalPrice Int? // in cents
   wrapNameSnapshot String?
   wrapPriceSnapshot Int?
   customerName String?
@@ -294,35 +293,13 @@ model Booking {
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
 
-  wrap        Wrap                @relation(fields: [wrapId], references: [id], onDelete: Cascade)
+  wrap        Wrap?               @relation(fields: [wrapId], references: [id], onDelete: SetNull)
   reservation BookingReservation?
   invoice     Invoice?
 
   @@index([deletedAt, status, startTime])
   @@index([customerId, deletedAt, status])
   @@index([deletedAt, startTime, endTime])
-}
-
-/// Active customer checkout draft that connects catalog, visualizer, and scheduling.
-model BookingDraft {
-  id               String   @id @default(cuid())
-  customerId       String   @unique
-  wrapId           String
-  wrapNameSnapshot String
-  wrapPriceSnapshot Int
-  vehicleMake      String?
-  vehicleModel     String?
-  vehicleYear      String?
-  vehicleTrim      String?
-  previewImageUrl  String?
-  previewPromptUsed String?
-  previewStatus    String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  wrap Wrap @relation(fields: [wrapId], references: [id], onDelete: Cascade)
-
-  @@index([wrapId, updatedAt])
 }
 
 /// 15-minute reservation hold on booking slots

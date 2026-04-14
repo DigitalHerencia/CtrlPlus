@@ -26,11 +26,11 @@ const STATUS_CONFIG: Record<
     { label: string; className: string }
 > = {
     pending: {
-        label: 'Pending',
+        label: 'Requested',
         className: 'border-neutral-700 bg-neutral-900 text-neutral-100',
     },
     requested: {
-        label: 'Pending',
+        label: 'Requested',
         className: 'border-neutral-700 bg-neutral-900 text-neutral-100',
     },
     reschedule_requested: {

@@ -11,7 +11,6 @@
  */
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { Prisma } from '@prisma/client'
 
 import { getSession } from '@/lib/auth/session'
@@ -20,13 +19,12 @@ import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
 import { revalidateSchedulingPages } from '@/lib/cache/revalidate-tags'
 import {
     BookingStatus,
-    PreviewStatus,
     getBookingDisplayStatus,
     normalizeBookingStatus,
 } from '@/lib/constants/statuses'
 import { DEFAULT_STORE_TIMEZONE } from '@/lib/constants/app'
 import { prisma } from '@/lib/db/prisma'
-import { bookingDraftSelectFields, bookingSelectFields } from '@/lib/db/selects/scheduling.selects'
+import { bookingSelectFields } from '@/lib/db/selects/scheduling.selects'
 import { assertSlotHasCapacity } from '@/lib/db/transactions/scheduling.transactions'
 import { getTenantNotificationEmail, sendNotificationEmail } from '@/lib/integrations/notifications'
 import {
@@ -37,7 +35,6 @@ import {
 } from '@/schemas/scheduling.schemas'
 import type {
     BookingActionDTO,
-    BookingDraftDTO,
     CancelBookingInput,
     CreateBookingInput,
     CreatedBookingDTO,
@@ -49,7 +46,7 @@ import type {
 const RESERVATION_TTL_MINUTES = 15
 
 type BookingRow = Prisma.BookingGetPayload<{ select: typeof bookingSelectFields }>
-type BookingDraftRow = Prisma.BookingDraftGetPayload<{ select: typeof bookingDraftSelectFields }>
+const STANDALONE_WRAP_NAME = 'General Appointment'
 
 function buildOwnedBookingWhereClause(
     session: { isOwner: boolean; isPlatformAdmin: boolean },
@@ -71,25 +68,6 @@ function toOptionalString(value: string | null | undefined): string | null {
     return trimmed.length > 0 ? trimmed : null
 }
 
-function toBookingDraftDTO(row: BookingDraftRow): BookingDraftDTO {
-    return {
-        id: row.id,
-        customerId: row.customerId,
-        wrapId: row.wrapId,
-        wrapNameSnapshot: row.wrapNameSnapshot,
-        wrapPriceSnapshot: row.wrapPriceSnapshot,
-        vehicleMake: row.vehicleMake,
-        vehicleModel: row.vehicleModel,
-        vehicleYear: row.vehicleYear,
-        vehicleTrim: row.vehicleTrim,
-        previewImageUrl: row.previewImageUrl,
-        previewPromptUsed: row.previewPromptUsed,
-        previewStatus: row.previewStatus,
-        createdAt: row.createdAt.toISOString(),
-        updatedAt: row.updatedAt.toISOString(),
-    }
-}
-
 function toBookingActionDTO(
     row: BookingRow,
     reservationExpiresAt: Date | null = row.reservation?.expiresAt ?? null
@@ -104,12 +82,52 @@ function toBookingActionDTO(
         startTime: row.startTime.toISOString(),
         endTime: row.endTime.toISOString(),
         status,
-        totalPrice: row.totalPrice,
+        totalPrice: row.wrapPriceSnapshot ?? row.totalPrice,
         reservationExpiresAt: reservationExpiresAt ? reservationExpiresAt.toISOString() : null,
         displayStatus: getBookingDisplayStatus(status, reservationExpiresAt),
         createdAt: row.createdAt.toISOString(),
         updatedAt: row.updatedAt.toISOString(),
     }
+}
+
+function isNullConstraintViolation(error: unknown): boolean {
+    return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2011'
+}
+
+async function getOrCreateStandaloneWrap(tx: Prisma.TransactionClient): Promise<{
+    id: string
+    name: string
+    price: number
+}> {
+    const existing = await tx.wrap.findFirst({
+        where: {
+            name: STANDALONE_WRAP_NAME,
+            deletedAt: null,
+        },
+        select: {
+            id: true,
+            name: true,
+            price: true,
+        },
+    })
+
+    if (existing) {
+        return existing
+    }
+
+    return tx.wrap.create({
+        data: {
+            name: STANDALONE_WRAP_NAME,
+            description: 'Fallback wrap for standalone appointment compatibility',
+            price: 0,
+            isHidden: true,
+        },
+        select: {
+            id: true,
+            name: true,
+            price: true,
+        },
+    })
 }
 async function assertNoCustomerSlotConflict(
     tx: Prisma.TransactionClient,
@@ -151,81 +169,6 @@ async function assertNoCustomerSlotConflict(
     }
 }
 
-async function getOwnedDraftForUser(customerId: string): Promise<BookingDraftRow | null> {
-    return prisma.bookingDraft.findUnique({
-        where: { customerId },
-        select: bookingDraftSelectFields,
-    })
-}
-
-async function upsertDraftForCustomer(
-    customerId: string,
-    input: {
-        wrapId: string
-        wrapNameSnapshot: string
-        wrapPriceSnapshot: number
-        vehicleMake?: string | null
-        vehicleModel?: string | null
-        vehicleYear?: string | null
-        vehicleTrim?: string | null
-        previewImageUrl?: string | null
-        previewPromptUsed?: string | null
-        previewStatus?: string | null
-    }
-): Promise<BookingDraftDTO> {
-    const row = await prisma.bookingDraft.upsert({
-        where: { customerId },
-        create: {
-            customerId,
-            wrapId: input.wrapId,
-            wrapNameSnapshot: input.wrapNameSnapshot,
-            wrapPriceSnapshot: input.wrapPriceSnapshot,
-            vehicleMake: toOptionalString(input.vehicleMake),
-            vehicleModel: toOptionalString(input.vehicleModel),
-            vehicleYear: toOptionalString(input.vehicleYear),
-            vehicleTrim: toOptionalString(input.vehicleTrim),
-            previewImageUrl: toOptionalString(input.previewImageUrl),
-            previewPromptUsed: toOptionalString(input.previewPromptUsed),
-            previewStatus: toOptionalString(input.previewStatus),
-        },
-        update: {
-            wrapId: input.wrapId,
-            wrapNameSnapshot: input.wrapNameSnapshot,
-            wrapPriceSnapshot: input.wrapPriceSnapshot,
-            vehicleMake: toOptionalString(input.vehicleMake),
-            vehicleModel: toOptionalString(input.vehicleModel),
-            vehicleYear: toOptionalString(input.vehicleYear),
-            vehicleTrim: toOptionalString(input.vehicleTrim),
-            previewImageUrl: toOptionalString(input.previewImageUrl),
-            previewPromptUsed: toOptionalString(input.previewPromptUsed),
-            previewStatus: toOptionalString(input.previewStatus),
-        },
-        select: bookingDraftSelectFields,
-    })
-
-    return toBookingDraftDTO(row)
-}
-
-async function getVisibleWrapForSession(
-    wrapId: string,
-    session: { isOwner: boolean; isPlatformAdmin: boolean }
-): Promise<{ id: string; name: string; price: number }> {
-    const wrap = await prisma.wrap.findFirst({
-        where: {
-            id: wrapId,
-            deletedAt: null,
-            ...(!session.isOwner && !session.isPlatformAdmin ? { isHidden: false } : {}),
-        },
-        select: { id: true, name: true, price: true },
-    })
-
-    if (!wrap) {
-        throw new Error('Wrap not found')
-    }
-
-    return wrap
-}
-
 async function notifyBookingLifecycle(input: {
     action: string
     actorUserId: string
@@ -239,11 +182,27 @@ async function notifyBookingLifecycle(input: {
     const ownerEmail = await getTenantNotificationEmail()
     const [ownerResult, customerResult] = await Promise.all([
         ownerEmail
-            ? sendNotificationEmail({ to: ownerEmail, subject: input.ownerSubject, text: input.ownerText })
-            : Promise.resolve({ delivered: false, skipped: true, reason: 'owner email unavailable' }),
+            ? sendNotificationEmail({
+                  to: ownerEmail,
+                  subject: input.ownerSubject,
+                  text: input.ownerText,
+              })
+            : Promise.resolve({
+                  delivered: false,
+                  skipped: true,
+                  reason: 'owner email unavailable',
+              }),
         input.customerEmail
-            ? sendNotificationEmail({ to: input.customerEmail, subject: input.customerSubject, text: input.customerText })
-            : Promise.resolve({ delivered: false, skipped: true, reason: 'customer email unavailable' }),
+            ? sendNotificationEmail({
+                  to: input.customerEmail,
+                  subject: input.customerSubject,
+                  text: input.customerText,
+              })
+            : Promise.resolve({
+                  delivered: false,
+                  skipped: true,
+                  reason: 'customer email unavailable',
+              }),
     ])
 
     await prisma.auditLog.create({
@@ -252,138 +211,15 @@ async function notifyBookingLifecycle(input: {
             action: input.action,
             resourceType: 'Booking',
             resourceId: input.bookingId,
-            details: JSON.stringify({ ownerEmail, customerEmail: input.customerEmail, ownerDelivery: ownerResult, customerDelivery: customerResult }),
+            details: JSON.stringify({
+                ownerEmail,
+                customerEmail: input.customerEmail,
+                ownerDelivery: ownerResult,
+                customerDelivery: customerResult,
+            }),
             timestamp: new Date(),
         },
     })
-}
-export async function startBookingDraftFromCatalog(
-    wrapId: string,
-    destination: 'visualizer' | 'scheduling' = 'visualizer'
-): Promise<never> {
-    const session = await getSession()
-    const userId = session.userId
-
-    if (!session.isAuthenticated || !userId) {
-        throw new Error('Unauthorized: not authenticated')
-    }
-
-    const wrap = await getVisibleWrapForSession(wrapId, session)
-    await upsertDraftForCustomer(userId, {
-        wrapId: wrap.id,
-        wrapNameSnapshot: wrap.name,
-        wrapPriceSnapshot: wrap.price,
-    })
-
-    revalidatePath('/visualizer')
-    revalidatePath('/scheduling/book')
-
-    redirect(destination === 'visualizer' ? `/visualizer?wrapId=${wrap.id}` : '/scheduling/book')
-}
-
-export async function getActiveBookingDraftAction(): Promise<BookingDraftDTO | null> {
-    const session = await getSession()
-    const userId = session.userId
-
-    if (!session.isAuthenticated || !userId) {
-        throw new Error('Unauthorized: not authenticated')
-    }
-
-    const draft = await getOwnedDraftForUser(userId)
-    return draft ? toBookingDraftDTO(draft) : null
-}
-
-export async function hydrateBookingFromDraft(): Promise<BookingDraftDTO> {
-    const session = await getSession()
-    const userId = session.userId
-
-    if (!session.isAuthenticated || !userId) {
-        throw new Error('Unauthorized: not authenticated')
-    }
-
-    const draft = await getOwnedDraftForUser(userId)
-    if (!draft) {
-        throw new Error('No active booking draft found')
-    }
-
-    const defaults = await prisma.websiteSettings.findUnique({
-        where: { clerkUserId: userId },
-        select: {
-            vehicleMake: true,
-            vehicleModel: true,
-            vehicleYear: true,
-            vehicleTrim: true,
-        },
-    })
-
-    const needsHydration =
-        (!draft.vehicleMake && defaults?.vehicleMake) ||
-        (!draft.vehicleModel && defaults?.vehicleModel) ||
-        (!draft.vehicleYear && defaults?.vehicleYear) ||
-        (!draft.vehicleTrim && defaults?.vehicleTrim)
-
-    if (!needsHydration) {
-        return toBookingDraftDTO(draft)
-    }
-
-    return upsertDraftForCustomer(userId, {
-        wrapId: draft.wrapId,
-        wrapNameSnapshot: draft.wrapNameSnapshot,
-        wrapPriceSnapshot: draft.wrapPriceSnapshot,
-        vehicleMake: draft.vehicleMake ?? defaults?.vehicleMake ?? null,
-        vehicleModel: draft.vehicleModel ?? defaults?.vehicleModel ?? null,
-        vehicleYear: draft.vehicleYear ?? defaults?.vehicleYear ?? null,
-        vehicleTrim: draft.vehicleTrim ?? defaults?.vehicleTrim ?? null,
-        previewImageUrl: draft.previewImageUrl,
-        previewPromptUsed: draft.previewPromptUsed,
-        previewStatus: draft.previewStatus,
-    })
-}
-
-export async function updateBookingDraftFromVisualizer(input: {
-    wrapId: string
-    vehicleMake: string
-    vehicleModel: string
-    vehicleYear: string
-    vehicleTrim?: string | null
-    previewImageUrl?: string | null
-    previewPromptUsed?: string | null
-    previewStatus?: string | null
-}): Promise<BookingDraftDTO> {
-    const session = await getSession()
-    const userId = session.userId
-
-    if (!session.isAuthenticated || !userId) {
-        throw new Error('Unauthorized: not authenticated')
-    }
-
-    const wrap = await getVisibleWrapForSession(input.wrapId, session)
-
-    return upsertDraftForCustomer(userId, {
-        wrapId: wrap.id,
-        wrapNameSnapshot: wrap.name,
-        wrapPriceSnapshot: wrap.price,
-        vehicleMake: input.vehicleMake,
-        vehicleModel: input.vehicleModel,
-        vehicleYear: input.vehicleYear,
-        vehicleTrim: input.vehicleTrim ?? null,
-        previewImageUrl: input.previewImageUrl ?? null,
-        previewPromptUsed: input.previewPromptUsed ?? null,
-        previewStatus: input.previewStatus ?? PreviewStatus.COMPLETE,
-    })
-}
-
-export async function clearBookingDraft(): Promise<void> {
-    const session = await getSession()
-    const userId = session.userId
-
-    if (!session.isAuthenticated || !userId) {
-        throw new Error('Unauthorized: not authenticated')
-    }
-
-    await prisma.bookingDraft.deleteMany({ where: { customerId: userId } })
-    revalidatePath('/visualizer')
-    revalidatePath('/scheduling/book')
 }
 export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBookingDTO> {
     const session = await getSession()
@@ -485,12 +321,12 @@ export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBook
 
             return {
                 id: booking.id,
-                wrapId: booking.wrapId,
+                wrapId: booking.wrapId ?? wrap.id,
                 wrapName: wrap.name,
                 startTime: booking.startTime.toISOString(),
                 endTime: booking.endTime.toISOString(),
                 status: normalizeBookingStatus(booking.status),
-                totalPrice: booking.totalPrice,
+                totalPrice: booking.totalPrice ?? wrap.price,
                 reservationExpiresAt: expiresAt.toISOString(),
                 displayStatus: 'reserved',
             }
@@ -508,152 +344,162 @@ export async function createBooking(rawInput: CreateBookingInput): Promise<Creat
     }
 
     const parsed = createBookingSchema.parse(rawInput)
-    const draft = await getOwnedDraftForUser(userId)
 
-    if (!draft) {
-        throw new Error('Start from the catalog before requesting installation.')
-    }
+    const runCreateBookingTransaction = async (
+        forceStandaloneFallbackWrap: boolean
+    ): Promise<BookingRow> =>
+        prisma.$transaction(
+            async (tx) => {
+                const now = new Date()
+                const requestedWrap = parsed.wrapId
+                    ? await tx.wrap.findFirst({
+                          where: {
+                              id: parsed.wrapId,
+                              deletedAt: null,
+                              ...(!session.isOwner && !session.isPlatformAdmin
+                                  ? { isHidden: false }
+                                  : {}),
+                          },
+                          select: { id: true, name: true, price: true },
+                      })
+                    : null
 
-    if (draft.wrapId !== parsed.wrapId) {
-        throw new Error('Your selected wrap is out of sync. Please restart from the catalog.')
-    }
+                if (parsed.wrapId && !requestedWrap) {
+                    throw new Error('Wrap not found')
+                }
 
-    const booking = await prisma.$transaction(
-        async (tx) => {
-            const now = new Date()
-            const wrap = await tx.wrap.findFirst({
-                where: {
-                    id: draft.wrapId,
-                    deletedAt: null,
-                    ...(!session.isOwner && !session.isPlatformAdmin ? { isHidden: false } : {}),
-                },
-                select: { id: true, name: true, price: true },
-            })
+                const effectiveWrap =
+                    requestedWrap ??
+                    (forceStandaloneFallbackWrap ? await getOrCreateStandaloneWrap(tx) : null)
 
-            if (!wrap) {
-                throw new Error('Wrap not found')
-            }
-
-            await assertSlotHasCapacity(tx, {
-                startTime: parsed.startTime,
-                endTime: parsed.endTime,
-                now,
-            })
-
-            await assertNoCustomerSlotConflict(tx, {
-                customerId: userId,
-                startTime: parsed.startTime,
-                endTime: parsed.endTime,
-                now,
-            })
-
-            const created = await tx.booking.create({
-                data: {
-                    customerId: userId,
-                    wrapId: wrap.id,
+                await assertSlotHasCapacity(tx, {
                     startTime: parsed.startTime,
                     endTime: parsed.endTime,
-                    status: BookingStatus.REQUESTED,
-                    totalPrice: draft.wrapPriceSnapshot || wrap.price,
-                    wrapNameSnapshot: draft.wrapNameSnapshot || wrap.name,
-                    wrapPriceSnapshot: draft.wrapPriceSnapshot || wrap.price,
-                    customerName: parsed.customerName,
-                    customerEmail: parsed.customerEmail,
-                    customerPhone: toOptionalString(parsed.customerPhone),
-                    preferredContact: parsed.preferredContact,
-                    billingAddressLine1: parsed.billingAddressLine1,
-                    billingAddressLine2: toOptionalString(parsed.billingAddressLine2),
-                    billingCity: parsed.billingCity,
-                    billingState: parsed.billingState,
-                    billingPostalCode: parsed.billingPostalCode,
-                    billingCountry: parsed.billingCountry,
-                    vehicleMake: parsed.vehicleMake,
-                    vehicleModel: parsed.vehicleModel,
-                    vehicleYear: parsed.vehicleYear,
-                    vehicleTrim: toOptionalString(parsed.vehicleTrim),
-                    previewImageUrl: toOptionalString(parsed.previewImageUrl) ?? draft.previewImageUrl,
-                    previewPromptUsed: toOptionalString(parsed.previewPromptUsed) ?? draft.previewPromptUsed,
-                    notes: toOptionalString(parsed.notes),
-                },
-                select: bookingSelectFields,
-            })
+                    now,
+                })
 
-            await tx.websiteSettings.upsert({
-                where: { clerkUserId: userId },
-                create: {
-                    clerkUserId: userId,
-                    preferredContact: parsed.preferredContact,
-                    appointmentReminders: true,
-                    marketingOptIn: false,
-                    timezone: DEFAULT_STORE_TIMEZONE,
-                    fullName: parsed.customerName,
-                    email: parsed.customerEmail,
-                    phone: toOptionalString(parsed.customerPhone),
-                    billingAddressLine1: parsed.billingAddressLine1,
-                    billingAddressLine2: toOptionalString(parsed.billingAddressLine2),
-                    billingCity: parsed.billingCity,
-                    billingState: parsed.billingState,
-                    billingPostalCode: parsed.billingPostalCode,
-                    billingCountry: parsed.billingCountry,
-                    vehicleMake: parsed.vehicleMake,
-                    vehicleModel: parsed.vehicleModel,
-                    vehicleYear: parsed.vehicleYear,
-                    vehicleTrim: toOptionalString(parsed.vehicleTrim),
-                },
-                update: {
-                    preferredContact: parsed.preferredContact,
-                    fullName: parsed.customerName,
-                    email: parsed.customerEmail,
-                    phone: toOptionalString(parsed.customerPhone),
-                    billingAddressLine1: parsed.billingAddressLine1,
-                    billingAddressLine2: toOptionalString(parsed.billingAddressLine2),
-                    billingCity: parsed.billingCity,
-                    billingState: parsed.billingState,
-                    billingPostalCode: parsed.billingPostalCode,
-                    billingCountry: parsed.billingCountry,
-                    vehicleMake: parsed.vehicleMake,
-                    vehicleModel: parsed.vehicleModel,
-                    vehicleYear: parsed.vehicleYear,
-                    vehicleTrim: toOptionalString(parsed.vehicleTrim),
-                },
-            })
+                await assertNoCustomerSlotConflict(tx, {
+                    customerId: userId,
+                    startTime: parsed.startTime,
+                    endTime: parsed.endTime,
+                    now,
+                })
 
-            await tx.bookingDraft.delete({ where: { customerId: userId } })
+                const created = await tx.booking.create({
+                    data: {
+                        customerId: userId,
+                        wrapId: effectiveWrap?.id ?? undefined,
+                        startTime: parsed.startTime,
+                        endTime: parsed.endTime,
+                        status: BookingStatus.REQUESTED,
+                        totalPrice: effectiveWrap?.price ?? undefined,
+                        wrapNameSnapshot: effectiveWrap?.name ?? undefined,
+                        wrapPriceSnapshot: effectiveWrap?.price ?? undefined,
+                        customerName: parsed.customerName,
+                        customerEmail: parsed.customerEmail,
+                        customerPhone: toOptionalString(parsed.customerPhone),
+                        preferredContact: parsed.preferredContact,
+                        billingAddressLine1: toOptionalString(parsed.billingAddressLine1),
+                        billingAddressLine2: toOptionalString(parsed.billingAddressLine2),
+                        billingCity: toOptionalString(parsed.billingCity),
+                        billingState: toOptionalString(parsed.billingState),
+                        billingPostalCode: toOptionalString(parsed.billingPostalCode),
+                        billingCountry: toOptionalString(parsed.billingCountry),
+                        vehicleMake: toOptionalString(parsed.vehicleMake),
+                        vehicleModel: toOptionalString(parsed.vehicleModel),
+                        vehicleYear: toOptionalString(parsed.vehicleYear),
+                        vehicleTrim: toOptionalString(parsed.vehicleTrim),
+                        previewImageUrl: toOptionalString(parsed.previewImageUrl),
+                        previewPromptUsed: toOptionalString(parsed.previewPromptUsed),
+                        notes: toOptionalString(parsed.notes),
+                    },
+                    select: bookingSelectFields,
+                })
 
-            await tx.auditLog.create({
-                data: {
-                    userId,
-                    action: 'CREATE_BOOKING_REQUEST',
-                    resourceType: 'Booking',
-                    resourceId: created.id,
-                    details: JSON.stringify({
-                        wrapId: created.wrapId,
-                        startTime: created.startTime.toISOString(),
-                        endTime: created.endTime.toISOString(),
-                        preferredContact: created.preferredContact,
-                    }),
-                    timestamp: now,
-                },
-            })
+                await tx.websiteSettings.upsert({
+                    where: { clerkUserId: userId },
+                    create: {
+                        clerkUserId: userId,
+                        preferredContact: parsed.preferredContact,
+                        appointmentReminders: true,
+                        marketingOptIn: false,
+                        timezone: DEFAULT_STORE_TIMEZONE,
+                        fullName: parsed.customerName,
+                        email: parsed.customerEmail,
+                        phone: toOptionalString(parsed.customerPhone),
+                        billingAddressLine1: parsed.billingAddressLine1,
+                        billingAddressLine2: toOptionalString(parsed.billingAddressLine2),
+                        billingCity: parsed.billingCity,
+                        billingState: parsed.billingState,
+                        billingPostalCode: parsed.billingPostalCode,
+                        billingCountry: parsed.billingCountry,
+                        vehicleMake: parsed.vehicleMake,
+                        vehicleModel: parsed.vehicleModel,
+                        vehicleYear: parsed.vehicleYear,
+                        vehicleTrim: toOptionalString(parsed.vehicleTrim),
+                    },
+                    update: {
+                        preferredContact: parsed.preferredContact,
+                        fullName: parsed.customerName,
+                        email: parsed.customerEmail,
+                        phone: toOptionalString(parsed.customerPhone),
+                        billingAddressLine1: parsed.billingAddressLine1,
+                        billingAddressLine2: toOptionalString(parsed.billingAddressLine2),
+                        billingCity: parsed.billingCity,
+                        billingState: parsed.billingState,
+                        billingPostalCode: parsed.billingPostalCode,
+                        billingCountry: parsed.billingCountry,
+                        vehicleMake: parsed.vehicleMake,
+                        vehicleModel: parsed.vehicleModel,
+                        vehicleYear: parsed.vehicleYear,
+                        vehicleTrim: toOptionalString(parsed.vehicleTrim),
+                    },
+                })
 
-            return created
-        },
-        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
-    )
+                await tx.auditLog.create({
+                    data: {
+                        userId,
+                        action: 'CREATE_BOOKING_REQUEST',
+                        resourceType: 'Booking',
+                        resourceId: created.id,
+                        details: JSON.stringify({
+                            wrapId: created.wrapId,
+                            startTime: created.startTime.toISOString(),
+                            endTime: created.endTime.toISOString(),
+                            preferredContact: created.preferredContact,
+                        }),
+                        timestamp: now,
+                    },
+                })
+
+                return created
+            },
+            { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
+        )
+
+    let booking: BookingRow
+    try {
+        booking = await runCreateBookingTransaction(false)
+    } catch (error) {
+        if (parsed.wrapId || !isNullConstraintViolation(error)) {
+            throw error
+        }
+
+        booking = await runCreateBookingTransaction(true)
+    }
 
     await notifyBookingLifecycle({
         action: 'SEND_BOOKING_NOTIFICATION',
         actorUserId: userId,
         bookingId: booking.id,
         customerEmail: booking.customerEmail,
-        ownerSubject: `New booking request: ${booking.wrapNameSnapshot ?? booking.wrap?.name ?? 'Wrap installation'}`,
-        ownerText: `${booking.customerName ?? 'A customer'} requested installation for ${booking.wrapNameSnapshot ?? booking.wrap?.name ?? 'a wrap'} on ${booking.startTime.toISOString()}.`,
-        customerSubject: 'We received your installation request',
-        customerText: `Your request for ${booking.wrapNameSnapshot ?? booking.wrap?.name ?? 'your selected wrap'} has been submitted. We will confirm or reschedule it shortly.`,
+        ownerSubject: `New appointment request: ${booking.wrapNameSnapshot ?? booking.wrap?.name ?? 'Consultation or service'}`,
+        ownerText: `${booking.customerName ?? 'A customer'} requested ${booking.wrapNameSnapshot ?? booking.wrap?.name ?? 'a consultation or service appointment'} on ${booking.startTime.toISOString()}.`,
+        customerSubject: 'We received your appointment request',
+        customerText: `Your request for ${booking.wrapNameSnapshot ?? booking.wrap?.name ?? 'a consultation or service appointment'} has been submitted. We will confirm or reschedule it shortly.`,
     })
 
     revalidateSchedulingPages()
-    revalidatePath('/visualizer')
     revalidatePath('/scheduling/book')
 
     return {
@@ -770,8 +616,8 @@ export async function updateBooking(
             customerEmail: updated.customerEmail,
             ownerSubject: `Reschedule requested for ${updated.wrapNameSnapshot ?? updated.wrap?.name ?? 'booking'}`,
             ownerText: `Booking ${updated.id} now needs customer review for a new time window.`,
-            customerSubject: 'Your installation request needs a new time',
-            customerText: `We proposed a new drop-off window for ${updated.wrapNameSnapshot ?? updated.wrap?.name ?? 'your wrap installation'}. Please review the updated booking in your account.`,
+            customerSubject: 'Your appointment request needs a new time',
+            customerText: `We proposed a new drop-off window for ${updated.wrapNameSnapshot ?? updated.wrap?.name ?? 'your appointment'}. Please review the updated booking in your account.`,
         })
     }
 
@@ -798,7 +644,10 @@ export async function confirmBooking(bookingId: string): Promise<BookingActionDT
         }
 
         const normalizedStatus = normalizeBookingStatus(booking.status)
-        if (normalizedStatus !== BookingStatus.REQUESTED && normalizedStatus !== BookingStatus.RESCHEDULE_REQUESTED) {
+        if (
+            normalizedStatus !== BookingStatus.REQUESTED &&
+            normalizedStatus !== BookingStatus.RESCHEDULE_REQUESTED
+        ) {
             throw new Error('Only requested bookings can be confirmed')
         }
 
@@ -829,10 +678,10 @@ export async function confirmBooking(bookingId: string): Promise<BookingActionDT
         actorUserId: userId,
         bookingId: updated.id,
         customerEmail: updated.customerEmail,
-        ownerSubject: `Booking confirmed: ${updated.wrapNameSnapshot ?? updated.wrap?.name ?? 'Wrap installation'}`,
+        ownerSubject: `Booking confirmed: ${updated.wrapNameSnapshot ?? updated.wrap?.name ?? 'Consultation or service'}`,
         ownerText: `Booking ${updated.id} has been confirmed.`,
-        customerSubject: 'Your installation is confirmed',
-        customerText: `Your booking for ${updated.wrapNameSnapshot ?? updated.wrap?.name ?? 'your wrap installation'} is confirmed.`,
+        customerSubject: 'Your appointment is confirmed',
+        customerText: `Your booking for ${updated.wrapNameSnapshot ?? updated.wrap?.name ?? 'your consultation or service appointment'} is confirmed.`,
     })
 
     revalidateSchedulingPages()
@@ -885,10 +734,10 @@ export async function completeBooking(bookingId: string): Promise<BookingActionD
         actorUserId: userId,
         bookingId: updated.id,
         customerEmail: updated.customerEmail,
-        ownerSubject: `Booking completed: ${updated.wrapNameSnapshot ?? updated.wrap?.name ?? 'Wrap installation'}`,
+        ownerSubject: `Booking completed: ${updated.wrapNameSnapshot ?? updated.wrap?.name ?? 'Consultation or service'}`,
         ownerText: `Booking ${updated.id} has been marked completed.`,
-        customerSubject: 'Your wrap installation is complete',
-        customerText: `Your ${updated.wrapNameSnapshot ?? updated.wrap?.name ?? 'wrap installation'} is complete. Your invoice will be sent next.`,
+        customerSubject: 'Your appointment is complete',
+        customerText: `Your ${updated.wrapNameSnapshot ?? updated.wrap?.name ?? 'consultation or service appointment'} is complete. Billing can issue an invoice when it is ready.`,
     })
 
     revalidateSchedulingPages()
@@ -1053,4 +902,3 @@ export async function cleanupExpiredReservations(
         processedBookingIds: bookingIds,
     }
 }
-

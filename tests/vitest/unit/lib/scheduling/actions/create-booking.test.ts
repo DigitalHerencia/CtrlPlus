@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { Prisma } from '@prisma/client'
 
 const mocks = vi.hoisted(() => ({
     getSession: vi.fn(),
     prisma: {
-        bookingDraft: { findUnique: vi.fn() },
         auditLog: { create: vi.fn() },
         $transaction: vi.fn(),
     },
@@ -47,25 +47,9 @@ describe('createBooking', () => {
         mocks.getTenantNotificationEmail.mockResolvedValue('owner@example.com')
         mocks.sendNotificationEmail.mockResolvedValue({ delivered: true })
         mocks.prisma.auditLog.create.mockResolvedValue(undefined)
-        mocks.prisma.bookingDraft.findUnique.mockResolvedValue({
-            id: 'draft-1',
-            customerId: 'user-1',
-            wrapId: 'wrap-1',
-            wrapNameSnapshot: 'Midnight Matte',
-            wrapPriceSnapshot: 100000,
-            vehicleMake: 'Ford',
-            vehicleModel: 'Mustang',
-            vehicleYear: '2022',
-            vehicleTrim: 'GT',
-            previewImageUrl: 'https://image.test/preview.png',
-            previewPromptUsed: 'prompt used',
-            previewStatus: 'complete',
-            createdAt: new Date('2026-03-01T00:00:00.000Z'),
-            updatedAt: new Date('2026-03-01T00:00:00.000Z'),
-        })
     })
 
-    it('creates a requested booking from the active draft, persists checkout defaults, and clears the draft', async () => {
+    it('creates a requested booking with a selected wrap and persists customer defaults', async () => {
         mocks.getSession.mockResolvedValue({
             isAuthenticated: true,
             userId: 'user-1',
@@ -78,11 +62,12 @@ describe('createBooking', () => {
             wrap: { findFirst: vi.fn() },
             booking: { findFirst: vi.fn(), create: vi.fn() },
             websiteSettings: { upsert: vi.fn() },
-            bookingDraft: { delete: vi.fn() },
             auditLog: { create: vi.fn() },
         }
 
-        mocks.prisma.$transaction.mockImplementation(async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx))
+        mocks.prisma.$transaction.mockImplementation(
+            async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx)
+        )
 
         tx.wrap.findFirst.mockResolvedValue({
             id: 'wrap-1',
@@ -123,7 +108,6 @@ describe('createBooking', () => {
             updatedAt: new Date('2026-03-01T00:00:00.000Z'),
         })
         tx.websiteSettings.upsert.mockResolvedValue(undefined)
-        tx.bookingDraft.delete.mockResolvedValue(undefined)
         tx.auditLog.create.mockResolvedValue(undefined)
 
         const result = await createBooking({
@@ -174,10 +158,216 @@ describe('createBooking', () => {
                 }),
             })
         )
-        expect(tx.bookingDraft.delete).toHaveBeenCalledWith({ where: { customerId: 'user-1' } })
         expect(mocks.sendNotificationEmail).toHaveBeenCalledTimes(2)
         expect(mocks.revalidateSchedulingPages).toHaveBeenCalledTimes(1)
-        expect(mocks.revalidatePath).toHaveBeenCalledWith('/visualizer')
         expect(mocks.revalidatePath).toHaveBeenCalledWith('/scheduling/book')
+    })
+
+    it('creates a standalone consultation booking when no wrap is provided', async () => {
+        mocks.getSession.mockResolvedValue({
+            isAuthenticated: true,
+            userId: 'user-1',
+            isOwner: false,
+            isPlatformAdmin: false,
+            authz: { role: 'customer' },
+        })
+
+        const tx = {
+            booking: { findFirst: vi.fn(), create: vi.fn() },
+            websiteSettings: { upsert: vi.fn() },
+            auditLog: { create: vi.fn() },
+        }
+
+        mocks.prisma.$transaction.mockImplementation(
+            async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx)
+        )
+
+        tx.booking.findFirst.mockResolvedValue(null)
+        tx.booking.create.mockResolvedValue({
+            id: 'booking-2',
+            customerId: 'user-1',
+            wrapId: null,
+            wrap: null,
+            wrapNameSnapshot: null,
+            wrapPriceSnapshot: null,
+            startTime: new Date('2026-03-24T16:00:00.000Z'),
+            endTime: new Date('2026-03-24T18:00:00.000Z'),
+            status: 'requested',
+            totalPrice: null,
+            customerName: 'Taylor Driver',
+            customerEmail: 'taylor@example.com',
+            customerPhone: '5551234567',
+            preferredContact: 'email',
+            billingAddressLine1: '123 Main St',
+            billingAddressLine2: null,
+            billingCity: 'Denver',
+            billingState: 'CO',
+            billingPostalCode: '80202',
+            billingCountry: 'US',
+            vehicleMake: 'Ford',
+            vehicleModel: 'Mustang',
+            vehicleYear: '2022',
+            vehicleTrim: 'GT',
+            previewImageUrl: null,
+            previewPromptUsed: null,
+            notes: null,
+            reservation: null,
+            createdAt: new Date('2026-03-01T00:00:00.000Z'),
+            updatedAt: new Date('2026-03-01T00:00:00.000Z'),
+        })
+        tx.websiteSettings.upsert.mockResolvedValue(undefined)
+        tx.auditLog.create.mockResolvedValue(undefined)
+
+        const result = await createBooking({
+            startTime: new Date('2026-03-24T16:00:00.000Z').toISOString(),
+            endTime: new Date('2026-03-24T18:00:00.000Z').toISOString(),
+            customerName: 'Taylor Driver',
+            customerEmail: 'taylor@example.com',
+            customerPhone: '5551234567',
+            preferredContact: 'email',
+            billingAddressLine1: '123 Main St',
+            billingAddressLine2: null,
+            billingCity: 'Denver',
+            billingState: 'CO',
+            billingPostalCode: '80202',
+            billingCountry: 'US',
+            vehicleMake: 'Ford',
+            vehicleModel: 'Mustang',
+            vehicleYear: '2022',
+            vehicleTrim: 'GT',
+            notes: null,
+        })
+
+        expect(result).toEqual(
+            expect.objectContaining({
+                id: 'booking-2',
+                wrapId: null,
+                wrapName: undefined,
+                totalPrice: null,
+            })
+        )
+        expect(tx.booking.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    wrapId: undefined,
+                    totalPrice: undefined,
+                    wrapNameSnapshot: undefined,
+                    wrapPriceSnapshot: undefined,
+                }),
+                select: expect.any(Object),
+            })
+        )
+    })
+
+    it('retries standalone booking with fallback wrap when legacy null-constraint is raised', async () => {
+        mocks.getSession.mockResolvedValue({
+            isAuthenticated: true,
+            userId: 'user-1',
+            isOwner: false,
+            isPlatformAdmin: false,
+            authz: { role: 'customer' },
+        })
+
+        const tx = {
+            wrap: { findFirst: vi.fn(), create: vi.fn() },
+            booking: { findFirst: vi.fn(), create: vi.fn() },
+            websiteSettings: { upsert: vi.fn() },
+            auditLog: { create: vi.fn() },
+        }
+
+        mocks.prisma.$transaction.mockImplementation(
+            async (callback: (client: typeof tx) => Promise<unknown>) => callback(tx)
+        )
+
+        tx.booking.findFirst.mockResolvedValue(null)
+        tx.wrap.findFirst.mockResolvedValue(null)
+        tx.wrap.create.mockResolvedValue({
+            id: 'wrap-fallback',
+            name: 'General Appointment',
+            price: 0,
+        })
+
+        const nullConstraintError = new Prisma.PrismaClientKnownRequestError(
+            'Null constraint violation on the (not available)',
+            {
+                code: 'P2011',
+                clientVersion: 'test',
+            }
+        )
+
+        tx.booking.create.mockRejectedValueOnce(nullConstraintError).mockResolvedValueOnce({
+            id: 'booking-legacy',
+            customerId: 'user-1',
+            wrapId: 'wrap-fallback',
+            wrap: { id: 'wrap-fallback', name: 'General Appointment' },
+            wrapNameSnapshot: 'General Appointment',
+            wrapPriceSnapshot: 0,
+            startTime: new Date('2026-03-24T16:00:00.000Z'),
+            endTime: new Date('2026-03-24T18:00:00.000Z'),
+            status: 'requested',
+            totalPrice: 0,
+            customerName: 'Taylor Driver',
+            customerEmail: 'taylor@example.com',
+            customerPhone: null,
+            preferredContact: 'email',
+            billingAddressLine1: null,
+            billingAddressLine2: null,
+            billingCity: null,
+            billingState: null,
+            billingPostalCode: null,
+            billingCountry: null,
+            vehicleMake: null,
+            vehicleModel: null,
+            vehicleYear: null,
+            vehicleTrim: null,
+            previewImageUrl: null,
+            previewPromptUsed: null,
+            notes: null,
+            reservation: null,
+            createdAt: new Date('2026-03-01T00:00:00.000Z'),
+            updatedAt: new Date('2026-03-01T00:00:00.000Z'),
+        })
+
+        tx.websiteSettings.upsert.mockResolvedValue(undefined)
+        tx.auditLog.create.mockResolvedValue(undefined)
+
+        const result = await createBooking({
+            startTime: new Date('2026-03-24T16:00:00.000Z').toISOString(),
+            endTime: new Date('2026-03-24T18:00:00.000Z').toISOString(),
+            customerName: 'Taylor Driver',
+            customerEmail: 'taylor@example.com',
+            customerPhone: '',
+            preferredContact: 'email',
+            billingAddressLine1: '',
+            billingAddressLine2: '',
+            billingCity: '',
+            billingState: '',
+            billingPostalCode: '',
+            billingCountry: '',
+            vehicleMake: '',
+            vehicleModel: '',
+            vehicleYear: '',
+            vehicleTrim: '',
+            notes: '',
+        })
+
+        expect(tx.wrap.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    name: 'General Appointment',
+                    price: 0,
+                    isHidden: true,
+                }),
+            })
+        )
+        expect(tx.booking.create).toHaveBeenCalledTimes(2)
+        expect(result).toEqual(
+            expect.objectContaining({
+                id: 'booking-legacy',
+                wrapId: 'wrap-fallback',
+                wrapName: 'General Appointment',
+                totalPrice: 0,
+            })
+        )
     })
 })

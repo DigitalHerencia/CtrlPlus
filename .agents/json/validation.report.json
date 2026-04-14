@@ -1,8 +1,32 @@
 {
   "artifact_type": "validation-report",
   "version": "1.0.0",
-  "updated_at": "2026-04-10",
+  "updated_at": "2026-04-13",
   "checks": [
+    {
+      "id": "VAL-052",
+      "name": "scheduling-audit-typecheck",
+      "status": "pass",
+      "details": "`pnpm typecheck` passed after restoring the scheduling appointment hub, removing dead manager create flows, and tightening own-scope scheduling fetchers."
+    },
+    {
+      "id": "VAL-053",
+      "name": "scheduling-audit-prisma-validate",
+      "status": "pass",
+      "details": "`pnpm prisma:validate` passed after the scheduling audit and cleanup changes."
+    },
+    {
+      "id": "VAL-054",
+      "name": "scheduling-audit-vitest",
+      "status": "pass",
+      "details": "`pnpm exec vitest run tests/vitest/unit/features/scheduling/scheduling-book-page-feature.test.tsx tests/vitest/unit/features/scheduling/scheduling-bookings-page-feature.test.tsx tests/vitest/unit/features/scheduling/scheduling-dashboard-page-feature.test.tsx tests/vitest/unit/features/scheduling/scheduling-booking-form-client.test.tsx tests/vitest/unit/lib/scheduling/fetchers/get-bookings.test.ts tests/vitest/unit/lib/scheduling/fetchers/get-availability.test.ts` passed with 6 files and 19 tests."
+    },
+    {
+      "id": "VAL-055",
+      "name": "scheduling-audit-targeted-eslint",
+      "status": "pass",
+      "details": "Targeted ESLint over the modified scheduling routes, features, fetchers, status helpers, and scheduling unit tests passed with `--max-warnings=0`."
+    },
     {
       "id": "VAL-043",
       "name": "scheduling-ui-focused-vitest",

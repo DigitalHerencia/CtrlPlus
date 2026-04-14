@@ -133,6 +133,7 @@ export const VALID_BOOKING_STATUSES = new Set(Object.values(BookingStatus))
  * SchedulingBookingDisplayStatus — TODO: brief description of this type.
  */
 export type SchedulingBookingDisplayStatus =
+    | 'reserved'
     | 'requested'
     | 'reschedule_requested'
     | 'confirmed'
@@ -167,10 +168,14 @@ export function getBookingDisplayStatus(
 ): SchedulingBookingDisplayStatus {
     if (status === BookingStatus.REQUESTED) {
         if (reservationExpiresAt && reservationExpiresAt > now) {
-            return 'requested'
+            return 'reserved'
         }
 
-        return 'expired'
+        if (reservationExpiresAt && reservationExpiresAt <= now) {
+            return 'expired'
+        }
+
+        return 'requested'
     }
 
     if (status === BookingStatus.RESCHEDULE_REQUESTED) {

@@ -9,7 +9,14 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
 
-const FILTERS = ['all', 'pending', 'confirmed', 'completed', 'cancelled'] as const
+const FILTERS = [
+    { value: 'all', label: 'All' },
+    { value: 'requested', label: 'Requested' },
+    { value: 'reschedule_requested', label: 'Reschedule Requested' },
+    { value: 'confirmed', label: 'Confirmed' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'cancelled', label: 'Cancelled' },
+] as const
 
 /**
  * BookingStatusFiltersClient — TODO: brief description of this function.
@@ -21,7 +28,7 @@ export function BookingStatusFiltersClient() {
     const searchParams = useSearchParams()
     const currentStatus = searchParams.get('status') ?? 'all'
 
-    function applyStatus(status: (typeof FILTERS)[number]) {
+    function applyStatus(status: (typeof FILTERS)[number]['value']) {
         const next = new URLSearchParams(searchParams.toString())
 
         if (status === 'all') {
@@ -40,13 +47,13 @@ export function BookingStatusFiltersClient() {
         <div className="flex flex-wrap items-center gap-2">
             {FILTERS.map((status) => (
                 <Button
-                    key={status}
+                    key={status.value}
                     type="button"
                     size="sm"
-                    variant={status === currentStatus ? 'default' : 'outline'}
-                    onClick={() => applyStatus(status)}
+                    variant={status.value === currentStatus ? 'default' : 'outline'}
+                    onClick={() => applyStatus(status.value)}
                 >
-                    {status[0]!.toUpperCase() + status.slice(1)}
+                    {status.label}
                 </Button>
             ))}
         </div>

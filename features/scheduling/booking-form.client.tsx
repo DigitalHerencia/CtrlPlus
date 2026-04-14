@@ -1,21 +1,14 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
 
 import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 
-import { BookingContactFields } from '@/components/scheduling/booking-form/booking-contact-fields'
 import { BookingDateFields } from '@/components/scheduling/booking-form/booking-date-fields'
 import { BookingFormActions } from '@/components/scheduling/booking-form/booking-form-actions'
 import { BookingFormFields } from '@/components/scheduling/booking-form/booking-form-fields'
 import { BookingFormShell } from '@/components/scheduling/booking-form/booking-form-shell'
-import { BookingNotesFields } from '@/components/scheduling/booking-form/booking-notes-fields'
-import { reserveSlot, updateBooking } from '@/lib/actions/scheduling.actions'
+import { updateBooking } from '@/lib/actions/scheduling.actions'
 
 import { BookingCalendarClient } from './booking-calendar.client'
 import { BookingSlotPickerClient } from './booking-slot-picker.client'
@@ -30,8 +23,7 @@ interface AvailabilityWindowOption {
 
 interface BookingFormClientProps {
     availabilityWindows: AvailabilityWindowOption[]
-    wraps: Array<{ id: string; name: string; price: number }>
-    bookingId?: string
+    bookingId: string
     initialDate?: Date
     initialWindowId?: string
     isManageView?: boolean
@@ -40,7 +32,6 @@ interface BookingFormClientProps {
 type BookingFormValues = {
     date?: Date
     windowId: string
-    wrapId: string
 }
 
 function buildDateTime(date: Date, hhmm: string): Date {
@@ -56,7 +47,6 @@ function buildDateTime(date: Date, hhmm: string): Date {
  */
 export function BookingFormClient({
     availabilityWindows,
-    wraps,
     bookingId,
     initialDate,
     initialWindowId,
@@ -66,16 +56,11 @@ export function BookingFormClient({
     const [serverError, setServerError] = useState<string | null>(null)
     const [selectedDate, setSelectedDate] = useState<Date | null>(initialDate ?? null)
     const [selectedWindowId, setSelectedWindowId] = useState(initialWindowId ?? '')
-    const [customerName, setCustomerName] = useState('')
-    const [customerEmail, setCustomerEmail] = useState('')
-    const [customerPhone, setCustomerPhone] = useState('')
-    const [notes, setNotes] = useState('')
 
     const form = useForm<BookingFormValues>({
         defaultValues: {
             date: initialDate,
             windowId: initialWindowId ?? '',
-            wrapId: wraps[0]?.id ?? '',
         },
     })
 
@@ -105,38 +90,31 @@ export function BookingFormClient({
         const endTime = buildDateTime(values.date, selectedWindow.endTime)
 
         try {
-            if (bookingId) {
-                await updateBooking(bookingId, {
-                    startTime: startTime.toISOString(),
-                    endTime: endTime.toISOString(),
-                })
+            await updateBooking(bookingId, {
+                startTime: startTime.toISOString(),
+                endTime: endTime.toISOString(),
+            })
 
-                const detailPath = isManageView
-                    ? `/scheduling/manage/${bookingId}`
-                    : `/scheduling/${bookingId}`
-                router.push(detailPath)
-            } else {
-                const created = await reserveSlot({
-                    wrapId: values.wrapId,
-                    startTime: startTime.toISOString(),
-                    endTime: endTime.toISOString(),
-                })
-
-                const destination = isManageView
-                    ? `/scheduling/manage/${created.id}`
-                    : `/scheduling/${created.id}`
-                router.push(destination)
-            }
-
+            const detailPath = isManageView
+                ? `/scheduling/manage/${bookingId}`
+                : `/scheduling/${bookingId}`
+            router.push(detailPath)
             router.refresh()
         } catch (error) {
-            setServerError(error instanceof Error ? error.message : 'Unable to save booking')
+            setServerError(error instanceof Error ? error.message : 'Unable to update appointment')
         }
     })
 
     return (
         <form onSubmit={submit} className="space-y-4">
-            <BookingFormShell>
+            <BookingFormShell
+                title={isManageView ? 'Edit Appointment' : 'Create Booking'}
+                description={
+                    isManageView
+                        ? 'Adjust appointment date and time, then save your changes.'
+                        : 'Pick slot, collect customer information, and submit booking.'
+                }
+            >
                 <BookingFormFields>
                     <BookingDateFields
                         calendar={
@@ -144,6 +122,7 @@ export function BookingFormClient({
                                 availableWeekdays={availableWeekdays}
                                 selectedDate={selectedDate ?? null}
                                 onDateSelect={(date) => {
+                                    setServerError(null)
                                     setSelectedDate(date)
                                     setSelectedWindowId('')
                                     form.setValue('date', date, { shouldValidate: true })
@@ -156,6 +135,7 @@ export function BookingFormClient({
                                 slots={slotsForDate}
                                 selectedSlotId={selectedWindowId}
                                 onSelectSlot={(slotId) => {
+                                    setServerError(null)
                                     setSelectedWindowId(slotId)
                                     form.setValue('windowId', slotId, { shouldValidate: true })
                                 }}
@@ -164,27 +144,15 @@ export function BookingFormClient({
                         }
                         error={form.formState.errors.windowId?.message}
                     />
-
-                    <BookingContactFields
-                        customerName={customerName}
-                        customerEmail={customerEmail}
-                        customerPhone={customerPhone}
-                        onCustomerNameChange={setCustomerName}
-                        onCustomerEmailChange={setCustomerEmail}
-                        onCustomerPhoneChange={setCustomerPhone}
-                    />
-
-                    <BookingNotesFields notes={notes} onNotesChange={setNotes} />
                 </BookingFormFields>
 
                 {serverError ? <p className="text-sm text-red-400">{serverError}</p> : null}
 
                 <BookingFormActions
                     isPending={form.formState.isSubmitting}
-                    submitLabel={bookingId ? 'Save Changes' : 'Create Booking'}
+                    submitLabel="Save Appointment Changes"
                 />
             </BookingFormShell>
         </form>
     )
 }
-

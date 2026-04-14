@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { useMemo, useState, useTransition } from 'react'
 
 import { generateVisualizerHfPreviewAction } from '@/lib/actions/visualizer.actions'
+import { createSchedulingBookHref } from '@/lib/utils/search-params'
 import type { VisualizerHfCatalogData } from '@/types/visualizer.types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -108,7 +109,7 @@ export function VisualizerHfConfiguratorClient({
             {/* Wrap Description Section */}
             <WorkspacePageContextCard
                 title="Wrap Selection"
-                description="Current wrap configuration"
+                description="Optional concept exploration for a selected wrap and vehicle"
             >
                 <div className="w-full space-y-3 lg:w-auto">
                     <p className="text-lg font-semibold text-neutral-100">
@@ -216,7 +217,9 @@ export function VisualizerHfConfiguratorClient({
                             {isPending ? 'Generating…' : 'Generate Preview'}
                         </Button>
                         <Button asChild type="button" variant="outline" className="flex-1">
-                            <Link href="/scheduling/book">Continue to Scheduling</Link>
+                            <Link href={createSchedulingBookHref(wrapId)}>
+                                Book Consultation or Install
+                            </Link>
                         </Button>
                     </div>
 
@@ -241,7 +244,7 @@ export function VisualizerHfConfiguratorClient({
                         />
                     ) : (
                         <div className="flex min-h-72 items-center justify-center rounded-lg border border-dashed border-neutral-700 text-sm text-neutral-400">
-                            Generate a preview to carry this vehicle setup into scheduling.
+                            Generate a concept preview to compare directions before you book.
                         </div>
                     )}
 

@@ -261,7 +261,7 @@ describe('scheduling lifecycle actions', () => {
             expect.objectContaining({
                 wrapName: 'Midnight Matte',
                 status: 'requested',
-                displayStatus: 'expired',
+                displayStatus: 'requested',
             })
         )
         expect(mocks.assertSlotHasCapacity).toHaveBeenCalledWith(

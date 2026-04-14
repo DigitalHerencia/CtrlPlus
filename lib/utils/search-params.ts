@@ -233,3 +233,20 @@ export function createVisualizerHref(wrapId: string | null | undefined): string 
     const query = createVisualizerQueryString(wrapId)
     return query ? `${APP_ROUTES.visualizer}?${query}` : APP_ROUTES.visualizer
 }
+
+/**
+ * createSchedulingBookHref — TODO: brief description of this function.
+ * @returns TODO: describe return value
+ */
+export function createSchedulingBookHref(wrapId: string | null | undefined): string {
+    const normalizedWrapId = wrapId?.trim() ?? ''
+
+    if (!normalizedWrapId) {
+        return APP_ROUTES.schedulingBook
+    }
+
+    const params = new URLSearchParams()
+    params.set('wrapId', normalizedWrapId)
+
+    return `${APP_ROUTES.schedulingBook}?${params.toString()}`
+}

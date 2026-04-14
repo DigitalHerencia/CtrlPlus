@@ -17,12 +17,14 @@ import { createInvoice } from '@/lib/actions/billing.actions'
 import { createInvoiceSchema } from '@/schemas/billing.schemas'
 import type { z } from 'zod'
 
-type CreateInvoiceInput = z.infer<typeof createInvoiceSchema>
+type CreateInvoiceFormValues = z.input<typeof createInvoiceSchema>
+type CreateInvoiceInput = z.output<typeof createInvoiceSchema>
 
 interface InvoiceEditorFormClientProps {
     initialBookingId?: string
+    initialDescription?: string
     submitLabel?: string
-    onSubmitInvoice?: (input: { bookingId: string }) => Promise<unknown>
+    onSubmitInvoice?: (input: CreateInvoiceInput) => Promise<unknown>
 }
 
 /**
@@ -31,27 +33,33 @@ interface InvoiceEditorFormClientProps {
  */
 export function InvoiceEditorFormClient({
     initialBookingId = '',
+    initialDescription = '',
     submitLabel = 'Create Invoice',
     onSubmitInvoice,
 }: InvoiceEditorFormClientProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
 
-    const form = useForm<CreateInvoiceInput>({
+    const form = useForm<CreateInvoiceFormValues, unknown, CreateInvoiceInput>({
         mode: 'onSubmit',
         resolver: zodResolver(createInvoiceSchema),
         defaultValues: {
             bookingId: initialBookingId,
+            description: initialDescription,
+            quantity: 1,
         },
     })
     const bookingId = useWatch({ control: form.control, name: 'bookingId' })
+    const description = useWatch({ control: form.control, name: 'description' }) ?? ''
+    const unitPrice = useWatch({ control: form.control, name: 'unitPrice' }) as number | undefined
+    const quantity = (useWatch({ control: form.control, name: 'quantity' }) as number | undefined) ?? 1
 
     function onSubmit(values: CreateInvoiceInput) {
         form.clearErrors()
         startTransition(async () => {
             try {
                 if (onSubmitInvoice) {
-                    await onSubmitInvoice({ bookingId: values.bookingId })
+                    await onSubmitInvoice(values)
                     router.refresh()
                     return
                 }
@@ -79,8 +87,29 @@ export function InvoiceEditorFormClient({
                 ) : null}
                 <InvoiceFormFields
                     bookingId={bookingId}
+                    description={description}
+                    unitPrice={unitPrice}
+                    quantity={quantity}
                     onBookingIdChange={(value) =>
                         form.setValue('bookingId', value, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                        })
+                    }
+                    onDescriptionChange={(value) =>
+                        form.setValue('description', value, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                        })
+                    }
+                    onUnitPriceChange={(value) =>
+                        form.setValue('unitPrice', value, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                        })
+                    }
+                    onQuantityChange={(value) =>
+                        form.setValue('quantity', value, {
                             shouldValidate: true,
                             shouldDirty: true,
                         })

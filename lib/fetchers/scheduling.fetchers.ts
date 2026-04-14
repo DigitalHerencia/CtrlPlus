@@ -4,7 +4,6 @@ import { getWraps } from '@/lib/fetchers/catalog.fetchers'
 import type { WrapDTO } from '@/types/catalog.types'
 import {
     availabilitySelectFields,
-    bookingDraftSelectFields,
     bookingSelectFields,
 } from '@/lib/db/selects/scheduling.selects'
 import { getSession } from '@/lib/auth/session'
@@ -17,7 +16,6 @@ import type {
     AvailabilityRuleDTO,
     AvailabilityWindowDTO,
     BookingDTO,
-    BookingDraftDTO,
     BookingDetailViewDTO,
     BookingListParams,
     BookingListResult,
@@ -174,6 +172,7 @@ export async function getAvailability(
     const parsed = availabilityQuerySchema.parse({ startDate, endDate })
     const rangeStart = parsed.startDate
     const rangeEnd = parsed.endDate
+    const now = new Date()
 
     const [rules, bookings] = await Promise.all([
         prisma.availabilityRule.findMany({
@@ -189,7 +188,20 @@ export async function getAvailability(
                 startTime: { lte: rangeEnd },
                 endTime: { gte: rangeStart },
                 OR: [
-                    { status: 'requested' },
+                    {
+                        status: 'requested',
+                        reservation: {
+                            is: null,
+                        },
+                    },
+                    {
+                        status: 'requested',
+                        reservation: {
+                            is: {
+                                expiresAt: { gt: now },
+                            },
+                        },
+                    },
                     { status: 'confirmed' },
                     { status: 'reschedule_requested' },
                     { status: 'completed' },
@@ -240,51 +252,6 @@ export async function getAvailability(
     return slots.sort((a, b) => a.start.localeCompare(b.start))
 }
 
-function toBookingDraftDTO(record: {
-    id: string
-    customerId: string
-    wrapId: string
-    wrapNameSnapshot: string
-    wrapPriceSnapshot: number
-    vehicleMake: string | null
-    vehicleModel: string | null
-    vehicleYear: string | null
-    vehicleTrim: string | null
-    previewImageUrl: string | null
-    previewPromptUsed: string | null
-    previewStatus: string | null
-    createdAt: Date
-    updatedAt: Date
-}): BookingDraftDTO {
-    return {
-        id: record.id,
-        customerId: record.customerId,
-        wrapId: record.wrapId,
-        wrapNameSnapshot: record.wrapNameSnapshot,
-        wrapPriceSnapshot: record.wrapPriceSnapshot,
-        vehicleMake: record.vehicleMake,
-        vehicleModel: record.vehicleModel,
-        vehicleYear: record.vehicleYear,
-        vehicleTrim: record.vehicleTrim,
-        previewImageUrl: record.previewImageUrl,
-        previewPromptUsed: record.previewPromptUsed,
-        previewStatus: record.previewStatus,
-        createdAt: record.createdAt.toISOString(),
-        updatedAt: record.updatedAt.toISOString(),
-    }
-}
-
-export async function getActiveBookingDraft(): Promise<BookingDraftDTO | null> {
-    const session = await requireSchedulingReadSession()
-
-    const row = await prisma.bookingDraft.findUnique({
-        where: { customerId: session.userId },
-        select: bookingDraftSelectFields,
-    })
-
-    return row ? toBookingDraftDTO(row) : null
-}
-
 // Bookings
 const DEFAULT_BOOKING_LIST_PARAMS: BookingListParams = {
     page: 1,
@@ -294,14 +261,14 @@ const DEFAULT_BOOKING_LIST_PARAMS: BookingListParams = {
 function toBookingDTO(record: {
     id: string
     customerId: string
-    wrapId: string
+    wrapId: string | null
     wrap: {
         name: string
-    }
+    } | null
     startTime: Date | string
     endTime: Date | string
     status: string
-    totalPrice: number
+    totalPrice: number | null
     wrapNameSnapshot: string | null
     wrapPriceSnapshot: number | null
     customerName: string | null
@@ -356,7 +323,7 @@ function toBookingDTO(record: {
         id: record.id,
         customerId: record.customerId,
         wrapId: record.wrapId,
-        wrapName: record.wrapNameSnapshot ?? record.wrap.name,
+        wrapName: record.wrapNameSnapshot ?? record.wrap?.name ?? undefined,
         startTime,
         endTime,
         status: normalizedStatus as BookingDTO['status'],
@@ -388,20 +355,36 @@ function toBookingDTO(record: {
     }
 }
 
+type BookingReadScope = {
+    customerId?: string
+    ownOnly?: boolean
+}
+
+function resolveBookingCustomerId(
+    session: Awaited<ReturnType<typeof requireSchedulingReadSession>>,
+    scope?: BookingReadScope
+): string | undefined {
+    if (scope?.customerId) {
+        return scope.customerId
+    }
+
+    if (scope?.ownOnly) {
+        return session.userId
+    }
+
+    return canViewAllSchedulingBookings(session) ? undefined : session.userId
+}
+
 export async function getBookings(
     params: BookingListParams = DEFAULT_BOOKING_LIST_PARAMS,
-    _scope?: {
-        customerId?: string
-    }
+    scope?: BookingReadScope
 ): Promise<BookingListResult> {
-    void _scope
-
     const session = await requireSchedulingReadSession()
     // Validate params at the action boundary: bookingListParamsSchema.parse(params)
     const { page, pageSize, status, fromDate, toDate } = params
     const skip = (page - 1) * pageSize
 
-    const customerId = canViewAllSchedulingBookings(session) ? undefined : session.userId
+    const customerId = resolveBookingCustomerId(session, scope)
 
     const where = {
         deletedAt: null,
@@ -435,9 +418,12 @@ export async function getBookings(
     }
 }
 
-export async function getBookingById(bookingId: string): Promise<BookingDTO | null> {
+export async function getBookingById(
+    bookingId: string,
+    scope?: BookingReadScope
+): Promise<BookingDTO | null> {
     const session = await requireSchedulingReadSession()
-    const customerId = canViewAllSchedulingBookings(session) ? undefined : session.userId
+    const customerId = resolveBookingCustomerId(session, scope)
 
     const record = await prisma.booking.findFirst({
         where: {
@@ -451,9 +437,12 @@ export async function getBookingById(bookingId: string): Promise<BookingDTO | nu
     return record ? toBookingDTO(record) : null
 }
 
-async function getBookingTimeline(bookingId: string): Promise<BookingTimelineEventDTO[]> {
+async function getBookingTimeline(
+    bookingId: string,
+    scope?: BookingReadScope
+): Promise<BookingTimelineEventDTO[]> {
     const session = await requireSchedulingReadSession()
-    const customerId = canViewAllSchedulingBookings(session) ? undefined : session.userId
+    const customerId = resolveBookingCustomerId(session, scope)
 
     const bookingExists = await prisma.booking.findFirst({
         where: {
@@ -498,16 +487,14 @@ async function getBookingTimeline(bookingId: string): Promise<BookingTimelineEve
 
 export async function getBooking(
     bookingId: string,
-    _userId?: string
+    scope?: BookingReadScope
 ): Promise<BookingDetailViewDTO | null> {
-    void _userId
-
-    const booking = await getBookingById(bookingId)
+    const booking = await getBookingById(bookingId, scope)
     if (!booking) {
         return null
     }
 
-    const timeline = await getBookingTimeline(bookingId)
+    const timeline = await getBookingTimeline(bookingId, scope)
 
     const scheduledAt = booking.startTime
     const durationMinutes = Math.max(
@@ -574,9 +561,12 @@ export async function getBookingManagerRows(
     }))
 }
 
-export async function getUpcomingBookingCount(from: Date = new Date()): Promise<number> {
+export async function getUpcomingBookingCount(
+    from: Date = new Date(),
+    scope?: BookingReadScope
+): Promise<number> {
     const session = await requireSchedulingReadSession()
-    const customerId = canViewAllSchedulingBookings(session) ? undefined : session.userId
+    const customerId = resolveBookingCustomerId(session, scope)
 
     return prisma.booking.count({
         where: {
@@ -596,5 +586,13 @@ export async function getWrapsForScheduling(opts?: {
     includeHidden?: boolean
 }): Promise<WrapDTO[]> {
     return getWraps({ includeHidden: opts?.includeHidden ?? false })
+}
+
+export async function getWrapForScheduling(
+    wrapId: string,
+    opts?: { includeHidden?: boolean }
+): Promise<WrapDTO | null> {
+    const wraps = await getWrapsForScheduling(opts)
+    return wraps.find((wrap) => wrap.id === wrapId) ?? null
 }
 

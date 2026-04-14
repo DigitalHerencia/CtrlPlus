@@ -48,23 +48,6 @@ vi.mock('@/features/scheduling/booking-slot-picker.client', () => ({
 
 import { SchedulingBookingFormClient } from '@/features/scheduling/scheduling-booking-form-client'
 
-const draft = {
-    id: 'draft-1',
-    customerId: 'user-1',
-    wrapId: 'wrap-1',
-    wrapNameSnapshot: 'Standard Wrap',
-    wrapPriceSnapshot: 10000,
-    vehicleMake: 'Ford',
-    vehicleModel: 'Mustang',
-    vehicleYear: '2022',
-    vehicleTrim: 'GT',
-    previewImageUrl: 'https://image.test/preview.png',
-    previewPromptUsed: 'prompt used',
-    previewStatus: 'complete',
-    createdAt: '2026-03-01T00:00:00.000Z',
-    updatedAt: '2026-03-01T00:00:00.000Z',
-} as const
-
 const initialSettings = {
     userId: 'user-1',
     theme: 'system',
@@ -105,7 +88,7 @@ describe('SchedulingBookingFormClient', () => {
         })
     })
 
-    it('submits the draft-backed checkout flow and redirects to the booking detail page', async () => {
+    it('submits a booking request and redirects to the booking detail page', async () => {
         render(
             <SchedulingBookingFormClient
                 availabilityWindows={[
@@ -117,7 +100,6 @@ describe('SchedulingBookingFormClient', () => {
                         capacity: 2,
                     },
                 ]}
-                draft={draft}
                 initialSettings={initialSettings}
             />
         )
@@ -128,7 +110,6 @@ describe('SchedulingBookingFormClient', () => {
 
         await waitFor(() =>
             expect(mocks.createBooking).toHaveBeenCalledWith({
-                wrapId: 'wrap-1',
                 startTime: new Date(2026, 2, 1, 9, 0, 0, 0).toISOString(),
                 endTime: new Date(2026, 2, 1, 10, 0, 0, 0).toISOString(),
                 customerName: 'Taylor Driver',
@@ -145,8 +126,6 @@ describe('SchedulingBookingFormClient', () => {
                 vehicleModel: 'Mustang',
                 vehicleYear: '2022',
                 vehicleTrim: 'GT',
-                previewImageUrl: 'https://image.test/preview.png',
-                previewPromptUsed: 'prompt used',
                 notes: '',
             })
         )
@@ -168,7 +147,6 @@ describe('SchedulingBookingFormClient', () => {
                         capacity: 2,
                     },
                 ]}
-                draft={draft}
                 initialSettings={initialSettings}
             />
         )

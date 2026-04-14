@@ -5,8 +5,6 @@
  * Public: TODO (yes/no)
  */
 
-import Image from 'next/image'
-import Link from 'next/link'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
 import { useMemo, useState } from 'react'
@@ -20,7 +18,6 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { createBooking } from '@/lib/actions/scheduling.actions'
 import { bookingFormSchema } from '@/schemas/scheduling.schemas'
-import type { BookingDraftDTO } from '@/types/scheduling.types'
 import type { UserSettingsViewDTO } from '@/types/settings.types'
 
 import { BookingCalendarClient } from './booking-calendar.client'
@@ -34,15 +31,13 @@ interface SchedulingBookingFormClientProps {
         endTime: string
         capacity: number
     }>
-    draft: BookingDraftDTO
     initialSettings: UserSettingsViewDTO
     minDate?: Date
 }
 
 type BookingFormValues = z.infer<typeof bookingFormSchema>
 
-const FIELD_LABEL_CLASS =
-    'text-xs font-semibold uppercase tracking-[0.18em] text-neutral-300'
+const FIELD_LABEL_CLASS = 'text-xs font-semibold uppercase tracking-[0.18em] text-neutral-300'
 const INPUT_CLASS =
     'h-11 border-neutral-700 bg-neutral-950 text-sm text-neutral-100 placeholder:text-neutral-500'
 const SELECT_CLASS =
@@ -57,19 +52,12 @@ function buildDateTime(date: Date, time: string): Date {
     return nextDate
 }
 
-function formatPrice(priceInCents: number): string {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
-        priceInCents / 100
-    )
-}
-
 /**
  * SchedulingBookingFormClient — TODO: brief description of this function.
  * @returns TODO: describe return value
  */
 export function SchedulingBookingFormClient({
     availabilityWindows,
-    draft,
     initialSettings,
     minDate,
 }: SchedulingBookingFormClientProps) {
@@ -91,12 +79,12 @@ export function SchedulingBookingFormClient({
             billingState: initialSettings.billingState ?? '',
             billingPostalCode: initialSettings.billingPostalCode ?? '',
             billingCountry: initialSettings.billingCountry ?? 'US',
-            vehicleMake: draft.vehicleMake ?? initialSettings.vehicleMake ?? '',
-            vehicleModel: draft.vehicleModel ?? initialSettings.vehicleModel ?? '',
-            vehicleYear: draft.vehicleYear ?? initialSettings.vehicleYear ?? '',
-            vehicleTrim: draft.vehicleTrim ?? initialSettings.vehicleTrim ?? '',
-            previewImageUrl: draft.previewImageUrl ?? '',
-            previewPromptUsed: draft.previewPromptUsed ?? '',
+            vehicleMake: initialSettings.vehicleMake ?? '',
+            vehicleModel: initialSettings.vehicleModel ?? '',
+            vehicleYear: initialSettings.vehicleYear ?? '',
+            vehicleTrim: initialSettings.vehicleTrim ?? '',
+            previewImageUrl: '',
+            previewPromptUsed: '',
             notes: '',
         },
     })
@@ -115,47 +103,49 @@ export function SchedulingBookingFormClient({
         return availabilityWindows.filter((window) => window.dayOfWeek === selectedDate.getDay())
     }, [availabilityWindows, selectedDate])
 
-    const handleSubmit = form.handleSubmit(async (values) => {
-        setServerError(null)
-        const window = availabilityWindows.find((item) => item.id === values.windowId)
-        if (!window) {
-            form.setError('windowId', { type: 'validate', message: 'Select a time slot.' })
-            return
+    const handleSubmit = form.handleSubmit(
+        async (values) => {
+            setServerError(null)
+            const window = availabilityWindows.find((item) => item.id === values.windowId)
+            if (!window) {
+                form.setError('windowId', { type: 'validate', message: 'Select a time slot.' })
+                return
+            }
+
+            const startTime = buildDateTime(values.date, window.startTime)
+            const endTime = buildDateTime(values.date, window.endTime)
+
+            try {
+                const booking = await createBooking({
+                    startTime: startTime.toISOString(),
+                    endTime: endTime.toISOString(),
+                    customerName: values.customerName,
+                    customerEmail: values.customerEmail,
+                    customerPhone: values.customerPhone,
+                    preferredContact: values.preferredContact,
+                    billingAddressLine1: values.billingAddressLine1,
+                    billingAddressLine2: values.billingAddressLine2,
+                    billingCity: values.billingCity,
+                    billingState: values.billingState,
+                    billingPostalCode: values.billingPostalCode,
+                    billingCountry: values.billingCountry,
+                    vehicleMake: values.vehicleMake,
+                    vehicleModel: values.vehicleModel,
+                    vehicleYear: values.vehicleYear,
+                    vehicleTrim: values.vehicleTrim,
+                    notes: values.notes,
+                })
+
+                router.push(`/scheduling/${booking.id}`)
+                router.refresh()
+            } catch (error) {
+                setServerError(error instanceof Error ? error.message : 'Failed to create booking.')
+            }
+        },
+        () => {
+            setServerError('Please complete the required appointment details and try again.')
         }
-
-        const startTime = buildDateTime(values.date, window.startTime)
-        const endTime = buildDateTime(values.date, window.endTime)
-
-        try {
-            const booking = await createBooking({
-                wrapId: draft.wrapId,
-                startTime: startTime.toISOString(),
-                endTime: endTime.toISOString(),
-                customerName: values.customerName,
-                customerEmail: values.customerEmail,
-                customerPhone: values.customerPhone,
-                preferredContact: values.preferredContact,
-                billingAddressLine1: values.billingAddressLine1,
-                billingAddressLine2: values.billingAddressLine2,
-                billingCity: values.billingCity,
-                billingState: values.billingState,
-                billingPostalCode: values.billingPostalCode,
-                billingCountry: values.billingCountry,
-                vehicleMake: values.vehicleMake,
-                vehicleModel: values.vehicleModel,
-                vehicleYear: values.vehicleYear,
-                vehicleTrim: values.vehicleTrim,
-                previewImageUrl: values.previewImageUrl,
-                previewPromptUsed: values.previewPromptUsed,
-                notes: values.notes,
-            })
-
-            router.push(`/scheduling/${booking.id}`)
-            router.refresh()
-        } catch (error) {
-            setServerError(error instanceof Error ? error.message : 'Failed to create booking.')
-        }
-    })
+    )
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -174,6 +164,7 @@ export function SchedulingBookingFormClient({
                                 availableWeekdays={availableWeekdays}
                                 selectedDate={selectedDate}
                                 onDateSelect={(date) => {
+                                    setServerError(null)
                                     form.setValue('date', date, { shouldValidate: true })
                                     form.setValue('windowId', '', { shouldValidate: true })
                                 }}
@@ -189,9 +180,10 @@ export function SchedulingBookingFormClient({
                                 <BookingSlotPickerClient
                                     slots={windowsForDate}
                                     selectedSlotId={selectedWindowId}
-                                    onSelectSlot={(slotId) =>
+                                    onSelectSlot={(slotId) => {
+                                        setServerError(null)
                                         form.setValue('windowId', slotId, { shouldValidate: true })
-                                    }
+                                    }}
                                     disabled={form.formState.isSubmitting}
                                 />
                                 {form.formState.errors.windowId?.message ? (
@@ -207,47 +199,18 @@ export function SchedulingBookingFormClient({
                 <div className="flex flex-col gap-5 xl:min-h-full">
                     <Card className="border-neutral-700 bg-neutral-900 text-neutral-100">
                         <CardHeader className="space-y-1 pb-4">
-                            <CardTitle className="text-base">Selected wrap</CardTitle>
+                            <CardTitle className="text-base">Appointment focus</CardTitle>
                             <p className="text-sm text-neutral-400">
-                                Review the wrap and preview that will carry into this appointment.
+                                Book a consultation, install planning session, or standalone service
+                                appointment.
                             </p>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <div className="space-y-1">
-                                    <p className="text-lg font-semibold text-neutral-100">
-                                        {draft.wrapNameSnapshot}
-                                    </p>
-                                    <p className="text-sm text-neutral-400">
-                                        Your visualizer selection stays attached to this booking
-                                        request.
-                                    </p>
-                                </div>
-                                <p className="text-sm font-semibold text-neutral-100">
-                                    {formatPrice(draft.wrapPriceSnapshot)}
+                            <div className="space-y-4 border border-dashed border-neutral-700 px-4 py-6 text-sm text-neutral-400">
+                                <p>
+                                    Choose your date and time, then provide contact and vehicle
+                                    details so the shop can confirm the appointment.
                                 </p>
-                            </div>
-                            {draft.previewImageUrl ? (
-                                <Image
-                                    src={draft.previewImageUrl}
-                                    alt="Wrap preview"
-                                    width={1200}
-                                    height={675}
-                                    className="w-full border border-neutral-700 object-cover"
-                                />
-                            ) : (
-                                <div className="border border-dashed border-neutral-700 px-4 py-6 text-sm text-neutral-400">
-                                    No generated preview yet. You can still book now or return to
-                                    the visualizer first.
-                                </div>
-                            )}
-                            <div className="flex flex-wrap gap-2">
-                                <Button asChild type="button" variant="outline">
-                                    <Link href="/visualizer">Edit Preview</Link>
-                                </Button>
-                                <Button asChild type="button" variant="outline">
-                                    <Link href="/settings/account">Review Account Defaults</Link>
-                                </Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -310,10 +273,7 @@ export function SchedulingBookingFormClient({
                         </CardHeader>
                         <CardContent className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-2 md:col-span-2">
-                                <Label
-                                    className={FIELD_LABEL_CLASS}
-                                    htmlFor="billingAddressLine1"
-                                >
+                                <Label className={FIELD_LABEL_CLASS} htmlFor="billingAddressLine1">
                                     Billing address
                                 </Label>
                                 <Input
@@ -323,10 +283,7 @@ export function SchedulingBookingFormClient({
                                 />
                             </div>
                             <div className="space-y-2 md:col-span-2">
-                                <Label
-                                    className={FIELD_LABEL_CLASS}
-                                    htmlFor="billingAddressLine2"
-                                >
+                                <Label className={FIELD_LABEL_CLASS} htmlFor="billingAddressLine2">
                                     Address line 2
                                 </Label>
                                 <Input
@@ -374,30 +331,6 @@ export function SchedulingBookingFormClient({
                                     className={INPUT_CLASS}
                                     {...form.register('billingCountry')}
                                 />
-                            </div>
-                            <div className="space-y-3 border border-neutral-700 bg-neutral-950 px-4 py-4 text-sm text-neutral-300 md:col-span-2">
-                                {initialSettings.stripeDefaultPaymentMethodLast4 ? (
-                                    <p>
-                                        Saved payment method on file:{' '}
-                                        {initialSettings.stripeDefaultPaymentMethodBrand ?? 'Card'}{' '}
-                                        ending in{' '}
-                                        {initialSettings.stripeDefaultPaymentMethodLast4}. You will
-                                        pay after the owner issues the invoice.
-                                    </p>
-                                ) : (
-                                    <p>
-                                        No default payment method is saved yet. You can still book
-                                        now and add payment details when the invoice is issued.
-                                    </p>
-                                )}
-                                <Button
-                                    asChild
-                                    type="button"
-                                    variant="link"
-                                    className="h-auto p-0 text-blue-300"
-                                >
-                                    <Link href="/settings/account">Manage payment details</Link>
-                                </Button>
                             </div>
                         </CardContent>
                     </Card>
@@ -463,7 +396,9 @@ export function SchedulingBookingFormClient({
 
                     <Card className="mt-1 border-neutral-700 bg-neutral-900 text-neutral-100 xl:mt-auto">
                         <CardContent className="space-y-4 pt-6">
-                            {serverError ? <p className="text-sm text-red-400">{serverError}</p> : null}
+                            {serverError ? (
+                                <p className="text-sm text-red-400">{serverError}</p>
+                            ) : null}
                             <div className="flex justify-end pt-2">
                                 <Button
                                     type="submit"

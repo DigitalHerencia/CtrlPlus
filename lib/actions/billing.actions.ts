@@ -297,10 +297,56 @@ export async function ensureInvoiceForBooking(
         }
     }
 
-    const roundedTotalPrice = normalizeCents(booking.totalPrice)
+    throw new Error(
+        `Use the invoice composer to issue billing for booking ${booking.id}. Pricing is no longer derived automatically from the booking.`
+    )
+}
+
+export async function createInvoice(rawInput: CreateInvoiceInput): Promise<EnsureInvoiceResult> {
+    const parsed = createInvoiceSchema.parse(rawInput)
+    const session = await requireOwnerOrPlatformAdmin()
+    const userId = session.userId
+
+    if (!session.isAuthenticated || !userId) {
+        throw new Error('Unauthorized: not authenticated')
+    }
+
+    const booking = await prisma.booking.findFirst({
+        where: {
+            id: parsed.bookingId,
+            deletedAt: null,
+        },
+        select: {
+            id: true,
+            customerEmail: true,
+            status: true,
+            invoice: {
+                where: { deletedAt: null },
+                select: { id: true },
+            },
+        },
+    })
+
+    if (!booking) {
+        throw new Error('Forbidden: booking not found')
+    }
+
+    if (normalizeBookingStatus(booking.status) !== BookingStatus.COMPLETED) {
+        throw new Error('Invoices can only be issued after the booking is completed')
+    }
+
+    if (booking.invoice) {
+        return {
+            invoiceId: booking.invoice.id,
+            created: false,
+        }
+    }
+
     const issuedAt = new Date()
     const dueDate = new Date(issuedAt.getTime() + 7 * 24 * 60 * 60 * 1000)
-    const lineItemDescription = booking.wrapNameSnapshot ?? booking.wrap?.name ?? 'Wrap installation'
+    const quantity = parsed.quantity ?? 1
+    const unitPrice = normalizeCents(parsed.unitPrice)
+    const subtotalAmount = normalizeCents(unitPrice * quantity)
 
     try {
         const created = await prisma.$transaction(async (tx) => {
@@ -308,18 +354,18 @@ export async function ensureInvoiceForBooking(
                 data: {
                     bookingId: booking.id,
                     status: 'issued',
-                    subtotalAmount: roundedTotalPrice,
+                    subtotalAmount,
                     taxAmount: 0,
-                    totalAmount: roundedTotalPrice,
+                    totalAmount: subtotalAmount,
                     issuedAt,
                     dueDate,
                     lineItems: {
                         create: [
                             {
-                                description: lineItemDescription,
-                                quantity: 1,
-                                unitPrice: roundedTotalPrice,
-                                totalPrice: roundedTotalPrice,
+                                description: parsed.description,
+                                quantity,
+                                unitPrice,
+                                totalPrice: subtotalAmount,
                             },
                         ],
                     },
@@ -330,10 +376,17 @@ export async function ensureInvoiceForBooking(
             await tx.auditLog.create({
                 data: {
                     userId,
-                    action: 'ENSURE_INVOICE_FOR_BOOKING',
+                    action: 'CREATE_INVOICE',
                     resourceType: 'Invoice',
                     resourceId: invoice.id,
-                    details: JSON.stringify({ bookingId: booking.id, issuedAt: issuedAt.toISOString(), dueDate: dueDate.toISOString() }),
+                    details: JSON.stringify({
+                        bookingId: booking.id,
+                        description: parsed.description,
+                        quantity,
+                        unitPrice,
+                        issuedAt: issuedAt.toISOString(),
+                        dueDate: dueDate.toISOString(),
+                    }),
                     timestamp: issuedAt,
                 },
             })
@@ -346,7 +399,7 @@ export async function ensureInvoiceForBooking(
             ownerEmail
                 ? sendNotificationEmail({
                       to: ownerEmail,
-                      subject: `Invoice issued for ${lineItemDescription}`,
+                      subject: `Invoice issued for booking ${booking.id}`,
                       text: `Invoice ${created.id} was issued for booking ${booking.id}.`,
                   })
                 : Promise.resolve(),
@@ -354,7 +407,7 @@ export async function ensureInvoiceForBooking(
                 ? sendNotificationEmail({
                       to: booking.customerEmail,
                       subject: 'Your invoice is ready',
-                      text: `Your invoice for ${lineItemDescription} is now available in your account.`,
+                      text: `Your invoice for ${parsed.description} is now available in your account.`,
                   })
                 : Promise.resolve(),
         ])
@@ -376,11 +429,6 @@ export async function ensureInvoiceForBooking(
 
         return { invoiceId: existingInvoice.id, created: false }
     }
-}
-
-export async function createInvoice(rawInput: CreateInvoiceInput): Promise<EnsureInvoiceResult> {
-    const parsed = createInvoiceSchema.parse(rawInput)
-    return ensureInvoiceForBooking({ bookingId: parsed.bookingId })
 }
 
 export async function processPayment(rawInput: ProcessPaymentInput): Promise<CheckoutSessionDTO> {
@@ -966,4 +1014,3 @@ export async function processStripeWebhookEvent({
         throw error
     }
 }
-

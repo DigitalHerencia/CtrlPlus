@@ -30,8 +30,8 @@ export function BookingDetailSummary({ booking }: BookingDetailSummaryProps) {
                     <BookingStatusBadge status={booking.status} className="mt-1" />
                 </div>
                 <div>
-                    <p className="text-neutral-500">Wrap</p>
-                    <p>{booking.wrapName ?? 'Wrap installation'}</p>
+                    <p className="text-neutral-500">Service</p>
+                    <p>{booking.wrapName ?? 'Consultation or service appointment'}</p>
                 </div>
                 <div>
                     <p className="text-neutral-500">Customer</p>

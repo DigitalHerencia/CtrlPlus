@@ -55,15 +55,14 @@ describe('SchedulingBookingsPageFeature', () => {
             address: '123 Main St, Denver, CO 80202',
         })
 
-        const { SchedulingBookingsPageFeature } = await import(
-            '@/features/scheduling/scheduling-bookings-page-feature'
-        )
+        const { SchedulingBookingsPageFeature } =
+            await import('@/features/scheduling/scheduling-bookings-page-feature')
 
-        render(await SchedulingBookingsPageFeature({ tab: 'upcoming' }))
+        render(await SchedulingBookingsPageFeature({ tab: 'upcoming', userId: 'user-1' }))
 
         expect(screen.getByRole('heading', { name: /My Appointments/i })).toBeVisible()
         expect(screen.queryByText(/Manage Bookings/i)).not.toBeInTheDocument()
-        expect(screen.getByText(/Wrap installation/i)).toBeVisible()
+        expect(screen.getByText(/Wrap-related appointment/i)).toBeVisible()
         expect(
             screen.getByText(/CtrlPlus Wrap Studio • 123 Main St, Denver, CO 80202/i)
         ).toBeVisible()
@@ -106,11 +105,10 @@ describe('SchedulingBookingsPageFeature', () => {
             address: null,
         })
 
-        const { SchedulingBookingsPageFeature } = await import(
-            '@/features/scheduling/scheduling-bookings-page-feature'
-        )
+        const { SchedulingBookingsPageFeature } =
+            await import('@/features/scheduling/scheduling-bookings-page-feature')
 
-        render(await SchedulingBookingsPageFeature({ tab: 'upcoming' }))
+        render(await SchedulingBookingsPageFeature({ tab: 'upcoming', userId: 'user-1' }))
 
         expect(screen.getByText(/Location shared after confirmation/i)).toBeVisible()
         expect(screen.getByRole('link', { name: /^View$/i })).toBeVisible()
@@ -119,9 +117,8 @@ describe('SchedulingBookingsPageFeature', () => {
     })
 
     it('routes inline customer cancellation through cancelBooking and redirects back to the same tab', async () => {
-        const { createCustomerCancelBookingAction } = await import(
-            '@/features/scheduling/scheduling-bookings-page-feature'
-        )
+        const { createCustomerCancelBookingAction } =
+            await import('@/features/scheduling/scheduling-bookings-page-feature')
 
         const action = createCustomerCancelBookingAction('upcoming')
         const formData = new FormData()

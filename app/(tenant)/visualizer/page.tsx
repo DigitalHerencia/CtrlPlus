@@ -29,7 +29,7 @@ export default async function VisualizerPage({ searchParams }: VisualizerPagePro
             <WorkspacePageIntro
                 label="Visualizer"
                 title="Visualizer"
-                description="Preview the wrap you selected, tune the vehicle details, and carry the result straight into booking."
+                description="Explore wrap concepts on a vehicle, tune the details, and move into scheduling only when you are ready."
             />
 
             <VisualizerHfPageFeature

@@ -15,6 +15,9 @@ export const invoiceFilterFormSchema = z.object({
 
 export const createInvoiceSchema = z.object({
     bookingId: z.string().min(1),
+    description: z.string().trim().min(3).max(200),
+    unitPrice: z.coerce.number().int().positive(),
+    quantity: z.coerce.number().int().positive().optional(),
     tenantId: z.string().min(1).optional(),
 })
 

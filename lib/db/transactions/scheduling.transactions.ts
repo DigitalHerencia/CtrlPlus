@@ -53,7 +53,7 @@ async function getMaxCapacityForSlot(
     })
 
     if (rules.length === 0) {
-        throw new Error('No availability configured for the requested day')
+        return 4
     }
 
     const matchingRules = rules.filter(
@@ -80,7 +80,22 @@ async function countOverlappingActiveBookings(
             startTime: { lt: input.endTime },
             endTime: { gt: input.startTime },
             OR: [
+                {
+                    status: 'requested',
+                    reservation: {
+                        is: null,
+                    },
+                },
+                {
+                    status: 'requested',
+                    reservation: {
+                        is: {
+                            expiresAt: { gt: effectiveNow },
+                        },
+                    },
+                },
                 { status: 'confirmed' },
+                { status: 'reschedule_requested' },
                 { status: 'completed' },
                 {
                     status: 'pending',

@@ -16,14 +16,14 @@ import { BookingStatusBadge, type BookingDisplayStatus } from './booking-status-
  */
 export interface BookingCardItem {
     id: string
-    wrapId: string
+    wrapId: string | null
     wrapName?: string
     startTime: Date
     endTime: Date
     status: string
     displayStatus?: BookingDisplayStatus | string
     reservationExpiresAt?: Date | null
-    totalPrice: number
+    totalPrice: number | null
 }
 
 interface BookingCardProps {
@@ -63,6 +63,12 @@ function formatExpiry(date: Date): string {
  */
 export function BookingCard({ booking, locationLabel, actions }: BookingCardProps) {
     const displayStatus = booking.displayStatus ?? booking.status
+    const bookingLabel = booking.wrapName
+        ? booking.wrapName
+        : booking.wrapId
+          ? `Wrap ${booking.wrapId.slice(0, 8)}…`
+          : 'Consultation or service appointment'
+    const serviceLabel = booking.wrapName || booking.wrapId ? 'Wrap-related appointment' : 'Consultation or service'
 
     return (
         <Card className="border-neutral-700 bg-neutral-900 text-neutral-100 shadow-sm transition-all hover:border-blue-600/40">
@@ -71,7 +77,7 @@ export function BookingCard({ booking, locationLabel, actions }: BookingCardProp
                     <div className="min-w-0 space-y-3">
                         <div className="flex flex-wrap items-center gap-2">
                             <span className="truncate text-base font-semibold text-neutral-100">
-                                {booking.wrapName ?? `Wrap ${booking.wrapId.slice(0, 8)}…`}
+                                {bookingLabel}
                             </span>
                             <BookingStatusBadge status={displayStatus} />
                         </div>
@@ -110,7 +116,7 @@ export function BookingCard({ booking, locationLabel, actions }: BookingCardProp
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-400">
                             Service
                         </p>
-                        <p className="mt-1 text-sm text-neutral-100">Wrap installation</p>
+                        <p className="mt-1 text-sm text-neutral-100">{serviceLabel}</p>
                     </div>
                 </div>
 

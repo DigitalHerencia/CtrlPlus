@@ -17,5 +17,5 @@ export default async function BookingsPage({ searchParams }: BookingsPageProps) 
     const { tab } = await searchParams
     const normalizedTab = (Array.isArray(tab) ? tab[0] : tab) === 'past' ? 'past' : 'upcoming'
 
-    return <SchedulingBookingsPageFeature tab={normalizedTab} />
+    return <SchedulingBookingsPageFeature tab={normalizedTab} userId={session.userId} />
 }

@@ -2,13 +2,11 @@
 
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
-import { updateBookingDraftFromVisualizer } from '@/lib/actions/scheduling.actions'
 import { WRAP_CATALOG } from '@/lib/constants/visualizer/wrap-catalog'
 import { getVisualizerSelectableWrapById } from '@/lib/fetchers/catalog.fetchers'
 import { getVisualizerHfCatalogData } from '@/lib/fetchers/visualizer.fetchers'
 import { generateVisualizerHfPreviewSchema } from '@/schemas/visualizer.schemas'
 import { generateVehicleWrapPreviewViaHfSpace } from '@/lib/visualizer/huggingface/space-client'
-import { PreviewStatus } from '@/lib/constants/statuses'
 import type { VisualizerWrapSelectionDTO } from '@/types/catalog.types'
 import type {
     GenerateVisualizerHfPreviewInput,
@@ -149,17 +147,6 @@ export async function generateVisualizerHfPreviewAction(
             wrapName: hfSpaceWrapName,
         })
 
-        await updateBookingDraftFromVisualizer({
-            wrapId: wrap.id,
-            vehicleMake: parsed.make,
-            vehicleModel: parsed.model,
-            vehicleYear: parsed.year,
-            vehicleTrim: parsed.trim,
-            previewImageUrl: result.imageUrl,
-            previewPromptUsed: result.promptUsed,
-            previewStatus: PreviewStatus.COMPLETE,
-        })
-
         return {
             wrapId: wrap.id,
             wrapName: wrap.name,
@@ -176,15 +163,6 @@ export async function generateVisualizerHfPreviewAction(
             year: parsed.year,
             trim: parsed.trim,
             reason: message,
-        })
-
-        await updateBookingDraftFromVisualizer({
-            wrapId: wrap.id,
-            vehicleMake: parsed.make,
-            vehicleModel: parsed.model,
-            vehicleYear: parsed.year,
-            vehicleTrim: parsed.trim,
-            previewStatus: PreviewStatus.FAILED,
         })
 
         if (message.includes('space_catalog_mismatch:')) {

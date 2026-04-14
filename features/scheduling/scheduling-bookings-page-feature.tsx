@@ -19,9 +19,11 @@ import { toBookingCardItem } from './booking.mappers'
 
 interface SchedulingBookingsPageFeatureProps {
     tab: 'upcoming' | 'past'
+    userId: string
 }
 
 const CUSTOMER_ACTIONABLE_STATUSES = new Set([
+    'reserved',
     'requested',
     'confirmed',
     'expired',
@@ -53,13 +55,17 @@ export function createCustomerCancelBookingAction(tab: 'upcoming' | 'past') {
     }
 }
 
-export async function SchedulingBookingsPageFeature({ tab }: SchedulingBookingsPageFeatureProps) {
+export async function SchedulingBookingsPageFeature({
+    tab,
+    userId,
+}: SchedulingBookingsPageFeatureProps) {
     const nowIso = new Date().toISOString()
     const [bookingsResult, tenantLocation] = await Promise.all([
         getBookings(
             tab === 'upcoming'
                 ? { page: 1, pageSize: 20, fromDate: nowIso }
-                : { page: 1, pageSize: 20, toDate: nowIso }
+                : { page: 1, pageSize: 20, toDate: nowIso },
+            { customerId: userId }
         ),
         getTenantLocationView(),
     ])
@@ -79,7 +85,7 @@ export async function SchedulingBookingsPageFeature({ tab }: SchedulingBookingsP
 
             <WorkspacePageContextCard
                 title="Appointments"
-                description="Switch between upcoming and past bookings or start a new appointment."
+                description="Switch between upcoming and past appointments or start a new appointment."
             >
                 <div className="inline-flex gap-1 border border-neutral-700 bg-neutral-900/80 p-1">
                     <Link
@@ -118,9 +124,7 @@ export async function SchedulingBookingsPageFeature({ tab }: SchedulingBookingsP
                     {bookings.length === 0 ? (
                         <WorkspaceEmptyState
                             title={
-                                isUpcoming
-                                    ? 'No upcoming appointments'
-                                    : 'No past appointments yet'
+                                isUpcoming ? 'No upcoming appointments' : 'No past appointments yet'
                             }
                             description={
                                 isUpcoming
@@ -134,12 +138,14 @@ export async function SchedulingBookingsPageFeature({ tab }: SchedulingBookingsP
                                     </Button>
                                 ) : null
                             }
-                            className="min-h-[320px] border-0 bg-transparent shadow-none"
+                            className="min-h-80 border-0 bg-transparent shadow-none"
                         />
                     ) : (
                         <div className="space-y-4">
                             {bookings.map((booking) => {
-                                const displayStatus = String(booking.displayStatus ?? booking.status)
+                                const displayStatus = String(
+                                    booking.displayStatus ?? booking.status
+                                )
                                 const canManageFromList =
                                     isUpcoming &&
                                     CUSTOMER_ACTIONABLE_STATUSES.has(displayStatus) &&
@@ -154,11 +160,15 @@ export async function SchedulingBookingsPageFeature({ tab }: SchedulingBookingsP
                                         actions={
                                             <>
                                                 <Button asChild size="sm" variant="outline">
-                                                    <Link href={`/scheduling/${booking.id}`}>View</Link>
+                                                    <Link href={`/scheduling/${booking.id}`}>
+                                                        View
+                                                    </Link>
                                                 </Button>
                                                 {canManageFromList ? (
                                                     <Button asChild size="sm" variant="outline">
-                                                        <Link href={`/scheduling/${booking.id}/edit`}>
+                                                        <Link
+                                                            href={`/scheduling/${booking.id}/edit`}
+                                                        >
                                                             Reschedule
                                                         </Link>
                                                     </Button>
@@ -170,7 +180,11 @@ export async function SchedulingBookingsPageFeature({ tab }: SchedulingBookingsP
                                                             name="bookingId"
                                                             value={booking.id}
                                                         />
-                                                        <Button size="sm" type="submit" variant="outline">
+                                                        <Button
+                                                            size="sm"
+                                                            type="submit"
+                                                            variant="outline"
+                                                        >
                                                             Cancel
                                                         </Button>
                                                     </form>

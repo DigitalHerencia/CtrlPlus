@@ -5,7 +5,6 @@ const mocks = vi.hoisted(() => ({
     requireCapability: vi.fn(),
     listVisualizerSelectableWraps: vi.fn(),
     prisma: {
-        bookingDraft: { findUnique: vi.fn() },
         websiteSettings: { findUnique: vi.fn() },
     },
 }))
@@ -41,7 +40,6 @@ describe('getVisualizerHfCatalogData', () => {
                 categories: [{ name: 'Stealth' }],
             },
         ])
-        mocks.prisma.bookingDraft.findUnique.mockResolvedValue(null)
         mocks.prisma.websiteSettings.findUnique.mockResolvedValue(null)
     })
 
@@ -81,20 +79,13 @@ describe('getVisualizerHfCatalogData', () => {
         expect(result.initialSelection.wrapId).toBe('wrap-1')
     })
 
-    it('prefers the requested wrap id over draft state', async () => {
+    it('prefers the requested wrap id over the default wrap selection', async () => {
         mocks.getSession.mockResolvedValueOnce({
             isAuthenticated: true,
             userId: 'user-1',
             isOwner: false,
             isPlatformAdmin: false,
             authz: { cap: true },
-        })
-        mocks.prisma.bookingDraft.findUnique.mockResolvedValue({
-            wrapId: 'wrap-legacy',
-            vehicleMake: 'Ford',
-            vehicleModel: 'Mustang',
-            vehicleYear: '2022',
-            vehicleTrim: 'GT',
         })
         mocks.listVisualizerSelectableWraps.mockResolvedValue([
             {

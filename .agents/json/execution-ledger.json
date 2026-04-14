@@ -1,8 +1,26 @@
 {
   "artifact_type": "execution-ledger",
   "version": "1.0.0",
-  "updated_at": "2026-04-10",
+  "updated_at": "2026-04-13",
   "entries": [
+    {
+      "id": "LEDGER-017",
+      "timestamp": "2026-04-13T20:58:00-06:00",
+      "type": "audit-fix",
+      "summary": "Repaired the scheduling domain after local feature deletions by restoring the customer appointment hub and My Appointments surface, removing the broken manager create-booking path and stale dashboard wrappers, forcing customer pages to read with explicit own-scope constraints, aligning booking display status and slot-capacity logic around active reservations, and adding focused scheduling tests to lock the customer-versus-manager boundary in place.",
+      "files": [
+        "app/(tenant)/scheduling/**",
+        "features/scheduling/**",
+        "components/scheduling/booking-status-badge.tsx",
+        "lib/fetchers/scheduling.fetchers.ts",
+        "lib/db/transactions/scheduling.transactions.ts",
+        "lib/constants/statuses.ts",
+        "tests/vitest/unit/features/scheduling/**",
+        "tests/vitest/unit/lib/scheduling/fetchers/get-bookings.test.ts",
+        ".agents/json/execution-ledger.json",
+        ".agents/json/validation.report.json"
+      ]
+    },
     {
       "id": "LEDGER-016",
       "timestamp": "2026-04-10T22:30:00-06:00",

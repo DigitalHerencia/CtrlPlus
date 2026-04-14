@@ -11,12 +11,10 @@ interface EditBookingPageFeatureProps {
 
 export async function EditBookingPageFeature({
     bookingId,
-    userId: _userId,
+    userId,
 }: EditBookingPageFeatureProps) {
-    void _userId
-
     const [booking, availabilityResult] = await Promise.all([
-        getBookingById(bookingId),
+        getBookingById(bookingId, { customerId: userId }),
         getAvailabilityWindows(),
     ])
 
@@ -36,9 +34,6 @@ export async function EditBookingPageFeature({
         <BookingFormClient
             bookingId={booking.id}
             availabilityWindows={availabilityWindows}
-            wraps={[
-                { id: booking.wrapId, name: booking.wrapName ?? 'Wrap', price: booking.totalPrice },
-            ]}
             initialDate={new Date(booking.startTime)}
             initialWindowId={
                 availabilityWindows.find(

@@ -61,23 +61,3 @@ export const bookingSelectFields = {
     createdAt: true,
     updatedAt: true,
 } as const
-
-/**
- * bookingDraftSelectFields — TODO: brief description.
- */
-export const bookingDraftSelectFields = {
-    id: true,
-    customerId: true,
-    wrapId: true,
-    wrapNameSnapshot: true,
-    wrapPriceSnapshot: true,
-    vehicleMake: true,
-    vehicleModel: true,
-    vehicleYear: true,
-    vehicleTrim: true,
-    previewImageUrl: true,
-    previewPromptUsed: true,
-    previewStatus: true,
-    createdAt: true,
-    updatedAt: true,
-} as const

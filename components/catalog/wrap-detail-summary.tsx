@@ -8,9 +8,9 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { startBookingDraftFromCatalog } from '@/lib/actions/scheduling.actions'
 import { formatInstallationTime } from '@/lib/utils/dates'
 import type { CatalogDetailDTO } from '@/types/catalog.types'
+import Link from 'next/link'
 
 interface WrapDetailSummaryProps {
     wrap: CatalogDetailDTO
@@ -63,12 +63,12 @@ export function WrapDetailSummary({ wrap, canManageCatalog }: WrapDetailSummaryP
                 </CardContent>
             </Card>
             <div className="flex flex-wrap gap-3">
-                <form action={startBookingDraftFromCatalog.bind(null, wrap.id, 'scheduling')}>
-                    <Button type="submit" size="lg">Book Installation</Button>
-                </form>
-                <form action={startBookingDraftFromCatalog.bind(null, wrap.id, 'visualizer')}>
-                    <Button type="submit" variant="outline" size="lg">Preview on Vehicle</Button>
-                </form>
+                <Button asChild size="lg">
+                    <Link href={`/scheduling/book?wrapId=${wrap.id}`}>Book Consultation or Install</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                    <Link href={`/visualizer?wrapId=${wrap.id}`}>Explore in Visualizer</Link>
+                </Button>
             </div>
         </>
     )

@@ -19,7 +19,7 @@ export async function BookingDetailPageFeature({
     userId,
     isManageView = false,
 }: BookingDetailPageFeatureProps) {
-    const booking = await getBooking(bookingId, userId)
+    const booking = await getBooking(bookingId, isManageView ? undefined : { customerId: userId })
 
     if (!booking) {
         notFound()
@@ -31,20 +31,17 @@ export async function BookingDetailPageFeature({
         <div className="space-y-6">
             <BookingDetailHeader booking={booking} isManageView={isManageView} />
             <WorkspacePageContextCard
-                title="Booking Actions"
+                title={isManageView ? 'Appointment Actions' : 'My Appointment'}
                 description="Navigate or edit this appointment"
             >
                 <Button asChild variant="outline">
-                    <Link href={isManageView ? '/scheduling/manage' : '/scheduling'}>Back</Link>
+                    <Link href={isManageView ? '/scheduling/manage' : '/scheduling/bookings'}>
+                        Back
+                    </Link>
                 </Button>
                 <Button asChild>
-                    <Link href={`${basePath}/edit`}>Edit Booking</Link>
+                    <Link href={`${basePath}/edit`}>Edit Appointment</Link>
                 </Button>
-                {isManageView && booking.status === 'completed' ? (
-                    <Button asChild variant="outline">
-                        <Link href={`/billing/manage/new?bookingId=${booking.id}`}>Issue Invoice</Link>
-                    </Button>
-                ) : null}
             </WorkspacePageContextCard>
             <BookingDetailTabsClient booking={booking} />
         </div>

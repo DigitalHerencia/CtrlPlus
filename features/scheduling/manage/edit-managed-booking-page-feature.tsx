@@ -1,10 +1,8 @@
 import { notFound } from 'next/navigation'
 
-import { BookingCommandPanel } from '@/components/scheduling/manage/booking-command-panel'
-import { BookingLifecyclePanel } from '@/components/scheduling/manage/booking-lifecycle-panel'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getAvailabilityWindows, getBookingById } from '@/lib/fetchers/scheduling.fetchers'
 
-import { BookingNotificationControlsClient } from './booking-notification-controls.client'
 import { BookingStatusActionsClient } from './booking-status-actions.client'
 import { ManagedBookingFormClient } from './managed-booking-form.client'
 
@@ -41,23 +39,28 @@ export async function EditManagedBookingPageFeature({
             <ManagedBookingFormClient
                 booking={booking}
                 availabilityWindows={availabilityWindows}
-                wraps={[
-                    {
-                        id: booking.wrapId,
-                        name: booking.wrapName ?? 'Wrap',
-                        price: booking.totalPrice,
-                    },
-                ]}
+                initialWindowId={
+                    availabilityWindows.find(
+                        (window) =>
+                            window.dayOfWeek === new Date(booking.startTime).getDay() &&
+                            window.startTime ===
+                                new Date(booking.startTime).toLocaleTimeString('en-GB', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    hour12: false,
+                                })
+                    )?.id
+                }
             />
 
-            <div className="grid gap-4 lg:grid-cols-2">
-                <BookingLifecyclePanel>
+            <Card className="border-neutral-800 bg-neutral-950/80">
+                <CardHeader>
+                    <CardTitle>Lifecycle Actions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
                     <BookingStatusActionsClient bookingId={booking.id} status={booking.status} />
-                </BookingLifecyclePanel>
-                <BookingCommandPanel>
-                    <BookingNotificationControlsClient />
-                </BookingCommandPanel>
-            </div>
+                </CardContent>
+            </Card>
         </div>
     )
 }

@@ -19,7 +19,7 @@ interface TenantSettingsFormShellProps {
  */
 export function TenantSettingsFormShell({ children }: TenantSettingsFormShellProps) {
     return (
-        <Card className="border-neutral-800 bg-neutral-900 text-neutral-100">
+        <Card className="border border-neutral-700 bg-neutral-950/80 text-neutral-100">
             <CardHeader>
                 <CardTitle>Tenant Configuration</CardTitle>
             </CardHeader>

@@ -113,7 +113,7 @@ function assertCatalogUsable(
  * Fetch catalog data and compute UI-friendly structures for the HF visualizer.
  *
  * - Validates session and capability
- * - Loads wraps, any booking draft, and user website settings in parallel
+ * - Loads wraps and user website settings in parallel
  * - Builds a vehicle index and a normalized list of wrap options
  * - Returns a stable initial selection and available makes/vehicleIndex
  *
@@ -130,19 +130,9 @@ export async function getVisualizerHfCatalogData(
 
     requireCapability(session.authz, 'visualizer.use')
 
-    const [wraps, draft, settings] = await Promise.all([
+    const [wraps, settings] = await Promise.all([
         listVisualizerSelectableWraps({
             includeHidden: session.isOwner || session.isPlatformAdmin,
-        }),
-        prisma.bookingDraft.findUnique({
-            where: { customerId: session.userId },
-            select: {
-                wrapId: true,
-                vehicleMake: true,
-                vehicleModel: true,
-                vehicleYear: true,
-                vehicleTrim: true,
-            },
         }),
         prisma.websiteSettings.findUnique({
             where: { clerkUserId: session.userId },
@@ -160,14 +150,14 @@ export async function getVisualizerHfCatalogData(
 
     assertCatalogUsable(vehicleIndex, wrapOptions)
 
-    const selectedWrapId = requestedWrapId ?? draft?.wrapId ?? wrapOptions[0]?.id ?? null
+    const selectedWrapId = requestedWrapId ?? wrapOptions[0]?.id ?? null
 
     const initialSelection = clampSelection(
         {
-            make: draft?.vehicleMake ?? settings?.vehicleMake ?? undefined,
-            model: draft?.vehicleModel ?? settings?.vehicleModel ?? undefined,
-            year: draft?.vehicleYear ?? settings?.vehicleYear ?? undefined,
-            trim: draft?.vehicleTrim ?? settings?.vehicleTrim ?? undefined,
+            make: settings?.vehicleMake ?? undefined,
+            model: settings?.vehicleModel ?? undefined,
+            year: settings?.vehicleYear ?? undefined,
+            trim: settings?.vehicleTrim ?? undefined,
             wrapId: selectedWrapId ?? undefined,
         },
         vehicleIndex,

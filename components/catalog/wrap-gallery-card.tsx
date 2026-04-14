@@ -26,8 +26,6 @@ interface WrapGalleryCardProps {
 export function WrapGalleryCard({ wrap }: WrapGalleryCardProps) {
     const installationTime = formatInstallationTime(wrap.installationMinutes)
     const detailHref = `/catalog/${wrap.id}`
-    const previewLabel =
-        wrap.previewHref === detailHref ? 'Open Product Page' : 'Preview on Your Vehicle'
 
     return (
         <Card className="group flex h-full flex-col overflow-hidden border-neutral-800 bg-neutral-950/80 text-neutral-100 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-blue-600/70">
@@ -98,7 +96,10 @@ export function WrapGalleryCard({ wrap }: WrapGalleryCardProps) {
                         size="sm"
                         className="transition-transform group-hover:translate-x-0.5"
                     >
-                        <Link href={wrap.previewHref}>{previewLabel}</Link>
+                        <Link href={wrap.schedulingHref}>Book Consultation or Install</Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline">
+                        <Link href={wrap.visualizerHref}>Open Visualizer</Link>
                     </Button>
                     <Button asChild size="sm" variant="outline">
                         <Link href={detailHref}>View Details</Link>

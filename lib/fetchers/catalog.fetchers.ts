@@ -18,7 +18,7 @@ import {
     resolvePrimaryDisplayAsset,
 } from '@/lib/fetchers/catalog.mappers'
 import { toCatalogAssetImage } from '@/lib/utils/catalog-assets'
-import { createVisualizerHref } from '@/lib/utils/search-params'
+import { createSchedulingBookHref, createVisualizerHref } from '@/lib/utils/search-params'
 import type {
     CatalogBrowseCardDTO,
     CatalogBrowseResultDTO,
@@ -179,7 +179,8 @@ function toCatalogBrowseCard(wrap: WrapDTO): CatalogBrowseCardDTO {
         categories: wrap.categories,
         heroImage,
         displayImage,
-        previewHref: createVisualizerHref(wrap.id),
+        schedulingHref: createSchedulingBookHref(wrap.id),
+        visualizerHref: createVisualizerHref(wrap.id),
         readiness,
     }
 }
@@ -339,7 +340,7 @@ export async function searchCatalogWraps(
     const parsedFilters = filters
     const effectiveScope = {
         ...scope,
-        requireVisualizerReady: scope.requireVisualizerReady ?? true,
+        requireVisualizerReady: scope.requireVisualizerReady ?? false,
     }
     const wraps = await getWraps({
         includeHidden: effectiveScope.includeHidden,

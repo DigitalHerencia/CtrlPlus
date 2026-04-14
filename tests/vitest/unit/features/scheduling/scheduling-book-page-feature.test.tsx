@@ -5,13 +5,11 @@ import { describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
     getAvailabilityWindows: vi.fn(),
-    getActiveBookingDraft: vi.fn(),
     getUserSettingsView: vi.fn(),
 }))
 
 vi.mock('@/lib/fetchers/scheduling.fetchers', () => ({
     getAvailabilityWindows: mocks.getAvailabilityWindows,
-    getActiveBookingDraft: mocks.getActiveBookingDraft,
 }))
 
 vi.mock('@/lib/fetchers/settings.fetchers', () => ({
@@ -23,7 +21,7 @@ vi.mock('@/features/scheduling/scheduling-booking-form-client', () => ({
 }))
 
 describe('SchedulingBookPageFeature', () => {
-    it('uses customer-facing copy when no draft is available', async () => {
+    it('renders appointment-focused scheduling copy', async () => {
         mocks.getAvailabilityWindows.mockResolvedValue({
             items: [],
             total: 0,
@@ -31,45 +29,20 @@ describe('SchedulingBookPageFeature', () => {
             pageSize: 20,
             totalPages: 0,
         })
-        mocks.getActiveBookingDraft.mockResolvedValue(null)
         mocks.getUserSettingsView.mockResolvedValue({})
 
-        const { SchedulingBookPageFeature } = await import(
-            '@/features/scheduling/scheduling-book-page-feature'
-        )
+        const { SchedulingBookPageFeature } =
+            await import('@/features/scheduling/scheduling-book-page-feature')
 
-        render(await SchedulingBookPageFeature({ canViewHiddenWraps: false }))
+        render(await SchedulingBookPageFeature())
 
         expect(screen.getByRole('heading', { name: /Book Appointment/i })).toBeVisible()
-        expect(screen.getByRole('link', { name: /My Appointments/i })).toHaveAttribute(
+        expect(screen.getAllByRole('link', { name: /My Appointments/i })[0]).toHaveAttribute(
             'href',
             '/scheduling/bookings'
         )
-        expect(screen.getByText(/Choose a wrap before booking/i)).toBeVisible()
-        expect(screen.queryByText(/Booking Navigation/i)).not.toBeInTheDocument()
-        expect(screen.queryByText(/configure scheduling windows/i)).not.toBeInTheDocument()
-    })
-
-    it('shows a customer-focused no-availability state without manager language', async () => {
-        mocks.getAvailabilityWindows.mockResolvedValue({
-            items: [],
-            total: 0,
-            page: 1,
-            pageSize: 20,
-            totalPages: 0,
-        })
-        mocks.getActiveBookingDraft.mockResolvedValue({
-            id: 'draft-1',
-        })
-        mocks.getUserSettingsView.mockResolvedValue({})
-
-        const { SchedulingBookPageFeature } = await import(
-            '@/features/scheduling/scheduling-book-page-feature'
-        )
-
-        render(await SchedulingBookPageFeature({ canViewHiddenWraps: false }))
-
-        expect(screen.getByText(/No appointment times are available right now/i)).toBeVisible()
-        expect(screen.queryByText(/Review Calendar/i)).not.toBeInTheDocument()
+        expect(screen.getByText(/booking form client/i)).toBeVisible()
+        expect(screen.getByText(/Set your appointment time and submit your request/i)).toBeVisible()
+        expect(screen.getByText(/temporary hourly slots from 9:00 AM to 5:00 PM/i)).toBeVisible()
     })
 })

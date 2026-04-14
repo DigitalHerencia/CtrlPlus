@@ -227,6 +227,9 @@ export interface EnsureInvoiceForBookingInput {
  */
 export interface CreateInvoiceInput {
     bookingId: string
+    description: string
+    unitPrice: number
+    quantity?: number
     tenantId?: string
 }
 
