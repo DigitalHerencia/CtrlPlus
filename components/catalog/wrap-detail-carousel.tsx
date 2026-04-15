@@ -1,4 +1,3 @@
-
 import Image from 'next/image'
 
 import {
@@ -15,7 +14,6 @@ interface WrapDetailCarouselProps {
     name: string
     images: CatalogAssetImageDTO[]
 }
-
 
 export function WrapDetailCarousel({ name, images }: WrapDetailCarouselProps) {
     if (images.length === 0) {
@@ -46,7 +44,7 @@ export function WrapDetailCarousel({ name, images }: WrapDetailCarouselProps) {
                                 width={1600}
                                 height={1200}
                                 sizes="(min-width: 1280px) 58vw, 100vw"
-                                className="h-104 w-full object-contain"
+                                className="h-104 w-full object-cover"
                             />
                         </CarouselItem>
                     ))}

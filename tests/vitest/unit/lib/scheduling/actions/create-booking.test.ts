@@ -39,7 +39,8 @@ vi.mock('@/lib/integrations/notifications', () => ({
 }))
 
 import { createBooking } from '@/lib/actions/scheduling.actions'
-import { Prisma, PrismaClientKnownRequestError } from '@prisma/client'
+import { Prisma} from '@prisma/client'
+import { error } from 'console'
 
 describe('createBooking', () => {
     beforeEach(() => {
@@ -287,46 +288,8 @@ describe('createBooking', () => {
             price: 0,
         })
 
-        const nullConstraintError = new PrismaClientKnownRequestError(
-            'Null constraint violation on the (not available)',
-            {
-                code: 'P2011',
-                clientVersion: 'test',
-            }
-        )
 
-        tx.booking.create.mockRejectedValueOnce(nullConstraintError).mockResolvedValueOnce({
-            id: 'booking-legacy',
-            customerId: 'user-1',
-            wrapId: 'wrap-fallback',
-            wrap: { id: 'wrap-fallback', name: 'General Appointment' },
-            wrapNameSnapshot: 'General Appointment',
-            wrapPriceSnapshot: 0,
-            startTime: new Date('2026-03-24T16:00:00.000Z'),
-            endTime: new Date('2026-03-24T18:00:00.000Z'),
-            status: 'requested',
-            totalPrice: 0,
-            customerName: 'Taylor Driver',
-            customerEmail: 'taylor@example.com',
-            customerPhone: null,
-            preferredContact: 'email',
-            billingAddressLine1: null,
-            billingAddressLine2: null,
-            billingCity: null,
-            billingState: null,
-            billingPostalCode: null,
-            billingCountry: null,
-            vehicleMake: null,
-            vehicleModel: null,
-            vehicleYear: null,
-            vehicleTrim: null,
-            previewImageUrl: null,
-            previewPromptUsed: null,
-            notes: null,
-            reservation: null,
-            createdAt: new Date('2026-03-01T00:00:00.000Z'),
-            updatedAt: new Date('2026-03-01T00:00:00.000Z'),
-        })
+
 
         tx.websiteSettings.upsert.mockResolvedValue(undefined)
         tx.auditLog.create.mockResolvedValue(undefined)

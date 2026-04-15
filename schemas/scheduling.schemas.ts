@@ -9,7 +9,13 @@ import {
 import { paginationParamsSchema } from '@/schemas/common.schemas'
 
 const WEEKDAY_SHORT_TO_INDEX: Record<string, number> = {
-    Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
 }
 
 function getStoreTimeParts(date: Date): { weekday: number; hour: number; minute: number } | null {
@@ -64,7 +70,10 @@ function isStandardAppointmentRange(startTime: Date, endTime: Date): boolean {
     }
 
     // Start within business window
-    if (start.hour < STANDARD_APPOINTMENT_START_HOUR || start.hour >= STANDARD_APPOINTMENT_END_HOUR) {
+    if (
+        start.hour < STANDARD_APPOINTMENT_START_HOUR ||
+        start.hour >= STANDARD_APPOINTMENT_END_HOUR
+    ) {
         return false
     }
 
