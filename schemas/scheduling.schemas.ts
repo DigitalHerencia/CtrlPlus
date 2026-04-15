@@ -1,33 +1,75 @@
 import { z } from 'zod'
 
+import { DEFAULT_STORE_TIMEZONE } from '@/lib/constants/app'
+import {
+    STANDARD_APPOINTMENT_DURATION_MINUTES,
+    STANDARD_APPOINTMENT_END_HOUR,
+    STANDARD_APPOINTMENT_START_HOUR,
+} from '@/lib/constants/scheduling'
 import { paginationParamsSchema } from '@/schemas/common.schemas'
+
+const WEEKDAY_SHORT_TO_INDEX: Record<string, number> = {
+    Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6,
+}
+
+function getStoreTimeParts(date: Date): { weekday: number; hour: number; minute: number } | null {
+    try {
+        const parts = new Intl.DateTimeFormat('en-US', {
+            timeZone: DEFAULT_STORE_TIMEZONE,
+            weekday: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        }).formatToParts(date)
+
+        const weekdayStr = parts.find((p) => p.type === 'weekday')?.value
+        const hourStr = parts.find((p) => p.type === 'hour')?.value
+        const minuteStr = parts.find((p) => p.type === 'minute')?.value
+
+        const weekday = weekdayStr !== undefined ? WEEKDAY_SHORT_TO_INDEX[weekdayStr] : undefined
+        const hour = hourStr !== undefined ? Number(hourStr) : NaN
+        const minute = minuteStr !== undefined ? Number(minuteStr) : NaN
+
+        if (weekday === undefined || Number.isNaN(hour) || Number.isNaN(minute)) {
+            return null
+        }
+
+        return { weekday, hour, minute }
+    } catch {
+        return null
+    }
+}
 
 function isStandardAppointmentRange(startTime: Date, endTime: Date): boolean {
     const durationMinutes = (endTime.getTime() - startTime.getTime()) / (60 * 1000)
-    if (durationMinutes !== 60) {
+    if (durationMinutes !== STANDARD_APPOINTMENT_DURATION_MINUTES) {
         return false
     }
 
-    const startDay = startTime.getDay()
-    const endDay = endTime.getDay()
-    if (startDay < 1 || startDay > 5 || endDay < 1 || endDay > 5) {
+    const start = getStoreTimeParts(startTime)
+    const end = getStoreTimeParts(endTime)
+
+    if (!start || !end) {
         return false
     }
 
-    const startHour = startTime.getHours()
-    const endHour = endTime.getHours()
-    const startMinute = startTime.getMinutes()
-    const endMinute = endTime.getMinutes()
-
-    if (startMinute !== 0 || endMinute !== 0) {
+    // Mon–Fri only (1–5)
+    if (start.weekday < 1 || start.weekday > 5 || end.weekday < 1 || end.weekday > 5) {
         return false
     }
 
-    if (startHour < 8 || startHour >= 18) {
+    // On the hour only
+    if (start.minute !== 0 || end.minute !== 0) {
         return false
     }
 
-    if (endHour !== startHour + 1 || endHour > 18) {
+    // Start within business window
+    if (start.hour < STANDARD_APPOINTMENT_START_HOUR || start.hour >= STANDARD_APPOINTMENT_END_HOUR) {
+        return false
+    }
+
+    // End is exactly 1 hour after start, same day
+    if (end.hour !== start.hour + 1 || end.weekday !== start.weekday) {
         return false
     }
 
