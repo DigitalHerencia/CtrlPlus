@@ -1,32 +1,33 @@
-import Link from 'next/link'
-
-import { WorkspacePageContextCard, WorkspacePageIntro } from '@/components/shared/tenant-elements'
-import { Button } from '@/components/ui/button'
+import { InvoiceActionPageShell } from '@/components/billing/invoice-action-page-shell'
+import { getSession } from '@/lib/auth/session'
 import { getInvoice } from '@/lib/fetchers/billing.fetchers'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 
 import { InvoicePayFormClient } from './invoice-pay-form.client'
 
 interface InvoicePayPageFeatureProps {
-    invoiceId: string
+    params: Promise<{ invoiceId: string }>
 }
 
-export async function InvoicePayPageFeature({ invoiceId }: InvoicePayPageFeatureProps) {
+export async function InvoicePayPageFeature({ params }: InvoicePayPageFeatureProps) {
+    const { userId } = await getSession()
+    if (!userId) {
+        redirect('/sign-in')
+    }
+
+    const { invoiceId } = await params
     const invoice = (await getInvoice(invoiceId)) ?? notFound()
 
     return (
-        <div className="space-y-6">
-            <WorkspacePageIntro
-                label="Billing"
-                title={`Pay Invoice ${invoice.id}`}
-                description="Complete this payment securely to keep your wrap project moving on schedule."
-            />
-            <WorkspacePageContextCard title="Payment Navigation" description="Return to invoice detail">
-                <Button asChild variant="outline">
-                    <Link href={`/billing/${invoice.id}`}>Back to Invoice</Link>
-                </Button>
-            </WorkspacePageContextCard>
+        <InvoiceActionPageShell
+            title={`Pay Invoice ${invoice.id}`}
+            description="Complete this payment securely to keep your wrap project moving on schedule."
+            backHref={`/billing/${invoice.id}`}
+            backLabel="Back to Invoice"
+            navTitle="Payment Navigation"
+            navDescription="Return to invoice detail"
+        >
             <InvoicePayFormClient invoiceId={invoice.id} />
-        </div>
+        </InvoiceActionPageShell>
     )
 }

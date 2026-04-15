@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of export-history-table.tsx
- *
- * @description TODO: longer description for export-history-table.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import {
     Table,
     TableBody,
@@ -19,10 +13,7 @@ interface ExportHistoryTableProps {
     rows: ExportHistoryRowDTO[]
 }
 
-/**
- * ExportHistoryTable — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function ExportHistoryTable({ rows }: ExportHistoryTableProps) {
     return (
         <Table>

@@ -1,50 +1,48 @@
-/**
- * @introduction Features — TODO: short one-line summary of new-invoice-page-feature.tsx
- *
- * @description TODO: longer description for new-invoice-page-feature.tsx. Keep it short — one or two sentences.
- * Domain: features
- * Public: TODO (yes/no)
- */
-import Link from 'next/link'
-
-import { WorkspacePageContextCard, WorkspacePageIntro } from '@/components/shared/tenant-elements'
-import { Button } from '@/components/ui/button'
+import { InvoiceActionPageShell } from '@/components/billing/invoice-action-page-shell'
+import { getSession } from '@/lib/auth/session'
+import { hasCapability } from '@/lib/authz/policy'
 import { getBooking } from '@/lib/fetchers/scheduling.fetchers'
+import type { SearchParamRecord } from '@/types/common.types'
+import { redirect } from 'next/navigation'
 import { InvoiceEditorFormClient } from './invoice-editor-form.client'
 
 interface NewInvoicePageFeatureProps {
-    initialBookingId?: string
+    searchParams: Promise<SearchParamRecord>
 }
 
-/**
- * NewInvoicePageFeature — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
-export async function NewInvoicePageFeature({
-    initialBookingId = '',
-}: NewInvoicePageFeatureProps) {
+export async function NewInvoicePageFeature({ searchParams }: NewInvoicePageFeatureProps) {
+    const session = await getSession()
+    if (!session.userId) {
+        redirect('/sign-in')
+    }
+
+    if (!hasCapability(session.authz, 'billing.write.all')) {
+        redirect('/billing/manage')
+    }
+
+    const resolvedSearchParams = await searchParams
+    const initialBookingId =
+        typeof resolvedSearchParams.bookingId === 'string' ? resolvedSearchParams.bookingId : ''
+
     const booking = initialBookingId ? await getBooking(initialBookingId) : null
     const initialDescription = booking?.wrapName
         ? `${booking.wrapName} appointment services`
         : 'Service appointment'
 
     return (
-        <div className="space-y-6">
-            <WorkspacePageIntro
-                label="Billing"
-                title="Compose Invoice"
-                description="Create a manager-authored invoice from booking context, set the exact line-item pricing, and route the customer into Stripe Checkout only when payment is due."
-            />
-            <WorkspacePageContextCard title="Manager Navigation" description="Return to invoice operations">
-                <Button asChild variant="outline">
-                    <Link href="/billing/manage">Back to Manager</Link>
-                </Button>
-            </WorkspacePageContextCard>
+        <InvoiceActionPageShell
+            title="Compose Invoice"
+            description="Create a manager-authored invoice from booking context, set the exact line-item pricing, and route the customer into Stripe Checkout only when payment is due."
+            backHref="/billing/manage"
+            backLabel="Back to Manager"
+            navTitle="Manager Navigation"
+            navDescription="Return to invoice operations"
+        >
             <InvoiceEditorFormClient
                 initialBookingId={initialBookingId}
                 initialDescription={initialDescription}
                 submitLabel="Create Invoice"
             />
-        </div>
+        </InvoiceActionPageShell>
     )
 }

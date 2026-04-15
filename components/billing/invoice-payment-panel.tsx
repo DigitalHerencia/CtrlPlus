@@ -1,32 +1,21 @@
-/**
- * @introduction Components — TODO: short one-line summary of invoice-payment-panel.tsx
- *
- * @description TODO: longer description for invoice-payment-panel.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
 import Link from 'next/link'
 
-import { isInvoicePayable } from '@/lib/constants/statuses'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { type InvoiceDetailDTO } from '@/types/billing.types'
 
 interface InvoicePaymentPanelProps {
-    invoice: InvoiceDetailDTO
-    canManageInvoice: boolean
+    invoiceId: string
+    canPayInvoice: boolean
+    canAdjustInvoice: boolean
+    canRefundInvoice: boolean
 }
 
-/**
- * InvoicePaymentPanel — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
-export function InvoicePaymentPanel({ invoice, canManageInvoice }: InvoicePaymentPanelProps) {
-    const canPayInvoice = isInvoicePayable(invoice.status)
-    const canAdjustInvoice =
-        canManageInvoice && (invoice.status === 'draft' || invoice.status === 'issued')
-    const canRefundInvoice = canManageInvoice && invoice.status === 'paid'
-
+export function InvoicePaymentPanel({
+    invoiceId,
+    canPayInvoice,
+    canAdjustInvoice,
+    canRefundInvoice,
+}: InvoicePaymentPanelProps) {
     return (
         <Card className="border-neutral-700 bg-neutral-950/80">
             <CardHeader>
@@ -40,17 +29,17 @@ export function InvoicePaymentPanel({ invoice, canManageInvoice }: InvoicePaymen
                     <div className="flex flex-wrap gap-2">
                         {canPayInvoice ? (
                             <Button asChild size="sm">
-                                <Link href={`/billing/${invoice.id}/pay`}>Pay</Link>
+                                <Link href={`/billing/${invoiceId}/pay`}>Pay</Link>
                             </Button>
                         ) : null}
                         {canRefundInvoice ? (
                             <Button asChild size="sm" variant="outline">
-                                <Link href={`/billing/${invoice.id}/refund`}>Refund</Link>
+                                <Link href={`/billing/manage/${invoiceId}/refund`}>Refund</Link>
                             </Button>
                         ) : null}
                         {canAdjustInvoice ? (
                             <Button asChild size="sm" variant="outline">
-                                <Link href={`/billing/${invoice.id}/adjust`}>Adjust</Link>
+                                <Link href={`/billing/manage/${invoiceId}/adjust`}>Adjust</Link>
                             </Button>
                         ) : null}
                     </div>

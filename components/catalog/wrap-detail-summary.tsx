@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of wrap-detail-summary.tsx
- *
- * @description TODO: longer description for wrap-detail-summary.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,10 +11,7 @@ interface WrapDetailSummaryProps {
     canManageCatalog: boolean
 }
 
-/**
- * WrapDetailSummary — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function WrapDetailSummary({ wrap, canManageCatalog }: WrapDetailSummaryProps) {
     const installationTime = formatInstallationTime(wrap.installationMinutes)
 

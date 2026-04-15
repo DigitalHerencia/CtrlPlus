@@ -1,9 +1,5 @@
 'use client'
-/**
- * Components — TODO: brief module description.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 
 import { useMemo, useState } from 'react'
 
@@ -35,10 +31,7 @@ const kindOptions: Array<{ value: WrapImageKindType; label: string }> = [
     { value: WrapImageKindConst.GALLERY, label: 'Gallery' },
 ]
 
-/**
- * WrapImageManager — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function WrapImageManager({
     wrapId,
     images,
@@ -198,7 +191,7 @@ export function WrapImageManager({
                             >
                                 <CardContent className="grid gap-4 p-4 xl:grid-cols-[180px_minmax(0,1fr)_auto]">
                                     <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        
                                         <img
                                             src={asset.thumbnailUrl}
                                             alt={`Catalog asset ${image.id}`}

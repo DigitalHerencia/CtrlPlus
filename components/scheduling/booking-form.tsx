@@ -1,9 +1,5 @@
 'use client'
-/**
- * Components — TODO: brief module description.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 
 import { Button } from '@/components/ui/button'
 import {
@@ -41,10 +37,7 @@ function formatPrice(priceInCents: number): string {
     }).format(priceInCents / 100)
 }
 
-/**
- * BookingForm — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BookingForm({
     availabilityWindows,
     wraps,

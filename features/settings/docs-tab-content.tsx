@@ -1,19 +1,12 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
+
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ExternalLink } from 'lucide-react'
 
-/**
- * DocsTabContent — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function DocsTabContent() {
     const docLinks = [
         {

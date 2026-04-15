@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of booking-form-shell.tsx
- *
- * @description TODO: longer description for booking-form-shell.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import type { ReactNode } from 'react'
 
 interface BookingFormShellProps {
@@ -13,10 +7,7 @@ interface BookingFormShellProps {
     children: ReactNode
 }
 
-/**
- * BookingFormShell — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BookingFormShell({
     title = 'Create Booking',
     description = 'Pick slot, collect customer information, and submit booking.',

@@ -1,9 +1,5 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
+
 
 import { useState, useTransition } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
@@ -34,10 +30,7 @@ type FormValues = {
     logoUrl: string
 }
 
-/**
- * TenantSettingsFormClient — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function TenantSettingsFormClient({
     initialSettings,
     onSave,

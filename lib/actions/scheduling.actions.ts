@@ -18,6 +18,11 @@ import { requireOwnerOrPlatformAdmin } from '@/lib/authz/guards'
 import { requireCustomerOwnedResourceAccess } from '@/lib/authz/policy'
 import { revalidateSchedulingPages } from '@/lib/cache/revalidate-tags'
 import {
+    STANDARD_APPOINTMENT_DURATION_MINUTES,
+    STANDARD_APPOINTMENT_END_HOUR,
+    STANDARD_APPOINTMENT_START_HOUR,
+} from '@/lib/constants/scheduling'
+import {
     BookingStatus,
     getBookingDisplayStatus,
     normalizeBookingStatus,
@@ -44,6 +49,16 @@ import type {
 } from '@/types/scheduling.types'
 
 const RESERVATION_TTL_MINUTES = 15
+const STORE_WEEKDAY_TO_INDEX: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+}
+const ALLOWED_STANDARD_WEEKDAYS = new Set([1, 2, 3, 4, 5])
 
 type BookingRow = Prisma.BookingGetPayload<{ select: typeof bookingSelectFields }>
 const STANDALONE_WRAP_NAME = 'General Appointment'
@@ -66,6 +81,67 @@ function toOptionalString(value: string | null | undefined): string | null {
 
     const trimmed = value.trim()
     return trimmed.length > 0 ? trimmed : null
+}
+
+function getStoreDateTimeParts(date: Date): { weekday: number; hour: number; minute: number } {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: DEFAULT_STORE_TIMEZONE,
+        weekday: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+    })
+
+    const parts = formatter.formatToParts(date)
+    const weekdayToken = parts.find((part) => part.type === 'weekday')?.value
+    const hourToken = parts.find((part) => part.type === 'hour')?.value
+    const minuteToken = parts.find((part) => part.type === 'minute')?.value
+
+    const weekday = weekdayToken ? STORE_WEEKDAY_TO_INDEX[weekdayToken] : undefined
+    const hour = hourToken ? Number(hourToken) : NaN
+    const minute = minuteToken ? Number(minuteToken) : NaN
+
+    if (weekday === undefined || Number.isNaN(hour) || Number.isNaN(minute)) {
+        throw new Error('Unable to validate booking time for store timezone')
+    }
+
+    return { weekday, hour, minute }
+}
+
+function assertStandardAppointmentWindow(startTime: Date, endTime: Date): void {
+    const durationMinutes = (endTime.getTime() - startTime.getTime()) / (60 * 1000)
+    if (durationMinutes !== STANDARD_APPOINTMENT_DURATION_MINUTES) {
+        throw new Error('Appointments must be exactly 1 hour long')
+    }
+
+    const start = getStoreDateTimeParts(startTime)
+    const end = getStoreDateTimeParts(endTime)
+
+    if (
+        !ALLOWED_STANDARD_WEEKDAYS.has(start.weekday) ||
+        !ALLOWED_STANDARD_WEEKDAYS.has(end.weekday)
+    ) {
+        throw new Error('Appointments are only available Monday through Friday')
+    }
+
+    if (start.minute !== 0 || end.minute !== 0) {
+        throw new Error('Appointments must start and end on the hour')
+    }
+
+    if (
+        start.hour < STANDARD_APPOINTMENT_START_HOUR ||
+        start.hour >= STANDARD_APPOINTMENT_END_HOUR
+    ) {
+        throw new Error('Appointments must start between 8:00 AM and 5:00 PM')
+    }
+
+    if (end.hour <= STANDARD_APPOINTMENT_START_HOUR || end.hour > STANDARD_APPOINTMENT_END_HOUR) {
+        throw new Error('Appointments must end by 6:00 PM')
+    }
+
+    if (end.hour !== start.hour + 1 || end.weekday !== start.weekday) {
+        throw new Error('Appointments must be a single one-hour block within business hours')
+    }
 }
 
 function toBookingActionDTO(
@@ -230,6 +306,7 @@ export async function reserveSlot(input: ReserveSlotInput): Promise<ReservedBook
     }
 
     const parsed = reserveSlotSchema.parse(input)
+    assertStandardAppointmentWindow(parsed.startTime, parsed.endTime)
 
     return prisma.$transaction(
         async (tx) => {
@@ -344,6 +421,7 @@ export async function createBooking(rawInput: CreateBookingInput): Promise<Creat
     }
 
     const parsed = createBookingSchema.parse(rawInput)
+    assertStandardAppointmentWindow(parsed.startTime, parsed.endTime)
 
     const runCreateBookingTransaction = async (
         forceStandaloneFallbackWrap: boolean
@@ -500,7 +578,7 @@ export async function createBooking(rawInput: CreateBookingInput): Promise<Creat
     })
 
     revalidateSchedulingPages()
-    revalidatePath('/scheduling/book')
+    revalidatePath('/scheduling/new')
 
     return {
         ...toBookingActionDTO(booking, null),
@@ -535,6 +613,7 @@ export async function updateBooking(
     }
 
     const parsed = updateBookingSchema.parse(input)
+    assertStandardAppointmentWindow(parsed.startTime, parsed.endTime)
     const isOwnerActor = session.isOwner || session.isPlatformAdmin
 
     const existing = await prisma.booking.findFirst({

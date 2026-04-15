@@ -1,9 +1,5 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
+
 
 import { usePathname, useRouter } from 'next/navigation'
 import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
@@ -50,10 +46,7 @@ function getTabFromPathname(pathname: string): TabType {
     return 'profile'
 }
 
-/**
- * UnifiedSettingsPageClient — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function UnifiedSettingsPageClient({
     userSettings,
     onSaveProfile,
@@ -79,17 +72,17 @@ export function UnifiedSettingsPageClient({
 
     return (
         <div className="space-y-6">
-            {/* Header */}
+            
             <WorkspacePageIntro
                 label="Settings"
                 title="Profile Settings"
                 description="Personalize how you run customer conversations, notifications, and day-to-day wrap operations."
             />
 
-            {/* Tabs Navigation */}
+            
             <SettingsTabsNav activeTab={activeTab} onTabChange={handleTabChange} />
 
-            {/* Tab Content */}
+            
             <div>
                 {activeTab === 'profile' && (
                     <ProfileTabContentClient

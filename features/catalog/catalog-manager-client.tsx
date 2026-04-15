@@ -1,9 +1,5 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
+
 
 import Link from 'next/link'
 import { useMemo, useState, useTransition } from 'react'
@@ -77,10 +73,7 @@ type ManagerSheet =
     | 'category-mapping'
     | 'catalog-assets'
 
-/**
- * CatalogManagerClient — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function CatalogManagerClient({ wraps, categories }: CatalogManagerProps) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()

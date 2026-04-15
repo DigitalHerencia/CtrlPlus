@@ -1,65 +1,9 @@
 import {
-    getHfSpaceApiName,
     getHfSpaceId,
     getOptionalHfApiKey,
 } from '@/lib/visualizer/huggingface/client'
 
 import { HuggingFaceGenerationError } from './map-hf-error'
-
-function parsePositiveInt(
-    value: string | undefined,
-    fallback: number,
-    min = 1,
-    max = 4096
-): number {
-    const parsed = Number(value)
-    if (!Number.isFinite(parsed)) {
-        return fallback
-    }
-
-    const normalized = Math.trunc(parsed)
-    if (normalized < min || normalized > max) {
-        return fallback
-    }
-
-    return normalized
-}
-
-function parsePositiveNumber(
-    value: string | undefined,
-    fallback: number,
-    min = 0,
-    max = 30
-): number {
-    const parsed = Number(value)
-    if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
-        return fallback
-    }
-
-    return parsed
-}
-
-function getSpaceGenerationDefaults() {
-    return {
-        // Free-tier friendly defaults. Can be overridden via env.
-        width: parsePositiveInt(process.env.HF_SPACE_WIDTH, 768, 64, 2048),
-        height: parsePositiveInt(process.env.HF_SPACE_HEIGHT, 768, 64, 2048),
-        guidanceScale: parsePositiveNumber(process.env.HF_SPACE_GUIDANCE_SCALE, 6.5, 0, 30),
-        inferenceSteps: parsePositiveInt(process.env.HF_SPACE_INFERENCE_STEPS, 20, 1, 100),
-        strength: parsePositiveNumber(process.env.HF_IMG2IMG_STRENGTH, 0.6, 0, 1),
-    }
-}
-
-async function fetchImageBuffer(url: string): Promise<Buffer> {
-    const response = await fetch(url)
-    if (!response.ok) {
-        throw new HuggingFaceGenerationError(
-            `space_response_invalid:Unable to fetch generated image (${response.status}).`
-        )
-    }
-
-    return Buffer.from(await response.arrayBuffer())
-}
 
 function stringifyUnknown(value: unknown): string {
     try {
@@ -286,8 +230,7 @@ function toDataUrlFromBlob(blob: Blob): Promise<string> {
 
 async function connectToSpaceClient() {
     const spaceId = getHfSpaceId()
-    const moduleName = '@gradio/client'
-    const gradio = (await import(/* webpackIgnore: true */ moduleName)) as {
+    const gradio = (await import('@gradio/client')) as {
         Client: {
             connect: (spaceId: string, options?: Record<string, unknown>) => Promise<unknown>
         }
@@ -352,102 +295,6 @@ function buildApiNameCandidates(
     return [...knownFirst, ...rest]
 }
 
-function buildHandledFile(gradio: { handle_file: (input: Blob) => unknown }, buffer: Buffer) {
-    return gradio.handle_file(new Blob([new Uint8Array(buffer)], { type: 'image/png' }))
-}
-
-function resolveParameterValue(
-    parameterName: string,
-    payload: {
-        boardImage: unknown
-        boardMask: unknown
-        prompt: string
-        negativePrompt: string
-        defaults: ReturnType<typeof getSpaceGenerationDefaults>
-    }
-) {
-    const normalizedName = parameterName.toLowerCase()
-
-    if (normalizedName === 'seed' || normalizedName.endsWith('_seed')) {
-        return Math.floor(Math.random() * 1_000_000_000)
-    }
-
-    if (normalizedName.includes('randomize') && normalizedName.includes('seed')) {
-        return true
-    }
-
-    if (normalizedName === 'width') {
-        return payload.defaults.width
-    }
-
-    if (normalizedName === 'height') {
-        return payload.defaults.height
-    }
-
-    if (normalizedName === 'guidance_scale' || normalizedName.includes('guidance')) {
-        return payload.defaults.guidanceScale
-    }
-
-    if (
-        normalizedName === 'num_inference_steps' ||
-        normalizedName === 'inference_steps' ||
-        normalizedName.includes('steps')
-    ) {
-        return payload.defaults.inferenceSteps
-    }
-
-    if (normalizedName === 'strength' || normalizedName === 'denoising_strength') {
-        return payload.defaults.strength
-    }
-
-    if (normalizedName.includes('mask')) {
-        return payload.boardMask
-    }
-
-    if (
-        normalizedName === 'prompt' ||
-        normalizedName === 'text_prompt' ||
-        normalizedName === 'positive_prompt'
-    ) {
-        return payload.prompt
-    }
-
-    if (normalizedName === 'negative_prompt' || normalizedName === 'negative') {
-        return payload.negativePrompt
-    }
-
-    if (
-        normalizedName.includes('image') ||
-        normalizedName.includes('board') ||
-        normalizedName.includes('source')
-    ) {
-        return payload.boardImage
-    }
-
-    return null
-}
-
-function buildPredictPayload(
-    parameterNames: string[],
-    payload: {
-        boardImage: unknown
-        boardMask: unknown
-        prompt: string
-        negativePrompt: string
-        defaults: ReturnType<typeof getSpaceGenerationDefaults>
-    }
-) {
-    if (parameterNames.length === 0) {
-        return [payload.boardImage, payload.boardMask, payload.prompt, payload.negativePrompt]
-    }
-
-    return parameterNames.map((parameterName) => {
-        const resolved = resolveParameterValue(parameterName, payload)
-
-        return resolved
-    })
-}
-
 function normalizeVehiclePreviewResponsePayload(response: unknown): unknown {
     if (!response) {
         return response
@@ -498,72 +345,6 @@ function normalizeVehiclePreviewResponsePayload(response: unknown): unknown {
 
 function isEndpointNameMismatch(message: string): boolean {
     return /no endpoint matching that name|fn_index/i.test(message)
-}
-
-export async function generateViaHfSpace(input: {
-    boardBuffer: Buffer
-    boardMaskBuffer: Buffer
-    prompt: string
-    negativePrompt: string
-}): Promise<Buffer> {
-    const { app, gradio } = await connectToSpaceClient()
-
-    const configuredApiName = getHfSpaceApiName()
-
-    const payload = {
-        boardImage: buildHandledFile(gradio, input.boardBuffer),
-        boardMask: buildHandledFile(gradio, input.boardMaskBuffer),
-        prompt: input.prompt,
-        negativePrompt: input.negativePrompt,
-        defaults: getSpaceGenerationDefaults(),
-    }
-    const viewApi = (
-        typeof app.view_api === 'function' ? await app.view_api() : null
-    ) as ViewApiResponse | null
-    const apiNameCandidates = buildApiNameCandidates(configuredApiName, viewApi)
-    const resolvedApiName = apiNameCandidates[0]
-
-    const parameterNames =
-        viewApi?.named_endpoints?.[resolvedApiName]?.parameters
-            ?.map((parameter) => parameter.parameter_name ?? '')
-            .filter(Boolean) ?? []
-
-    let response: unknown
-    let lastPredictError: unknown = null
-    for (const apiName of apiNameCandidates) {
-        try {
-            response = await app.predict(apiName, buildPredictPayload(parameterNames, payload))
-            lastPredictError = null
-            break
-        } catch (error) {
-            lastPredictError = error
-            const message = resolveErrorMessage(error)
-            if (!/no endpoint matching that name|fn_index/i.test(message)) {
-                throw error
-            }
-        }
-    }
-
-    if (lastPredictError || response == null) {
-        const message = resolveErrorMessage(lastPredictError)
-        throw new HuggingFaceGenerationError(
-            `space_endpoint_not_found:configured=${configuredApiName}; tried=${apiNameCandidates.join(',')}; ${message}`
-        )
-    }
-
-    const imageLike = pickImageLikeValue(response)
-
-    if (!imageLike) {
-        throw new HuggingFaceGenerationError(
-            'space_response_invalid:No image payload returned by HF Space.'
-        )
-    }
-
-    if (typeof imageLike === 'string') {
-        return fetchImageBuffer(imageLike)
-    }
-
-    return Buffer.from(await imageLike.arrayBuffer())
 }
 
 export async function generateVehicleWrapPreviewViaHfSpace(input: {

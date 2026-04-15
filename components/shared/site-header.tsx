@@ -1,19 +1,12 @@
 'use client'
-/**
- * Components — TODO: brief module description.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 
 import Link from 'next/link'
 
 import { LogoMark } from '@/components/shared/logo-mark'
 import { Button } from '@/components/ui/button'
 
-/**
- * SiteHeader — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function SiteHeader() {
     return (
         <header className="sticky top-0 z-30 border-b border-neutral-700 bg-neutral-950/80 backdrop-blur-md">

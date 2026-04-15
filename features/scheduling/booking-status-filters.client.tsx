@@ -1,9 +1,5 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
+
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
@@ -18,10 +14,7 @@ const FILTERS = [
     { value: 'cancelled', label: 'Cancelled' },
 ] as const
 
-/**
- * BookingStatusFiltersClient — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BookingStatusFiltersClient() {
     const router = useRouter()
     const pathname = usePathname()

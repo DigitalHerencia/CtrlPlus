@@ -104,7 +104,7 @@ export function VisualizerHfConfiguratorClient({
 
     return (
         <div className="space-y-6">
-            {/* Wrap Description Section */}
+            
             <WorkspacePageContextCard
                 title="Wrap Selection"
                 className="[&>div]:flex-col [&>div]:items-stretch [&>div]:justify-start"
@@ -130,13 +130,13 @@ export function VisualizerHfConfiguratorClient({
                 </div>
             </WorkspacePageContextCard>
 
-            {/* Vehicle Configurator Section */}
+            
             <Card className="border-neutral-700 bg-neutral-950/80">
                 <CardHeader>
                     <CardTitle className="text-lg font-semibold">Vehicle Configurator</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    {/* Vehicle Selection Grid */}
+                    
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <label className="flex flex-col space-y-2">
                             <span className="text-sm font-medium text-neutral-300">Make</span>
@@ -199,7 +199,7 @@ export function VisualizerHfConfiguratorClient({
                         </label>
                     </div>
 
-                    {/* Buttons */}
+                    
                     <div className="flex flex-col gap-3 sm:flex-row">
                         <Button
                             type="button"
@@ -221,12 +221,12 @@ export function VisualizerHfConfiguratorClient({
                         </Button>
                     </div>
 
-                    {/* Error State */}
+                    
                     {error ? <p className="text-sm text-red-400">{error}</p> : null}
                 </CardContent>
             </Card>
 
-            {/* Generated Concept Section */}
+            
             <Card className="border-neutral-700 bg-neutral-950/80">
                 <CardHeader>
                     <CardTitle className="text-lg font-semibold">Generated Concept</CardTitle>
@@ -246,7 +246,7 @@ export function VisualizerHfConfiguratorClient({
                         </div>
                     )}
 
-                    {/* Prompt Used Section - Conditionally Shown */}
+                    
                     {canViewPrompt && (
                         <div className="space-y-2 border-t border-neutral-700 pt-4">
                             <p className="text-xs uppercase tracking-wider text-neutral-500">

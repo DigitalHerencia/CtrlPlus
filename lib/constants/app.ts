@@ -59,8 +59,9 @@ export const APP_ROUTES = {
     catalogManage: '/catalog/manage',
     visualizer: '/visualizer',
     scheduling: '/scheduling',
-    schedulingBook: '/scheduling/book',
-    schedulingBookings: '/scheduling/bookings',
+    schedulingBook: '/scheduling/new',
+    schedulingBookings: '/scheduling',
+    schedulingManage: '/scheduling/manage',
     billing: '/billing',
     platform: '/platform',
     signIn: '/sign-in',
@@ -73,5 +74,5 @@ export const APP_ROUTES = {
 export const SCHEDULING_REVALIDATION_PATHS = [
     APP_ROUTES.scheduling,
     APP_ROUTES.schedulingBook,
-    APP_ROUTES.schedulingBookings,
+    APP_ROUTES.schedulingManage,
 ] as const

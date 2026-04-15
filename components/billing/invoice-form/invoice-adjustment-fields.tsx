@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of invoice-adjustment-fields.tsx
- *
- * @description TODO: longer description for invoice-adjustment-fields.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -16,10 +10,7 @@ interface InvoiceAdjustmentFieldsProps {
     onNotesChange: (value: string) => void
 }
 
-/**
- * InvoiceAdjustmentFields — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function InvoiceAdjustmentFields({
     amount,
     notes,

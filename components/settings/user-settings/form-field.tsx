@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of form-field.tsx
- *
- * @description TODO: longer description for form-field.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { ReactNode } from 'react'
 import { Label } from '@/components/ui/label'
 
@@ -15,10 +9,7 @@ interface FormFieldProps {
     children: ReactNode
 }
 
-/**
- * FormField — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function FormField({ label, required = false, error, children }: FormFieldProps) {
     return (
         <div className="grid gap-2">

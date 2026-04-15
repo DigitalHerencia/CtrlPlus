@@ -1,24 +1,7 @@
-import { redirect } from 'next/navigation'
+import { NewWrapRouteFeature } from '@/features/catalog/manage/new-wrap-route-feature'
 
-import { getSession } from '@/lib/auth/session'
-import { hasCapability } from '@/lib/authz/policy'
-import { NewWrapPageFeature } from '@/features/catalog/manage/new-wrap-page-feature'
-
-export const metadata = {
-    title: 'Create Wrap',
-    description: 'Create a new vehicle wrap product',
-}
+export { newWrapRouteMetadata as metadata } from '@/features/catalog/manage/new-wrap-route-feature'
 
 export default async function NewWrapPage() {
-    const session = await getSession()
-
-    if (!session.isAuthenticated || !session.userId) {
-        redirect('/sign-in')
-    }
-
-    if (!hasCapability(session.authz, 'catalog.manage')) {
-        redirect('/catalog')
-    }
-
-    return <NewWrapPageFeature />
+    return <NewWrapRouteFeature />
 }

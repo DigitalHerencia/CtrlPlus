@@ -1,34 +1,52 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 
-import { getAvailabilityWindows, getBookingById } from '@/lib/fetchers/scheduling.fetchers'
+import { getSession } from '@/lib/auth/session'
+import { hasCapability } from '@/lib/authz/policy'
+import { createStandardAppointmentWindows } from '@/lib/constants/scheduling'
+import { getBookingById } from '@/lib/fetchers/scheduling.fetchers'
 
 import { BookingFormClient } from './booking-form.client'
 
 interface EditBookingPageFeatureProps {
-    bookingId: string
-    userId: string
+    bookingId?: string
+    userId?: string
+    params?: Promise<{ bookingId: string }>
 }
 
 export async function EditBookingPageFeature({
     bookingId,
     userId,
+    params,
 }: EditBookingPageFeatureProps) {
-    const [booking, availabilityResult] = await Promise.all([
-        getBookingById(bookingId, { customerId: userId }),
-        getAvailabilityWindows(),
-    ])
+    const resolvedBookingId = bookingId ?? (await params)?.bookingId
+
+    if (!resolvedBookingId) {
+        notFound()
+    }
+
+    let resolvedUserId = userId
+
+    if (!resolvedUserId) {
+        const session = await getSession()
+
+        if (!session.isAuthenticated || !session.userId) {
+            redirect('/sign-in')
+        }
+
+        if (hasCapability(session.authz, 'scheduling.read.all')) {
+            redirect(`/scheduling/manage/${resolvedBookingId}/edit`)
+        }
+
+        resolvedUserId = session.userId
+    }
+
+    const booking = await getBookingById(resolvedBookingId, { customerId: resolvedUserId })
 
     if (!booking) {
         notFound()
     }
 
-    const availabilityWindows = availabilityResult.items.map((window) => ({
-        id: window.id,
-        dayOfWeek: window.dayOfWeek,
-        startTime: window.startTime,
-        endTime: window.endTime,
-        capacity: window.capacitySlots,
-    }))
+    const availabilityWindows = createStandardAppointmentWindows()
 
     return (
         <BookingFormClient

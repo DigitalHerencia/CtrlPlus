@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of docs-next-prev.tsx
- *
- * @description TODO: longer description for docs-next-prev.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight } from 'lucide-react'
 
@@ -17,10 +11,7 @@ type DocsNextPrevProps = {
     next: DocNavItem | null
 }
 
-/**
- * DocsNextPrev — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function DocsNextPrev({ previous, next }: DocsNextPrevProps) {
     if (!previous && !next) {
         return null

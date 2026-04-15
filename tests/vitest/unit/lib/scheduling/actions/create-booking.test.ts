@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { Prisma } from '@prisma/client'
 
 const mocks = vi.hoisted(() => ({
     getSession: vi.fn(),
@@ -40,6 +39,7 @@ vi.mock('@/lib/integrations/notifications', () => ({
 }))
 
 import { createBooking } from '@/lib/actions/scheduling.actions'
+import { Prisma, PrismaClientKnownRequestError } from '@prisma/client'
 
 describe('createBooking', () => {
     beforeEach(() => {
@@ -287,7 +287,7 @@ describe('createBooking', () => {
             price: 0,
         })
 
-        const nullConstraintError = new Prisma.PrismaClientKnownRequestError(
+        const nullConstraintError = new PrismaClientKnownRequestError(
             'Null constraint violation on the (not available)',
             {
                 code: 'P2011',

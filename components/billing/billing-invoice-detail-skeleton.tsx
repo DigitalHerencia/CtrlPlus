@@ -1,16 +1,7 @@
-/**
- * @introduction Components — TODO: short one-line summary of billing-invoice-detail-skeleton.tsx
- *
- * @description TODO: longer description for billing-invoice-detail-skeleton.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { Skeleton } from '@/components/ui/skeleton'
 
-/**
- * BillingInvoiceDetailSkeleton — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BillingInvoiceDetailSkeleton() {
     return (
         <div className="max-w-4xl space-y-6">

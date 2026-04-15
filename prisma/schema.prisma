@@ -263,35 +263,35 @@ model AvailabilityRule {
 
 /// Customer bookings
 model Booking {
-  id         String    @id @default(cuid())
-  customerId String // Clerk user ID of customer
-  wrapId     String?
-  startTime  DateTime
-  endTime    DateTime
-  status     String    @default("requested") // "requested" | "confirmed" | "reschedule_requested" | "completed" | "cancelled"
-  totalPrice Int? // in cents
-  wrapNameSnapshot String?
-  wrapPriceSnapshot Int?
-  customerName String?
-  customerEmail String?
-  customerPhone String?
-  preferredContact String?
+  id                  String    @id @default(cuid())
+  customerId          String // Clerk user ID of customer
+  wrapId              String?
+  startTime           DateTime
+  endTime             DateTime
+  status              String    @default("requested") // "requested" | "confirmed" | "reschedule_requested" | "completed" | "cancelled"
+  totalPrice          Int? // in cents
+  wrapNameSnapshot    String?
+  wrapPriceSnapshot   Int?
+  customerName        String?
+  customerEmail       String?
+  customerPhone       String?
+  preferredContact    String?
   billingAddressLine1 String?
   billingAddressLine2 String?
-  billingCity String?
-  billingState String?
-  billingPostalCode String?
-  billingCountry String?
-  vehicleMake String?
-  vehicleModel String?
-  vehicleYear String?
-  vehicleTrim String?
-  previewImageUrl String?
-  previewPromptUsed String?
-  notes      String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  deletedAt  DateTime?
+  billingCity         String?
+  billingState        String?
+  billingPostalCode   String?
+  billingCountry      String?
+  vehicleMake         String?
+  vehicleModel        String?
+  vehicleYear         String?
+  vehicleTrim         String?
+  previewImageUrl     String?
+  previewPromptUsed   String?
+  notes               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  deletedAt           DateTime?
 
   wrap        Wrap?               @relation(fields: [wrapId], references: [id], onDelete: SetNull)
   reservation BookingReservation?
@@ -321,25 +321,25 @@ model BookingReservation {
 
 /// Owner-scoped source uploads used by the visualizer.
 model VisualizerUpload {
-  id                  String    @id @default(cuid())
-  ownerClerkUserId    String
-  legacyUrl           String?
-  cloudinaryAssetId   String?   @unique
-  cloudinaryPublicId  String?
-  cloudinaryVersion   Int?
+  id                     String    @id @default(cuid())
+  ownerClerkUserId       String
+  legacyUrl              String?
+  cloudinaryAssetId      String?   @unique
+  cloudinaryPublicId     String?
+  cloudinaryVersion      Int?
   cloudinaryResourceType String?
   cloudinaryDeliveryType String?
   cloudinaryAssetFolder  String?
-  mimeType            String?
-  format              String?
-  bytes               Int?
-  width               Int?
-  height              Int?
-  contentHash         String    @default("")
-  originalFileName    String?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  deletedAt           DateTime?
+  mimeType               String?
+  format                 String?
+  bytes                  Int?
+  width                  Int?
+  height                 Int?
+  contentHash            String    @default("")
+  originalFileName       String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  deletedAt              DateTime?
 
   previews VisualizerPreview[]
 
@@ -348,38 +348,38 @@ model VisualizerUpload {
 
 /// Preview generation results (cached for 24h)
 model VisualizerPreview {
-  id                     String    @id @default(cuid())
-  wrapId                 String
-  uploadId               String
-  ownerClerkUserId       String    @default("legacy")
-  customerPhotoUrl       String
-  processedImageUrl      String? // Filled after processing
-  status                 String    @default("pending") // "pending" | "processing" | "complete" | "failed"
-  cacheKey               String    @unique // Deterministic hash for caching
-  referenceSignature     String    @default("")
-  generationMode         String    @default("reference_edit")
-  generationProvider     String?
-  generationModel        String?
-  generationPromptVersion String?
-  generationFallbackReason String?
-  resultLegacyUrl        String?
-  resultCloudinaryAssetId   String? @unique
-  resultCloudinaryPublicId  String?
-  resultCloudinaryVersion   Int?
+  id                           String    @id @default(cuid())
+  wrapId                       String
+  uploadId                     String
+  ownerClerkUserId             String    @default("legacy")
+  customerPhotoUrl             String
+  processedImageUrl            String? // Filled after processing
+  status                       String    @default("pending") // "pending" | "processing" | "complete" | "failed"
+  cacheKey                     String    @unique // Deterministic hash for caching
+  referenceSignature           String    @default("")
+  generationMode               String    @default("reference_edit")
+  generationProvider           String?
+  generationModel              String?
+  generationPromptVersion      String?
+  generationFallbackReason     String?
+  resultLegacyUrl              String?
+  resultCloudinaryAssetId      String?   @unique
+  resultCloudinaryPublicId     String?
+  resultCloudinaryVersion      Int?
   resultCloudinaryResourceType String?
   resultCloudinaryDeliveryType String?
   resultCloudinaryAssetFolder  String?
-  resultMimeType         String?
-  resultFormat           String?
-  resultBytes            Int?
-  resultWidth            Int?
-  resultHeight           Int?
-  sourceWrapImageId      String?
-  sourceWrapImageVersion Int?
-  expiresAt              DateTime
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
-  deletedAt              DateTime?
+  resultMimeType               String?
+  resultFormat                 String?
+  resultBytes                  Int?
+  resultWidth                  Int?
+  resultHeight                 Int?
+  sourceWrapImageId            String?
+  sourceWrapImageVersion       Int?
+  expiresAt                    DateTime
+  createdAt                    DateTime  @default(now())
+  updatedAt                    DateTime  @updatedAt
+  deletedAt                    DateTime?
 
   wrap   Wrap             @relation(fields: [wrapId], references: [id], onDelete: Cascade)
   upload VisualizerUpload @relation(fields: [uploadId], references: [id], onDelete: Cascade)
@@ -396,19 +396,19 @@ model VisualizerPreview {
 
 /// Invoices for bookings
 model Invoice {
-  id          String    @id @default(cuid())
-  bookingId   String    @unique
-  status      String    @default("draft") // "draft" | "issued" | "paid" | "refunded" | "void"
-  subtotalAmount Int?
-  taxAmount   Int?
-  totalAmount Int // in cents
-  dueDate     DateTime?
-  issuedAt    DateTime?
-  stripeCheckoutSessionId String? @unique
-  stripeCustomerId String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
+  id                      String    @id @default(cuid())
+  bookingId               String    @unique
+  status                  String    @default("draft") // "draft" | "issued" | "paid" | "refunded" | "void"
+  subtotalAmount          Int?
+  taxAmount               Int?
+  totalAmount             Int // in cents
+  dueDate                 DateTime?
+  issuedAt                DateTime?
+  stripeCheckoutSessionId String?   @unique
+  stripeCustomerId        String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  deletedAt               DateTime?
 
   booking   Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   lineItems InvoiceLineItem[]
@@ -471,32 +471,32 @@ model StripeWebhookEvent {
 // ============================================================================
 
 model WebsiteSettings {
-  id                   String    @id @default(cuid())
-  clerkUserId          String    @unique
-  fullName             String?
-  email                String?
-  phone                String?
-  preferredContact     String    @default("email") // "email" | "sms"
-  appointmentReminders Boolean   @default(true)
-  marketingOptIn       Boolean   @default(false)
-  billingAddressLine1  String?
-  billingAddressLine2  String?
-  billingCity          String?
-  billingState         String?
-  billingPostalCode    String?
-  billingCountry       String?
-  vehicleMake          String?
-  vehicleModel         String?
-  vehicleYear          String?
-  vehicleTrim          String?
-  stripeCustomerId     String?   @unique
-  stripeDefaultPaymentMethodId String?
+  id                              String    @id @default(cuid())
+  clerkUserId                     String    @unique
+  fullName                        String?
+  email                           String?
+  phone                           String?
+  preferredContact                String    @default("email") // "email" | "sms"
+  appointmentReminders            Boolean   @default(true)
+  marketingOptIn                  Boolean   @default(false)
+  billingAddressLine1             String?
+  billingAddressLine2             String?
+  billingCity                     String?
+  billingState                    String?
+  billingPostalCode               String?
+  billingCountry                  String?
+  vehicleMake                     String?
+  vehicleModel                    String?
+  vehicleYear                     String?
+  vehicleTrim                     String?
+  stripeCustomerId                String?   @unique
+  stripeDefaultPaymentMethodId    String?
   stripeDefaultPaymentMethodBrand String?
   stripeDefaultPaymentMethodLast4 String?
-  timezone             String    @default("America/Denver")
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
-  deletedAt            DateTime?
+  timezone                        String    @default("America/Denver")
+  createdAt                       DateTime  @default(now())
+  updatedAt                       DateTime  @updatedAt
+  deletedAt                       DateTime?
 
   @@index([deletedAt])
   @@index([clerkUserId, deletedAt])
@@ -522,4 +522,3 @@ model AuditLog {
   @@index([action])
   @@index([deletedAt])
 }
-

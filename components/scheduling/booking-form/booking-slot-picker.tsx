@@ -1,10 +1,6 @@
-/**
- * @introduction Components — TODO: short one-line summary of booking-slot-picker.tsx
- *
- * @description TODO: longer description for booking-slot-picker.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
+import { Card, CardContent } from '@/components/ui/card'
+
 import { TimeSlot } from '@/components/scheduling/time-slot'
 
 interface Slot {
@@ -21,10 +17,7 @@ interface BookingSlotPickerProps {
     disabled?: boolean
 }
 
-/**
- * BookingSlotPicker — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BookingSlotPicker({
     slots,
     selectedSlotId,
@@ -33,9 +26,11 @@ export function BookingSlotPicker({
 }: BookingSlotPickerProps) {
     if (slots.length === 0) {
         return (
-            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/70 px-4 py-6 text-sm text-neutral-400">
-                No appointment times are available for the selected date.
-            </div>
+            <Card className="border-neutral-800 bg-neutral-900/70">
+                <CardContent className="p-6 text-center text-sm text-neutral-400">
+                    No appointment times are available for the selected date.
+                </CardContent>
+            </Card>
         )
     }
 

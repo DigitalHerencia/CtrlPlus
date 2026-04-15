@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of button.tsx
- *
- * @description TODO: longer description for button.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import * as React from 'react'
@@ -41,9 +35,7 @@ const buttonVariants = cva(
     }
 )
 
-/**
- * ButtonProps — TODO: brief description of this type.
- */
+
 export interface ButtonProps
     extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
     asChild?: boolean

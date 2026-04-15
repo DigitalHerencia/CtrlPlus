@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of bookings-manager-table.tsx
- *
- * @description TODO: longer description for bookings-manager-table.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import {
     Table,
     TableBody,
@@ -22,10 +16,7 @@ interface BookingsManagerTableProps {
     rowActions?: (row: BookingManagerRowDTO) => import('react').ReactNode
 }
 
-/**
- * BookingsManagerTable — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BookingsManagerTable({ rows, rowActions }: BookingsManagerTableProps) {
     if (rows.length === 0) {
         return (

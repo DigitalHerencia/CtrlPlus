@@ -2,6 +2,38 @@ import { z } from 'zod'
 
 import { paginationParamsSchema } from '@/schemas/common.schemas'
 
+function isStandardAppointmentRange(startTime: Date, endTime: Date): boolean {
+    const durationMinutes = (endTime.getTime() - startTime.getTime()) / (60 * 1000)
+    if (durationMinutes !== 60) {
+        return false
+    }
+
+    const startDay = startTime.getDay()
+    const endDay = endTime.getDay()
+    if (startDay < 1 || startDay > 5 || endDay < 1 || endDay > 5) {
+        return false
+    }
+
+    const startHour = startTime.getHours()
+    const endHour = endTime.getHours()
+    const startMinute = startTime.getMinutes()
+    const endMinute = endTime.getMinutes()
+
+    if (startMinute !== 0 || endMinute !== 0) {
+        return false
+    }
+
+    if (startHour < 8 || startHour >= 18) {
+        return false
+    }
+
+    if (endHour !== startHour + 1 || endHour > 18) {
+        return false
+    }
+
+    return true
+}
+
 export const bookingListParamsSchema = paginationParamsSchema.extend({
     status: z
         .enum(['requested', 'confirmed', 'reschedule_requested', 'completed', 'cancelled'])
@@ -31,6 +63,11 @@ export const reserveSlotSchema = z
         message: 'End time must be after start time',
         path: ['endTime'],
     })
+    .refine((data) => isStandardAppointmentRange(data.startTime, data.endTime), {
+        message:
+            'Appointments must be Monday-Friday, on the hour, and exactly 1 hour between 8:00 AM and 6:00 PM',
+        path: ['startTime'],
+    })
 
 export const updateBookingSchema = z
     .object({
@@ -40,6 +77,11 @@ export const updateBookingSchema = z
     .refine((data) => data.endTime > data.startTime, {
         message: 'End time must be after start time',
         path: ['endTime'],
+    })
+    .refine((data) => isStandardAppointmentRange(data.startTime, data.endTime), {
+        message:
+            'Appointments must be Monday-Friday, on the hour, and exactly 1 hour between 8:00 AM and 6:00 PM',
+        path: ['startTime'],
     })
 
 export const cancelBookingSchema = z.object({
@@ -114,4 +156,9 @@ export const createBookingSchema = z
     .refine((data) => data.endTime > data.startTime, {
         message: 'End time must be after start time',
         path: ['endTime'],
+    })
+    .refine((data) => isStandardAppointmentRange(data.startTime, data.endTime), {
+        message:
+            'Appointments must be Monday-Friday, on the hour, and exactly 1 hour between 8:00 AM and 6:00 PM',
+        path: ['startTime'],
     })

@@ -1,13 +1,5 @@
-/**
- * @introduction Components — TODO: short one-line summary of invoices-dashboard-table.tsx
- *
- * @description TODO: longer description for invoices-dashboard-table.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
 import Link from 'next/link'
 
-import { InvoiceStatusBadge } from '@/components/billing/InvoiceStatusBadge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -19,9 +11,11 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { type InvoiceDTO } from '@/types/billing.types'
+import type { ReactNode } from 'react'
 
 interface InvoicesDashboardTableProps {
     invoices: InvoiceDTO[]
+    renderStatusBadge: (status: InvoiceDTO['status']) => ReactNode
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
@@ -29,11 +23,10 @@ const currencyFormatter = new Intl.NumberFormat('en-US', {
     currency: 'USD',
 })
 
-/**
- * InvoicesDashboardTable — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
-export function InvoicesDashboardTable({ invoices }: InvoicesDashboardTableProps) {
+export function InvoicesDashboardTable({
+    invoices,
+    renderStatusBadge,
+}: InvoicesDashboardTableProps) {
     // Empty state
     if (invoices.length === 0) {
         return (
@@ -75,9 +68,7 @@ export function InvoicesDashboardTable({ invoices }: InvoicesDashboardTableProps
                                 className="border-neutral-700 bg-neutral-900"
                             >
                                 <TableCell className="font-mono text-xs">{invoice.id}</TableCell>
-                                <TableCell>
-                                    <InvoiceStatusBadge status={invoice.status} />
-                                </TableCell>
+                                <TableCell>{renderStatusBadge(invoice.status)}</TableCell>
                                 <TableCell className="text-right">
                                     {currencyFormatter.format(invoice.totalAmount / 100)}
                                 </TableCell>

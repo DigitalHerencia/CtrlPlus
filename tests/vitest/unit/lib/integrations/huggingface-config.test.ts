@@ -40,12 +40,10 @@ describe('visualizer allowed host configuration', () => {
         delete process.env.HF_API_KEY
         process.env.HUGGINGFACE_API_TOKEN = 'hf_test_token'
         process.env.HUGGINGFACE_VISUALIZER_PREVIEW_MODEL = 'legacy-preview-model'
-        process.env.HF_PREVIEW_STRATEGY = 'space_inpaint'
 
         const configModule = await loadConfig()
 
         expect(configModule.visualizerConfig.huggingFaceToken).toBe('hf_test_token')
         expect(configModule.visualizerConfig.previewModel).toBe('legacy-preview-model')
-        expect(configModule.visualizerConfig.previewProvider).toBe('space_inpaint')
     })
 })

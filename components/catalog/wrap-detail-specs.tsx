@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of wrap-detail-specs.tsx
- *
- * @description TODO: longer description for wrap-detail-specs.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { Card, CardContent } from '@/components/ui/card'
 import type { CatalogDetailDTO } from '@/types/catalog.types'
 
@@ -13,10 +7,7 @@ interface WrapDetailSpecsProps {
     canManageCatalog: boolean
 }
 
-/**
- * WrapDetailSpecs — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function WrapDetailSpecs({ wrap, canManageCatalog }: WrapDetailSpecsProps) {
     if (!canManageCatalog) {
         return null

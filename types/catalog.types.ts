@@ -7,7 +7,9 @@
  */
 import type { PublishRequiredWrapImageKind, WrapImageKind } from '@/lib/constants/statuses'
 import type { SearchParamRecord, Timestamp } from '@/types/common.types'
+import type { z } from 'zod'
 import { WRAP_SORT_BY_VALUES } from '@/lib/constants/app'
+import { createWrapSchema } from '@/schemas/catalog.schemas'
 
 /**
  * WrapImageDTO — TODO: brief description of this type.
@@ -283,22 +285,15 @@ export interface CatalogManagerResultDTO {
 }
 
 /**
- * CreateWrapInput — TODO: brief description of this type.
+ * CreateWrapInput — represents validated input data for creating a wrap
  */
 /**
- * CreateWrapInput — TODO: brief description of this type.
+ * CreateWrapInput — represents validated input data for creating a wrap
  */
 /**
- * CreateWrapInput — TODO: brief description of this type.
+ * CreateWrapInput — represents validated input data for creating a wrap
  */
-export interface CreateWrapInput {
-    name: string
-    description?: string
-    price: number
-    installationMinutes?: number
-    aiPromptTemplate?: string
-    aiNegativePrompt?: string
-}
+export type CreateWrapInput = z.infer<typeof createWrapSchema>
 
 /**
  * UpdateWrapInput — TODO: brief description of this type.

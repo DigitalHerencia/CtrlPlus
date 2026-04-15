@@ -1,9 +1,5 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
+
 
 import { resolveFlag } from '@/lib/actions/admin.actions'
 import { useTransition } from 'react'
@@ -13,10 +9,7 @@ interface AdminModerationActionsClientProps {
     status: 'open' | 'resolved'
 }
 
-/**
- * AdminModerationActionsClient — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function AdminModerationActionsClient({
     flagId,
     status,

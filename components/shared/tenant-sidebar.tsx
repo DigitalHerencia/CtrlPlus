@@ -1,9 +1,5 @@
 'use client'
-/**
- * Components — TODO: brief module description.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 
 import { UserMenu } from '@/components/auth/user-menu'
 import { LogoIcon } from '@/components/shared/logo-icon'
@@ -34,10 +30,7 @@ interface TenantSidebarProps {
     canAccessAdminConsole: boolean
     children: ReactNode
 }
-/**
- * TenantSidebar — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function TenantSidebar({
     canAccessOwnerDashboard,
     canAccessAdminConsole,
@@ -167,18 +160,18 @@ export function TenantSidebar({
 
             <nav
                 aria-label="Mobile navigation"
-                className="supports-backdrop-filter:bg-neutral-950/80 fixed inset-x-0 bottom-0 z-40 border-t border-neutral-700 bg-neutral-950/90 px-2 py-2 text-neutral-100 backdrop-blur md:hidden"
+                className="supports-backdrop-filter:bg-neutral-950/80 fixed inset-x-0 bottom-0 z-40 w-full border-t border-neutral-700 bg-neutral-950/90 px-1 py-1 text-neutral-100 backdrop-blur md:hidden"
             >
-                <ul className="mx-auto flex max-w-full items-stretch justify-start gap-1 overflow-x-auto">
+                <ul className="flex w-full items-stretch justify-evenly overflow-hidden">
                     {visibleNavItems.map((item) => {
                         const active = isTenantNavActive(pathname, item.href)
 
                         return (
-                            <li key={`mobile-${item.href}`} className="min-w-21 flex-1">
+                            <li key={`mobile-${item.href}`} className="min-w-0 flex-1">
                                 <Link
                                     href={item.href}
                                     className={cn(
-                                        'flex h-full min-h-14 flex-col items-center justify-center gap-1 border border-transparent px-2 py-1 text-center text-[11px] leading-tight text-neutral-300 transition-colors',
+                                        'flex h-full min-h-14 w-full flex-col items-center justify-center gap-0.5 border border-transparent px-1 py-1 text-center text-[10px] leading-tight text-neutral-300 transition-colors',
                                         'hover:border-neutral-700 hover:bg-neutral-900 hover:text-neutral-100',
                                         active
                                             ? 'border-blue-600 bg-blue-600/15 text-neutral-100'
@@ -186,7 +179,9 @@ export function TenantSidebar({
                                     )}
                                 >
                                     <item.icon className="size-4 shrink-0" />
-                                    <span className="line-clamp-2">{item.title}</span>
+                                    <span className="line-clamp-1 w-full truncate text-center">
+                                        {item.title}
+                                    </span>
                                 </Link>
                             </li>
                         )

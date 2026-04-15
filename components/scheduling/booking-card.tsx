@@ -1,19 +1,11 @@
-/**
- * @introduction Components — TODO: short one-line summary of booking-card.tsx
- *
- * @description TODO: longer description for booking-card.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { Card, CardContent } from '@/components/ui/card'
 import { CalendarDays, Clock3, MapPin, TimerReset } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { BookingStatusBadge, type BookingDisplayStatus } from './booking-status-badge'
 
-/**
- * BookingCardItem — TODO: brief description of this type.
- */
+
 export interface BookingCardItem {
     id: string
     wrapId: string | null
@@ -57,10 +49,7 @@ function formatExpiry(date: Date): string {
     }).format(date)
 }
 
-/**
- * BookingCard — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BookingCard({ booking, locationLabel, actions }: BookingCardProps) {
     const displayStatus = booking.displayStatus ?? booking.status
     const bookingLabel = booking.wrapName

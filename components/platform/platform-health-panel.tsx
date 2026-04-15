@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of platform-health-panel.tsx
- *
- * @description TODO: longer description for platform-health-panel.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -14,10 +8,7 @@ interface PlatformHealthPanelProps {
     dependencies: DependencyHealthDTO[]
 }
 
-/**
- * PlatformHealthPanel — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function PlatformHealthPanel({ dependencies }: PlatformHealthPanelProps) {
     return (
         <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">

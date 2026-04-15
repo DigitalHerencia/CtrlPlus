@@ -8,7 +8,7 @@
 import { revalidatePath } from 'next/cache'
 // Note: revalidateTag migration planned for Phase 3 after Next.js 16+ improvements
 
-const SCHEDULING_REVALIDATION_PATHS = ['/scheduling', '/scheduling/book', '/scheduling/bookings']
+const SCHEDULING_REVALIDATION_PATHS = ['/scheduling', '/scheduling/new', '/scheduling/manage']
 
 // ============================================================================
 // CANONICAL CACHE TAG NAMING CONVENTION

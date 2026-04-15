@@ -1,17 +1,9 @@
-/**
- * @introduction Components — TODO: short one-line summary of textarea.tsx
- *
- * @description TODO: longer description for textarea.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import * as React from 'react'
 
 import { cn } from '@/lib/utils/cn'
 
-/**
- * TextareaProps — TODO: brief description of this type.
- */
+
 export type TextareaProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(

@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of platform-visualizer-tools-panel.tsx
- *
- * @description TODO: longer description for platform-visualizer-tools-panel.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { PlatformActionPanel } from '@/components/platform/platform-action-panel'
 
 import type { PlatformToolCardDTO } from '@/types/platform.types'
@@ -13,10 +7,7 @@ interface PlatformVisualizerToolsPanelProps {
     tools: PlatformToolCardDTO[]
 }
 
-/**
- * PlatformVisualizerToolsPanel — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function PlatformVisualizerToolsPanel({ tools }: PlatformVisualizerToolsPanelProps) {
     return (
         <PlatformActionPanel

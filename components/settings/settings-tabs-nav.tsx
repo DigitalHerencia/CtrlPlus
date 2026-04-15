@@ -1,9 +1,5 @@
 'use client'
-/**
- * Components — TODO: brief module description.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 
 import { Button } from '@/components/ui/button'
 import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
@@ -13,10 +9,7 @@ interface SettingsTabsNavProps {
     onTabChange: (tab: 'profile' | 'account' | 'data' | 'docs') => void
 }
 
-/**
- * SettingsTabsNav — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function SettingsTabsNav({ activeTab, onTabChange }: SettingsTabsNavProps) {
     return (
         <WorkspacePageContextCard

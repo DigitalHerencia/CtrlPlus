@@ -1,9 +1,5 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
+
 
 import { useState, useTransition } from 'react'
 
@@ -19,10 +15,7 @@ interface ExportDataActionsClientProps {
     onExport: (input: { tenantId: string; format: 'json' | 'csv' }) => Promise<unknown>
 }
 
-/**
- * ExportDataActionsClient — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function ExportDataActionsClient({
     tenantId,
     history,

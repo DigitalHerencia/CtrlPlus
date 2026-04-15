@@ -1,16 +1,8 @@
-/**
- * @introduction Components — TODO: short one-line summary of booking-status-badge.tsx
- *
- * @description TODO: longer description for booking-status-badge.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils/cn'
 
-/**
- * BookingDisplayStatus — TODO: brief description of this type.
- */
+
 export type BookingDisplayStatus =
     | 'pending'
     | 'requested'
@@ -64,10 +56,7 @@ interface BookingStatusBadgeProps {
     className?: string
 }
 
-/**
- * BookingStatusBadge — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BookingStatusBadge({ status, className }: BookingStatusBadgeProps) {
     const config =
         STATUS_CONFIG[status as BookingDisplayStatus] ??

@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of badge.tsx
- *
- * @description TODO: longer description for badge.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { cva, type VariantProps } from 'class-variance-authority'
 import * as React from 'react'
 
@@ -30,9 +24,7 @@ const badgeVariants = cva(
     }
 )
 
-/**
- * BadgeProps — TODO: brief description of this type.
- */
+
 export interface BadgeProps
     extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
 

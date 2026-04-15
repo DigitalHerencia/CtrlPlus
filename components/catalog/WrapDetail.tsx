@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of WrapDetail.tsx
- *
- * @description TODO: longer description for WrapDetail.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
@@ -20,10 +14,7 @@ interface WrapDetailProps {
     canManageCatalog: boolean
 }
 
-/**
- * WrapDetail — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function WrapDetail({ wrap, canManageCatalog }: WrapDetailProps) {
     return (
         <div className="space-y-6">

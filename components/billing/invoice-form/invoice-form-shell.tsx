@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of invoice-form-shell.tsx
- *
- * @description TODO: longer description for invoice-form-shell.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { type ReactNode } from 'react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -15,10 +9,7 @@ interface InvoiceFormShellProps {
     children: ReactNode
 }
 
-/**
- * InvoiceFormShell — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function InvoiceFormShell({ title, description, children }: InvoiceFormShellProps) {
     return (
         <Card className="border-neutral-700 bg-neutral-950/80">

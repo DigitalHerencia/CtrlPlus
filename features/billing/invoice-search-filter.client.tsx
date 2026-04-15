@@ -1,9 +1,5 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
+
 
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useTransition } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -57,10 +53,7 @@ function buildQueryString(values: InvoiceFilterFormValues, searchParams: Readonl
     return params.toString()
 }
 
-/**
- * InvoiceSearchFilterClient — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function InvoiceSearchFilterClient() {
     const router = useRouter()
     const pathname = usePathname()

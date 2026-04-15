@@ -1,16 +1,9 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
+
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
-/**
- * AdminAuditFiltersClient — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function AdminAuditFiltersClient() {
     const router = useRouter()
     const pathname = usePathname()

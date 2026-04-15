@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of notification-preferences-fields.tsx
- *
- * @description TODO: longer description for notification-preferences-fields.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 
@@ -39,10 +33,7 @@ function ToggleRow({
     )
 }
 
-/**
- * NotificationPreferencesFields — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function NotificationPreferencesFields({
     email,
     sms,

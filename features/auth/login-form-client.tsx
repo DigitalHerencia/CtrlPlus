@@ -1,9 +1,5 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
+
 
 import { useSignIn } from '@clerk/nextjs'
 import { LoaderCircle } from 'lucide-react'
@@ -30,10 +26,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
         : fallback
 }
 
-/**
- * LoginForm — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) {
     const { fetchStatus, signIn } = useSignIn()
     const router = useRouter()

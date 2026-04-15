@@ -1,9 +1,5 @@
 'use client'
-/**
- * Components — TODO: brief module description.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -19,10 +15,7 @@ interface PlatformRouteTabsProps {
     tabs: PlatformRouteTab[]
 }
 
-/**
- * PlatformRouteTabs — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function PlatformRouteTabs({ tabs }: PlatformRouteTabsProps) {
     const currentPathname = usePathname()
 

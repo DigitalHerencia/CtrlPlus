@@ -1,18 +1,11 @@
 'use client'
-/**
- * Components — TODO: brief module description.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 
 import Link from 'next/link'
 
 import { Separator } from '@/components/ui/separator'
 
-/**
- * SiteFooter — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function SiteFooter() {
     return (
         <footer className="bg-neutral-950/80">

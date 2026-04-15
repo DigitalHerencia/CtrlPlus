@@ -52,19 +52,11 @@ describe('catalog detail route contracts', () => {
     })
 
     it('passes wrapId through the catalog detail page route', async () => {
-        pageMocks.getSession.mockResolvedValue({
-            isAuthenticated: true,
-            userId: 'user-1',
-            authz: {},
-        })
-        pageMocks.hasCapability.mockReturnValue(true)
-
         const routeModule = await import('@/app/(tenant)/catalog/[wrapId]/page')
         const element = await routeModule.default({
             params: Promise.resolve({ wrapId: 'wrap-1' }),
         })
 
-        expect(element.props.wrapId).toBe('wrap-1')
-        expect(element.props.canManageCatalog).toBe(true)
+        expect(await element.props.params).toEqual({ wrapId: 'wrap-1' })
     })
 })

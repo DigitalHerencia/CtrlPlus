@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of wrap-gallery-card.tsx
- *
- * @description TODO: longer description for wrap-gallery-card.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -18,10 +12,7 @@ interface WrapGalleryCardProps {
     wrap: CatalogBrowseCardDTO
 }
 
-/**
- * WrapGalleryCard — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function WrapGalleryCard({ wrap }: WrapGalleryCardProps) {
     const detailHref = `/catalog/${wrap.id}`
 

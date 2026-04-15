@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of booking-form-actions.tsx
- *
- * @description TODO: longer description for booking-form-actions.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { LoaderCircle } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -16,10 +10,7 @@ interface BookingFormActionsProps {
     submitLabel?: string
 }
 
-/**
- * BookingFormActions — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BookingFormActions({
     isPending = false,
     secondaryAction,

@@ -1,9 +1,5 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
+
 
 import { Button } from '@/components/ui/button'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -58,10 +54,7 @@ function buildQueryString(values: WrapFilterFormValues, searchParams: ReadonlyUR
     return params.toString()
 }
 
-/**
- * CatalogFiltersClient — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function CatalogFiltersClient({ categories = [] }: WrapFilterProps) {
     const router = useRouter()
     const pathname = usePathname()

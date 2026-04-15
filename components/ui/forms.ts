@@ -1,17 +1,8 @@
-/**
- * @introduction Components — TODO: short one-line summary of forms.ts
- *
- * @description TODO: longer description for forms.ts. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import type { FieldErrors, FieldPath, FieldValues, Resolver, UseFormClearErrors, UseFormSetError } from 'react-hook-form'
 import { type z } from 'zod'
 
-/**
- * applyZodErrors — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function applyZodErrors<TFieldValues extends FieldValues>(
     error: z.ZodError,
     setError: UseFormSetError<TFieldValues>,
@@ -72,10 +63,7 @@ function setNestedError(
     })
 }
 
-/**
- * zodResolver — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function zodResolver<TFieldValues extends FieldValues>(
     schema: z.ZodType<TFieldValues>
 ): Resolver<TFieldValues> {

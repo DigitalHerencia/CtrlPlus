@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of catalog-pagination.tsx
- *
- * @description TODO: longer description for catalog-pagination.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import Link from 'next/link'
 
 import { Button } from '@/components/ui/button'
@@ -15,10 +9,7 @@ interface CatalogPaginationProps {
     createPageHref: (page: number) => string
 }
 
-/**
- * CatalogPagination — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function CatalogPagination({ page, totalPages, createPageHref }: CatalogPaginationProps) {
     if (totalPages <= 1) {
         return null

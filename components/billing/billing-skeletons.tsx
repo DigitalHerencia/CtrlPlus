@@ -1,32 +1,20 @@
-/**
- * @introduction Components — TODO: short one-line summary of billing-skeletons.tsx
- *
- * @description TODO: longer description for billing-skeletons.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-/**
- * Billing-specific skeleton components
- * Mapped 1:1 to real billing UI structure
- */
 
-/**
- * BillingInvoiceTableSkeleton — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
+
 export function BillingInvoiceTableSkeleton() {
     return (
         <div className="space-y-2">
-            {/* Header */}
+            
             <div className="mb-3 grid grid-cols-5 gap-4">
                 {Array.from({ length: 5 }).map((_, i) => (
                     <Skeleton key={i} className="h-4 rounded" />
                 ))}
             </div>
-            {/* Rows */}
+            
             {Array.from({ length: 8 }).map((_, i) => (
                 <Skeleton key={i} className="h-12 rounded" />
             ))}
@@ -34,10 +22,7 @@ export function BillingInvoiceTableSkeleton() {
     )
 }
 
-/**
- * BillingKpiCardsSkeleton — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BillingKpiCardsSkeleton() {
     return (
         <div className="grid gap-4 md:grid-cols-2">
@@ -57,10 +42,7 @@ export function BillingKpiCardsSkeleton() {
     )
 }
 
-/**
- * BillingInvoiceDetailSkeleton — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BillingInvoiceDetailSkeleton() {
     return (
         <Card className="border-neutral-700 bg-neutral-950/90">
@@ -74,7 +56,7 @@ export function BillingInvoiceDetailSkeleton() {
                 </div>
             </CardHeader>
             <CardContent className="space-y-6">
-                {/* Address blocks */}
+                
                 <div className="grid gap-6 md:grid-cols-2">
                     {Array.from({ length: 2 }).map((_, i) => (
                         <div key={i} className="space-y-2">
@@ -85,7 +67,7 @@ export function BillingInvoiceDetailSkeleton() {
                         </div>
                     ))}
                 </div>
-                {/* Line items */}
+                
                 <div className="space-y-2">
                     {Array.from({ length: 4 }).map((_, i) => (
                         <Skeleton key={i} className="h-10 rounded" />

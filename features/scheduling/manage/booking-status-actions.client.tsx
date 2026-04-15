@@ -1,9 +1,5 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
+
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -16,10 +12,7 @@ interface BookingStatusActionsClientProps {
     status?: string
 }
 
-/**
- * BookingStatusActionsClient — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BookingStatusActionsClient({ bookingId, status }: BookingStatusActionsClientProps) {
     const router = useRouter()
     const [isPending, setIsPending] = useState(false)

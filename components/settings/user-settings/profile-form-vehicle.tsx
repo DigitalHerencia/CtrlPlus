@@ -1,9 +1,5 @@
 'use client'
-/**
- * Components — TODO: brief module description.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 
 import { Input } from '@/components/ui/input'
 import { FormField } from './form-field'
@@ -20,10 +16,7 @@ interface ProfileFormVehicleProps {
     onTrimChange: (value: string) => void
 }
 
-/**
- * ProfileFormVehicle — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function ProfileFormVehicle({
     vehicleMake,
     vehicleModel,

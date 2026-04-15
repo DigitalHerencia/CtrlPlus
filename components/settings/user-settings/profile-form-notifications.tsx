@@ -1,9 +1,5 @@
 'use client'
-/**
- * Components — TODO: brief module description.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 
 import { FormField } from './form-field'
 import { ProfileFormGroup } from './profile-form-group'
@@ -18,10 +14,7 @@ interface ProfileFormNotificationsProps {
     onPushChange: (value: boolean) => void
 }
 
-/**
- * ProfileFormNotifications — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function ProfileFormNotifications({
     emailNotifications,
     smsNotifications,

@@ -1,9 +1,5 @@
 'use client'
-/**
- * Components — TODO: brief module description.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 
 import { Input } from '@/components/ui/input'
 import { FormField } from './form-field'
@@ -24,10 +20,7 @@ interface ProfileFormBillingProps {
     onCountryChange: (value: string) => void
 }
 
-/**
- * ProfileFormBilling — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function ProfileFormBilling({
     billingAddressLine1,
     billingAddressLine2,

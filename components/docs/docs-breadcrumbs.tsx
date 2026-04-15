@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of docs-breadcrumbs.tsx
- *
- * @description TODO: longer description for docs-breadcrumbs.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import Link from 'next/link'
 
 import {
@@ -20,10 +14,7 @@ type DocsBreadcrumbsProps = {
     title: string
 }
 
-/**
- * DocsBreadcrumbs — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function DocsBreadcrumbs({ title }: DocsBreadcrumbsProps) {
     return (
         <Breadcrumb>

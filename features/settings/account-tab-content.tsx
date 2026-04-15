@@ -1,17 +1,10 @@
 'use client'
-/**
- * Features — TODO: brief module description.
- * Domain: features
- * Public: TODO (yes/no)
- */
+
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
-/**
- * AccountTabContent — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function AccountTabContent() {
     return (
         <div className="space-y-6">

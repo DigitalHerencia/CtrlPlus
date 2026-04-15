@@ -290,7 +290,7 @@ export async function getAdminQuickLinks(): Promise<AdminQuickLinkDTO[]> {
         },
         {
             label: 'Scheduling operations',
-            href: '/scheduling/bookings',
+            href: '/scheduling/manage',
             description: 'Inspect upcoming jobs and booking status transitions.',
         },
         {

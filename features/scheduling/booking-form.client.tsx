@@ -41,10 +41,7 @@ function buildDateTime(date: Date, hhmm: string): Date {
     return nextDate
 }
 
-/**
- * BookingFormClient — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BookingFormClient({
     availabilityWindows,
     bookingId,

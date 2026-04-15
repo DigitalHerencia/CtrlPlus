@@ -1,81 +1,73 @@
-import { InvoiceDetailHeader } from '@/components/billing/invoice-detail-header'
 import { InvoiceDetailSummary } from '@/components/billing/invoice-detail-summary'
+import { InvoiceDetailPageLayout } from '@/components/billing/invoice-detail-page-layout'
 import { InvoiceLineItemsTable } from '@/components/billing/invoice-line-items-table'
 import { InvoicePaymentPanel } from '@/components/billing/invoice-payment-panel'
-import { InvoiceStatusBadge } from '@/components/billing/InvoiceStatusBadge'
-import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
-import { Button } from '@/components/ui/button'
+import { InvoicePaymentHistoryPanel } from '@/components/billing/invoice-payment-history-panel'
 import { getSession } from '@/lib/auth/session'
 import { hasCapability } from '@/lib/authz/policy'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { isInvoicePayable } from '@/lib/constants/statuses'
 import { getInvoice } from '@/lib/fetchers/billing.fetchers'
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
+import { notFound, redirect } from 'next/navigation'
 
 import { InvoiceDetailTabsClient } from './invoice-detail-tabs.client'
+import { getInvoiceStatusBadgePresentation } from './invoice-status-badge-presenter'
 
 interface InvoiceDetailPageFeatureProps {
-    invoiceId: string
+    params: Promise<{ invoiceId: string }>
+    backPath?: string
+    requireBillingReadAll?: boolean
 }
 
-export async function InvoiceDetailPageFeature({ invoiceId }: InvoiceDetailPageFeatureProps) {
-    const [invoice, session] = await Promise.all([getInvoice(invoiceId), getSession()])
+export async function InvoiceDetailPageFeature({
+    params,
+    backPath = '/billing',
+    requireBillingReadAll = false,
+}: InvoiceDetailPageFeatureProps) {
+    const session = await getSession()
+    if (!session.userId) {
+        redirect('/sign-in')
+    }
+
+    if (requireBillingReadAll && !hasCapability(session.authz, 'billing.read.all')) {
+        redirect('/billing')
+    }
+
+    const { invoiceId } = await params
+    const invoice = await getInvoice(invoiceId)
 
     if (!invoice) {
         notFound()
     }
 
     const canManageInvoice = hasCapability(session.authz, 'billing.write.all')
+    const canPayInvoice = isInvoicePayable(invoice.status)
+    const canAdjustInvoice =
+        canManageInvoice && (invoice.status === 'draft' || invoice.status === 'issued')
+    const canRefundInvoice = canManageInvoice && invoice.status === 'paid'
+    const statusBadge = getInvoiceStatusBadgePresentation(invoice.status)
 
     return (
-        <div className="space-y-6">
-            <InvoiceDetailHeader invoice={invoice} />
-            <WorkspacePageContextCard
-                title="Invoice Controls"
-                description="Current status and quick navigation"
-            >
-                <InvoiceStatusBadge status={invoice.status} />
-                <Button asChild variant="outline">
-                    <Link href="/billing">Back to Billing</Link>
-                </Button>
-            </WorkspacePageContextCard>
-
-            <div className="grid gap-4 md:grid-cols-3">
-                <div className="md:col-span-2">
-                    <InvoiceLineItemsTable lineItems={invoice.lineItems} />
-                </div>
-                <InvoicePaymentPanel invoice={invoice} canManageInvoice={canManageInvoice} />
-            </div>
-
-            <InvoiceDetailTabsClient
-                summary={<InvoiceDetailSummary invoice={invoice} />}
-                paymentHistory={
-                    <Card className="border-neutral-700 bg-neutral-950/80">
-                        <CardHeader>
-                            <CardTitle className="text-neutral-100">Payment History</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                            {invoice.paymentHistory.length === 0 ? (
-                                <p className="text-sm text-neutral-400">No payment events yet.</p>
-                            ) : (
-                                invoice.paymentHistory.map((event) => (
-                                    <div
-                                        key={event.id}
-                                        className="flex items-center justify-between rounded-md border border-neutral-700 p-3"
-                                    >
-                                        <span className="text-sm text-neutral-300">
-                                            {event.type}
-                                        </span>
-                                        <span className="text-sm text-neutral-100">
-                                            {event.amount / 100}
-                                        </span>
-                                    </div>
-                                ))
-                            )}
-                        </CardContent>
-                    </Card>
-                }
-            />
-        </div>
+        <InvoiceDetailPageLayout
+            invoice={invoice}
+            backPath={backPath}
+            statusBadge={statusBadge}
+            lineItemsSection={<InvoiceLineItemsTable lineItems={invoice.lineItems} />}
+            paymentPanelSection={
+                <InvoicePaymentPanel
+                    invoiceId={invoice.id}
+                    canPayInvoice={canPayInvoice}
+                    canAdjustInvoice={canAdjustInvoice}
+                    canRefundInvoice={canRefundInvoice}
+                />
+            }
+            tabsSection={
+                <InvoiceDetailTabsClient
+                    summary={<InvoiceDetailSummary invoice={invoice} />}
+                    paymentHistory={
+                        <InvoicePaymentHistoryPanel paymentHistory={invoice.paymentHistory} />
+                    }
+                />
+            }
+        />
     )
 }

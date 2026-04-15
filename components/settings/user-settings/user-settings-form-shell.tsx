@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of user-settings-form-shell.tsx
- *
- * @description TODO: longer description for user-settings-form-shell.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { type ReactNode } from 'react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,10 +8,7 @@ interface UserSettingsFormShellProps {
     children: ReactNode
 }
 
-/**
- * UserSettingsFormShell — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function UserSettingsFormShell({
     title = 'User Preferences',
     children,

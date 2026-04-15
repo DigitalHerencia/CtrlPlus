@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of wrap-gallery-grid.tsx
- *
- * @description TODO: longer description for wrap-gallery-grid.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import Link from 'next/link'
 
 import { WorkspaceEmptyState } from '@/components/shared/tenant-elements'
@@ -18,10 +12,7 @@ interface WrapGalleryGridProps {
     canManageCatalog?: boolean
 }
 
-/**
- * WrapGalleryGrid — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function WrapGalleryGrid({ wraps, canManageCatalog = false }: WrapGalleryGridProps) {
     if (wraps.length === 0) {
         return (

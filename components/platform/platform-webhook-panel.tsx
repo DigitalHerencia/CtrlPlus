@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of platform-webhook-panel.tsx
- *
- * @description TODO: longer description for platform-webhook-panel.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 
 import type { WebhookOperationsOverviewDTO } from '@/types/platform.types'
@@ -13,10 +7,7 @@ interface PlatformWebhookPanelProps {
     overview: WebhookOperationsOverviewDTO
 }
 
-/**
- * PlatformWebhookPanel — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function PlatformWebhookPanel({ overview }: PlatformWebhookPanelProps) {
     return (
         <Card className="border-neutral-700 bg-neutral-950/80 text-neutral-100">

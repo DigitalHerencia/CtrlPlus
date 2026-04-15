@@ -73,14 +73,8 @@ export interface PaginatedParams {
 /**
  * PaginatedResult — TODO: brief description of this type.
  */
-/**
- * PaginatedResult — TODO: brief description of this type.
- */
 export interface PaginatedResult<TItem> extends PaginatedParams {
-    /** Items for the current page */
     items: TItem[]
-    /** Total number of items matching the query */
     total: number
-    /** Total number of pages available */
     totalPages: number
 }

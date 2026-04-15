@@ -9,7 +9,6 @@ import sharp from 'sharp'
 import { getCloudinaryCredentials } from '@/lib/integrations/cloudinary'
 import {
     getHfModelName,
-    getHfPreviewStrategy,
     getHfRetryCount,
     getHfTimeoutMs,
     getOptionalHfApiKey,
@@ -51,7 +50,6 @@ export const visualizerConfig = {
     huggingFaceModelRevision: process.env.HUGGINGFACE_VISUALIZER_REVISION ?? 'main',
     huggingFaceProvider: process.env.HUGGINGFACE_VISUALIZER_PROVIDER ?? 'self-hosted',
     previewModel: getHfModelName(),
-    previewProvider: getHfPreviewStrategy(),
     huggingFaceApiBase:
         process.env.HUGGINGFACE_INFERENCE_API_BASE ?? 'https://api-inference.huggingface.co/models',
     huggingFaceToken: getOptionalHfApiKey(),

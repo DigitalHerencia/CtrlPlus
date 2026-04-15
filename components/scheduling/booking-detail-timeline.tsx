@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of booking-detail-timeline.tsx
- *
- * @description TODO: longer description for booking-detail-timeline.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { BookingTimelineEventDTO } from '@/types/scheduling.types'
 
@@ -12,10 +6,7 @@ interface BookingDetailTimelineProps {
     timeline: BookingTimelineEventDTO[]
 }
 
-/**
- * BookingDetailTimeline — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BookingDetailTimeline({ timeline }: BookingDetailTimelineProps) {
     return (
         <Card className="border-neutral-800 bg-neutral-950/80">

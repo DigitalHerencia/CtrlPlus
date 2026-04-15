@@ -1,10 +1,4 @@
-/**
- * @introduction Components — TODO: short one-line summary of booking-detail-summary.tsx
- *
- * @description TODO: longer description for booking-detail-summary.tsx. Keep it short — one or two sentences.
- * Domain: components
- * Public: TODO (yes/no)
- */
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { BookingDetailViewDTO } from '@/types/scheduling.types'
 
@@ -14,10 +8,7 @@ interface BookingDetailSummaryProps {
     booking: BookingDetailViewDTO
 }
 
-/**
- * BookingDetailSummary — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
+
 export function BookingDetailSummary({ booking }: BookingDetailSummaryProps) {
     return (
         <Card className="border-neutral-800 bg-neutral-950/80">
