@@ -1,40 +1,8 @@
-/**
- * @introduction Types — TODO: short one-line summary of visualizer.types.ts
- *
- * @description TODO: longer description for visualizer.types.ts. Keep it short — one or two sentences.
- * Domain: types
- * Public: TODO (yes/no)
- */
 import type { SearchParamRecord, Timestamp } from '@/types/common.types'
 import type { PreviewStatus } from '@/lib/constants/statuses'
 
-/**
- * Index of vehicle data used by the visualizer: make -> model -> year -> trims
- * Structure: { [make]: { [model]: { [year]: string[] } } }
- */
-/**
- * VisualizerVehicleCatalogIndex — TODO: brief description of this type.
- */
-/**
- * VisualizerVehicleCatalogIndex — TODO: brief description of this type.
- */
-/**
- * VisualizerVehicleCatalogIndex — TODO: brief description of this type.
- */
 export type VisualizerVehicleCatalogIndex = Record<string, Record<string, Record<string, string[]>>>
 
-/**
- * Option representing a wrap available in the HF-based visualizer catalog.
- */
-/**
- * VisualizerHfWrapOption — TODO: brief description of this type.
- */
-/**
- * VisualizerHfWrapOption — TODO: brief description of this type.
- */
-/**
- * VisualizerHfWrapOption — TODO: brief description of this type.
- */
 export interface VisualizerHfWrapOption {
     id: string
     name: string
@@ -44,18 +12,6 @@ export interface VisualizerHfWrapOption {
     promptTemplate: string
 }
 
-/**
- * Selected vehicle + wrap identifiers used by the visualizer UI.
- */
-/**
- * VisualizerHfSelection — TODO: brief description of this type.
- */
-/**
- * VisualizerHfSelection — TODO: brief description of this type.
- */
-/**
- * VisualizerHfSelection — TODO: brief description of this type.
- */
 export interface VisualizerHfSelection {
     make: string
     model: string
@@ -64,18 +20,6 @@ export interface VisualizerHfSelection {
     wrapId: string
 }
 
-/**
- * Aggregated catalog data returned by the visualizer fetcher used to build UI options.
- */
-/**
- * VisualizerHfCatalogData — TODO: brief description of this type.
- */
-/**
- * VisualizerHfCatalogData — TODO: brief description of this type.
- */
-/**
- * VisualizerHfCatalogData — TODO: brief description of this type.
- */
 export interface VisualizerHfCatalogData {
     makes: string[]
     vehicleIndex: VisualizerVehicleCatalogIndex
@@ -84,18 +28,6 @@ export interface VisualizerHfCatalogData {
     selectedWrapId: string | null
 }
 
-/**
- * Input for generating a visualizer preview via HF pipeline.
- */
-/**
- * GenerateVisualizerHfPreviewInput — TODO: brief description of this type.
- */
-/**
- * GenerateVisualizerHfPreviewInput — TODO: brief description of this type.
- */
-/**
- * GenerateVisualizerHfPreviewInput — TODO: brief description of this type.
- */
 export interface GenerateVisualizerHfPreviewInput {
     wrapId: string
     make: string
@@ -104,18 +36,6 @@ export interface GenerateVisualizerHfPreviewInput {
     trim: string
 }
 
-/**
- * Result metadata after queueing or generating a visualizer preview.
- */
-/**
- * GenerateVisualizerHfPreviewResult — TODO: brief description of this type.
- */
-/**
- * GenerateVisualizerHfPreviewResult — TODO: brief description of this type.
- */
-/**
- * GenerateVisualizerHfPreviewResult — TODO: brief description of this type.
- */
 export interface GenerateVisualizerHfPreviewResult {
     wrapId: string
     wrapName: string
@@ -123,18 +43,6 @@ export interface GenerateVisualizerHfPreviewResult {
     promptUsed: string
 }
 
-/**
- * DTO (data transfer object) representing a stored visualizer preview.
- */
-/**
- * VisualizerPreviewDTO — TODO: brief description of this type.
- */
-/**
- * VisualizerPreviewDTO — TODO: brief description of this type.
- */
-/**
- * VisualizerPreviewDTO — TODO: brief description of this type.
- */
 export interface VisualizerPreviewDTO {
     id: string
     wrapId: string

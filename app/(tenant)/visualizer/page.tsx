@@ -13,8 +13,6 @@ export default async function VisualizerPage({ searchParams }: VisualizerPagePro
         redirect('/sign-in')
     }
 
-    requireCapability(session.authz, 'visualizer.use')
-
     const resolvedSearchParams = await searchParams
     const requestedWrapId =
         typeof resolvedSearchParams.wrapId === 'string' &&
