@@ -52,8 +52,9 @@ export const createWrapSchema = z.object({
     description: z.string().max(500).optional(),
     price: z
         .union([z.number(), z.string()])
+        .transform((value) => (typeof value === 'string' ? Number(value) : value))
         .pipe(
-            z.coerce
+            z
                 .number()
                 .int('Price must be an integer number of cents')
                 .positive('Price must be positive')
@@ -61,7 +62,8 @@ export const createWrapSchema = z.object({
         ),
     installationMinutes: z
         .union([z.number(), z.string()])
-        .pipe(z.coerce.number().int().positive('Installation minutes must be a positive integer'))
+        .transform((value) => (typeof value === 'string' ? Number(value) : value))
+        .pipe(z.number().int().positive('Installation minutes must be a positive integer'))
         .optional(),
     aiPromptTemplate: z.string().max(2_000).optional(),
     aiNegativePrompt: z.string().max(1_000).optional(),
