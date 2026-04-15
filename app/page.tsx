@@ -167,18 +167,18 @@ export default function HomePage() {
 
                 {/* Mobile Portrait Landing (matches bottom-bar breakpoint) */}
                 <section className="relative min-h-dvh overflow-hidden bg-neutral-900 pb-[calc(7rem+env(safe-area-inset-bottom))] md:hidden">
-                    <div className="-translate-x-55 absolute left-1/2 top-8 z-0 h-[65vh] w-screen overflow-hidden">
+                    <div className="absolute -top-5 z-0 ml-9 h-[55vh] w-screen overflow-hidden">
                         <Image
                             src="/features-bg.png"
                             alt="CTRL+ mobile vehicle wrap preview"
                             fill
                             sizes="100vw"
-                            className="object-top-right -translate-y-1 object-contain"
+                            className="object-top-right"
                             priority
                         />
                     </div>
 
-                    <div className="pointer-events-none absolute bottom-0 left-1/2 z-0 h-[46vh] w-screen -translate-x-1/2 overflow-hidden pt-10">
+                    <div className="pointer-events-none absolute bottom-0 left-1/2 z-0 h-[36vh] w-screen -translate-x-1/2 overflow-hidden pt-10">
                         <Image
                             src="/wrapped-vehicles-night-star.png"
                             alt="Wrapped vehicles at night in El Paso"
@@ -196,7 +196,7 @@ export default function HomePage() {
                                 See It On Your Ride{' '}
                                 <span className="text-blue-600">Before You Wrap It</span>
                             </h1>
-                            <p className="max-w-[92%] text-sm leading-relaxed text-neutral-100/95">
+                            <p className="max-w-[85%] text-sm leading-relaxed text-neutral-100/95">
                                 Browse our catalog and generate a preview of your car wrap in
                                 seconds powered by AI.
                             </p>
@@ -207,7 +207,7 @@ export default function HomePage() {
                             </Link>
                         </div>
 
-                        <div className="mb-16 mt-10 space-y-6 sm:mb-20 sm:mt-14 sm:space-y-8">
+                        <div className="mb-16 mt-24 space-y-6 sm:mb-20 sm:mt-36 sm:space-y-8">
                             <h2 className="text-center text-3xl font-black uppercase leading-tight tracking-tight text-neutral-100 drop-shadow-lg">
                                 Simple
                                 <span className="text-blue-600"> Transparent </span>
