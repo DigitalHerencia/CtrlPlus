@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { FormEventHandler } from 'react'
 import type { FieldErrors, UseFormRegister } from 'react-hook-form'
+import type { z } from 'zod'
 
 import { CatalogManagerHeader } from '@/components/catalog/manage/catalog-manager-header'
 import { WrapDetailsFields } from '@/components/catalog/wrap-form/wrap-details-fields'
@@ -13,14 +14,25 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import type { CreateWrapInput } from '@/types/catalog.types'
+import { createWrapSchema } from '@/schemas/catalog.schemas'
+
+type CreateWrapFormInput = z.input<typeof createWrapSchema>
 
 interface NewWrapPageViewProps {
     onSubmit: FormEventHandler<HTMLFormElement>
-    register: UseFormRegister<CreateWrapInput>
-    errors: FieldErrors<CreateWrapInput>
+    register: UseFormRegister<CreateWrapFormInput>
+    errors: FieldErrors<CreateWrapFormInput>
     isPending: boolean
     submitError: string | null
+}
+
+function getErrorMessage(error: unknown): string | null {
+    if (!error || typeof error !== 'object') {
+        return null
+    }
+
+    const maybeMessage = (error as { message?: unknown }).message
+    return typeof maybeMessage === 'string' ? maybeMessage : null
 }
 
 export function NewWrapPageView({
@@ -30,6 +42,11 @@ export function NewWrapPageView({
     isPending,
     submitError,
 }: NewWrapPageViewProps) {
+    const nameErrorMessage = getErrorMessage(errors.name)
+    const descriptionErrorMessage = getErrorMessage(errors.description)
+    const priceErrorMessage = getErrorMessage(errors.price)
+    const installationMinutesErrorMessage = getErrorMessage(errors.installationMinutes)
+
     return (
         <div className="space-y-6">
             <CatalogManagerHeader
@@ -58,9 +75,9 @@ export function NewWrapPageView({
                                 placeholder="e.g., Phoenix Metallic Blue"
                                 {...register('name')}
                             />
-                            {errors.name && (
-                                <p className="text-sm text-red-500">{errors.name.message}</p>
-                            )}
+                            {nameErrorMessage ? (
+                                <p className="text-sm text-red-500">{nameErrorMessage}</p>
+                            ) : null}
                         </WrapDetailsFields>
 
                         <WrapDetailsFields>
@@ -71,9 +88,9 @@ export function NewWrapPageView({
                                 rows={4}
                                 {...register('description')}
                             />
-                            {errors.description && (
-                                <p className="text-sm text-red-500">{errors.description.message}</p>
-                            )}
+                            {descriptionErrorMessage ? (
+                                <p className="text-sm text-red-500">{descriptionErrorMessage}</p>
+                            ) : null}
                         </WrapDetailsFields>
 
                         <WrapPricingFields>
@@ -87,9 +104,9 @@ export function NewWrapPageView({
                                     placeholder="e.g., 2500 for $2,500"
                                     {...register('price', { valueAsNumber: true })}
                                 />
-                                {errors.price && (
-                                    <p className="text-sm text-red-500">{errors.price.message}</p>
-                                )}
+                                {priceErrorMessage ? (
+                                    <p className="text-sm text-red-500">{priceErrorMessage}</p>
+                                ) : null}
                             </div>
 
                             <div className="space-y-2">
@@ -102,11 +119,11 @@ export function NewWrapPageView({
                                     placeholder="e.g., 180"
                                     {...register('installationMinutes', { valueAsNumber: true })}
                                 />
-                                {errors.installationMinutes && (
+                                {installationMinutesErrorMessage ? (
                                     <p className="text-sm text-red-500">
-                                        {errors.installationMinutes.message}
+                                        {installationMinutesErrorMessage}
                                     </p>
-                                )}
+                                ) : null}
                             </div>
                         </WrapPricingFields>
                     </WrapFormFields>

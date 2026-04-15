@@ -11,7 +11,8 @@ import { NewWrapPageView } from '@/components/catalog/manage/new-wrap-page-view'
 import { createWrap } from '@/lib/actions/catalog.actions'
 import { createWrapSchema } from '@/schemas/catalog.schemas'
 
-type CreateWrapFormData = z.infer<typeof createWrapSchema>
+type CreateWrapFormInput = z.input<typeof createWrapSchema>
+type CreateWrapFormData = z.output<typeof createWrapSchema>
 
 function parsePriceInput(value: number): number {
     if (!Number.isFinite(value) || value <= 0) {
@@ -30,7 +31,7 @@ export function NewWrapPageFeature() {
         register,
         handleSubmit,
         formState: { errors },
-    } = useForm<CreateWrapFormData>({
+    } = useForm<CreateWrapFormInput, unknown, CreateWrapFormData>({
         resolver: zodResolver(createWrapSchema),
     })
 
