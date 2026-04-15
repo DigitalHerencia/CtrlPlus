@@ -30,11 +30,9 @@ const nextConfig: NextConfig = {
             },
             {
                 protocol: 'https',
-                // Hugging Face Spaces deliver generated images from the hf.space host,
-                // not the huggingface.co/spaces page URL.
                 hostname: 'cannatech-ctrlplus.hf.space',
                 port: '',
-                pathname: '/gradio_api/**',
+                pathname: '/**',
                 search: '',
             },
         ],

@@ -1,9 +1,4 @@
 'use client'
-/**
- * Components — TODO: brief module description.
- * Domain: components
- * Public: TODO (yes/no)
- */
 
 import Image from 'next/image'
 import Link from 'next/link'
@@ -27,10 +22,6 @@ interface VisualizerHfConfiguratorClientProps {
     ) => Promise<GenerateVisualizerHfPreviewResult>
 }
 
-/**
- * VisualizerHfConfiguratorClient — TODO: brief description of this function.
- * @returns TODO: describe return value
- */
 export function VisualizerHfConfiguratorClient({
     catalog,
     canViewPrompt,
