@@ -21,7 +21,8 @@ jobs:
               run: npm install -g pnpm@10.32.1
 
             - name: Install dependencies
-              run: pnpm install --frozen-lockfile
+             run: pnpm install --frozen-lockfile
+             working-directory: ./your-folder
 
             - name: Validate (lint / typecheck / prisma / tests)
               run: pnpm validate
