@@ -330,8 +330,8 @@ export default function HomePage() {
                         <div className="mx-auto max-w-7xl">
                             <div className="mb-12 text-center sm:mb-14 lg:mb-16">
                                 <h2 className="mb-3 whitespace-nowrap text-2xl font-black uppercase tracking-tight text-neutral-100 drop-shadow-lg sm:mb-4 sm:text-4xl lg:text-5xl">
-                                    Built for El Paso Drivers Who Demand{' '}
-                                    <span className="text-blue-600">More Than Ordinary</span>
+                                    Built for El Paso Drivers Who Want to{' '}
+                                    <span className="text-blue-600"> Stand Out</span>
                                 </h2>
                             </div>
 
@@ -381,8 +381,8 @@ export default function HomePage() {
                         <div className="relative z-10 mx-auto max-w-7xl">
                             <div className="mb-12 text-center sm:mb-14 lg:mb-16">
                                 <h2 className="mb-3 text-2xl font-black uppercase tracking-tight text-neutral-100 drop-shadow-lg sm:mb-4 sm:text-4xl lg:text-5xl">
-                                    Fair and{' '}
-                                    <span className="text-blue-600">Straight-Shooting</span> Pricing
+                                    Fair and <span className="text-blue-600">Transparent</span>{' '}
+                                    Pricing
                                 </h2>
                             </div>
 
