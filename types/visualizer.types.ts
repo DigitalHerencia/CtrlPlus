@@ -8,6 +8,8 @@ export interface VisualizerHfWrapOption {
     name: string
     category: string | null
     description: string
+    design_traits?: string[]
+    best_for?: string[]
     stylePrompt: string
     promptTemplate: string
 }

@@ -17,7 +17,7 @@ export default function RootLayout({
         <html lang="en">
             <body>
                 <ClerkProvider>
-                    <main className="bg-neutral-900">{children}</main>
+                    <main className="min-w-90 bg-neutral-900">{children}</main>
                 </ClerkProvider>
             </body>
         </html>

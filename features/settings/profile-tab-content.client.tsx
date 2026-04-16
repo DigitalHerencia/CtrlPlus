@@ -1,6 +1,5 @@
 'use client'
 
-
 import { useState, useTransition } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 
@@ -37,6 +36,7 @@ interface ProfileTabContentClientProps {
         vehicleYear: string | null
         vehicleTrim: string | null
     }) => Promise<unknown>
+    onSettingsSaved?: () => void
 }
 
 type FormValues = {
@@ -65,8 +65,11 @@ function textOrNull(value: string): string | null {
     return trimmed.length > 0 ? trimmed : null
 }
 
-
-export function ProfileTabContentClient({ initialSettings, onSave }: ProfileTabContentClientProps) {
+export function ProfileTabContentClient({
+    initialSettings,
+    onSave,
+    onSettingsSaved,
+}: ProfileTabContentClientProps) {
     const [serverMessage, setServerMessage] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
 
@@ -144,6 +147,7 @@ export function ProfileTabContentClient({ initialSettings, onSave }: ProfileTabC
                     vehicleTrim: textOrNull(vehicleTrim),
                 })
                 setServerMessage('Settings saved successfully.')
+                onSettingsSaved?.()
                 // Optional: Reset form dirty state
                 form.reset(form.getValues())
             } catch (error) {

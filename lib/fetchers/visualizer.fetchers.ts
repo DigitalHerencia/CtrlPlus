@@ -3,6 +3,7 @@ import 'server-only'
 import { getSession } from '@/lib/auth/session'
 import { requireCapability } from '@/lib/authz/policy'
 import { VEHICLE_CATALOG } from '@/lib/constants/visualizer/vehicle-catalog'
+import { WRAP_CATALOG } from '@/lib/constants/visualizer/wrap-catalog'
 import { prisma } from '@/lib/db/prisma'
 import { listVisualizerSelectableWraps } from '@/lib/fetchers/catalog.fetchers'
 import type {
@@ -21,14 +22,25 @@ function sortedUnique(values: string[]) {
 function mapWrapOptions(
     wraps: Awaited<ReturnType<typeof listVisualizerSelectableWraps>>
 ): VisualizerHfWrapOption[] {
-    return wraps.map((wrap) => ({
-        id: wrap.id,
-        name: wrap.name,
-        description: wrap.description ?? '',
-        stylePrompt: wrap.aiNegativePrompt ?? '',
-        promptTemplate: wrap.aiPromptTemplate ?? '',
-        category: wrap.categories[0]?.name ?? null,
-    }))
+    return wraps.map((wrap) => {
+        // Try to find matching wrap in WRAP_CATALOG for enhanced data
+        const catalogWrap = WRAP_CATALOG.wraps.find(
+            (catalogWrap) =>
+                catalogWrap.name.toLowerCase() === wrap.name.toLowerCase() ||
+                catalogWrap.id === wrap.id
+        )
+
+        return {
+            id: wrap.id,
+            name: wrap.name,
+            description: catalogWrap?.description ?? wrap.description ?? '',
+            design_traits: catalogWrap?.design_traits ? [...catalogWrap.design_traits] : undefined,
+            best_for: catalogWrap?.best_for ? [...catalogWrap.best_for] : undefined,
+            stylePrompt: wrap.aiNegativePrompt ?? '',
+            promptTemplate: wrap.aiPromptTemplate ?? '',
+            category: wrap.categories[0]?.name ?? null,
+        }
+    })
 }
 
 function getVehicleIndex(): VisualizerVehicleCatalogIndex {

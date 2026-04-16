@@ -140,9 +140,7 @@ CtrlPlus/
 
 ## Codebase Metrics
 
-<table width="100%">
-<tr>
-<td width="50%" align="left" style="padding-right:1rem;vertical-align:top;">
+<div>
 
 ### File Counts
 
@@ -181,14 +179,13 @@ CtrlPlus/
 
 [!NOTE] Line totals are physical line counts (not comment-adjusted)
 
-</td>
-<td width="50%" align="center" style="padding-left:1rem;vertical-align:top;">
+<span style="display:inline-block; margin-top:20px;">
 
-<img src="public/mobile-visualizer_ctrlplus.vercel.app.jpeg" alt="Mobile Visualizer" style="width:;height:auto;"/>
+<img src="public/mobile-visualizer_ctrlplus.vercel.app.jpeg" alt="Mobile Visualizer" style="height:50%;"/>
 
-</td>
-</tr>
-</table>
+</span>
+
+</div>
 
 ## Development Workflow
 

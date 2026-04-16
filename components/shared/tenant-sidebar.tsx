@@ -1,6 +1,5 @@
 'use client'
 
-
 import { UserMenu } from '@/components/auth/user-menu'
 import { LogoIcon } from '@/components/shared/logo-icon'
 import { LogoMark } from '@/components/shared/logo-mark'
@@ -18,7 +17,7 @@ import {
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils/cn'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { type CSSProperties, type ReactNode, useEffect, useMemo, useState } from 'react'
 
 import { isTenantNavActive, tenantNavItems } from './tenant-nav-config'
@@ -28,15 +27,18 @@ const SIDEBAR_STORAGE_KEY = 'tenant_sidebar_open'
 interface TenantSidebarProps {
     canAccessOwnerDashboard: boolean
     canAccessAdminConsole: boolean
+    needsSettingsOnboarding: boolean
     children: ReactNode
 }
 
 export function TenantSidebar({
     canAccessOwnerDashboard,
     canAccessAdminConsole,
+    needsSettingsOnboarding,
     children,
 }: TenantSidebarProps) {
     const pathname = usePathname()
+    const router = useRouter()
     const [open, setOpen] = useState(true)
     const [hasLoadedStoredPreference, setHasLoadedStoredPreference] = useState(false)
 
@@ -59,6 +61,18 @@ export function TenantSidebar({
 
         window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(open))
     }, [hasLoadedStoredPreference, open])
+
+    useEffect(() => {
+        if (!needsSettingsOnboarding) {
+            return
+        }
+
+        if (pathname.startsWith('/settings/profile')) {
+            return
+        }
+
+        router.replace('/settings/profile')
+    }, [needsSettingsOnboarding, pathname, router])
 
     const visibleNavItems = useMemo(
         () =>

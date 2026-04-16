@@ -2,12 +2,26 @@ import { describe, it, expect, vi } from 'vitest'
 import type { ReactNode } from 'react'
 import type { SessionContext } from '@/types/auth.types'
 
-vi.mock('@/lib/auth/session', () => ({
+const mocks = vi.hoisted(() => ({
     getSession: vi.fn(),
+    redirect: vi.fn(),
+    prisma: {
+        websiteSettings: {
+            findFirst: vi.fn(),
+        },
+    },
+}))
+
+vi.mock('@/lib/auth/session', () => ({
+    getSession: mocks.getSession,
 }))
 
 vi.mock('next/navigation', () => ({
-    redirect: vi.fn(),
+    redirect: mocks.redirect,
+}))
+
+vi.mock('@/lib/db/prisma', () => ({
+    prisma: mocks.prisma,
 }))
 
 // Avoid importing real client TenantSidebar during the test
@@ -20,6 +34,10 @@ import { getSession } from '@/lib/auth/session'
 import { redirect } from 'next/navigation'
 
 describe('TenantLayout', () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+    })
+
     it('redirects unauthenticated users to sign-in', async () => {
         const mockedSession = vi.mocked(getSession)
         mockedSession.mockResolvedValueOnce({
@@ -39,15 +57,46 @@ describe('TenantLayout', () => {
 
         const mockedRedirect = vi.mocked(redirect)
 
-        // Call the layout function directly; it should call redirect
         try {
-            // call and ignore returned React nodes
-            // call as a plain async function
             await TenantLayout({ children: 'child' } as unknown as { children: ReactNode })
         } catch {
             // Some implementations of redirect may throw; ignore
         }
 
         expect(mockedRedirect).toHaveBeenCalledWith('/sign-in')
+    })
+
+    it('passes onboarding state when the user has no saved website settings', async () => {
+        const mockedSession = vi.mocked(getSession)
+        mockedSession.mockResolvedValueOnce({
+            isAuthenticated: true,
+            userId: 'user-1',
+            authz: {
+                userId: 'user-1',
+                role: 'customer',
+                isAuthenticated: true,
+                isOwner: false,
+                isPlatformAdmin: false,
+            },
+            role: 'customer',
+            isOwner: false,
+            isPlatformAdmin: false,
+        } as SessionContext)
+
+        const mockedFindFirst = vi.mocked(mocks.prisma.websiteSettings.findFirst)
+        mockedFindFirst.mockResolvedValueOnce(null)
+
+        await TenantLayout({ children: 'child' } as unknown as { children: ReactNode })
+
+        expect(mocks.prisma.websiteSettings.findFirst).toHaveBeenCalledWith({
+            where: {
+                clerkUserId: 'user-1',
+                deletedAt: null,
+            },
+            select: {
+                id: true,
+            },
+        })
+        expect(vi.mocked(redirect)).not.toHaveBeenCalled()
     })
 })

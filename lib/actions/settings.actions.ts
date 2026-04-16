@@ -56,38 +56,74 @@ export async function updateUserPreferences(
             appointmentReminders: parsed.appointmentReminders ?? current.appointmentReminders,
             marketingOptIn: parsed.marketingOptIn ?? current.marketingOptIn,
             timezone: parsed.timezone ?? current.timezone ?? DEFAULT_STORE_TIMEZONE,
-            fullName: parsed.fullName ?? current.fullName,
-            email: parsed.email ?? current.email,
-            phone: parsed.phone ?? current.phone,
-            billingAddressLine1: parsed.billingAddressLine1 ?? current.billingAddressLine1,
-            billingAddressLine2: parsed.billingAddressLine2 ?? current.billingAddressLine2,
-            billingCity: parsed.billingCity ?? current.billingCity,
-            billingState: parsed.billingState ?? current.billingState,
-            billingPostalCode: parsed.billingPostalCode ?? current.billingPostalCode,
-            billingCountry: parsed.billingCountry ?? current.billingCountry,
-            vehicleMake: parsed.vehicleMake ?? current.vehicleMake,
-            vehicleModel: parsed.vehicleModel ?? current.vehicleModel,
-            vehicleYear: parsed.vehicleYear ?? current.vehicleYear,
-            vehicleTrim: parsed.vehicleTrim ?? current.vehicleTrim,
+            fullName: parsed.fullName === undefined ? current.fullName : parsed.fullName,
+            email: parsed.email === undefined ? current.email : parsed.email,
+            phone: parsed.phone === undefined ? current.phone : parsed.phone,
+            billingAddressLine1:
+                parsed.billingAddressLine1 === undefined
+                    ? current.billingAddressLine1
+                    : parsed.billingAddressLine1,
+            billingAddressLine2:
+                parsed.billingAddressLine2 === undefined
+                    ? current.billingAddressLine2
+                    : parsed.billingAddressLine2,
+            billingCity:
+                parsed.billingCity === undefined ? current.billingCity : parsed.billingCity,
+            billingState:
+                parsed.billingState === undefined ? current.billingState : parsed.billingState,
+            billingPostalCode:
+                parsed.billingPostalCode === undefined
+                    ? current.billingPostalCode
+                    : parsed.billingPostalCode,
+            billingCountry:
+                parsed.billingCountry === undefined
+                    ? current.billingCountry
+                    : parsed.billingCountry,
+            vehicleMake:
+                parsed.vehicleMake === undefined ? current.vehicleMake : parsed.vehicleMake,
+            vehicleModel:
+                parsed.vehicleModel === undefined ? current.vehicleModel : parsed.vehicleModel,
+            vehicleYear:
+                parsed.vehicleYear === undefined ? current.vehicleYear : parsed.vehicleYear,
+            vehicleTrim:
+                parsed.vehicleTrim === undefined ? current.vehicleTrim : parsed.vehicleTrim,
         },
         update: {
             preferredContact,
             appointmentReminders: parsed.appointmentReminders ?? current.appointmentReminders,
             marketingOptIn: parsed.marketingOptIn ?? current.marketingOptIn,
             timezone: parsed.timezone ?? current.timezone ?? DEFAULT_STORE_TIMEZONE,
-            fullName: parsed.fullName ?? current.fullName,
-            email: parsed.email ?? current.email,
-            phone: parsed.phone ?? current.phone,
-            billingAddressLine1: parsed.billingAddressLine1 ?? current.billingAddressLine1,
-            billingAddressLine2: parsed.billingAddressLine2 ?? current.billingAddressLine2,
-            billingCity: parsed.billingCity ?? current.billingCity,
-            billingState: parsed.billingState ?? current.billingState,
-            billingPostalCode: parsed.billingPostalCode ?? current.billingPostalCode,
-            billingCountry: parsed.billingCountry ?? current.billingCountry,
-            vehicleMake: parsed.vehicleMake ?? current.vehicleMake,
-            vehicleModel: parsed.vehicleModel ?? current.vehicleModel,
-            vehicleYear: parsed.vehicleYear ?? current.vehicleYear,
-            vehicleTrim: parsed.vehicleTrim ?? current.vehicleTrim,
+            fullName: parsed.fullName === undefined ? current.fullName : parsed.fullName,
+            email: parsed.email === undefined ? current.email : parsed.email,
+            phone: parsed.phone === undefined ? current.phone : parsed.phone,
+            billingAddressLine1:
+                parsed.billingAddressLine1 === undefined
+                    ? current.billingAddressLine1
+                    : parsed.billingAddressLine1,
+            billingAddressLine2:
+                parsed.billingAddressLine2 === undefined
+                    ? current.billingAddressLine2
+                    : parsed.billingAddressLine2,
+            billingCity:
+                parsed.billingCity === undefined ? current.billingCity : parsed.billingCity,
+            billingState:
+                parsed.billingState === undefined ? current.billingState : parsed.billingState,
+            billingPostalCode:
+                parsed.billingPostalCode === undefined
+                    ? current.billingPostalCode
+                    : parsed.billingPostalCode,
+            billingCountry:
+                parsed.billingCountry === undefined
+                    ? current.billingCountry
+                    : parsed.billingCountry,
+            vehicleMake:
+                parsed.vehicleMake === undefined ? current.vehicleMake : parsed.vehicleMake,
+            vehicleModel:
+                parsed.vehicleModel === undefined ? current.vehicleModel : parsed.vehicleModel,
+            vehicleYear:
+                parsed.vehicleYear === undefined ? current.vehicleYear : parsed.vehicleYear,
+            vehicleTrim:
+                parsed.vehicleTrim === undefined ? current.vehicleTrim : parsed.vehicleTrim,
         },
         select: {
             preferredContact: true,

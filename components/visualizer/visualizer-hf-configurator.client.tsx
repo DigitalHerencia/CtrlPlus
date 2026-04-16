@@ -104,7 +104,6 @@ export function VisualizerHfConfiguratorClient({
 
     return (
         <div className="space-y-6">
-            
             <WorkspacePageContextCard
                 title="Wrap Selection"
                 className="[&>div]:flex-col [&>div]:items-stretch [&>div]:justify-start"
@@ -127,16 +126,55 @@ export function VisualizerHfConfiguratorClient({
                         {selectedWrap?.description ??
                             'Choose a wrap to preview it against your selected vehicle.'}
                     </p>
+
+                    {selectedWrap && (
+                        <div className="mt-4 space-y-3 border-t border-neutral-700 pt-4">
+                            {selectedWrap.design_traits &&
+                                selectedWrap.design_traits.length > 0 && (
+                                    <div>
+                                        <p className="mb-2 text-xs uppercase tracking-wider text-neutral-500">
+                                            Design Traits
+                                        </p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {selectedWrap.design_traits.map((trait, index) => (
+                                                <span
+                                                    key={index}
+                                                    className="inline-block rounded-full border border-blue-600/30 bg-blue-600/20 px-2 py-1 text-xs text-blue-300"
+                                                >
+                                                    {trait}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                            {selectedWrap.best_for && selectedWrap.best_for.length > 0 && (
+                                <div>
+                                    <p className="mb-2 text-xs uppercase tracking-wider text-neutral-500">
+                                        Best For
+                                    </p>
+                                    <div className="flex flex-wrap gap-1">
+                                        {selectedWrap.best_for.map((use, index) => (
+                                            <span
+                                                key={index}
+                                                className="inline-block rounded-full border border-neutral-600/30 bg-neutral-600/20 px-2 py-1 text-xs text-neutral-300"
+                                            >
+                                                {use}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </WorkspacePageContextCard>
 
-            
             <Card className="border-neutral-700 bg-neutral-950/80">
                 <CardHeader>
                     <CardTitle className="text-lg font-semibold">Vehicle Configurator</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <label className="flex flex-col space-y-2">
                             <span className="text-sm font-medium text-neutral-300">Make</span>
@@ -199,7 +237,6 @@ export function VisualizerHfConfiguratorClient({
                         </label>
                     </div>
 
-                    
                     <div className="flex flex-col gap-3 sm:flex-row">
                         <Button
                             type="button"
@@ -221,12 +258,10 @@ export function VisualizerHfConfiguratorClient({
                         </Button>
                     </div>
 
-                    
                     {error ? <p className="text-sm text-red-400">{error}</p> : null}
                 </CardContent>
             </Card>
 
-            
             <Card className="border-neutral-700 bg-neutral-950/80">
                 <CardHeader>
                     <CardTitle className="text-lg font-semibold">Generated Concept</CardTitle>
@@ -246,7 +281,6 @@ export function VisualizerHfConfiguratorClient({
                         </div>
                     )}
 
-                    
                     {canViewPrompt && (
                         <div className="space-y-2 border-t border-neutral-700 pt-4">
                             <p className="text-xs uppercase tracking-wider text-neutral-500">

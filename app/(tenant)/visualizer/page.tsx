@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 
 import { getSession } from '@/lib/auth/session'
-import { hasCapability, requireCapability } from '@/lib/authz/policy'
+import { hasCapability } from '@/lib/authz/policy'
 import type { VisualizerPageProps } from '@/types/visualizer.types'
 import { WorkspacePageIntro } from '@/components/shared/tenant-elements'
 import { VisualizerHfPageFeature } from '@/features/visualizer/visualizer-hf-page-feature'
