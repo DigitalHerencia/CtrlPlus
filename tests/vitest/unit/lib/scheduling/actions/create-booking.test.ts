@@ -286,9 +286,6 @@ describe('createBooking', () => {
             price: 0,
         })
 
-
-
-
         tx.websiteSettings.upsert.mockResolvedValue(undefined)
         tx.auditLog.create.mockResolvedValue(undefined)
 

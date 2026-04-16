@@ -1,6 +1,5 @@
 'use client'
 
-
 import { useMemo, useState } from 'react'
 
 import Image from 'next/image'
@@ -31,7 +30,6 @@ const kindOptions: Array<{ value: WrapImageKindType; label: string }> = [
     { value: WrapImageKindConst.HERO, label: 'Hero / display' },
     { value: WrapImageKindConst.GALLERY, label: 'Gallery' },
 ]
-
 
 export function WrapImageManager({
     wrapId,

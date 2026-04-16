@@ -10,9 +10,7 @@ import type { SearchWrapsInput } from '@/types/catalog.types'
 
 import { CatalogFiltersClient } from './catalog-filters-client'
 
-const getCatalogBrowseData = cache(async (filters: SearchWrapsInput) =>
-    searchCatalogWraps(filters)
-)
+const getCatalogBrowseData = cache(async (filters: SearchWrapsInput) => searchCatalogWraps(filters))
 
 const getCatalogCategories = cache(async () => getWrapCategories())
 
@@ -21,9 +19,7 @@ interface CatalogBrowseRegionProps {
     canManageCatalog: boolean
 }
 
-export async function CatalogResultsSummary({
-    filters,
-}: CatalogBrowseRegionProps) {
+export async function CatalogResultsSummary({ filters }: CatalogBrowseRegionProps) {
     const data = await getCatalogBrowseData(filters)
 
     return (
