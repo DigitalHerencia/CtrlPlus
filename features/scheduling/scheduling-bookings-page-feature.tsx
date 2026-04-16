@@ -14,7 +14,6 @@ import { toBookingCardItem } from './booking.mappers'
 interface SchedulingBookingsPageFeatureProps {
     tab?: 'upcoming' | 'past'
     userId?: string
-    searchParams?: Promise<{ tab?: string | string[] }>
 }
 
 const CUSTOMER_ACTIONABLE_STATUSES = new Set([
@@ -51,14 +50,11 @@ export function createCustomerCancelBookingAction(tab: 'upcoming' | 'past') {
 }
 
 export async function SchedulingBookingsPageFeature({
-    tab,
     userId,
-    searchParams,
 }: SchedulingBookingsPageFeatureProps) {
-    let resolvedTab = tab
     let resolvedUserId = userId
 
-    if (!resolvedUserId || !resolvedTab) {
+    if (!resolvedUserId) {
         const session = await getSession()
 
         if (!session.isAuthenticated || !session.userId) {
@@ -69,28 +65,18 @@ export async function SchedulingBookingsPageFeature({
             redirect('/scheduling/manage')
         }
 
-        const params = searchParams ? await searchParams : {}
-        const tabParam = params.tab
-
-        resolvedTab =
-            (Array.isArray(tabParam) ? tabParam[0] : tabParam) === 'past' ? 'past' : 'upcoming'
         resolvedUserId = session.userId
     }
 
     const nowIso = new Date().toISOString()
     const [bookingsResult, tenantLocation] = await Promise.all([
-        getBookings(
-            resolvedTab === 'upcoming'
-                ? { page: 1, pageSize: 20, fromDate: nowIso }
-                : { page: 1, pageSize: 20, toDate: nowIso },
-            { customerId: resolvedUserId }
-        ),
+        getBookings({ page: 1, pageSize: 20, fromDate: nowIso }, { customerId: resolvedUserId }),
         getTenantLocationView(),
     ])
 
     const bookings = bookingsResult.items.map(toBookingCardItem)
-    const isUpcoming = resolvedTab === 'upcoming'
-    const cancelAction = createCustomerCancelBookingAction(resolvedTab)
+    const isUpcoming = true
+    const cancelAction = createCustomerCancelBookingAction('upcoming')
     const locationLabel = buildLocationLabel(tenantLocation) || 'Location shared after confirmation'
     const bookingItems = bookings.map((booking) => {
         const displayStatus = String(booking.displayStatus ?? booking.status)

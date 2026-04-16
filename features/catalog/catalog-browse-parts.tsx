@@ -10,7 +10,7 @@ import type { SearchWrapsInput } from '@/types/catalog.types'
 
 import { CatalogFiltersClient } from './catalog-filters-client'
 
-const getCatalogBrowseData = cache(async (filters: SearchWrapsInput, _canManageCatalog: boolean) =>
+const getCatalogBrowseData = cache(async (filters: SearchWrapsInput) =>
     searchCatalogWraps(filters)
 )
 

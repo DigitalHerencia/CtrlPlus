@@ -34,9 +34,9 @@ export function CatalogBrowsePageView({
     return (
         <div className="space-y-6">
             <WorkspacePageIntro
-                label="Catalog"
-                title="Vehicle Wrap Gallery"
-                description="Explore premium wrap styles built for attention, compare finish options quickly, and move from inspiration to booking with confidence."
+                label="WrapGallery™"
+                title="Your Wrap Inspiration Hub"
+                description="Browse killer designs that fit El Paso style. Compare finishes, find your vibe, and get ready to transform your ride with confidence."
             />
             {canManageCatalog ? (
                 <WorkspacePageContextCard

@@ -8,13 +8,11 @@ import {
     Car,
     CreditCard,
     MapPinned,
-    ScanSearch,
     Settings,
     Shield,
     Smartphone,
     Sparkles,
     TrendingUp,
-    Truck,
     Users,
     Zap,
 } from 'lucide-react'
@@ -25,116 +23,117 @@ export default function HomePage() {
     const features = [
         {
             icon: Zap,
-            title: 'See It Before You Wrap It',
-            description: 'Upload a photo of your ride and preview your new look before you commit.',
+            title: 'WrapVision™ Preview',
+            description:
+                'Snap your ride and see killer wraps before you commit. No more "what if" regrets in the El Paso heat.',
         },
         {
             icon: Smartphone,
-            title: 'Styles That Fit El Paso',
+            title: 'Border Town Bold',
             description:
-                'Choose bold colors, clean finishes, and standout designs built for Sun City streets.',
+                'Wraps that scream El Paso attitude. From matte stealth to chrome that blinds the competition.',
         },
         {
             icon: Calendar,
-            title: 'Book in Minutes',
+            title: 'SlotLock™ Booking',
             description:
-                'Pick a time that works for you and lock in your appointment without the back-and-forth.',
+                'Grab your perfect install time faster than a border run. No waiting, no hassle, just results.',
         },
         {
             icon: Users,
-            title: 'Clear, Upfront Pricing',
+            title: 'PricePlay™ Transparency',
             description:
-                'Get transparent pricing so you know exactly what your project includes before install day.',
+                "Know exactly what you're getting before you sign. We hate surprises more than traffic on I-10.",
         },
         {
             icon: BarChart3,
-            title: 'Built for Work Vehicles',
+            title: 'FleetFlex™ Solutions',
             description:
-                'Turn trucks, vans, and fleets into rolling ads that get noticed all across El Paso.',
+                'Turn work trucks into rolling billboards. Make your fleet the envy of every construction site.',
         },
         {
             icon: Shield,
-            title: 'Secure Checkout',
+            title: 'SecureWrap™ Checkout',
             description:
-                'Reserve your project with trusted payment processing and instant confirmation.',
+                "Lock in your project with bulletproof security. Your info's safer than a vault at the Federal Reserve.",
         },
         {
             icon: CreditCard,
-            title: 'Track Your Project',
+            title: 'ProjectPulse™ Tracking',
             description:
-                'Stay in the loop from booking to installation with clear progress updates.',
+                'Watch your wrap come to life from quote to install. Stay in the loop without the constant texts.',
         },
         {
             icon: TrendingUp,
-            title: 'Local Support, Fast Answers',
+            title: 'BorderBoss™ Support',
             description:
-                'Need help? Get responsive support from a team that understands the El Paso market.',
+                'Local experts who get El Paso. Fast answers, real solutions, zero corporate runaround.',
         },
         {
             icon: Settings,
-            title: 'Results That Turn Heads',
+            title: 'FinishFlex™ Guarantee',
             description:
-                'Drive away with a professional wrap finish built to stand out day and night.',
+                'Drive away with wrap perfection that lasts. We back our work harder than a Chihuahua backs down.',
         },
     ]
 
     const pricingTiers = [
         {
-            name: 'Window Tinting',
+            name: 'TintShield™',
             price: '$189',
             period: '/vehicle',
-            description: 'Beat the heat and protect your interior.',
+            description: 'Beat the desert heat and protect your interior like a boss.',
             features: [
                 'Ceramic, carbon, and dyed tint options',
-                'Heat and UV rejection',
-                'Warranty-backed installation',
-                'Texas-compliant shades',
+                'Heat and UV rejection that actually works',
+                'Warranty-backed installation you can trust',
+                'Texas-compliant shades that pass inspection',
             ],
             popular: false,
-            cta: 'Book Tint Consultation',
+            cta: 'Get Tinted Now',
         },
         {
-            name: 'Vehicle Wraps',
+            name: 'WrapMaster™ Pro',
             price: '$2,499',
             period: '/project',
-            description: 'Transform your ride or fleet with custom wraps.',
+            description: 'Transform your ride into something unforgettable.',
             features: [
                 'Matte, gloss, satin, and color-change films',
                 'Custom design mockups included',
                 'Full or partial wrap packages',
-                'Fleet branding available',
+                'Fleet branding that turns heads',
             ],
             popular: true,
-            cta: 'Start Your Wrap Design',
+            cta: 'Design My Wrap',
         },
         {
-            name: 'Custom Signage',
+            name: 'SignStorm™',
             price: '$299',
             period: '/project',
-            description: 'High-impact signage for your business.',
+            description: 'High-impact signage that screams your brand.',
             features: [
                 'Banners, window graphics, and decals',
-                'Indoor and outdoor materials',
-                'Brand-consistent designs',
-                'Fast turnaround',
+                'Indoor and outdoor materials that last',
+                'Brand-consistent designs that pop',
+                'Fast turnaround when you need it yesterday',
             ],
             popular: false,
-            cta: 'Get Custom Quote',
+            cta: 'Create My Signs',
         },
     ]
 
     const mobileWhyItems = [
         {
             icon: Sparkles,
-            title: 'Mobile preview in seconds',
+            title: 'Instant preview magic',
         },
         {
             icon: Car,
-            title: 'Built for trucks, vans, and fleets',
+            title: 'Built for El Paso trucks & fleets',
         },
         {
             icon: MapPinned,
-            title: 'Local install, fast turnaround',
+            title: 'Local install, zero commute drama',
         },
     ]
 
@@ -193,25 +192,24 @@ export default function HomePage() {
                     <div className="relative z-10 mx-auto mb-64 w-full max-w-7xl px-4 pt-16 sm:mb-72 sm:px-6 sm:pt-20">
                         <div className="mb-28 max-w-[60%] space-y-5 sm:mb-36 sm:max-w-[56%] sm:space-y-6">
                             <h1 className="text-3xl font-black uppercase leading-tight tracking-tight text-neutral-100 drop-shadow-lg">
-                                See It On Your Ride{' '}
-                                <span className="text-blue-600">Before You Wrap It</span>
+                                See Your Ride <span className="text-blue-600">Wrapped & Ready</span>
                             </h1>
                             <p className="max-w-[85%] text-sm leading-relaxed text-neutral-100/95">
-                                Browse our catalog and generate a preview of your car wrap in
-                                seconds powered by AI.
+                                Upload your vehicle and unleash WrapVision™ AI magic. Preview killer
+                                designs powered by cutting-edge tech.
                             </p>
                             <Link href="/visualizer" className="inline-block pt-2">
                                 <Button className="bg-blue-600 px-6 py-3 text-sm font-semibold text-neutral-100 shadow-lg transition-all hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600">
-                                    Try the Visualizer
+                                    Try WrapVision™
                                 </Button>
                             </Link>
                         </div>
 
                         <div className="mb-16 mt-24 space-y-6 sm:mb-20 sm:mt-36 sm:space-y-8">
                             <h2 className="text-center text-3xl font-black uppercase leading-tight tracking-tight text-neutral-100 drop-shadow-lg">
-                                Simple
-                                <span className="text-blue-600"> Transparent </span>
-                                Pricing
+                                No-BS
+                                <span className="text-blue-600"> Pricing </span>
+                                That Works
                             </h2>
 
                             <div className="grid grid-cols-1 gap-4">
@@ -251,8 +249,9 @@ export default function HomePage() {
 
                         <div className="mt-12 space-y-6 sm:mt-14 sm:space-y-8">
                             <h2 className="text-center text-3xl font-black uppercase leading-tight tracking-tight text-neutral-100 drop-shadow-lg">
-                                Command Your
-                                <span className="text-blue-600"> Brand </span>
+                                Own Your
+                                <span className="text-blue-600"> El Paso </span>
+                                Moment
                             </h2>
                             <div className="grid grid-cols-3 gap-4 sm:gap-6">
                                 {mobileWhyItems.map((item, idx) => {
@@ -276,7 +275,7 @@ export default function HomePage() {
 
                             <Link href="/sign-up" className="block pt-4 sm:pt-6">
                                 <Button className="w-full bg-blue-600 py-3 text-base font-semibold text-neutral-100 shadow-lg transition-all hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600">
-                                    Start Designing Your Wrap Today
+                                    Start My Wrap Journey
                                 </Button>
                             </Link>
                         </div>
@@ -310,16 +309,16 @@ export default function HomePage() {
                         <div className="sm:pt-30 relative z-10 mx-auto flex w-full max-w-7xl items-start px-4 pt-24 sm:px-6 lg:px-8 lg:pt-36">
                             <div className="max-w-2xl animate-fade-in">
                                 <h1 className="mb-2 whitespace-nowrap text-3xl font-black uppercase leading-tight tracking-tight text-neutral-100 drop-shadow-lg sm:mb-3 sm:text-4xl lg:mb-4 lg:text-6xl">
-                                    Command Your <span className="text-blue-600">Brand</span>
+                                    Command Your <span className="text-blue-600">El Paso Edge</span>
                                 </h1>
                                 <p className="mb-4 text-base font-semibold leading-snug text-neutral-100 drop-shadow-lg sm:mb-6 sm:text-lg lg:mb-8 lg:text-xl">
                                     Transform your ride with premium vehicle wraps. Visualize
-                                    designs on your car, book your appointment, and drive in style.
+                                    designs, book your install, and drive with attitude.
                                 </p>
                                 <div>
                                     <Link href="/sign-up">
                                         <Button className="bg-blue-600 px-6 py-3 text-base font-semibold text-neutral-100 shadow-lg transition-all hover:border-2 hover:border-blue-600 hover:bg-transparent hover:text-blue-600 hover:shadow-xl sm:px-8 sm:py-4 sm:text-lg">
-                                            Start Your New Project
+                                            Start Your Project
                                         </Button>
                                     </Link>
                                 </div>
@@ -332,8 +331,8 @@ export default function HomePage() {
                         <div className="mx-auto max-w-7xl">
                             <div className="mb-12 text-center sm:mb-14 lg:mb-16">
                                 <h2 className="mb-3 whitespace-nowrap text-2xl font-black uppercase tracking-tight text-neutral-100 drop-shadow-lg sm:mb-4 sm:text-4xl lg:text-5xl">
-                                    Built for El Paso Drivers Who Want to{' '}
-                                    <span className="text-blue-600">Stand Out</span>
+                                    Built for El Paso Drivers Who Demand{' '}
+                                    <span className="text-blue-600">More Than Ordinary</span>
                                 </h2>
                             </div>
 
@@ -383,8 +382,8 @@ export default function HomePage() {
                         <div className="relative z-10 mx-auto max-w-7xl">
                             <div className="mb-12 text-center sm:mb-14 lg:mb-16">
                                 <h2 className="mb-3 text-2xl font-black uppercase tracking-tight text-neutral-100 drop-shadow-lg sm:mb-4 sm:text-4xl lg:text-5xl">
-                                    Fair and <span className="text-blue-600">Transparent</span>{' '}
-                                    Pricing
+                                    Fair and{' '}
+                                    <span className="text-blue-600">Straight-Shooting</span> Pricing
                                 </h2>
                             </div>
 

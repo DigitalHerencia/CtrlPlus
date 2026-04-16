@@ -132,9 +132,9 @@ export function UnifiedSettingsPageClient({
     return (
         <div className="space-y-6">
             <WorkspacePageIntro
-                label="Settings"
-                title="Profile Settings"
-                description="Personalize how you run customer conversations, notifications, and day-to-day wrap operations."
+                label="WrapProfile™"
+                title="Your Wrap Command Center"
+                description="Customize your experience, manage notifications, and keep your wrap projects running smoothly with personalized settings."
             />
 
             <SettingsTabsNav activeTab={activeTab} onTabChange={handleTabChange} />

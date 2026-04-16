@@ -39,8 +39,6 @@ vi.mock('@/lib/integrations/notifications', () => ({
 }))
 
 import { createBooking } from '@/lib/actions/scheduling.actions'
-import { Prisma} from '@prisma/client'
-import { error } from 'console'
 
 describe('createBooking', () => {
     beforeEach(() => {

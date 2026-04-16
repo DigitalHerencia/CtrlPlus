@@ -14,9 +14,9 @@ export async function AdminDashboardPageFeature() {
     return (
         <div className="space-y-6">
             <WorkspacePageIntro
-                label="Admin"
-                title="Command and control"
-                description="Keep bookings, revenue, moderation, and preview operations aligned so customers experience reliable delivery at every step."
+                label="WrapOps™"
+                title="Wrap Operations Command Center"
+                description="Monitor the pulse of your wrap business. Track installations, revenue, customer satisfaction, and keep every project on schedule."
             />
 
             <AdminKpiGridFeature tenantId={TENANT_ID} />

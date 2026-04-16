@@ -21,15 +21,15 @@ export function InvoicesDashboardPageLayout({
     return (
         <div className="space-y-6">
             <WorkspacePageIntro
-                label="Billing"
-                title="Billing"
-                description="Keep every wrap project financially aligned with clear balances, payment signals, and invoice accountability."
+                label="WrapWallet™"
+                title="Project Billing & Payments"
+                description="Track your wrap project costs, review invoices, and manage payments with complete transparency and zero surprises."
             />
 
             {canManageInvoices && (
                 <InvoicesDashboardToolbar>
                     <Button asChild>
-                        <Link href="/billing/manage">Manage Invoices</Link>
+                        <Link href="/billing/manage">Manage Project Bills</Link>
                     </Button>
                 </InvoicesDashboardToolbar>
             )}

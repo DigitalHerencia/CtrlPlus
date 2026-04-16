@@ -8,17 +8,20 @@ export default function NotFound() {
         <>
             <SiteHeader />
             <div className="mx-auto max-w-4xl py-32 text-center">
-                <h1 className="mb-4 text-4xl font-black text-neutral-100">Page not found</h1>
+                <h1 className="mb-4 text-4xl font-black text-neutral-100">Wrap Not Found</h1>
                 <p className="mb-6 text-neutral-300">
-                    The page you were looking for does not exist. Try going back to the
-                    catalog or home.
+                    That design slipped through the cracks. Head back to our wrap gallery or home to
+                    find your perfect match.
                 </p>
                 <div className="flex items-center justify-center gap-3">
                     <Link href="/catalog" className="rounded bg-blue-600 px-4 py-2 text-white">
-                        Browse Catalog
+                        Explore WrapGallery™
                     </Link>
-                    <Link href="/" className="rounded border border-neutral-700 px-4 py-2 text-neutral-100">
-                        Home
+                    <Link
+                        href="/"
+                        className="rounded border border-neutral-700 px-4 py-2 text-neutral-100"
+                    >
+                        Back to Home
                     </Link>
                 </div>
             </div>

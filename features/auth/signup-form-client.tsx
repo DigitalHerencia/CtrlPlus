@@ -1,6 +1,5 @@
 'use client'
 
-
 import { useSignUp } from '@clerk/nextjs'
 import { LoaderCircle } from 'lucide-react'
 import Link from 'next/link'
@@ -25,7 +24,6 @@ function getErrorMessage(error: unknown, fallback: string): string {
         ? firstMessage
         : fallback
 }
-
 
 export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps) {
     const { fetchStatus, signUp } = useSignUp()
@@ -175,9 +173,11 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
                         <LogoMark className="mt-4 scale-150" />
                     </Link>
                     <h1 className="mt-2 text-3xl font-semibold uppercase tracking-tight text-neutral-50 sm:text-4xl">
-                        Create your account
+                        Join the El Paso wrap revolution
                     </h1>
-                    <p className="mt-2 max-w-sm text-sm text-neutral-400">Get started today</p>
+                    <p className="mt-2 max-w-sm text-sm text-neutral-400">
+                        Start your journey to a standout ride
+                    </p>
                 </div>
 
                 {notice ? (
@@ -345,7 +345,7 @@ export function SignupForm({ className, redirectUrl, ...props }: SignupFormProps
                             {form.formState.isSubmitting ? (
                                 <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                             ) : null}
-                            Create account
+                            Start My Wrap Journey
                         </Button>
 
                         <div className="flex items-center justify-center gap-1 text-sm text-neutral-400">

@@ -7,7 +7,6 @@ import {
 } from '@/components/shared/tenant-elements'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 import { BookingCard, type BookingCardItem } from './booking-card'
 
@@ -32,27 +31,17 @@ export function SchedulingBookingsPageView({
     return (
         <div className="space-y-6">
             <WorkspacePageIntro
-                label="Scheduling"
-                title="My Appointments"
-                description="Review upcoming installation times, revisit past appointments, and make changes to your own bookings."
+                label="SlotLock™"
+                title="Your Install Schedule"
+                description="Track upcoming installations, manage your appointments, and stay on top of your wrap timeline with zero hassle."
             />
 
             <WorkspacePageContextCard
-                title="Appointments"
-                description="Switch between upcoming and past appointments or start a new appointment."
+                title="Appointment Control Center"
+                description="Lock in your next appointment slot and manage your installation schedule."
             >
-                <Tabs value={isUpcoming ? 'upcoming' : 'past'} className="w-full">
-                    <TabsList>
-                        <TabsTrigger value="upcoming" asChild>
-                            <Link href="/scheduling?tab=upcoming">Upcoming</Link>
-                        </TabsTrigger>
-                        <TabsTrigger value="past" asChild>
-                            <Link href="/scheduling?tab=past">Past</Link>
-                        </TabsTrigger>
-                    </TabsList>
-                </Tabs>
                 <Button asChild>
-                    <Link href="/scheduling/new">Book Appointment</Link>
+                    <Link href="/scheduling/new">Schedule My Install</Link>
                 </Button>
             </WorkspacePageContextCard>
 

@@ -3,6 +3,7 @@
 
 import { useMemo, useState } from 'react'
 
+import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -190,12 +191,12 @@ export function WrapImageManager({
                                 className="border-neutral-800 bg-neutral-950/70 text-neutral-100"
                             >
                                 <CardContent className="grid gap-4 p-4 xl:grid-cols-[180px_minmax(0,1fr)_auto]">
-                                    <div className="overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900">
-                                        
-                                        <img
+                                    <div className="relative overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900">
+                                        <Image
                                             src={asset.thumbnailUrl}
                                             alt={`Catalog asset ${image.id}`}
-                                            className="h-32 w-full object-cover"
+                                            fill
+                                            className="object-cover"
                                         />
                                     </div>
 

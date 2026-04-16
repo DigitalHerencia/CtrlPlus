@@ -1,6 +1,5 @@
 'use client'
 
-
 import { useSignIn } from '@clerk/nextjs'
 import { LoaderCircle } from 'lucide-react'
 import Link from 'next/link'
@@ -25,7 +24,6 @@ function getErrorMessage(error: unknown, fallback: string): string {
         ? firstMessage
         : fallback
 }
-
 
 export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) {
     const { fetchStatus, signIn } = useSignIn()
@@ -217,10 +215,10 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
                         <LogoMark className="mt-4 scale-150" />
                     </Link>
                     <h1 className="mt-2 text-3xl font-semibold uppercase tracking-tight text-neutral-50 sm:text-4xl">
-                        Welcome back
+                        Welcome back, boss
                     </h1>
                     <p className="mt-2 text-3xl font-semibold uppercase tracking-tight text-neutral-50 sm:text-4xl">
-                        Sign in to manage your account
+                        Access your wrap projects
                     </p>
                 </div>
 
@@ -285,7 +283,7 @@ export function LoginForm({ className, redirectUrl, ...props }: LoginFormProps) 
                                 {form.formState.isSubmitting ? (
                                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
                                 ) : null}
-                                Verify code
+                                Access My Projects
                             </Button>
                             <Button
                                 type="button"

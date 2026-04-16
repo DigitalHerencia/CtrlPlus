@@ -25,9 +25,9 @@ export default async function VisualizerPage({ searchParams }: VisualizerPagePro
     return (
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-4 md:px-6 md:py-6">
             <WorkspacePageIntro
-                label="Visualizer"
-                title="Visualizer"
-                description="Explore wrap concepts on a vehicle, tune the details, and move into scheduling only when you are ready."
+                label="WrapVision™"
+                title="See Your Ride Transformed"
+                description="Upload your vehicle and unleash AI-powered previews. Experiment with designs, tweak details, and visualize your perfect wrap before you commit."
             />
 
             <VisualizerHfPageFeature
