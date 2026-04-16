@@ -23,9 +23,8 @@ interface CatalogBrowseRegionProps {
 
 export async function CatalogResultsSummary({
     filters,
-    canManageCatalog,
 }: CatalogBrowseRegionProps) {
-    const data = await getCatalogBrowseData(filters, canManageCatalog)
+    const data = await getCatalogBrowseData(filters)
 
     return (
         <div className="text-right">
@@ -44,7 +43,7 @@ export async function CatalogResultsSection({
     filters,
     canManageCatalog,
 }: CatalogBrowseRegionProps) {
-    const data = await getCatalogBrowseData(filters, canManageCatalog)
+    const data = await getCatalogBrowseData(filters)
 
     return (
         <div className="space-y-6">
