@@ -9,6 +9,7 @@ import type { VisualizerHfCatalogData } from '@/types/visualizer.types'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { WorkspacePageContextCard } from '@/components/shared/tenant-elements'
+import { FormattedDescription } from '@/components/visualizer/formatted-description'
 import type {
     GenerateVisualizerHfPreviewInput,
     GenerateVisualizerHfPreviewResult,
@@ -122,10 +123,13 @@ export function VisualizerHfConfiguratorClient({
                         ))}
                     </select>
 
-                    <p className="text-sm leading-relaxed text-neutral-300">
-                        {selectedWrap?.description ??
-                            'Choose a wrap to preview it against your selected vehicle.'}
-                    </p>
+                    {selectedWrap?.description ? (
+                        <FormattedDescription description={selectedWrap.description} />
+                    ) : (
+                        <p className="text-sm text-neutral-400">
+                            Choose a wrap to preview it against your selected vehicle.
+                        </p>
+                    )}
 
                     {selectedWrap && (
                         <div className="mt-4 space-y-3 border-t border-neutral-700 pt-4">
