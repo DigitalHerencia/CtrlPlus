@@ -43,7 +43,7 @@
         "db:migrate:deploy": "prisma migrate deploy"
     },
     "dependencies": {
-        "@clerk/nextjs": "7.2.1",
+        "@clerk/nextjs": "7.2.8",
         "@gradio/client": "2.2.0",
         "@hookform/resolvers": "5.2.2",
         "@huggingface/inference": "4.13.15",
